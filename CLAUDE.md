@@ -173,15 +173,27 @@ All deadlines are 23:59 UTC.
   satisfies either reading and nothing needs changing — but the relicence was
   argued from arcprize.org alone, and under the Kaggle rules plain MIT would
   likely have sufficed. Read both sites before relying on either.
-- **The model constraint is tighter than "open weights"** (§2.5.a): a submission
-  must have "open source system, open source model, and open source
+- **The model constraint, resolved by reading the two paragraphs together.**
+  §2.5.a requires "open source system, open source model, and open source
   weights/parameters, as defined in the checklist from the Open Source AI
-  definition by the Open Source Initiative". OSAID asks for training-data
-  information too, which many downloadable-weight models do not provide. The very
-  next paragraph cuts the other way — a pretrained model "with an incompatible
-  license" need not be relicensed — and the whole section binds winners only.
-  **Settle this with the organisers before choosing a model**; choosing first and
-  asking later risks a wasted month.
+  definition by the Open Source Initiative". The next paragraph exempts pretrained
+  models "with an incompatible license" — and scopes that exemption precisely:
+  "you do not need to grant an open source license in the preceding Section **for
+  that data and/or model(s)**". The exemption covers the borrowed model, not the
+  work built on it.
+
+  So: **a downloaded pretrained model whose licence fails OSAID is fine; anything
+  this project writes or trains is not exempt.** The architecture already puts the
+  model in as a prediction organ that is used, not retrained, so nothing here is
+  blocked. The line to remember is that fine-tuning would change this — trained
+  weights would have to meet OSAID, which asks for training-data information.
+
+  On whether open-sourcing binds a submission not chasing a leaderboard prize:
+  §2.5 is headed "Winner License" and conditions on "if you are a Competition
+  winner", but arcprize.org states separately that "participants must open source
+  their solutions before receiving official private evaluation scores **across all
+  three competition tracks**". The obligation holds either way; it just does not
+  come from §2.5.
 - **One Kaggle account** (§3.5.a). Submitting from more than one is
   disqualification, not a warning.
 - **Public code sharing has a required channel** (§3.6): sharing Competition Code
@@ -309,9 +321,10 @@ that forecloses everything, and the paper's quality is what decides the outcome.
 Treat the pool as upside, never as the plan.
 
 ## Still unverified
-- **Whether the OSAID model requirement (§2.5.a) binds a submission that is not
-  competing for a leaderboard prize**, given the next paragraph exempts pretrained
-  models with an incompatible licence. Nothing in either forum addresses it.
+- **The Paper Track's own rules have never been read.** Every licensing and
+  eligibility conclusion here comes from the ARC-AGI-3 rules. The Paper Track is
+  a separate Kaggle competition with a separate rules page — which is exactly the
+  distinction that nearly cost the entry. Read them before relying on any of this.
 - The two official sources disagree on the Milestone 1 split: arcprize.org says
   $25K/$10K/$2.5K, Kaggle says $25,000/$7,500/$5,000. Both total $37,500. Which
   is authoritative is unknown; it does not affect this plan, but it is a reason
