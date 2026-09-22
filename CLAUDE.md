@@ -61,7 +61,7 @@ around a policy — and breaks four invariants outright:
 ### What this settles about model choice
 
 The requirement is not a strong decision-maker. It is something that **predicts the
-next frame** over a grid of at most 64×64 with values 0–15 — a far smaller problem,
+next frame** over a stack of 64×64 grids with values 0–15 — a far smaller problem,
 and a far better fit for the compute ceiling of a Kaggle session with no network.
 
 ## DECIDE@IMPL — what this implementation still has to declare
@@ -73,11 +73,15 @@ host. This repository has declared only the store's (F, G, H, carried over in
 `store/decisions.py`). The rest are open, and two of them are not paperwork.
 
 - **Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment.**
-  Straightforward here: a 2D grid of at most 64×64 with integer cells 0–15, plus
-  the game state and the `available_actions` set. Note 0–15, sixteen values —
-  0–9 is ARC-AGI-1/2, a different benchmark.
+  **Declared** in `src/arc3/decisions.py`, from measured frames — and it was not
+  straightforward. See "The environment" below: an observation is a *stack* of
+  grids, not one grid. Note 0–15, sixteen values — 0–9 is ARC-AGI-1/2, a
+  different benchmark.
 - **Tag B — numeric thresholds** (matching window, stability, recurrence).
-  Undeclared; needs values once the loop runs.
+  Still undeclared. The loop ring carries dil-core's minimal-host values and
+  `arc3/decisions.py` records them **as inherited, not as chosen**. Tuning them
+  before a run has produced measurements would be inventing numbers, which §12
+  exists to prevent.
 - **Tag C / Tag D — the Mode-A anchor and the live Mode-B source.** Satisfiable.
   `dil-core` declares tag D as "host-source (live external input the agent does
   not control) … any region that returns and can resist", and an ARC-AGI-3 game
@@ -151,12 +155,23 @@ fewest moves.
 
 ## The environment
 
-- Observation: a 2D grid, at most **64×64**, cells are integers **0–15**, origin
-  `(0,0)` top-left, `(x, y)` order. It is a grid of numbers, not an image.
+- Observation: a **stack of grids** — `FrameData.frame` is
+  `list[list[list[int]]]`, three levels deep. Measured on 42 real frames
+  (2026-09-22): shapes `(1, 64, 64)` and `(6, 64, 64)`. So a frame is 1..N grids,
+  each 64 rows × 64 columns; both games observed used the full 64×64 every time,
+  though the docs say "maximum". Cells are integers **0–15** (values actually
+  seen across those frames: 0,1,3,4,5,7,8,9,11,12 — ten of sixteen). Origin
+  `(0,0)` top-left, `(x, y)` order. It is numbers, not an image.
+  *An earlier draft of this file said "a 2D grid". That was read off the docs,
+  not off a frame, and it was wrong.*
 - Game state is one of `NOT_PLAYED`, `NOT_FINISHED`, `WIN`, `GAME_OVER`.
 - Actions: `RESET`; `ACTION1`–`ACTION4` (up/down/left/right); `ACTION5` (varies by
   game); `ACTION6` taking `x, y` in 0–63; `ACTION7` (undo). Each response carries
   `available_actions`, and only that subset may be used.
+- **`available_actions` varies by game, and can be a single action.** Measured:
+  `ls20` offered `(1,2,3,4)`; `vc33` offered only `(6,)`. An agent that emits
+  only the simple actions does literally nothing in `vc33`. Whatever produces a
+  move must read `available_actions` off the frame it is answering.
 - Agent surface: `is_done(frames, latest_frame) -> bool` and
   `choose_action(frames, latest_frame) -> GameAction`.
 - Competition mode allows one `make` per environment and one scorecard.
@@ -329,6 +344,28 @@ the pipeline six weeks early.
 Environment seeds are stable per task (Greg Kamradt), with one noted exception —
 the black-noise animation in `lf52-271a04aa`. Whether seeds are identical across
 two scored runs of the same notebook was asked and never answered.
+
+## The host ring — what exists, 2026-09-22
+
+`src/arc3/` is the body. Three files, 132 tests green.
+
+- `decisions.py` — tag A, declared from 42 measured frames. Tag B recorded as
+  **inherited from dil-core, not chosen**; tag H left open.
+- `frame.py` — the boundary gate. It **refuses** a frame outside the
+  declaration rather than coercing it, the same stance §5's tagging gate takes
+  toward a datum without provenance. Verified against 52 live frames from
+  `ls20` and `vc33`: 52 accepted, 0 refused.
+- `action.py` — what a legal move looks like and how to hand one to the engine.
+  It forms no move. Who forms one is unsettled.
+
+### A third trap, this one in the engine's enum
+
+`GameAction(1)` raises `ValueError: 1 is not a valid GameAction`. The members
+are declared `ACTION1 = (1, SimpleAction)`, so `_value2member_map_` is keyed by
+the **tuple**; `__init__` then rewrites `_value_` to the bare id, too late for
+the lookup map. `GameAction.from_id(1)` works, which is why the classmethod
+exists. Found by running it — reading `_value_ = action_id` suggests the
+opposite.
 
 ## Two bugs in the starter kit on Windows
 
