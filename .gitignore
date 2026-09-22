@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+*.js.map
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Local secrets and scratch
+.env
+.env.*
+!.env.example
+scratch/
