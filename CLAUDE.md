@@ -299,6 +299,36 @@ worth a pull request to `arcprize/ARC-AGI-3-Kaggle-Starter`:
 - For what a winning paper looks like, Kamradt points to the previous winners at
   arcprize.org/competitions/2025 and /2024. Worth reading before drafting.
 
+## The Paper Track's own rules
+
+Read on 2026-09-22. Four things in them that the ARC-AGI-3 rules and
+arcprize.org do not say:
+
+- **The $375K pool is discretionary.** §1.5: "Client **may choose** to award up to
+  $375,000 for papers that score above 4.5/5 on the paper rubric. If multiple
+  papers score above 4.5/5, the total prize pool will be **divided equally among
+  all**." Clearing 4.5 neither guarantees payment nor a fixed amount. The section
+  is headed "TOTAL PRIZES AVAILABLE: $75,000"; the $450K on the Kaggle listing is
+  that $75K plus the discretionary pool.
+- **One submission only.** §2.2 contains a single clause — "For Hackathons, each
+  Team may submit one (1) Submission only" — and no per-day limit at all. The
+  Paper Track is judged by a rubric with no leaderboard, which §3.7.a says is the
+  hackathon shape. So the writeup is one shot, not an iterated leaderboard entry.
+  The rules never state in so many words that this competition is a hackathon, so
+  treat this as a strong inference; a competitor on the forum read it the same way.
+- **The team must match.** §2.1.b: "Team must match the team making a submission
+  to either ARC-AGI-2 or ARC-AGI-3." Automatic for a solo entrant, but it shows
+  the link to a code submission is structural.
+- **There is no OSAID clause here.** The requirement for "open source system,
+  open source model, and open source weights/parameters, as defined in the
+  checklist from the Open Source AI definition" appears in the ARC-AGI-3 rules and
+  **not** in the Paper Track's. The practical conclusion is unchanged — both
+  competitions exempt a pretrained model with an incompatible licence — but the
+  OSAID obligation belongs to ARC-AGI-3 alone.
+
+Licence is CC-BY 4.0 here too (§1.6), which MIT-0 over-satisfies. No competition
+data is provided at all (§1.7, §2.4.a).
+
 ## Which prize this aims at
 
 The Paper Track pays through two mechanisms, and they are not the same shape.
@@ -321,10 +351,14 @@ that forecloses everything, and the paper's quality is what decides the outcome.
 Treat the pool as upside, never as the plan.
 
 ## Still unverified
-- **The Paper Track's own rules have never been read.** Every licensing and
-  eligibility conclusion here comes from the ARC-AGI-3 rules. The Paper Track is
-  a separate Kaggle competition with a separate rules page — which is exactly the
-  distinction that nearly cost the entry. Read them before relying on any of this.
+
+- **Whether the 1,500-word limit is real**, and what it counts. Two competitors
+  on the Paper Track forum treat it as a known constraint; no host ever replied,
+  and it is not in the rules. It is the last thing that would reshape the paper,
+  so confirm it on the competition's Overview page before drafting.
+- **How the 4.5 is computed.** The rules say "papers that score above 4.5/5 on
+  the paper rubric" without saying whether that is a mean across the six
+  criteria. It matters less now that the pool is known to be discretionary.
 - The two official sources disagree on the Milestone 1 split: arcprize.org says
   $25K/$10K/$2.5K, Kaggle says $25,000/$7,500/$5,000. Both total $37,500. Which
   is authoritative is unknown; it does not affect this plan, but it is a reason
