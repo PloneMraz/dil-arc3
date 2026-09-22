@@ -100,14 +100,61 @@ fewest moves.
   `choose_action(frames, latest_frame) -> GameAction`.
 - Competition mode allows one `make` per environment and one scorecard.
 
-## Unverified — do not treat as settled
+## What this repository is for
 
-- The Kaggle **runtime limit in hours** is not stated in the ARC Prize docs, and
-  the Kaggle pages render client-side so they could not be read. Figures found by
-  search ("P100, 12 hours") belong to ARC Prize 2024 and were discarded.
-- The **number of games in the private evaluation set** is not published. A
-  community repository mentions 25 public games; unverified.
+The goal is the **Paper Track**, not winning ARC-AGI-3. A paper is only eligible
+when it is linked to a Kaggle code submission, so this agent is the ticket — but
+the rule names what kind of ticket: "a Kaggle code submission **that demonstrates
+the approach detailed in the paper**." A throwaway agent would not qualify. This
+one has to run the protocol honestly: the eight invariants enforced, the layers
+threaded, an `[event]` log a third party can verify.
 
-## Dates
+The bar for a *valid submission* is low, and worth knowing: "as long as the agent
+takes action on any of the games, a submission file for all of the games is
+created." One action secures the entry. Everything above that serves the paper's
+Accuracy criterion, not the entry itself.
 
-Code submission 2026-11-02. Paper 2026-11-08. Results 2026-12-04.
+**The protocol document is not the paper.** `DIL-protocol-v0.3.2.md` is 55 KB of
+normative specification, written for someone implementing it. The paper is a
+separate artifact still to be written, in the shape ARC Prize asks for —
+abstract, introduction, prior work, approach, results, conclusion — and their
+instruction is "shorter and clearer is always better. No filler, no unnecessary
+equations."
+
+## Dates — the entry deadline is the one that bites
+
+- **2026-10-26 — ENTRY DEADLINE.** The competition rules must be accepted before
+  this date or there is no way to compete at all, and the paper loses the
+  submission it has to be linked to. Accepting them is a binding agreement on
+  Plone's account: he does it, not the agent.
+- 2026-10-26 — team merger deadline.
+- 2026-11-02 — final submission.
+- 2026-11-08 — paper.
+- 2026-12-04 — results.
+
+All deadlines are 23:59 UTC.
+
+## Limits, verified from the Kaggle competition page
+
+- Submissions are **Notebooks**. CPU notebook ≤ **9 hours**, GPU notebook ≤
+  **9 hours**.
+- **Internet access disabled.**
+- "Freely & publicly available external data is allowed, **including pre-trained
+  models**" — so shipping a local model is explicitly permitted, not a grey area.
+- RTX 6000 (`g4-standard-48`) is in the hardware pool for this competition only;
+  using it for anything else risks account moderation, and RTX sessions must have
+  internet disabled.
+
+## Still unverified
+
+- **How the Paper Track's 4.5 threshold is computed** — a mean across the six
+  criteria, or something else. It is not on the paper page, and it decides
+  whether a low Accuracy forecloses the $375K pool. Only the organisers can
+  answer this.
+- Whether the three Top Paper prizes use that same threshold.
+- **The number of games in the private evaluation set.** A community repository
+  mentions 25 public games; unverified.
+- The two official sources disagree on the Milestone 1 split: arcprize.org says
+  $25K/$10K/$2.5K, Kaggle says $25,000/$7,500/$5,000. Both total $37,500. Which
+  is authoritative is unknown; it does not affect this plan, but it is a reason
+  to read both sites rather than trust one.
