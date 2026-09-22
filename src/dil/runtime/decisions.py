@@ -4,12 +4,12 @@ This is the outermost ring — where DIL meets the host. It declares the live
 Mode-B source (tag D), the reflection mechanism (tag E), and the diversity-loss
 thresholds (§11, conformance criterion 7).
 
-**Tag E is where this deployment will have to differ, and CLAUDE.md records it as
-open.** Reflection is defined as a third party reading a recorded collision out
-of the `[event]` log and returning it through a declared channel; §8.4 is
-explicit that the agent "cannot self-reflect on call". A Kaggle evaluation
-session has no third party and no network. The declaration below is dil-core's
-and is carried over unchanged for now; it is not yet true of this host.
+**Tag E is settled for this host, and differently from dil-core's deployment.**
+Reflection needs a third party, and a Kaggle evaluation session has neither a
+network nor a human. The reader here is **another agent in the same run**, which
+tag E's own wording already admits: "WHO reads (a user, another agent, a critic
+service) stays deliberately deployment-open". See `peer.py` for the mechanism and
+for what it does not reach.
 
 Ported from dil-core against DIL protocol v0.3.2.
 """
@@ -30,10 +30,15 @@ MODE_B_SOURCE: Final = "host-source (live external input the agent does not cont
 
 # DECIDE@IMPL tag E — the read-collision-into-coordinates mechanism (§8.4).
 REFLECTION_MECHANISM: str = (
-    "event-coordinate reading: a third party reads a recorded collision out of "
-    "the [event] log into coordinates (collision_coordinates / form_reading) and "
-    "returns it through a declared T3 channel (reflection_signal + "
-    "reflection_transducer); the agency-gate classifies it ENV_PUSHED"
+    "peer-agent event-coordinate reading: another agent running in the same "
+    "session reads a recorded collision out of this agent's [event] log into "
+    "coordinates (collision_coordinates / form_reading) and returns it through "
+    "the declared T3 channel `peer-reflection` (reflection_signal + "
+    "reflection_transducer); the agency-gate classifies it ENV_PUSHED. The peer "
+    "holds a read-only log view and no store handle, so §8.4's "
+    "'Mode-B returns; it does not write' is kept by the type. LIMIT, declared: "
+    "peers run the same implementation, so this catches accrued drift and not "
+    "bias in the mechanism itself"
 )
 # Rationale: the coordinate system is the [event] log itself — the one trace a
 # third party already reads (§13); a coordinate addresses one recorded collision

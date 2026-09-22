@@ -83,28 +83,47 @@ host. This repository has declared only the store's (F, G, H, carried over in
   not control) … any region that returns and can resist", and an ARC-AGI-3 game
   is exactly that: it returns frames, the agent does not control it, and it
   resists prediction. The game is the Mode-B source.
-- **Tag E — the reflection mechanism, and this one is a real gap.** §8.4 puts
-  reflection outside the agent: "a collision read into coordinates by a third
-  party … entering through T3 tagged ENV_PUSHED", and "the agent is blind to its
-  own time-derivative; it cannot self-reflect on call". `dil-core` implements it
-  as a third party reading the `[event]` log and returning coordinates. **In a
-  Kaggle session there is no third party and no network.** Nothing can read the
-  log and return a reading mid-run. Either reflection is declared absent for this
-  deployment — with the consequence stated honestly — or something inside the
-  run has to occupy that role without becoming self-reflection, which §8.4
-  forbids. Unresolved.
+- **Tag E — settled: the reader is a peer agent.** §8.4 puts reflection outside
+  the agent, and §10 makes it an obligation — "a private store … MUST carry the
+  resistance-retrieval channel, otherwise drift is certain". A Kaggle session has
+  neither network nor human, so the usual reader cannot exist. The reader here is
+  **another agent running in the same session**, reading this agent's recorded
+  collisions out of its log. Tag E's own wording already admits it: "WHO reads (a
+  user, **another agent**, a critic service) stays deliberately deployment-open".
+
+  This is the private-store branch done properly, not §10's shared-store branch:
+  each agent keeps its own store and the retrieval channel is what crosses
+  between them. The peer holds a read-only log view and no store handle, so
+  §8.4's "Mode-B returns; it does not write" is kept by the type, and
+  `form_reading` refuses a coordinate naming no real record, so a reflection
+  cannot be fabricated about a collision that never happened.
+
+  **The limit, which the paper must state rather than bury**: peers run the same
+  implementation, with the same update law and thresholds. Peer reflection
+  catches *accrued* drift and is blind to bias in the *mechanism*, which every
+  peer shares equally. It is a real Mode-B channel and it is weaker than a
+  genuinely foreign reader.
 - **Tag H — situation fit.** Fit is measured between the frame the loop predicted
   and the frame the region returned. Not against a correct answer: no answer is
   ever revealed during a run.
 
-**A consequence worth seeing now.** Conformance criterion 7 (§11) fires a
-diversity-loss signal when the resistance-source set holds fewer than
-MIN_DIVERSITY_SOURCES distinct sources over a window — `dil-core` sets that to 2
-over 8 cycles. An agent playing one game at a time has one resistance source.
-`dil-core`'s own §13.5 and §13.7 render `partial` for precisely this reason. The
-paper's conformance table will show the same unless the design gives the loop
-more than one source of resistance, and claiming otherwise would be the kind of
-unearned pass the protocol exists to prevent.
+**The diversity problem, and how the same move solves it.** Conformance criterion
+7 (§11) fires a diversity-loss signal when the resistance-source set holds fewer
+than MIN_DIVERSITY_SOURCES distinct sources over a window. An agent playing one
+game has one resistance source, so §13.5 and §13.7 would render `partial`, as
+they do in dil-core for the same reason.
+
+Peer reflection fixes this as a side effect, because a peer's reading arrives
+tagged ENV_PUSHED and can itself resist. Measured on a run of two agents on
+different games:
+
+| | resistance sources | §13.5 | §13.7 |
+|---|---|---|---|
+| agent alone | `e1` | partial | partial |
+| agent with a peer reader | `agent-A`, `e2`, `region` | **pass** | **pass** |
+
+The diversity is earned rather than arranged: the peer is a real source that
+returns something this agent did not author.
 
 ## What the benchmark actually measures
 

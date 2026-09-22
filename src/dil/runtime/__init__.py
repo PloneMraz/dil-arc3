@@ -22,6 +22,12 @@ from .decisions import (
 from .diversity import DiversityMonitor, create_diversity_monitor
 from .host_source import HostSource, ScriptedSource, scripted_source
 from .manifest import collect_manifest
+from .peer import (
+    PEER_REFLECTION_CHANNEL,
+    PeerLog,
+    PeerReflectingSource,
+    peer_reflecting_source,
+)
 from .reflection import (
     CollisionCoordinate,
     ReflectionError,
@@ -43,11 +49,14 @@ __all__ = [
     "MIN_DIVERSITY_SOURCES",
     "MODE_B_SOURCE",
     "REFLECTION_MECHANISM",
+    "PEER_REFLECTION_CHANNEL",
     "AbsorptionReport",
     "CollisionCoordinate",
     "Daemon",
     "DiversityMonitor",
     "HostSource",
+    "PeerLog",
+    "PeerReflectingSource",
     "ReflectionError",
     "ReflectionReading",
     "RejectedItem",
@@ -65,6 +74,7 @@ __all__ = [
     "encode_snapshot_value",
     "form_reading",
     "measure_absorption",
+    "peer_reflecting_source",
     "reflection_signal",
     "reflection_transducer",
     "requisition",
