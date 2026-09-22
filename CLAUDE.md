@@ -16,6 +16,54 @@ An ARC-AGI-3 agent host built on the DIL protocol, for ARC Prize 2026.
 - **DIL does not act.** The loop supplies the condition; the agent acts. Whatever
   chooses a move lives in this repo, not inside DIL.
 
+## Architecture — settled with Plone, 2026-09-22
+
+`dil-core` is a preparation, not an organism: a brain on a bench, wired to
+electrodes and stimulated to show the mechanism runs. It has no region to meet,
+which is why its terminal emission is a fixed marker —
+`{ kind: "respond", cycle, valence }` — and never a move.
+
+This repository is a whole body, built as one from the start. Four roles, and
+they are not interchangeable:
+
+| | |
+|---|---|
+| **DIL** | the operating mechanism of the whole. Not a part beside other parts — how the body runs. Present everywhere, located nowhere. |
+| **host** | the container and the sense organs. It declares its faculties; DIL threads through. |
+| **model** | the thinking organ. An organ, not a subject. |
+| **the self** | what occurs while the loop runs. **The self acts.** |
+
+### The line that must not be crossed
+
+**The model emits no action.** It supplies predictions and models into the loop —
+material for T5 expectation, T6 other-model synthesis, T8 abstraction. What the
+region returns then *collides* with that prediction, and the collision — the place
+the model was wrong — is the information that accrues. The move is emitted by the
+agent under DIL, through the host: by the self, after appraisal, on criteria that
+lie outside the state being edited.
+
+A model that picks the move rebuilds the design this replaced — DIL as a wrapper
+around a policy — and breaks four invariants outright:
+
+- **INV-4** — no layer assigns meaning to a signal in isolation; meaning is a
+  function of (signal, lower-layer context). A model reading a frame and naming a
+  move is meaning assigned in isolation.
+- **INV-5** — temporal state forms only by sequential accrual, never loaded. Refeeding
+  the whole game history into a context window each step is a load, not an accrual:
+  the guard's own note calls it "a reloaded context masquerading as a self".
+- **INV-6** — every change is classified self-written or environment-pushed before
+  interpretation. Model output is self-written; the returned grid is
+  environment-pushed. Conflating them destroys the only signal that matters.
+- **INV-8** — appraisal may not draw its criteria from the state being edited,
+  "otherwise it is self-scoring and hackable". A model that both proposes and
+  justifies the move is scoring itself.
+
+### What this settles about model choice
+
+The requirement is not a strong decision-maker. It is something that **predicts the
+next frame** over a grid of at most 64×64 with values 0–15 — a far smaller problem,
+and a far better fit for the compute ceiling of a Kaggle session with no network.
+
 ## What the benchmark actually measures
 
 The score is **RHAE — Relative Human Action Efficiency**, not a solve rate:
