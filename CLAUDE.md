@@ -64,6 +64,48 @@ The requirement is not a strong decision-maker. It is something that **predicts 
 next frame** over a grid of at most 64×64 with values 0–15 — a far smaller problem,
 and a far better fit for the compute ceiling of a Kaggle session with no network.
 
+## DECIDE@IMPL — what this implementation still has to declare
+
+Protocol §12 leaves eight constants open and says a conforming implementation
+"MUST fill each and MUST declare the value it chose. Fabricating a constant at
+protocol level is non-conformant." `dil-core` declares all eight for its minimal
+host. This repository has declared only the store's (F, G, H, carried over in
+`store/decisions.py`). The rest are open, and two of them are not paperwork.
+
+- **Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment.**
+  Straightforward here: a 2D grid of at most 64×64 with integer cells 0–15, plus
+  the game state and the `available_actions` set. Note 0–15, sixteen values —
+  0–9 is ARC-AGI-1/2, a different benchmark.
+- **Tag B — numeric thresholds** (matching window, stability, recurrence).
+  Undeclared; needs values once the loop runs.
+- **Tag C / Tag D — the Mode-A anchor and the live Mode-B source.** Satisfiable.
+  `dil-core` declares tag D as "host-source (live external input the agent does
+  not control) … any region that returns and can resist", and an ARC-AGI-3 game
+  is exactly that: it returns frames, the agent does not control it, and it
+  resists prediction. The game is the Mode-B source.
+- **Tag E — the reflection mechanism, and this one is a real gap.** §8.4 puts
+  reflection outside the agent: "a collision read into coordinates by a third
+  party … entering through T3 tagged ENV_PUSHED", and "the agent is blind to its
+  own time-derivative; it cannot self-reflect on call". `dil-core` implements it
+  as a third party reading the `[event]` log and returning coordinates. **In a
+  Kaggle session there is no third party and no network.** Nothing can read the
+  log and return a reading mid-run. Either reflection is declared absent for this
+  deployment — with the consequence stated honestly — or something inside the
+  run has to occupy that role without becoming self-reflection, which §8.4
+  forbids. Unresolved.
+- **Tag H — situation fit.** Fit is measured between the frame the loop predicted
+  and the frame the region returned. Not against a correct answer: no answer is
+  ever revealed during a run.
+
+**A consequence worth seeing now.** Conformance criterion 7 (§11) fires a
+diversity-loss signal when the resistance-source set holds fewer than
+MIN_DIVERSITY_SOURCES distinct sources over a window — `dil-core` sets that to 2
+over 8 cycles. An agent playing one game at a time has one resistance source.
+`dil-core`'s own §13.5 and §13.7 render `partial` for precisely this reason. The
+paper's conformance table will show the same unless the design gives the loop
+more than one source of resistance, and claiming otherwise would be the kind of
+unearned pass the protocol exists to prevent.
+
 ## What the benchmark actually measures
 
 The score is **RHAE — Relative Human Action Efficiency**, not a solve rate:
