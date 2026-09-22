@@ -116,6 +116,50 @@ class HostCycleInput:
     # Observed changes after the emission; `id` is treated as the entity id.
     changes: tuple[ObservedChange, ...] = dc_field(default_factory=tuple)
     interactions: tuple[ObservedInteraction, ...] = dc_field(default_factory=tuple)
+    # DEVIATION from dil-core, declared. Entity ids the region says are PRESENT
+    # this cycle — able to return if they are going to. T7 registers an absence
+    # only against these, because an entity the region itself says is not there
+    # cannot be silent; silence presupposes the chance to speak.
+    #
+    # Needed because this host's entities are affordances, which return only when
+    # the agent uses one, and it uses one per cycle. Without it, N-1 absences
+    # were recorded every cycle for ever: measured at 444 of 481 scars over 159
+    # real ls20 cycles. `None` means the host does not report presence and the
+    # original behaviour holds exactly, so dil-core's semantics are unchanged.
+    afforded: frozenset[str] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RespondContext:
+    """What the terminal response is built from (§6.4, link 5).
+
+    Handed to the host's declared `RespondPolicy` at the close of the
+    meaning-channel, after appraisal. Everything a committed action may be built
+    from is here and nothing else: the appraisal that judged the cycle, the
+    per-entity expectations the loop holds, and what the region supplied.
+    """
+
+    cycle: int
+    appraisal: Appraisal
+    # The loop's expectations this cycle, entity by entity — including each
+    # one's confidence and recurrence.
+    expectations: tuple[Any, ...]
+    # What the region supplied this cycle, including the afforded entity set.
+    host: HostCycleInput
+
+
+# Builds the cycle's committed action (DECIDE@IMPL, host-declared).
+RespondPolicy: TypeAlias = Callable[[RespondContext], Any]
+
+
+def default_respond(ctx: RespondContext) -> Any:
+    """dil-core's minimal-host response: a marker, carrying no action.
+
+    It is what a host with no region to push into can honestly commit to. A host
+    with a real region declares its own policy; this stays the default so the
+    reference behaviour is unchanged when none is declared.
+    """
+    return {"kind": "respond", "cycle": ctx.cycle, "valence": ctx.appraisal.valence}
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,7 +196,7 @@ class Cycle:
 
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
-        "_cycle", "_last_emission", "_cycle_t",
+        "_cycle", "_last_emission", "_cycle_t", "_respond",
     )
 
     def __init__(
@@ -164,7 +208,19 @@ class Cycle:
         initial_emission: Emission,
         now: Callable[[], int] | None = None,
         resume: DriverState | None = None,
+        respond: RespondPolicy | None = None,
     ) -> None:
+        # DEVIATION from dil-core, declared. The content of the terminal
+        # emission is host-declared, exactly as T3's transducers and T4's
+        # resolver already are. dil-core hard-codes a marker because its
+        # minimal host has no region to push into; a host with a real region
+        # must be able to commit a real action, or INV-1 never closes.
+        #
+        # The seam is here — at the close of the meaning-channel, after
+        # appraisal, issuing layer T8 — and NOT in a layer. A layer emitting the
+        # move would make the thinking organ the actor. The action issues from
+        # the whole loop.
+        self._respond = respond if respond is not None else default_respond
         self._layers = layers
         self._glob = glob
         self._data = data
@@ -333,7 +389,7 @@ class Cycle:
         self._log_exit(6)
         ch.publish(6, t6.output)
 
-        t7 = run_layer(L.t7, gather_t7(ch), field, datum)
+        t7 = run_layer(L.t7, gather_t7(ch, host), field, datum)
         datum = t7.datum
         self._log_exit(7)
         ch.publish(7, t7.output)
@@ -518,11 +574,14 @@ class Cycle:
         # The one real emission per cycle here; issued at the close of the
         # meaning-channel after appraisal, so its issuing layer is T8.
         directive = Directive(
-            committed_action={
-                "kind": "respond",
-                "cycle": self._cycle,
-                "valence": appraisal.valence,
-            },
+            committed_action=self._respond(
+                RespondContext(
+                    cycle=self._cycle,
+                    appraisal=appraisal,
+                    expectations=pass_.t5.results,
+                    host=host,
+                )
+            ),
             issuing_layer=8,
             built_from=(appraisal,),
             t=self._cycle_t,
@@ -642,6 +701,7 @@ def create_cycle(
     initial_emission: Emission,
     now: Callable[[], int] | None = None,
     resume: DriverState | None = None,
+    respond: RespondPolicy | None = None,
 ) -> Cycle:
     return Cycle(
         layers=layers,
@@ -651,4 +711,5 @@ def create_cycle(
         initial_emission=initial_emission,
         now=now,
         resume=resume,
+        respond=respond,
     )

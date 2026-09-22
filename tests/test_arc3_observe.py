@@ -98,7 +98,11 @@ def test_the_move_is_reported_as_the_one_self_written_change():
     host = a_transition(Move(2))
     ids = [c.id for c in host.changes]
     assert ids == [SELF_MOVE_CHANGE, "action:2"]
-    assert host.changes[0].value == {"actionId": 2, "x": None, "y": None}
+    # The `kind` discriminator is load-bearing: the host refuses an emission
+    # that is not a move, so dil-core's marker cannot silently reach the game.
+    assert host.changes[0].value == {
+        "kind": "move", "actionId": 2, "x": None, "y": None
+    }
 
 
 def test_the_frame_change_is_reported_under_the_affordance_id():

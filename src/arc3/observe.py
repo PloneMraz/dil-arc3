@@ -39,7 +39,7 @@ from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import ObservedChange
 from dil.loop.types import Signal
 
-from .action import Move
+from .action import IllegalMove, Move
 from .effect import Effect
 from .frame import Frame
 
@@ -78,8 +78,22 @@ def effect_value(effect: Effect) -> dict[str, object]:
 
 
 def move_value(move: Move) -> dict[str, object]:
-    """The move as plain data, for T2's match against the recorded emission."""
-    return {"actionId": move.action_id, "x": move.x, "y": move.y}
+    """The move as plain data.
+
+    This exact shape is BOTH what the respond policy commits and what the host
+    reports back as the self-written change, because T2 classifies agency by
+    structural equality against the emission it recorded. If the two shapes
+    drifted apart the agent's own move would be tagged ENV_PUSHED — it would
+    stop recognising its own act.
+    """
+    return {"kind": "move", "actionId": move.action_id, "x": move.x, "y": move.y}
+
+
+def move_from_value(value: object) -> Move:
+    """Read a committed action back into a Move. Raises if it is not one."""
+    if not isinstance(value, dict) or value.get("kind") != "move":
+        raise IllegalMove(f"not a committed move: {value!r}")
+    return Move(int(value["actionId"]), value.get("x"), value.get("y"))
 
 
 def game_transducer(signal: Signal) -> tuple[str, object]:
@@ -102,6 +116,14 @@ def observe(prev: Frame, move: Move, now: Frame, effect: Effect, t: int) -> Host
     """
     entity = affordance_key(move)
     return HostCycleInput(
+        # Which affordances the region said were there when this move was
+        # chosen. T7 registers an absence only against these: an action the game
+        # did not offer is not silent, it simply was not there to answer. Read
+        # off `prev`, because that is the frame the move was chosen from — `now`
+        # reports what is afforded for the NEXT choice.
+        afforded=frozenset(
+            f"action:{a}" for a in prev.available_actions
+        ),
         signals=(
             Signal(
                 source_id=GAME_CHANNEL,

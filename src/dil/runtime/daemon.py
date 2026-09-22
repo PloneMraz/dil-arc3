@@ -28,7 +28,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..host import HostDeclaration
-from ..loop.cycle import Cycle, CycleResult, DriverState, HostCycleInput, Layers, create_cycle
+from ..loop.cycle import (
+    Cycle,
+    CycleResult,
+    DriverState,
+    HostCycleInput,
+    Layers,
+    RespondPolicy,
+    create_cycle,
+)
 from ..loop.decisions import (
     BASELINE_WINDOW,
     MATCHING_WINDOW,
@@ -67,6 +75,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
+        "_respond",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -88,7 +97,11 @@ class Daemon:
         chain_head: Callable[[], str] | None = None,
         commit_every: int | None = None,
         recover_from: str | None = None,
+        respond: RespondPolicy | None = None,
     ) -> None:
+        # The host's declared terminal-response policy; None keeps dil-core's
+        # marker. See cycle.py's RespondContext for why the seam exists.
+        self._respond = respond
         self._host = host
         self._source = source
         self._layers = layers
@@ -211,6 +224,7 @@ class Daemon:
             initial_emission=self._initial_emission,
             now=self._now,
             resume=resume,
+            respond=self._respond,
         )
         self._running = True
 

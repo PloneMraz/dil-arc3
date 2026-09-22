@@ -6,6 +6,11 @@ PredErr — no observation, signed "-". A single silence against a background of
 returns is a valid mismatch (§4); unbroken silence is a void field, handled by
 the precondition gate, not here.
 
+DEVIATION from dil-core, declared: `T7Input.present` lets the host report which
+entities the region says are there this cycle, and an absence is registered only
+against those. Silence presupposes the chance to speak. `None` — the default —
+restores the original behaviour exactly.
+
 T7 accrues which entities are expected to recur (INV-5): an entity seen at least
 `min_observations_to_expect` times is expected next cycle.
 
@@ -36,6 +41,10 @@ class T7Input:
     expectations: tuple[ExpectedEntity, ...] = dc_field(default_factory=tuple)
     # Entities that actually returned this cycle.
     observed: frozenset[str] = dc_field(default_factory=frozenset)
+    # Entities the region reports PRESENT this cycle — able to return if they
+    # are going to. See HostCycleInput.afforded for why this exists and what it
+    # measured. `None` restores dil-core's behaviour exactly.
+    present: frozenset[str] | None = dc_field(default=None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,7 +121,11 @@ class T7(BaseLayer):
                 delta=1.0,
             )
             for entity_id, st in self._expected.items()
-            if st.seen >= self._min_seen and entity_id not in input.observed
+            if st.seen >= self._min_seen
+            and entity_id not in input.observed
+            # Silence presupposes the chance to speak: an entity the region says
+            # is not present this cycle is not silent, it is simply not there.
+            and (input.present is None or entity_id in input.present)
         )
         return T7Output(absences=absences)
 

@@ -469,6 +469,100 @@ scheme is not the same as knowing how to win a level. In `ls20` the persistence
 ceiling per affordance is 66–86%, so the residual error is largely the cases
 where the effect depends on position — exactly the information withheld.
 
+## The host, and the loop closing against a live game
+
+### Correction to the earlier entry
+
+What the previous section called "running the real loop" was `cycle.run()`
+driven by a scratchpad script over pickled frames. **No daemon, no HostSource,
+no live game — and no emission.** The actions in that replay were chosen by the
+dump script's round-robin; the loop's `response` was computed and thrown away.
+The loop was a passive observer of a scripted sequence. The absence measurement
+stands, because it is about T7's bookkeeping and independent of who chose the
+actions. The description did not.
+
+### What plays the thinking role
+
+**Nothing does. There is no model.** The prediction is T5's declared update law,
+persistence, and it is one line:
+
+```python
+predicted = window[-1] if window else observed
+```
+
+"Predict that this control does what it did last time." That is the whole
+thinking organ at present. **This is where a model goes** — it would supply the
+expectation, predicting an action's effect from context, which is exactly the
+role settled with Plone: the model supplies the expectation, never the choice.
+
+### Two declared deviations from dil-core
+
+Both are additive and defaulted, so dil-core's behaviour is unchanged when a
+host declares neither.
+
+1. **`HostCycleInput.afforded` → `T7Input.present`.** T7 registers an absence
+   only against entities the region says are there. Silence presupposes the
+   chance to speak.
+2. **`Cycle(respond=...)`, a host-declared `RespondPolicy`.** dil-core hard-codes
+   the terminal emission as `{kind: "respond", cycle, valence}` because its
+   minimal host has no region to push into. A host with a real region must
+   commit a real action or INV-1 never closes. The seam is at the close of the
+   meaning-channel after appraisal, issuing layer T8 — **not in a layer**. A
+   layer emitting the move would make the thinking organ the actor.
+
+`src/arc3/respond.py` declares the policy: commit the afforded action whose
+expectation is **least resolved**, ties on fewest observations then lowest id.
+An affordance never met ranks at confidence 0, so the loop reaches for what it
+does not know first. Exploration is not bolted on; it is what the loop's own
+state recommends.
+
+### `src/arc3/host.py` — the body
+
+`Arc3Source` is a `HostSource` over a live game. `deliver` executes what the
+self committed — *the agent acts through deliver* — and the following `next`
+reports what the region did. Nothing here chooses; a move the frame does not
+afford is refused, never substituted, because swapping in a legal action would
+put the choice in the body.
+
+Cycle 0 reports the opening RESET with a **null effect**: `reset()` makes the
+first frame out of nothing and there is no earlier frame to difference it
+against. It binds an `action:0` entity the game never affords, which is also the
+live check that the presence filter works.
+
+### Measured on live runs, 80 cycles each
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| precondition gate | Qualify | Qualify |
+| cycles / actions | 80 / 80 | 80 / 80 |
+| scars from the region (absences) | 225 | 1 |
+| scars from an affordance | 4 | 45 |
+| levels completed | 0 | 0 |
+
+**The absence flood persists in `ls20` and the presence filter does not touch
+it**, exactly as forecast when option (ii) was chosen: `ls20` affords all four
+actions every cycle, so all four are genuinely present and three are genuinely
+unused. The filter is live — it is what keeps `action:0` from being registered
+absent, and `vc33` shows 1 absence rather than a flood — but it does not solve
+`ls20`. The remaining question is whether an affordance that is present but
+*unasked* should count as silent. Not decided here.
+
+**Two engine behaviours found by running it**, neither documented:
+
+- `reset()` returns a populated frame for `ls20` and an **empty** one for
+  `vc33`, which needs RESET sent as an action before the game starts. The
+  boundary gate refusing the empty frame is how this surfaced.
+- `vc33` reaches `GAME_OVER` and **keeps reporting `available_actions == (6,)`**.
+  Stepping that action in a terminal state returns an empty frame. So the
+  policy reads the state, not the afforded list, and commits RESET from a
+  terminal frame.
+
+**Neither game completed a level.** The move distribution is 20/20/20/20 — with
+all four affordances at confidence 1.0, ties break on fewest observations and
+the policy round-robins. That is a systematic sweep, not learning-driven
+behaviour, and it is the declared limit showing up in the numbers: the loop
+knows what its controls do and does not know where anything is.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are
