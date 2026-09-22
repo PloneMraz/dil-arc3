@@ -123,18 +123,28 @@ equations."
 
 ## Dates — the entry deadline is the one that bites
 
-- **2026-10-26 — entry deadline. DONE.** Plone accepted the rules on 2026-09-22
-  and the account shows a Submit button, so the entry that the paper must link to
-  exists. Nothing about the competition is gated on a date before 2026-11-02 any
-  more.
+- **2026-10-26 — ARC-AGI-3 entry deadline. DONE.** Plone accepted those rules on
+  2026-09-22; `kaggle competitions list` reports `userHasEntered True` for
+  arc-prize-2026-arc-agi-3, so the submission the paper must link to can exist.
+- **THE PAPER TRACK IS A SEPARATE KAGGLE COMPETITION AND IS NOT ENTERED.**
+  `arc-prize-2026-paper-track` reports `userHasEntered False`, and downloading
+  even its 150-byte NOTE.md returns 403. Entering ARC-AGI-3 does not enter it.
+  Its rules have to be accepted on their own, and until that happens the track
+  this whole plan aims at is shut. Plone accepts them; the agent does not.
 - 2026-09-30 — Milestone 2. Optional, skipped deliberately: it is judged on
   leaderboard score at that date, there is no running agent, and RHAE squares the
   action ratio, so a barely-working agent would score near zero. Missing it costs
   nothing downstream.
 - 2026-10-26 — team merger deadline.
-- 2026-11-02 — final submission.
-- 2026-11-08 — paper.
+- 2026-11-02 — final submission (ARC-AGI-3).
+- **2026-11-09 — paper.** Kaggle's competition listing gives this deadline;
+  arcprize.org says 2026-11-08. A third disagreement between the two official
+  sources, so work to the earlier date.
 - 2026-12-04 — results.
+
+Field sizes, read from the Kaggle listing on 2026-09-22: ARC-AGI-3 has **3,230
+teams**, the Paper Track **198**. The track this plan aims at is the far less
+crowded one, which is a reason the aim is sound — not a reason to relax.
 
 All deadlines are 23:59 UTC.
 
