@@ -145,6 +145,37 @@ All deadlines are 23:59 UTC.
   using it for anything else risks account moderation, and RTX sessions must have
   internet disabled.
 
+## What the Kaggle rules add
+
+- **Licence, and a conflict between two official sources.** arcprize.org asks for
+  "a permissive public domain license (eg. CC0 or MIT-0)"; the Kaggle rules (§1.6,
+  §2.5) name **CC-BY 4.0**, which keeps an attribution condition and is not a
+  public-domain licence. MIT-0 grants strictly more than CC-BY 4.0 does, so it
+  satisfies either reading and nothing needs changing — but the relicence was
+  argued from arcprize.org alone, and under the Kaggle rules plain MIT would
+  likely have sufficed. Read both sites before relying on either.
+- **The model constraint is tighter than "open weights"** (§2.5.a): a submission
+  must have "open source system, open source model, and open source
+  weights/parameters, as defined in the checklist from the Open Source AI
+  definition by the Open Source Initiative". OSAID asks for training-data
+  information too, which many downloadable-weight models do not provide. The very
+  next paragraph cuts the other way — a pretrained model "with an incompatible
+  license" need not be relicensed — and the whole section binds winners only.
+  **Settle this with the organisers before choosing a model**; choosing first and
+  asking later risks a wasted month.
+- **One Kaggle account** (§3.5.a). Submitting from more than one is
+  disqualification, not a warning.
+- **Public code sharing has a required channel** (§3.6): sharing Competition Code
+  publicly obliges sharing it "on Kaggle.com on the discussion forum or notebooks
+  associated specifically with the Competition". Publishing this repository on
+  GitHub is not forbidden, but it does not discharge that obligation, and §3.6.a
+  treats private sharing as a breach.
+- Submission limits (§2.2): one per day, at most two final submissions.
+- Open-source code used in the submission must be under an OSI-approved licence
+  that does not limit commercial use (§3.6.c). MIT-0 is OSI-approved.
+- Entry itself constitutes acceptance of the rules, which are a binding agreement
+  under California law (§2.9). Plone accepts them; the agent does not.
+
 ## Still unverified
 
 - **How the Paper Track's 4.5 threshold is computed** — a mean across the six
