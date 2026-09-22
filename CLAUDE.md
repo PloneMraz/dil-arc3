@@ -224,9 +224,34 @@ Three traps, each of which would have cost a day at the deadline:
    has 3.13 and 3.14. Nothing has broken yet, but the local run and the graded
    run are not on the same interpreter.
 
-Not understood yet: the emitted `submission.parquet` held **one row**
-(`game_id=1`, `score=1`), not one per game. Whether that is a validation phase or
-the real shape is unresolved — do not build on either reading.
+The one-row `submission.parquet` (`game_id=1`, `score=1`) appears to be normal
+rather than a fault: a competitor reporting a different problem quoted a file of
+"approximately 2.65 KB", and ours is 2,648 bytes. Two forum replies describe the
+grading as re-running the agent server-side against hidden games — "a Kaggle
+error in this competition means that your submission runs into an error before
+starting the games", and the generic error "usually means your agent crashed on
+one of the hidden test games". That would explain a local run that emits one row.
+Community reports, not an organiser's statement.
+
+## Scoring, from a top-3 competitor on the forum — useful, and partly suspect
+
+CPMP, ranked 3rd in the competition, on topic 697944:
+
+> There are no rerun at end of competition. Your final score is already computed
+> but will stay hidden till end of competition.
+>
+> There are 100 games in test data. 55 are used to compute the score shown on
+> public LB during the competition. 55 are used to compute a hidden score that
+> will be used for final ranking if you select that submission.
+
+**55 + 55 = 110 against a stated 100**, so at least one of those numbers is wrong
+or the two sets overlap. Treat the counts as unconfirmed.
+
+What is consistent with the published rules, and matters more: **submissions are
+graded when made, not re-run at the end.** Combined with one submission per day
+and two selectable final submissions, that means a submission is a commitment —
+there is no submitting something rough on 2 November and improving it after. It
+is also the strongest argument for having verified the pipeline six weeks early.
 
 ## Two bugs in the starter kit on Windows
 
