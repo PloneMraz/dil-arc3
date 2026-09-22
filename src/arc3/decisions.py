@@ -55,11 +55,35 @@ COMPLEX_ACTION_COORD_MAX: Final = 63
 # gives grounds to change them.
 TAG_B_STATUS: Final = "inherited from dil-core's minimal host; not yet tuned on measurements"
 
+# ── The entity, settled with Plone 2026-09-22 ──
+#
+# The unit of experience is the AFFORDANCE, not the frame and not the cell. The
+# loop holds an expectation about what an action DOES, and a collision is the
+# action doing something other than expected. This is what the game is actually
+# about — discovering the controls — and it is what RHAE rewards, since winning
+# a level in few actions means learning the mechanics fast.
+#
+# It needed no change to the loop. T4's context resolver is already DECIDE@IMPL
+# and pluggable, so the entity id becomes the affordance; T5's persistence rule
+# then accrues a window of observed effects per affordance, with confidence
+# ramping over recurrence, which IS learning what each control does.
+ENTITY: Final = "affordance — one per action the region affords"
+
 # ── Tag H — situation fit ──
 #
-# NOT YET DECLARED. Fit is measured between the frame the loop predicted and the
-# frame the region returned — never against a correct answer, because no answer
-# is revealed during a run. What "closer" means over a stack of grids (cell
-# agreement, region agreement, something else) is open and depends on what an
-# entity turns out to be.
-TAG_H_STATUS: Final = "open — depends on the entity decision, which is Plone's"
+# DECLARED: fit is equality of the effect signature in `effect.py`. Two uses of a
+# control are the same situation exactly when the change they produced has the
+# same shape — translation-invariant, so the same control used at two places
+# reads as the same event.
+#
+# Measured on 316 real transitions rather than asserted. In `ls20` the signature
+# recovers the control scheme unaided (ACTION1 up, 2 down, 3 left, 4 right, five
+# cells, 29-33 consistent observations each) and each action lands on 2-4
+# signatures out of 10, 79% of them unique to one action. The shared remainder is
+# the blocked move, which is genuinely direction-blind.
+#
+# LIMIT, declared: in `vc33` the signature carried NO information — across 157
+# transitions the click position never changed it. Whether that is this
+# representation failing or those clicks genuinely doing nothing is unresolved,
+# and is not being guessed at.
+TAG_H_STATUS: Final = "declared — equality of the effect signature; see effect.py"

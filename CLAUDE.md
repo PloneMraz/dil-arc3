@@ -367,6 +367,58 @@ the lookup map. `GameAction.from_id(1)` works, which is why the classmethod
 exists. Found by running it — reading `_value_ = action_id` suggests the
 opposite.
 
+## The entity is the affordance — settled with Plone, 2026-09-22
+
+The loop holds an expectation about **what an action does**, not about what the
+next frame looks like. A collision is the action doing something other than
+expected.
+
+Three reasons it was chosen over "the whole frame" and "the cell/region":
+
+1. It matches what ARC-AGI-3 actually is — discovering the control scheme.
+2. It matches RHAE: winning a level in few actions means learning the mechanics
+   fast, which is exactly accruing confidence per affordance.
+3. **It settles emission without breaking the four roles.** The model predicts
+   an action's *effect* — it supplies the **expectation**, not the **choice**.
+   The self picks which expectation is worth testing. The model still emits
+   nothing. Exploration stops being an epsilon-greedy bolt-on and becomes a
+   consequence of the mechanism.
+
+It required **no change to the loop ring**: `T4`'s context resolver is already
+DECIDE@IMPL and pluggable, so the entity id becomes the affordance, and `T5`'s
+persistence rule then accrues a window of observed effects per affordance with
+confidence ramping over recurrence.
+
+### Tag H, declared and measured
+
+Fit is equality of the **effect signature** in `src/arc3/effect.py`: a
+translation-invariant description of what changed, so the same control used in
+two places reads as the same event. A literal cell diff would have made every
+use of a control look unrelated and the agent could never have learned its own
+controls.
+
+Measured on **316 real transitions**, not asserted:
+
+- In `ls20` the signature **recovers the control scheme unaided** — values 9 and
+  12 displace `(-5,0)` under ACTION1, `(+5,0)` under ACTION2, `(0,-5)` under
+  ACTION3, `(0,+5)` under ACTION4, with 29–33 consistent observations each.
+- One filter carries this. A displacement is claimed only when a value vanishes
+  from as many cells as it appears in — a **rigid translation conserves cell
+  count**, a spreading trail does not. Without it, one noisy value shattered the
+  signature: 33 distinct signatures instead of 10, 8–11 per action instead of
+  2–4, at the same 79% discrimination.
+- A blocked move gives the same signature whichever direction was tried. Not a
+  defect — walking into a wall is genuinely direction-blind.
+- **Negative result, declared:** in `vc33` the signature carried no information.
+  Across 157 transitions the click position never changed it. Whether the
+  representation is failing there or those clicks genuinely do nothing is **not
+  established**, and is not being guessed at.
+
+Variants that scored worse are recorded rather than discarded: dropping the
+transition counts and keeping only displacements gave a tidier 5 signatures for
+`ls20` but went blind on any game whose effect is a colour change rather than a
+movement, which is the `vc33` case.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are
