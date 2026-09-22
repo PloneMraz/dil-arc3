@@ -106,7 +106,29 @@ def game_transducer(signal: Signal) -> tuple[str, object]:
     return (EFFECT_INFO_TYPE, signal.raw_payload)
 
 
-def observe(prev: Frame, move: Move, now: Frame, effect: Effect, t: int) -> HostCycleInput:
+def effect_from_value(value: object) -> Effect:
+    """Rebuild an Effect from the plain data `effect_value` produced."""
+    if not isinstance(value, dict):
+        raise IllegalMove(f"not an effect: {value!r}")
+    return Effect(
+        cells_changed=int(value["cellsChanged"]),
+        transitions=tuple(tuple(t) for t in value["transitions"]),  # type: ignore[misc]
+        displacements=tuple(tuple(d) for d in value["displacements"]),  # type: ignore[misc]
+        depth_delta=int(value["depthDelta"]),
+        levels_delta=int(value["levelsDelta"]),
+        state_from=str(value["stateFrom"]),
+        state_to=str(value["stateTo"]),
+    )
+
+
+def observe(
+    prev: Frame,
+    move: Move,
+    now: Frame,
+    effect: Effect,
+    t: int,
+    context: str = "",
+) -> HostCycleInput:
     """One cycle's input: what the move was, and what the region did about it.
 
     `prev` is not sent inward. It is taken as an argument because the effect is a
@@ -135,6 +157,10 @@ def observe(prev: Frame, move: Move, now: Frame, effect: Effect, t: int) -> Host
                     "effect": effect_value(effect),
                     "game": now.game_id,
                     "affords": list(now.available_actions),
+                    # The situation the move was made FROM, named by the model.
+                    # It travels with the observation so the expectation can be
+                    # conditioned on it without the grid entering the loop.
+                    "context": context,
                 },
                 t=t,
             ),

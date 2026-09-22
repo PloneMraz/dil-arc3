@@ -563,6 +563,80 @@ the policy round-robins. That is a systematic sweep, not learning-driven
 behaviour, and it is the declared limit showing up in the numbers: the loop
 knows what its controls do and does not know where anything is.
 
+## The model — the thinking organ
+
+`src/arc3/model.py`, plugged into T5's `PredictRule` seam (declared deviation
+**#3**, same additive-and-defaulted shape as the other two; dil-core's
+persistence stays the default). The model supplies the **expectation** and
+nothing else: it never sees the afforded set and never reaches the emission, so
+it cannot choose. The model thinks, the self acts.
+
+### Why it is not a downloaded network
+
+Three constraints, each on its own sufficient:
+
+- The scored games are **unseen**, and their mechanics are the thing to be
+  discovered. Weights trained on other games predict the wrong world.
+- Kaggle's evaluation session has **no network**.
+- **INV-5 forbids the alternative outright**: "refeeding the whole game history
+  into a context window each step is a load, not an accrual". A large model
+  re-reading its own history every step is exactly what the invariant names.
+
+What is left, and what the protocol actually asks for, is a predictor that
+**accrues within the episode**. It starts knowing nothing about the game it is
+in.
+
+### What it conditions on
+
+Persistence predicts that a control does what it did last time; measured, that
+is right 76% of the time in `ls20`. The residual is position — whether a move is
+blocked depends on what is in the way. So the context is **what lies where the
+move would land**: the values of the cells the mover would arrive on, as a
+multiset, so the same obstruction met at two places reads as one situation.
+
+The mover and each action's displacement are **learned from the agent's own
+effects**, not configured. On real `ls20` frames the model recovered
+`action:1 → (-5,0)`, `action:2 → (+5,0)`, `action:3 → (0,-5)`, `action:4 →
+(0,+5)` and a mover of value 9 — the control scheme, from nothing.
+
+### Measured, with the two gains separated
+
+The model changed **two** things at once — majority vote over accrued evidence
+instead of most-recent, and context conditioning. Reporting one number would
+credit context with wins that majority alone produces.
+
+| on 316 real transitions | `ls20` | `vc33` |
+|---|---|---|
+| most-recent (dil-core persistence) | 76% | 41% |
+| majority, no context | 76% (**+0**) | **69%** (+28) |
+| majority + context (the model) | **94%** (+18) | 69% (**+0**) |
+
+**Two different mechanisms, each carrying one game.** In `ls20` the whole gain
+is context; in `vc33` the whole gain is majority, because no mover is learnable
+there — `vc33` produced no rigid displacement at all, so its context was empty
+in every one of 157 cycles.
+
+Live, 80 cycles each, scars sourced to an affordance fell from **4 → 2**
+(`ls20`) and **45 → 23** (`vc33`).
+
+### A defect the tests found, which the real frames had hidden
+
+The background collected displacement votes it had not earned: when a thing
+steps into empty space, the hole it leaves steps the other way, so the
+background mirrors every move and can tie with — or beat — the thing that
+actually moved. On real frames the rigidity filter already excluded it, so the
+live numbers never showed it; a clean two-value frame exposed it immediately.
+The model now votes for a background separately and excludes it, and keeps
+displacement votes keyed by value so the mirrored vote cannot outrank the real
+one. **The measured numbers are unchanged by the fix** — it buys robustness, not
+score.
+
+### What it does not do
+
+Neither game completed a level. The model improves **prediction**, not
+**winning**. Knowing what a control does, and knowing it 94% of the time, is
+still not knowing where to go.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are

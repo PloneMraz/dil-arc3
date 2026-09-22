@@ -61,7 +61,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "delivered",
+        "_model", "_context", "delivered",
     )
 
     def __init__(
@@ -69,7 +69,14 @@ class Arc3Source:
         env: Any,
         game_action_cls: Any,
         action_budget: int = DEFAULT_ACTION_BUDGET,
+        model: Any = None,
     ) -> None:
+        # The thinking organ, if one is declared. The body does not think with
+        # it — it only asks it to NAME the situation a move is made from, and
+        # carries that name inward with the observation. The expectation itself
+        # is formed inside the loop, at T5.
+        self._model = model
+        self._context = ""
         self._env = env
         self._ga = game_action_cls
         self._frame: Frame | None = None
@@ -111,6 +118,7 @@ class Arc3Source:
             self._frame,
             diff(self._prev, self._frame),
             t=self._t,
+            context=self._context,
         )
         self._t += 1
         self._pending = None
@@ -158,6 +166,13 @@ class Arc3Source:
         if raw is None:
             raise StepFailed(f"the engine returned nothing for {move}")
 
+        # Name the situation BEFORE the move lands, off the frame it was made
+        # from. Naming it afterwards would name the consequence.
+        self._context = (
+            self._model.context(self._frame, f"action:{move.action_id}")
+            if self._model is not None
+            else ""
+        )
         self._prev = self._frame
         self._frame = read_frame(raw)
         self._pending = move
@@ -198,9 +213,12 @@ def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
 
 
 def create_source(
-    env: Any, game_action_cls: Any, action_budget: int = DEFAULT_ACTION_BUDGET
+    env: Any,
+    game_action_cls: Any,
+    action_budget: int = DEFAULT_ACTION_BUDGET,
+    model: Any = None,
 ) -> Arc3Source:
-    return Arc3Source(env, game_action_cls, action_budget)
+    return Arc3Source(env, game_action_cls, action_budget, model)
 
 
 __all__ = [

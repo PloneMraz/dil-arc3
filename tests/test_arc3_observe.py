@@ -59,7 +59,10 @@ def test_the_cycle_gets_one_signal_on_the_game_channel():
 def test_the_payload_carries_the_effect_not_the_frame():
     """The unit is the affordance, so the grid must not be what travels."""
     payload = a_transition(Move(1)).signals[0].raw_payload
-    assert set(payload) == {"entity", "effect", "game", "affords"}
+    assert set(payload) == {"entity", "effect", "game", "affords", "context"}
+    # `context` is a NAME for the situation, produced by the model — never the
+    # grid itself. The grid does not enter the loop.
+    assert isinstance(payload["context"], str)
     assert "grids" not in payload
 
 

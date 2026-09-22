@@ -22,6 +22,7 @@ from .decisions import (
     TAG_B_STATUS,
     TAG_H_STATUS,
 )
+from .model import EffectModel, create_model, predict_rule
 from .observe import (
     EFFECT_INFO_TYPE,
     GAME_CHANNEL,
@@ -71,15 +72,18 @@ __all__ = [
     "Frame",
     "EFFECT_INFO_TYPE",
     "Effect",
+    "EffectModel",
     "FrameViolation",
     "Grid",
     "IllegalMove",
     "Move",
     "affordance_key",
     "check_afforded",
+    "create_model",
     "diff",
     "game_transducer",
     "observe",
+    "predict_rule",
     "read_frame",
     "to_engine",
 ]
