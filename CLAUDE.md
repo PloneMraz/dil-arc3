@@ -419,6 +419,56 @@ transition counts and keeping only displacements gave a tidier 5 signatures for
 `ls20` but went blind on any game whose effect is a colour change rather than a
 movement, which is the `vc33` case.
 
+## The bridge, and what running the real loop found
+
+`src/arc3/observe.py` turns "I made move M and the region returned frame F" into
+the `HostCycleInput` the cycle driver takes. It needed **no custom resolver**:
+T4's declared default reads `content["value"]["entity"]`, so the transducer just
+has to put the affordance there.
+
+Two declarations it makes:
+
+- **One affordance per action id.** ACTION6 carries `(x, y)`; treating each
+  coordinate as its own affordance would create 4096 entities that each recur
+  once, and nothing would accrue. Coordinates are context, not identity.
+  Bucketing them would be tidier, but no measurement backs any particular
+  bucketing, and §12 exists to stop that. Declared cost: `action:6`'s
+  expectation cannot stabilise.
+- **The agent authors moves, never frames.** T2 sees one self-written change —
+  the move, observed back — and every frame change is environment-pushed. This
+  is the architectural line stated in code, and it makes each affordance an
+  Other under T6.
+
+### Run on 159 real ls20 cycles
+
+The loop runs end to end. All four affordances reached confidence 1.00 with
+36–42 observations each. But **resistance never fell**: 93, 132, 129, 127 scars
+per 40-cycle block.
+
+The cause is measured, not guessed. **444 of the 481 scars were absences.** T7
+registers an expected entity that did not return as a negative PredErr — but an
+affordance is not a source that returns on its own. It returns only when the
+agent uses it, and the agent uses one per cycle. So once N affordances are known,
+N−1 absences are recorded every cycle, for ever.
+
+`vc33` is the control that proves it: one affordance, **0 absences**, and the
+scar rate was 0.58/cycle against a measured persistence ceiling of 42% — a
+58% miss rate, matching exactly. **The mechanism is sound; the mapping is what
+floods it.**
+
+This is not patched around. Disabling T7 for affordance entities would be a
+change to the skeleton, and it is Plone's call. Pinned by
+`tests/test_arc3_observe.py::test_unexercised_affordances_register_as_absences`
+so it cannot quietly stop being true.
+
+### The other declared limit
+
+Under the affordance reading the loop is handed **no coordinates**. It learns
+what its controls do; it does not learn where anything is. Knowing the control
+scheme is not the same as knowing how to win a level. In `ls20` the persistence
+ceiling per affordance is 66–86%, so the residual error is largely the cases
+where the effect depends on position — exactly the information withheld.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are

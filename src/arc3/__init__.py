@@ -22,6 +22,14 @@ from .decisions import (
     TAG_B_STATUS,
     TAG_H_STATUS,
 )
+from .observe import (
+    EFFECT_INFO_TYPE,
+    GAME_CHANNEL,
+    SELF_MOVE_CHANGE,
+    affordance_key,
+    game_transducer,
+    observe,
+)
 from .action import (
     COMPLEX_ACTION,
     RESET,
@@ -31,6 +39,7 @@ from .action import (
     check_afforded,
     to_engine,
 )
+from .effect import Effect, diff
 from .frame import (
     LIVE_STATES,
     TERMINAL_STATES,
@@ -49,20 +58,28 @@ __all__ = [
     "COMPLEX_ACTION_COORD_MIN",
     "FRAME_IS_A_STACK",
     "GRID_COLS",
+    "GAME_CHANNEL",
     "GRID_ROWS",
     "LIVE_STATES",
     "RESET",
     "SIGNAL_PAYLOAD_REPR",
+    "SELF_MOVE_CHANGE",
     "SIMPLE_ACTIONS",
     "TAG_B_STATUS",
     "TAG_H_STATUS",
     "TERMINAL_STATES",
     "Frame",
+    "EFFECT_INFO_TYPE",
+    "Effect",
     "FrameViolation",
     "Grid",
     "IllegalMove",
     "Move",
+    "affordance_key",
     "check_afforded",
+    "diff",
+    "game_transducer",
+    "observe",
     "read_frame",
     "to_engine",
 ]
