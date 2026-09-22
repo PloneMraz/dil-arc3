@@ -224,34 +224,38 @@ Three traps, each of which would have cost a day at the deadline:
    has 3.13 and 3.14. Nothing has broken yet, but the local run and the graded
    run are not on the same interpreter.
 
-The one-row `submission.parquet` (`game_id=1`, `score=1`) appears to be normal
-rather than a fault: a competitor reporting a different problem quoted a file of
-"approximately 2.65 KB", and ours is 2,648 bytes. Two forum replies describe the
-grading as re-running the agent server-side against hidden games — "a Kaggle
-error in this competition means that your submission runs into an error before
-starting the games", and the generic error "usually means your agent crashed on
-one of the hidden test games". That would explain a local run that emits one row.
-Community reports, not an organiser's statement.
+**The submission scored 0.02, and that number matters more than its size.**
+Grading runs in two phases. Phase A is the commit run, which emits a dummy
+parquet — "1 row: row_id=1_0, game_id=1, score=1", exactly what appeared in our
+kernel output, so it is not a fault. Phase B is the real evaluation: a sidecar
+resolves `gateway:8001` and the agent plays the hidden games server-side.
 
-## Scoring, from a top-3 competitor on the forum — useful, and partly suspect
+Several competitors report submissions that finish in ~30 seconds, never reach
+Phase B, and score 0.00 — including one who submitted an exact copy of the
+official random-agent sample. Ours scored 0.02, so Phase B ran and the agent
+played. The pipeline clears the step that is currently blocking other people.
 
-CPMP, ranked 3rd in the competition, on topic 697944:
+**Baseline calibration: a uniformly random agent scores 0.02.** That is the floor
+any DIL agent has to beat for Accuracy to mean anything.
 
-> There are no rerun at end of competition. Your final score is already computed
-> but will stay hidden till end of competition.
->
-> There are 100 games in test data. 55 are used to compute the score shown on
-> public LB during the competition. 55 are used to compute a hidden score that
-> will be used for final ranking if you select that submission.
+## How scoring works — settled
 
-**55 + 55 = 110 against a stated 100**, so at least one of those numbers is wrong
-or the two sets overlap. Treat the counts as unconfirmed.
+**110 environments, not 100.** Kaggle staff (inversion): "Submissions run on all
+110 tasks." A top-3 competitor gave the split — 55 for the public leaderboard, 55
+for the hidden score that decides the final ranking — and separately wrote "100
+games in test data", which does not sum. 55 + 55 = 110 and the staff figure is
+110, so the 100 was the slip.
 
-What is consistent with the published rules, and matters more: **submissions are
-graded when made, not re-run at the end.** Combined with one submission per day
-and two selectable final submissions, that means a submission is a commitment —
-there is no submitting something rough on 2 November and improving it after. It
-is also the strongest argument for having verified the pipeline six weeks early.
+**Submissions are graded when made, not re-run at the end.** "There are no rerun
+at end of competition. Your final score is already computed but will stay hidden
+till end of competition." With one submission a day and two selectable finals, a
+submission is a commitment: there is no submitting something rough on 2 November
+and improving on it afterwards. This is the strongest argument for having tested
+the pipeline six weeks early.
+
+Environment seeds are stable per task (Greg Kamradt), with one noted exception —
+the black-noise animation in `lf52-271a04aa`. Whether seeds are identical across
+two scored runs of the same notebook was asked and never answered.
 
 ## Two bugs in the starter kit on Windows
 
@@ -266,15 +270,32 @@ worth a pull request to `arcprize/ARC-AGI-3-Kaggle-Starter`:
    `UnicodeEncodeError`. Worked around with `PYTHONIOENCODING=utf-8` rather than
    by editing their file.
 
+## What the Paper Track forum gives
+
+- **A 1,500-word limit is referred to as a known constraint** by two competitors
+  ("does the bibliography fit within the 1500-word limit?", "does the 1,500-word
+  limit also apply if you upload a PDF through the Public Project Link instead of
+  writing it in the Kaggle Writeup"). No host ever replied to either. If it holds,
+  it reshapes the paper completely: 1,500 words against a 55 KB specification.
+  **Confirm this on the competition's own Overview page before writing anything.**
+- There is apparently a **Public Project Link** through which a PDF can be
+  uploaded, as an alternative to writing the Writeup inline.
+- **A unified paper covering both ARC-AGI-2 and ARC-AGI-3 is allowed** — Greg
+  Kamradt, President of the ARC Prize Foundation: "A unified paper is allowed —
+  it will be judged according to the rubric as normal." Irrelevant here, since
+  only ARC-AGI-3 is entered, but it fixes that the rubric is what judges papers.
+- For what a winning paper looks like, Kamradt points to the previous winners at
+  arcprize.org/competitions/2025 and /2024. Worth reading before drafting.
+
 ## Still unverified
 
 - **How the Paper Track's 4.5 threshold is computed** — a mean across the six
-  criteria, or something else. It is not on the paper page, and it decides
-  whether a low Accuracy forecloses the $375K pool. Only the organisers can
-  answer this.
+  criteria, or something else. Not on the paper page, not in the forum, and it
+  decides whether a low Accuracy forecloses the $375K pool.
 - Whether the three Top Paper prizes use that same threshold.
-- **The number of games in the private evaluation set.** A community repository
-  mentions 25 public games; unverified.
+- **Whether the OSAID model requirement (§2.5.a) binds a submission that is not
+  competing for a leaderboard prize**, given the next paragraph exempts pretrained
+  models with an incompatible licence. Nothing in either forum addresses it.
 - The two official sources disagree on the Milestone 1 split: arcprize.org says
   $25K/$10K/$2.5K, Kaggle says $25,000/$7,500/$5,000. Both total $37,500. Which
   is authoritative is unknown; it does not affect this plan, but it is a reason
