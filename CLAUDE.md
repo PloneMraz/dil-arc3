@@ -123,10 +123,14 @@ equations."
 
 ## Dates — the entry deadline is the one that bites
 
-- **2026-10-26 — ENTRY DEADLINE.** The competition rules must be accepted before
-  this date or there is no way to compete at all, and the paper loses the
-  submission it has to be linked to. Accepting them is a binding agreement on
-  Plone's account: he does it, not the agent.
+- **2026-10-26 — entry deadline. DONE.** Plone accepted the rules on 2026-09-22
+  and the account shows a Submit button, so the entry that the paper must link to
+  exists. Nothing about the competition is gated on a date before 2026-11-02 any
+  more.
+- 2026-09-30 — Milestone 2. Optional, skipped deliberately: it is judged on
+  leaderboard score at that date, there is no running agent, and RHAE squares the
+  action ratio, so a barely-working agent would score near zero. Missing it costs
+  nothing downstream.
 - 2026-10-26 — team merger deadline.
 - 2026-11-02 — final submission.
 - 2026-11-08 — paper.
