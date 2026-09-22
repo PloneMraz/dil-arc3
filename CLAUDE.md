@@ -126,20 +126,25 @@ equations."
 - **2026-10-26 — ARC-AGI-3 entry deadline. DONE.** Plone accepted those rules on
   2026-09-22; `kaggle competitions list` reports `userHasEntered True` for
   arc-prize-2026-arc-agi-3, so the submission the paper must link to can exist.
-- **THE PAPER TRACK IS A SEPARATE KAGGLE COMPETITION AND IS NOT ENTERED.**
-  `arc-prize-2026-paper-track` reports `userHasEntered False`, and downloading
-  even its 150-byte NOTE.md returns 403. Entering ARC-AGI-3 does not enter it.
-  Its rules have to be accepted on their own, and until that happens the track
-  this whole plan aims at is shut. Plone accepts them; the agent does not.
+- **Paper Track entry. DONE**, 2026-09-22. It is a separate Kaggle competition,
+  `arc-prize-2026-paper-track`, with its own rules: entering ARC-AGI-3 did not
+  enter it, and before Plone accepted them the listing reported
+  `userHasEntered False` and even its 150-byte NOTE.md returned 403. Worth
+  remembering that nothing in the ARC-AGI-3 work would have revealed this.
+- **The paper is submitted as a Kaggle Writeup**, not as an uploaded file. The
+  competition page says "You haven't created a writeup yet." A Writeup is the
+  Kaggle object that links to the notebooks, datasets and models behind it —
+  which is almost certainly the mechanism behind the rule that a paper "must be
+  linked to a Kaggle code submission". None exists yet.
 - 2026-09-30 — Milestone 2. Optional, skipped deliberately: it is judged on
   leaderboard score at that date, there is no running agent, and RHAE squares the
   action ratio, so a barely-working agent would score near zero. Missing it costs
   nothing downstream.
 - 2026-10-26 — team merger deadline.
 - 2026-11-02 — final submission (ARC-AGI-3).
-- **2026-11-09 — paper.** Kaggle's competition listing gives this deadline;
-  arcprize.org says 2026-11-08. A third disagreement between the two official
-  sources, so work to the earlier date.
+- **2026-11-09 23:59 UTC — paper.** Settled: the competition page states
+  "All submissions are due by Nov 10, 2026 at 6:59 AM GMT+7", which is that
+  instant. arcprize.org's 2026-11-08 is the one that is wrong.
 - 2026-12-04 — results.
 
 Field sizes, read from the Kaggle listing on 2026-09-22: ARC-AGI-3 has **3,230
@@ -189,6 +194,52 @@ All deadlines are 23:59 UTC.
   that does not limit commercial use (§3.6.c). MIT-0 is OSI-approved.
 - Entry itself constitutes acceptance of the rules, which are a binding agreement
   under California law (§2.9). Plone accepts them; the agent does not.
+
+## The submission pipeline, verified end to end on 2026-09-22
+
+Run against the starter kit's baseline random agent, well before the deadline,
+because a code competition allows **one submission per day**: a pipeline fault
+found on 1 November leaves one attempt to fix it.
+
+```
+kaggle kernels push -p notebooks/
+kaggle kernels status  <user>/<kernel>          # wait for COMPLETE
+kaggle competitions submit arc-prize-2026-arc-agi-3 \
+    -k <user>/<kernel> -v <version> -f submission.parquet -m "<message>"
+```
+
+What the run proved: the notebook executes on Kaggle with **internet disabled**,
+installing `arc-agi` from wheels the competition ships offline at
+`/kaggle/input/competitions/arc-prize-2026-arc-agi-3/arc_agi_3_wheels`, and emits
+`submission.parquet` with columns `row_id, game_id, end_of_game, score`.
+
+Three traps, each of which would have cost a day at the deadline:
+
+1. **Pushing a kernel is not submitting.** After a successful push and a COMPLETE
+   run, `competitions submissions` still said "No submissions found" and the
+   daily quota was untouched. The submit call is separate.
+2. **`submit` needs `-f` as well as `-k` and `-v`.** Without the output file name
+   it returns `400 Bad Request` with no explanation.
+3. **Kaggle runs Python 3.12**, and the starter kit asks for 3.12. This machine
+   has 3.13 and 3.14. Nothing has broken yet, but the local run and the graded
+   run are not on the same interpreter.
+
+Not understood yet: the emitted `submission.parquet` held **one row**
+(`game_id=1`, `score=1`), not one per game. Whether that is a validation phase or
+the real shape is unresolved — do not build on either reading.
+
+## Two bugs in the starter kit on Windows
+
+Both are upstream's, both block a Windows user at the first step, and both are
+worth a pull request to `arcprize/ARC-AGI-3-Kaggle-Starter`:
+
+1. `scripts/slim_framework.py` calls `INIT.write_text(SLIM)` with no encoding, so
+   on Windows it writes cp1252. The text contains an em dash, which lands as byte
+   0x97, and Python then refuses to read the generated `.py` as UTF-8. Fixed
+   locally with `encoding="utf-8"`.
+2. `scripts/play_local.py` prints `→` to a cp1252 stdout and raises
+   `UnicodeEncodeError`. Worked around with `PYTHONIOENCODING=utf-8` rather than
+   by editing their file.
 
 ## Still unverified
 
