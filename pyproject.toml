@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dil-arc3"
+version = "0.0.1"
+description = "An ARC-AGI-3 agent whose whole operation is the DIL protocol"
+requires-python = ">=3.12"
+license = "MIT-0"
+license-files = ["LICENSE"]
+authors = [{ name = "Plone Mraz" }]
+
+# No runtime dependencies, and that is a requirement rather than a boast:
+# Kaggle disables the network on every accelerated session, so anything the
+# agent needs at evaluation time has to already be in the image or shipped
+# beside it. The reference implementation holds the same line.
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
