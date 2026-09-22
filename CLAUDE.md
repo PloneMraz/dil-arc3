@@ -287,12 +287,28 @@ worth a pull request to `arcprize/ARC-AGI-3-Kaggle-Starter`:
 - For what a winning paper looks like, Kamradt points to the previous winners at
   arcprize.org/competitions/2025 and /2024. Worth reading before drafting.
 
-## Still unverified
+## Which prize this aims at
 
-- **How the Paper Track's 4.5 threshold is computed** — a mean across the six
-  criteria, or something else. Not on the paper page, not in the forum, and it
-  decides whether a low Accuracy forecloses the $375K pool.
-- Whether the three Top Paper prizes use that same threshold.
+The Paper Track pays through two mechanisms, and they are not the same shape.
+From arcprize.org's paper page, read directly:
+
+- **Top Paper — $50K / $20K / $5K.** Three prizes, awarded by **rank**. No
+  threshold is stated for them.
+- **Outstanding Papers Pool — $375K**, "awarded to submissions scoring above
+  4.5", and "multiple parties may win from this pool". Gated by a **threshold**.
+
+If the 4.5 is a mean of the six criteria — the natural reading, and the one a
+search summary asserts, though the page itself leaves the aggregation unstated
+and one cited source was a third-party blog — then the pool needs better than
+27 of 30 points. An Accuracy of 0 costs 5 and makes it unreachable; an Accuracy
+of 2 requires a perfect 5 on all five remaining criteria.
+
+**So aim at the Top Paper prizes.** They are ranked, not gated, against a field
+of 198. Accuracy then contributes to a ranking rather than standing as a gate
+that forecloses everything, and the paper's quality is what decides the outcome.
+Treat the pool as upside, never as the plan.
+
+## Still unverified
 - **Whether the OSAID model requirement (§2.5.a) binds a submission that is not
   competing for a leaderboard prize**, given the next paragraph exempts pretrained
   models with an incompatible licence. Nothing in either forum addresses it.
