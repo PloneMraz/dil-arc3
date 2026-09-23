@@ -91,6 +91,39 @@ class T7Output:
 # The field parameter that scales the attention span (INV-7, down-channel).
 ATTENTION_GAIN: Final = "attentionGain"
 
+# How many expected entities stayed silent this cycle (INV-7, up-channel).
+SILENCE: Final = "silence"
+
+# Read-only names for the facts other layers report. Local string constants
+# rather than imports, so T7 takes no meaning-channel dependency on T4 or T6
+# (INV-3): the field is the down-channel and carries no such tie.
+_OTHER_COUNT: Final = "otherCount"
+_STRANGENESS: Final = "strangeness"
+
+
+def attention_width(params: dict[str, float]) -> float:
+    """How wide attention is, read off the field (DECIDE@IMPL, tunable).
+
+    ATTENTION IS A COMPOSITION, NOT A FORMULA IN ONE LAYER. An earlier version
+    had T6 compute `1/N` and contribute the answer, which made attention a lone
+    layer's constant. It is not: it is what the whole field holds. This reads the
+    facts each layer reported from its own vantage and composes them —
+
+        otherCount  (T6, accrued)  how many Others the loop is holding
+        strangeness (T4, context)  the share of arrivals that bound to no entity
+
+    — so attention narrows as the loop holds more and widens again when what
+    arrives stops being attributable. A strange situation earns a longer look; a
+    crowded familiar one does not. Both inputs are facts from context and
+    environment rather than tuning knobs, which is the point.
+
+    An empty field composes to 1, so a host that reports nothing keeps the
+    reference behaviour exactly.
+    """
+    others = params.get(_OTHER_COUNT, 0.0)
+    strangeness = params.get(_STRANGENESS, 0.0)
+    return (1.0 + strangeness) / max(1.0, others)
+
 
 @dataclass(slots=True)
 class _ExpectState:
@@ -164,7 +197,14 @@ class T7(BaseLayer):
         # The attention span in force this cycle: the declared span under the
         # field's gain (INV-7, read as read-only background; T7 never reaches up
         # into the field).
-        span = self._base_span * field.params.get(ATTENTION_GAIN, 1.0)
+        # The span in force this cycle: the declared span, narrowed or widened
+        # by what the field holds, and finally scaled by any explicit gain a host
+        # has set. INV-7 down-channel — read as background, never written.
+        span = (
+            self._base_span
+            * attention_width(field.params)
+            * field.params.get(ATTENTION_GAIN, 1.0)
+        )
 
         # Register absence for expected entities that did not return, naming
         # which entity fell silent and how many times it had been expected, so
@@ -187,6 +227,9 @@ class T7(BaseLayer):
             # comes, is registered as it always was.
             and self._tick - st.last_seen <= span
         )
+        # A FACT T7 can see: how much of what the loop was waiting for did not
+        # arrive. Reported, not interpreted.
+        contribute({SILENCE: float(len(absences))})
         return T7Output(absences=absences)
 
     def info_units(self, output: T7Output) -> Sequence[InfoUnit]:

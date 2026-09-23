@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
-from typing import Any
+from typing import Any, Final
 
 from collections.abc import Callable
 
@@ -52,6 +52,10 @@ def persistence(entity_id: str, window: HistoryWindow, observed: InfoUnit) -> In
     host that declares no model behaves exactly as the reference does.
     """
     return window[-1] if window else observed
+
+
+# Mean prediction error over this cycle's entities (INV-7, up-channel).
+SURPRISE: Final = "surprise"
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,6 +165,17 @@ class T5(BaseLayer):
                 T5Result(entity_id=entity_id, expectation=expectation, pred_err=pred_err)
             )
 
+        # A FACT T5 can see: how far the region fell from expectation, right
+        # now. Reported as it is; what follows from it is not T5's to say.
+        contribute(
+            {
+                SURPRISE: (
+                    sum(r.pred_err.delta for r in results) / len(results)
+                    if results
+                    else 0.0
+                )
+            }
+        )
         return T5Output(results=tuple(results))
 
     def info_units(self, output: T5Output) -> Sequence[InfoUnit]:

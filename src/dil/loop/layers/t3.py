@@ -11,7 +11,7 @@ Ported from dil-core against DIL protocol v0.3.2.
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field as dc_field
-from typing import Any
+from typing import Any, Final
 
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField, RefFrame, Signal
@@ -19,6 +19,9 @@ from ..types import InfoUnit, ModField, RefFrame, Signal
 # Maps a channel's raw signal into a typed value (DECIDE@IMPL, per channel).
 # Returns (info_type, value).
 ChannelTransducer = Callable[[Signal], tuple[str, Any]]
+
+# How many signals the region delivered this cycle (INV-7, up-channel).
+CHANNEL_ACTIVITY: Final = "channelActivity"
 
 
 def default_transducer(signal: Signal) -> tuple[str, Any]:
@@ -50,6 +53,10 @@ class T3(BaseLayer):
         emit: EmitFn,
         contribute: ContributeFn,
     ) -> T3Output:
+        # A FACT T3 can see and no other layer can: how much the region said this
+        # cycle. Not a policy number — T3 does not decide what follows from it.
+        contribute({CHANNEL_ACTIVITY: float(len(input.signals))})
+
         units: list[InfoUnit] = []
         for signal in input.signals:
             transduce = self._transducers.get(signal.source_id, default_transducer)

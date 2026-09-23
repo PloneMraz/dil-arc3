@@ -803,6 +803,58 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## What GLOB-MOD actually holds, read off a live run
+
+Attention is a composition now, not one layer's formula. Each layer contributes
+the fact it can see and no other layer can, at weight 1, and decides nothing
+about what follows: T3 `channelActivity`, T4 `strangeness`, T5 `surprise`, T6
+`otherCount`, T7 `silence`. T7 reads the width off the composition —
+`(1 + strangeness) / max(1, otherCount)` — and `RespondContext` now carries the
+field, so it can reach behaviour.
+
+Traced on `ls20`, 40 live cycles:
+
+```
+cyc channelAc strangene  surprise otherCoun   silence  ->width  ->span
+  1     1.000     0.000     0.000     1.000     0.000    1.000   4.000
+  2     1.000     0.000     0.000     2.000     0.000    0.500   2.000
+  4     1.000     0.000     0.000     3.000     1.000    0.333   1.333
+  6     1.000     0.000     0.000     4.000     1.000    0.250   1.000
+  8     1.000     0.000     0.000     5.000     1.000    0.200   0.800
+ 20     1.000     0.000     0.000     5.000     0.000    0.200   0.800
+ 40     1.000     0.000     0.000     5.000     0.000    0.200   0.800
+```
+
+**Two of the five facts are constants in this host, and the rest go flat after
+cycle 8.**
+
+- `channelActivity` is 1.000 for ever: the host sends exactly one signal per
+  cycle, so the number carries nothing.
+- `strangeness` is 0.000 for ever: T4's resolver always finds the entity,
+  because the host always knows which affordance it just used. There is no
+  entity novelty in this host to measure.
+- `otherCount` climbs 1 → 5 and then freezes: five affordances, all met by
+  cycle 8.
+- `surprise` and `silence` do move, and they are the only two that do.
+
+So the composition machinery is right and **the host is not feeding it anything
+that varies**. The field is legible now, and what it legibly says is that it has
+almost no context to compose from.
+
+### Where the missing context is
+
+`strangeness` measures **entity** novelty, and this host has none. The novelty
+that exists here is **context** novelty — is this landing-situation one the agent
+has met before? The model knows exactly that: it is whether `(entity, context)`
+is already a key in its table. That is an interpretation of context, which is
+what the field is missing, and it is one the model is already computing and
+throwing away.
+
+It cannot get in yet. The model lives behind T5's `PredictRule`, and a rule is
+not a layer: it receives `(entity, window, observed)` and has no `contribute`.
+Letting the model's reading of its own situation reach the field means widening
+that seam, which is a skeleton decision and is not taken here.
+
 ## Nothing reads the goal
 
 Traced through the code, the chain §9 describes — mismatch → memory → learning →

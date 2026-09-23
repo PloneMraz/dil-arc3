@@ -18,6 +18,9 @@ from ..types import InfoUnit, ModField
 # The positional "unknown entity" binding.
 STRANGER: Final = "STRANGER"
 
+# The share of arriving units that bound to STRANGER (INV-7, up-channel).
+STRANGENESS: Final = "strangeness"
+
 # Resolves which entity an InfoUnit concerns, or STRANGER (DECIDE@IMPL).
 ContextResolver = Callable[[InfoUnit], str]
 
@@ -66,12 +69,16 @@ class T4(BaseLayer):
         emit: EmitFn,
         contribute: ContributeFn,
     ) -> T4Output:
-        return T4Output(
-            bound=tuple(
-                BoundInfo(unit=unit, entity_id=self._resolve(unit))
-                for unit in input.units
-            )
+        bound = tuple(
+            BoundInfo(unit=unit, entity_id=self._resolve(unit))
+            for unit in input.units
         )
+        # A FACT T4 can see and no other layer can: how much of what arrived
+        # could not be attributed to a known entity. Context novelty, reported
+        # and not interpreted.
+        strangers = sum(1 for b in bound if b.entity_id == STRANGER)
+        contribute({STRANGENESS: strangers / len(bound) if bound else 0.0})
+        return T4Output(bound=bound)
 
     def info_units(self, output: T4Output) -> Sequence[InfoUnit]:
         return tuple(b.unit for b in output.bound)

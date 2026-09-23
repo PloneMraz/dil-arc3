@@ -41,27 +41,8 @@ class T6Output:
     others: tuple[OtherModel, ...] = dc_field(default_factory=tuple)
 
 
-# The field parameter T6 sets: how wide attention is, given how many Others the
-# loop is holding.
-ATTENTION_GAIN_PARAM: Final = "attentionGain"
-
-
-def attention_gain_for(n: int) -> float:
-    """Attention width for N Others (DECIDE@IMPL, tunable and NOT derived).
-
-    1/N: attending to four things is not attending to one thing four times over.
-    The SHAPE is what is argued for — the false-absence load a flat expectation
-    carries grows with N, so the width that answers it has to fall with N. The
-    constant itself has nothing behind it but a measurement on two games, and is
-    declared tunable for that reason.
-
-    T6 is the layer that holds this, because it is the layer that ACCRUES
-    Others. T8 had the job first and it did not work: T8 ranks the Others
-    PRESENT this cycle, so in a host where one entity returns per cycle it saw
-    N = 1 every time and the width never moved. Measured live: the gain sat at
-    1.0 for 80 cycles while four affordances were being held.
-    """
-    return 1.0 / max(1, n)
+# How many Others the loop is holding (INV-7, up-channel).
+OTHER_COUNT: Final = "otherCount"
 
 
 @dataclass(slots=True)
@@ -135,9 +116,14 @@ class T6(BaseLayer):
                 )
             )
 
-        # The width of attention, contributed upward into the field (INV-7).
-        # It blends with every other contribution and lands at N+1.
-        contribute({ATTENTION_GAIN_PARAM: attention_gain_for(len(self._state))})
+        # A FACT T6 can see and no other layer can: how many Others the loop is
+        # HOLDING — not how many happened to return this cycle, which is all T8
+        # could see and is why the width never moved when T8 had this job.
+        #
+        # It contributes the COUNT and not a width. A layer reports what it
+        # sees; a lone layer computing a policy number was the mistake this
+        # replaces: attention is a composition of what the whole field holds.
+        contribute({OTHER_COUNT: float(len(self._state))})
 
         return T6Output(others=tuple(others))
 
