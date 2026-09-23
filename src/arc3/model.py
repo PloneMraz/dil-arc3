@@ -183,8 +183,49 @@ def create_model(rows: int = 64, cols: int = 64) -> EffectModel:
     return EffectModel(rows=rows, cols=cols)
 
 
-def predict_rule(model: EffectModel):
-    """Adapt an `EffectModel` to T5's `PredictRule`.
+def situation_key(unit: InfoUnit) -> str:
+    """The situation an observation names, for the recollection to key on.
+
+    The same context the model conditions on, so the record answers about the
+    same thing the model is predicting about.
+    """
+    content = unit.content
+    if isinstance(content, dict):
+        value = content.get("value")
+        if isinstance(value, dict):
+            context = value.get("context")
+            if isinstance(context, str):
+                return context
+    return NO_CONTEXT
+
+
+def predict_rule(
+    model: EffectModel,
+    recollection: Any = None,
+    watch: Any = None,
+):
+    """Adapt an `EffectModel` to T5's `PredictRule`, optionally with the record.
+
+    TWO SOURCES OF EXPECTATION, AND NO ARBITER BETWEEN THEM. The model says what
+    it has learned; the record says what the region actually did, last time, in
+    this same situation. They can disagree, and §6.4 already settles what to do
+    about that: "the opposition is not resolved by an internal rule but collided
+    against the region". So nothing here picks a winner on the merits. Where the
+    record has something to say, it is what gets TESTED — and the region settles
+    it. Where the record is silent, which is everywhere it has never collided,
+    the model rules.
+
+    That asymmetry is earned, not arbitrary. A record exists for a situation
+    only because the region once contradicted the agent there. Testing the
+    record again is testing exactly the point where the agent has already been
+    wrong once, which is the point worth testing. And the record is the harder
+    source to re-author: §8.4's B-source rule prefers "a source that says no in
+    a way the agent cannot re-interpret away", and an immutable line in an
+    append-only log is precisely that.
+
+    Whichever source answers, the loser is corrected by the outcome: the model
+    accrues the region's actual return either way, and a record that turns out
+    wrong produces a fresh scar that supersedes it next time.
 
     Order is load-bearing and is INV-8 in code: the rule **predicts first, from
     the context alone, and accrues the observed effect only afterwards**. Reading
@@ -203,23 +244,55 @@ def predict_rule(model: EffectModel):
         value = observed.content["value"]
         context = value.get("context", NO_CONTEXT)
 
-        # 1. Predict — from the context, never from the effect being predicted.
-        predicted_effect = model.predict(entity_id, context)
-
-        # 2. Then accrue what actually happened.
-        model.observe(entity_id, context, effect_from_value(value["effect"]))
-
-        if predicted_effect is None:
-            # First sighting of this affordance: dil-core predicts the
-            # observation itself, and there is nothing better to say.
-            return observed
-
-        content = {
-            **observed.content,
-            "value": {**value, "effect": effect_value(predicted_effect)},
-        }
-        return InfoUnit(
-            content=content, ref_frame=observed.ref_frame, t=observed.t
+        # 1. Both sources answer, from the context alone — never from the effect
+        #    being predicted, which is the answer (INV-8).
+        from_model = model.predict(entity_id, context)
+        from_record = (
+            recollection.recall(entity_id, observed)
+            if recollection is not None
+            else None
         )
 
+        # 2. Then accrue what actually happened. The model learns from the
+        #    region whichever source was put up for testing.
+        model.observe(entity_id, context, effect_from_value(value["effect"]))
+
+        # 3. No arbiter (§6.4). The record, where it speaks, is what is tested.
+        recalled_effect = _effect_of(from_record)
+        if watch is not None:
+            # An observability hook, off by default. It exists so a claim about
+            # which source was right can be CHECKED on the real code path rather
+            # than on a re-implementation of it. It reads; it never decides.
+            watch(
+                entity_id,
+                context,
+                effect_value(from_model) if from_model is not None else None,
+                recalled_effect,
+                value["effect"],
+            )
+        chosen = recalled_effect if recalled_effect is not None else (
+            effect_value(from_model) if from_model is not None else None
+        )
+        if chosen is None:
+            # First sighting of this affordance, and the record is silent:
+            # predict the observation itself, as dil-core does.
+            return observed
+
+        # Only the effect is replaced, so T5's content comparison reduces to the
+        # effect — which is what tag H declares fit to be. A recalled unit is
+        # spliced the same way: its own `affords` and `game` are from another
+        # cycle and would make an identical effect read as a mismatch.
+        content = {**observed.content, "value": {**value, "effect": chosen}}
+        return InfoUnit(content=content, ref_frame=observed.ref_frame, t=observed.t)
+
     return rule
+
+
+def _effect_of(unit: InfoUnit | None) -> dict[str, object] | None:
+    """The effect payload inside a recalled unit, if it carries one."""
+    if unit is None or not isinstance(unit.content, dict):
+        return None
+    value = unit.content.get("value")
+    if isinstance(value, dict) and isinstance(value.get("effect"), dict):
+        return value["effect"]
+    return None

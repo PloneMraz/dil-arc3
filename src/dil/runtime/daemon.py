@@ -75,7 +75,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
-        "_respond",
+        "_respond", "_recollection",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -98,7 +98,9 @@ class Daemon:
         commit_every: int | None = None,
         recover_from: str | None = None,
         respond: RespondPolicy | None = None,
+        recollection: Any = None,
     ) -> None:
+        self._recollection = recollection
         # The host's declared terminal-response policy; None keeps dil-core's
         # marker. See cycle.py's RespondContext for why the seam exists.
         self._respond = respond
@@ -225,6 +227,7 @@ class Daemon:
             now=self._now,
             resume=resume,
             respond=self._respond,
+            recollection=self._recollection,
         )
         self._running = True
 

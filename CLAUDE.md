@@ -685,7 +685,59 @@ four affordances), so the gain settles at 0.2:
 **225 → 3 at a declared span of 4**, with C3 still alive, and the real-resistance
 column still untouched.
 
-### The fit floor, and what bounds its reach
+### The resistance-retrieval channel, and a negative result
+
+§10 requires a private store to carry the resistance-retrieval channel. It now
+exists here: `dil/loop/recollection.py` reads `[event]` and answers with an
+expectation — what the region gave, last time, in this same situation — and
+nothing else. `scar → running` fires for every scar it returns, so the store is
+genuinely being read for the first time.
+
+Two sources of expectation then exist: the model, which says what it has
+learned, and the record, which says what the region actually did. §6.4 already
+settles what to do when two internal sources disagree — "the opposition is not
+resolved by an internal rule but collided against the region" — so nothing
+arbitrates on the merits: where the record speaks, it is what gets TESTED.
+
+**Measured, 200 cycles per game. It does not work.**
+
+| | `ls20` OFF | `ls20` ON | `vc33` OFF | `vc33` ON |
+|---|---|---|---|---|
+| prediction errors | 9 | **16** | 58 | **113** |
+
+And the contests themselves, across both games — **66 disagreements**:
+
+| the region sided with | count |
+|---|---|
+| the model | 62 |
+| the record | **1** |
+| neither | 3 |
+
+The record lost 62 of 66 and roughly doubled the error rate in both games.
+
+### Why, and it is structural rather than a bug
+
+**§9 admits only scars to the store.** "The self accrues from scars";
+uncontested information is deliberately kept out. So the store holds only the
+occasions on which the agent was *wrong*. A predictor built from that answers
+with the exceptional case by construction, while the model answers with the
+distribution. In `vc33` the record even disagreed with the *outcome* 54 times
+while agreeing with the model — it was reciting old exceptions.
+
+This is the quantitative form of the worry raised before the design was chosen:
+if only scars enter the store, **the better the agent gets, the less its store
+holds**. In `ls20` the model is right 94% of the time, so 94% of its experience
+is never recorded, and what is recorded is the residue.
+
+### What is kept, and what is declared
+
+The channel stays, wired and tested, and **off by default** (`recollection=None`
+keeps the reference behaviour exactly). It is not recommended as a *predictor*
+on this evidence. What it might still be good for — a signal that a situation is
+unstable, rather than a claim about what will happen — is not settled, and is
+not being guessed at here.
+
+## The fit floor, and what bounds its reach
 
 Ported from dil-core: the field can raise the floor a situation's fit must clear
 before the loop builds forward from it — attention over *situations*, under the

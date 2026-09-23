@@ -204,7 +204,7 @@ class Cycle:
 
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
-        "_cycle", "_last_emission", "_cycle_t", "_respond",
+        "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
     )
 
     def __init__(
@@ -217,7 +217,15 @@ class Cycle:
         now: Callable[[], int] | None = None,
         resume: DriverState | None = None,
         respond: RespondPolicy | None = None,
+        recollection: Any = None,
     ) -> None:
+        # The host's resistance-retrieval channel (§10), if one is declared. The
+        # driver does not call it — T5 does, through its declared PredictRule.
+        # The driver only asks which scars it returned, so their return can be
+        # recorded in `[event]` (§9: every transition along a provenance edge is
+        # recorded as it occurs). Without this, `scar → running` could never
+        # fire and the store would stay write-only.
+        self._recollection = recollection
         # DEVIATION from dil-core, declared. The content of the terminal
         # emission is host-declared, exactly as T3's transducers and T4's
         # resolver already are. dil-core hard-codes a marker because its
@@ -532,6 +540,22 @@ class Cycle:
                 )
             )
 
+        # ── Scars that returned as material (§9, `scar → running`) ──
+        # A recalled scar is "data in use"; §9 is explicit that a scar is not a
+        # resting place. The datum key is the recalled scar's own (`cycle-N`),
+        # not this cycle's: it is that datum which moved, not this one.
+        if self._recollection is not None:
+            for recalled in self._recollection.drain():
+                self._events.append(
+                    record_provenance(
+                        f"cycle-{recalled.cycle}",
+                        self._cycle,
+                        "scar",
+                        "running",
+                        self._cycle_t,
+                    )
+                )
+
         # ── Forward-building (§6.2): build situations, cast outcomes ──
         # The datum takes the running→simulated→projected road WHEN the store
         # affords material — an entity whose expectation has accrued confidence.
@@ -734,6 +758,7 @@ def create_cycle(
     now: Callable[[], int] | None = None,
     resume: DriverState | None = None,
     respond: RespondPolicy | None = None,
+    recollection: Any = None,
 ) -> Cycle:
     return Cycle(
         layers=layers,
@@ -744,4 +769,5 @@ def create_cycle(
         now=now,
         resume=resume,
         respond=respond,
+        recollection=recollection,
     )
