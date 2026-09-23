@@ -193,9 +193,21 @@ def thing_transducer(signal: Signal) -> tuple[str, object]:
     return (THING_INFO_TYPE, signal.raw_payload)
 
 
-def status_transducer(signal: Signal) -> tuple[str, object]:
-    """T3's transducer for the region's status channel."""
-    return (STATUS_INFO_TYPE, signal.raw_payload)
+# What a status report is about, on the open-tag dimension `object` (tag F). The
+# directive is tagged with the same value, because it is about the same thing:
+# the states the region reports. That shared description is the whole of how the
+# one comes to mind when the other arrives.
+STATUS_OBJECT: Final = "region-status"
+
+
+def status_transducer(signal: Signal) -> tuple[str, object, dict[str, str]]:
+    """T3's transducer for the region's status channel.
+
+    It also says what the arrival is about, which is what T3 asks the store with
+    (§6.4 query). The vision channel says nothing of the kind yet: a thing's
+    change has no stored datum about it to recall.
+    """
+    return (STATUS_INFO_TYPE, signal.raw_payload, {"object": STATUS_OBJECT})
 
 
 def transducers() -> dict[str, object]:

@@ -21,6 +21,17 @@ is a completed level, and none has ever happened, so the want that exists has
 only ever learned what to steer away from. That is measured, not guessed, and it
 is the open problem.
 
+**What it is told.** It arrives with no history — nothing like what a creature
+carries in its genes or learned from others — so the least it is given is a
+directive: the one sentence the competition gives every model on its official
+leaderboard, "You are playing a game. Your goal is to win.", with the published
+rules of the place. Nothing about any particular game, and nothing about how to
+win one. It enters as host data stamped `prior` — not the character's own, not
+yet tested — and stays in the store until the character recalls it: the first
+report of the region's status brings it to mind. The good-or-bad reading of the
+region's answers used to be written into the code; it is now read from that
+recalled directive, and with no directive every answer is neutral.
+
 An earlier version also stuck: it acted on whatever it understood least, and took
 one action 103 times in 120 because that action's outcome depended on something
 the mind could not see. That is fixed — see below — and the fix is recorded
@@ -38,6 +49,7 @@ real mistake this project made.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
 | **host** | the body: receives signals, carries them, executes what was committed. **Concludes nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
+| **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) | `src/dil/store/`, `src/arc3/prior.py` |
 | **mind** | the thinking organ: finds the things in a signal, follows them across frames, reads what became of them, says what they will do. **Chooses nothing.** | `src/arc3/perceive.py`, `seeing.py`, `interpret.py`, `mind.py` |
 | **self** | what occurs while the loop runs through them. **It is what acts.** | not a file |
 
@@ -155,7 +167,7 @@ and they fall into three kinds — which is worth keeping straight.
 ### Gaps between the protocol and its reference implementation
 
 Each was verified by measurement, then fixed in `dil-core` first and ported back.
-All four have the same shape: a channel present in the topology that nothing
+All five have the same shape: a channel present in the topology that nothing
 drew on.
 
 1. **The store was write-only.** §9 says "the self accrues from scars" and defines
@@ -175,10 +187,18 @@ drew on.
    INV-1 forbids dead branches, and §6.2 says in as many words that "T8 closes
    back into the loop, not into a sink". The meaning-channel cannot carry T8's
    output back down, so it now returns through the field.
+5. **Admitted, and never asked for.** Host data enters through the tagging-gate
+   stamped `prior`, and §9 has it move to `running` "once it has run". Nothing
+   ever asked for it, so it never ran. §6.4 already names the mechanism — "T3
+   emits a *query*: it opens or calls a channel to ingest actively" — and the
+   index is the open-tag layer §9 already requires to be consistent by key. T3
+   now asks the store with the description of what just arrived; the answer
+   comes back through T1 and runs every layer. Recalled on a cue, never poured
+   in.
 
 ### A property of the protocol's own design
 
-5. **The experience store is a biased sample, by construction.** §9 admits only
+6. **The experience store is a biased sample, by construction.** §9 admits only
    registered mismatches, so what it holds are the region's *surprises*. Asked to
    predict, it lost 62 of 66 contests against the model — not because it is
    wrong, but because an exception loses to a distribution. No verdict is
@@ -189,8 +209,10 @@ drew on.
 
 ### A gap in this agent
 
-6. **Want has nothing to seek**, as the status section says. Local to this
-   repository, not upstream's.
+7. **Want has nothing to seek**, as the status section says. The directive now
+   tells it what counts as reaching the goal, but not how to get there, and no
+   level has ever been completed to learn from. Local to this repository, not
+   upstream's.
 
 ## Running it
 

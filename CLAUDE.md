@@ -847,19 +847,67 @@ a verdict tag is refused and reported, not admitted.
 Declared: admission happens only with a real substrate (`store_root`). The
 in-memory fixture the live measurement scripts ran on has no requisition step.
 
-### What is NOT done yet, and why
+### How the prior is recalled — settled with Plone, same day
 
-**Nothing reads the prior once it is admitted.** It sits in `[data]` stamped
-`prior`, and no layer, no mind and no driver ever takes it up, so it never makes
-the `prior → running` transition §9 defines. This is a sixth instance of the
-shape the Findings list: a channel present in the topology that nothing draws
-on. It is a gap in the protocol implementation, so by direction (b) it is fixed
-in dil-core first. How the prior enters the loop is a skeleton-level decision
-and is waiting on Plone.
+First found: **nothing read the prior once it was admitted.** It sat in `[data]`
+stamped `prior` and never made the `prior → running` move §9 defines — a sixth
+instance of a channel present in the topology that nothing drew on.
 
-Until it is fixed, `region_valence` keeps its hard-coded signs. Plone approved
-removing them, but they are to be replaced by the directive being read, and
-removing them first would leave the character with no want at all.
+Plone settled how it enters, correcting both options put to him. Data does not
+flow in by itself — the store is the character's memory, and memory pouring in
+unasked is overload, a disease in a living thing. So the character asks. But
+what it retrieves then enters the loop and runs every layer, and that is when
+its tag changes from `prior` to `running`. `prior` is only a state tag: it tells
+the character that the datum is not its own, has not been through its own
+experience, and needs to be tested. (§9 agrees: "Running many cycles does not
+wash a prior to tested status; only collision-and-hold does.")
+
+The protocol already had every piece; the first proposal here invented an
+`about` tag the open layer already covers, and Plone sent it back to be re-read.
+What is used:
+
+- **§6.4, T3 query** — "opens or calls a channel to ingest actively". The
+  channel called is the store.
+- **§6, link 1** — query returns are an input channel, so the return arrives at
+  T1 the next cycle and runs T1→T8.
+- **§9 open layer, tag F** — a key denotes the same dimension wherever it
+  appears. That is the index: an arrival's description and a datum's open tags
+  are matched on the same keys. This host declares its keys in
+  `decisions.OPEN_TAG_KEYS`; the one doing the recalling is `object`.
+
+Fixed in dil-core first (`5bb031a`), then ported. T3 asks once per description
+it has not asked about. T7 no longer registers a recalled datum absent on cycles
+it was not asked for — measured before that fix, with no presence reported, it
+was registered absent every cycle from the second on.
+
+The status transducer describes its reports as `object: region-status`; the
+directive carries the same tag. The other four items are about other things
+(`level-structure`, `action-cost`, `body`, `things`) and nothing arriving
+describes those yet, so they wait.
+
+**The signs left the code.** `region_valence` now reads the region's answer
+against the recalled directive; with none recalled every answer reads 0. What
+stays in the mind is the interpretation — what an objective and a run ended
+without it mean. Which states those are, and what the region counts on the way,
+comes from the directive.
+
+### Live, 120 cycles, with a real substrate
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| admitted through the gate / rejected | 5 / 0 | 5 / 0 |
+| store queries from T3 | 1 (`object: region-status`) | 1 |
+| `prior:directive` → `running` | cycle 1 | cycle 1 |
+| directive in the mind from | cycle 1 | cycle 1 |
+| other priors | still `prior`, no cycle-mark | same |
+| moves committed | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| levels | 0 | 0 |
+
+Behaviour is identical to the run before, and that is what should happen: the
+directive carries exactly the content the hard-coded signs had. What changed is
+where it comes from and that an auditor can see it arrive. It does not, by
+itself, get the character through a level; nothing about how to win was ever in
+it.
 
 ## Individuals, and curiosity that follows progress
 

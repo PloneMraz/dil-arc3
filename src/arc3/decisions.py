@@ -69,6 +69,22 @@ TAG_B_STATUS: Final = "inherited from dil-core's minimal host; not yet tuned on 
 # ramping over recurrence, which IS learning what each control does.
 ENTITY: Final = "affordance — one per action the region affords"
 
+# ── Tag F — the open-tag registry beyond `domain`, and the store's index ──
+#
+# §9: a key MUST denote the same dimension wherever it appears, so the store is
+# filterable by it; which keys exist is the implementation's to declare. These
+# are the keys this host uses, each with the one dimension it names. T3 asks the
+# store with an arrival's description on these keys (§6.4 query), and a datum
+# answers when its open tags carry the same pairs — so a key used with two
+# meanings would recall the wrong thing, and that is why they are fixed here.
+OPEN_TAG_KEYS: Final[dict[str, str]] = {
+    "domain": "the class of data the datum is (required by §9)",
+    "kind": "what sort of datum it is within its domain",
+    "source": "where the datum was read or produced",
+    "object": "what the datum is about — the same on a stored datum and on an "
+    "arrival, which is what lets the one recall the other",
+}
+
 # ── Tag H — situation fit ──
 #
 # DECLARED: fit is equality of the effect signature in `effect.py`. Two uses of a

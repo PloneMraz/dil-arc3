@@ -39,6 +39,7 @@ import json
 from collections import Counter
 from typing import Any, Final
 
+from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.types import InfoUnit
 
 # The context for an observation that names none.
@@ -66,26 +67,35 @@ PROGRESS_PREFIX: Final = "progress:"
 PROGRESS_WINDOW: Final = 4
 
 
-def region_valence(status: object) -> float:
-    """How the region answered, read as good, bad, or neither (DECLARED).
+def region_valence(status: object, directive: dict[str, Any] | None) -> float:
+    """How the region answered, read against the directive the mind recalled.
 
-    The region gives exactly three signals that carry any sense of better or
-    worse: a level completed, the game won, the game over. This reads them as +1,
-    +1 and -1 and everything else as 0. That mapping is a declared reading, not a
-    derivation, and it is the one place in this repository where a sign is put on
-    an outcome — which is why it is a named function rather than a constant
-    buried in the policy.
+    The signs are not in this code. They were, until 2026-09-23: +1 for a level
+    or a win and -1 for game over, written here and admitted by nobody. That was
+    a directive smuggled in as code — no `prior` tag, no tagging-gate, invisible
+    to anyone reading the store. It now arrives the way the protocol has for it:
+    the host's published rules, admitted as `prior`, recalled by T3 on a cue, run
+    up the layers, and read here.
 
-    What it is NOT is a goal. Nothing here says "complete levels". The mind
-    accrues, per situation, how the region has answered it; the field carries
-    that reading; the self composes it with everything else. Want is what that
-    composition does, not what this function says.
+    What stays in the code is the interpretation — what an objective and a run
+    ended without it MEAN to something that has been told to reach one. What
+    comes from the directive is which of the region's states those are, and what
+    the region counts on the way. With no directive recalled there is nothing to
+    read against, and every answer reads 0: a character with no problem to solve
+    has nothing to prefer.
     """
-    if not isinstance(status, dict):
+    if not isinstance(status, dict) or not directive:
         return 0.0
-    if status.get("stateTo") == "GAME_OVER":
+    objective = (directive.get("objective") or {}).get("state")
+    ended_without = (directive.get("ended_without") or {}).get("state")
+    if ended_without is not None and status.get("stateTo") == ended_without:
         return -1.0
-    if status.get("stateTo") == "WIN" or (status.get("levelsDelta") or 0) > 0:
+    if objective is not None and status.get("stateTo") == objective:
+        return 1.0
+    # The count the directive names as the way there. The region reports its
+    # change as `levelsDelta` (interpret.region_status).
+    toward = (directive.get("toward") or {}).get("count")
+    if toward == "levels_completed" and (status.get("levelsDelta") or 0) > 0:
         return 1.0
     return 0.0
 
@@ -105,6 +115,7 @@ class Mind:
 
     __slots__ = (
         "_table", "_last", "_seen_values", "_hits", "_trials", "_valence", "_uses",
+        "_directive",
     )
 
     def __init__(self) -> None:
@@ -124,6 +135,9 @@ class Mind:
         # many predictions about Others came true, out of how many. Keyed by the
         # cycle's time, so one use is every Other seen after one action.
         self._uses: dict[str, dict[int, list[int]]] = {}
+        # The directive, once recalled from the store and run up the layers.
+        # None until then: nothing has told this character what it is for.
+        self._directive: dict[str, Any] | None = None
 
     # ── what it knows so far (read-only, for reporting) ──
 
@@ -188,7 +202,25 @@ class Mind:
 
     def answered(self, context: str, status: object) -> None:
         """Record how the region answered this situation."""
-        self._valence.setdefault(context, []).append(region_valence(status))
+        self._valence.setdefault(context, []).append(
+            region_valence(status, self._directive)
+        )
+
+    def recall(self, returned: dict[str, Any]) -> None:
+        """Take up what the store returned, if it is something the mind can read.
+
+        Only a directive is read, today: a payload naming an objective. The rest
+        of what may come back is left as it arrived. The return still carries
+        the provenance the store held it at — `prior`, not the character's own
+        and not yet tested — and nothing here changes that; only a collision
+        does (§9).
+        """
+        payload = returned.get("payload")
+        if isinstance(payload, dict) and isinstance(payload.get("objective"), dict):
+            self._directive = payload
+
+    def directive(self) -> dict[str, Any] | None:
+        return self._directive
 
     # ── accrual and prediction ──
 
@@ -285,6 +317,11 @@ def predict_rule(mind: Mind, recollection: Any = None):
     def rule(entity_id: str, window, observed, contribute=None):
         payload = _payload_of(observed)
         if payload is None:
+            return observed
+        # Something the character recalled from its own store, arriving like any
+        # other return. The mind reads it; it is not an Other to predict.
+        if isinstance(observed.content, dict) and observed.content.get("channel") == STORE_CHANNEL:
+            mind.recall(payload)
             return observed
         # Two readings of where the agent is, kept apart. `context` is the action
         # — what the mind reports on, per action, to the self. `where` is the

@@ -19,6 +19,13 @@ the host declares it as pre-existing memory, and the runtime admits each item
 through the tagging-gate, stamped `prior` with no cycle-mark (§9, "no side
 door"). An item that cannot be tagged honestly is refused, not smuggled in.
 
+**How it is recalled.** Not poured in. It waits in the store until something
+arrives that it is about: each item's open tag `object` says what that is, on
+the same dimension the status channel describes its reports with, and T3 asks
+the store with that description (§6.4 query). The directive is about the
+region's status, so the first status report brings it to mind. The other items
+are about things no arrival describes yet, and wait.
+
 The directive is the one sentence the competition gives every model on its
 official leaderboard. The character is told no more than that.
 """
@@ -29,6 +36,8 @@ from collections.abc import Iterable
 from typing import Final
 
 from dil.host import PreexistingItem
+
+from .observe import STATUS_OBJECT
 
 # Every item carries these open tags: the gate requires `domain` and at least
 # three in all, and forbids any key that names a verdict.
@@ -51,17 +60,18 @@ def _q(text: str, source: str) -> dict[str, str]:
     return {"text": text, "source": source}
 
 
-def _item(key: str, kind: str, payload: dict) -> PreexistingItem:
+def _item(key: str, kind: str, about: str, payload: dict) -> PreexistingItem:
     return PreexistingItem(
         id=f"prior:{key}",
         payload=payload,
-        open={"domain": DOMAIN, "kind": kind, "source": SOURCE_TAG},
+        open={"domain": DOMAIN, "kind": kind, "source": SOURCE_TAG, "object": about},
     )
 
 
 DIRECTIVE: Final = _item(
     "directive",
     "directive",
+    STATUS_OBJECT,
     {
         # The official leaderboard's system prompt, given to every model alike.
         "says": [_q("You are playing a game. Your goal is to win.", REPORT)],
@@ -92,6 +102,7 @@ DIRECTIVE: Final = _item(
 LEVELS: Final = _item(
     "levels",
     "structure",
+    "level-structure",
     {
         "says": [
             _q("Environments are developed with a level-based structure, with at "
@@ -109,6 +120,7 @@ LEVELS: Final = _item(
 COST: Final = _item(
     "cost",
     "cost",
+    "action-cost",
     {
         "says": [
             _q("Each turn where the agent submits a command, move, or input that "
@@ -124,6 +136,7 @@ COST: Final = _item(
 )
 
 BODY: Final = _item(
+    "body",
     "body",
     "body",
     {
@@ -163,6 +176,7 @@ BODY: Final = _item(
 WORLD: Final = _item(
     "world",
     "world",
+    "things",
     {
         "says": [
             _q("Objectness: Elements are perceived as coherent, persistent "
