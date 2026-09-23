@@ -803,6 +803,66 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## Nothing reads the goal
+
+Traced through the code, the chain §9 describes — mismatch → memory → learning →
+change — is complete, and its last link is one rule wide:
+
+| what | which component |
+|---|---|
+| interacts with the region | `Arc3Source.deliver` → `env.step` |
+| perceives | `read_frame` → `diff` → the effect signature |
+| **knows where anything is** | **nothing** — only "what is on the square I would land on" |
+| collects mismatch | T5 (value-mismatch), T7 (absence) → driver → `[event]` |
+| learns | the model's table, T5's windows, T6's counters, T7's expectations |
+| changes behaviour | `LeastResolved`: take the least-resolved afforded action |
+| **pursues a goal** | **nothing** |
+
+`levels_delta` is the score channel — the only thing RHAE counts, the only
+definition of winning. Grepped: it appears exactly twice, both in
+`observe.py`, writing it into the payload and reading it back out when
+rebuilding an `Effect`. **No component uses it to decide anything.** The
+`stateTo` channel has one reader, `respond.py`, and only to RESET after a
+terminal frame — never to seek a WIN.
+
+So the agent cannot pursue the goal, because nothing reads the goal. It carries
+the goal inward and drops it.
+
+That accounts fully for zero levels completed. It is not a tuning problem. Two
+limits declared earlier — "the loop is handed no coordinates" and "`vc33`
+learns nothing from context" — were written up as limits of the *context*
+representation. They are the same single hole, and the hole is that **nothing in
+this repository represents a want**.
+
+Where such a thing could live is not obvious and is not being guessed at:
+§6 link 4 assigns direction and value, but INV-8 forbids the appraisal step from
+drawing its criteria from the state the agent is editing, and `levels_completed`
+is part of that state. Naming a goal is therefore a skeleton decision, not an
+implementation detail.
+
+## How far this travels beyond ARC-AGI-3
+
+Layered, and the layers were checked rather than assumed. `grep` over `src/dil/`
+finds no ARC-AGI-3 knowledge in code at all — only the word "frame" inside
+"reference frame", and two comments.
+
+| ring | what it assumes | portability |
+|---|---|---|
+| `dil/` | nothing about any world | travels intact |
+| `frame.py` | 64×64, values 0–15 | shape is general, constants are not |
+| `effect.py` | a grid of discrete values | any grid world; `transitions` survive off-grid |
+| `model.py` | something moves rigidly on a grid | **the most specific piece** |
+| `respond.py`, `host.py` | action ids plus coordinates | general in shape |
+
+**`vc33` is the empirical test of this**, not a hypothetical: there the model
+found no rigid mover, context was empty in all 157 cycles, and it degraded
+gracefully to majority-over-effects — 41% → 69%. It keeps working and loses its
+best feature.
+
+Porting to another world means re-declaring exactly the seams §12 already
+enumerates: T3's transducer, T4's resolver, T5's predict rule, the boundary gate
+and the effect signature. The DECIDE@IMPL list *is* the portability surface.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are
