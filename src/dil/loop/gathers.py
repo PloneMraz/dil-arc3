@@ -53,11 +53,17 @@ def _must_read(ch: MeaningChannel, consumer: LayerIndex, from_: LayerIndex) -> A
     return out
 
 
-def gather_t2(ch: MeaningChannel, host: HostCycleInput, emitted: Emission) -> T2Input:
+def gather_t2(
+    ch: MeaningChannel,
+    host: HostCycleInput,
+    emitted: Emission,
+    lateral: tuple[object, ...] = (),
+) -> T2Input:
     return T2Input(
         env=_must_read(ch, 2, 1),
         emitted=emitted,
         changes=tuple(host.changes),
+        lateral=lateral,
     )
 
 

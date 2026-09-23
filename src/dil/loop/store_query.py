@@ -55,6 +55,8 @@ def answer_query(data: DataStore, cue: Description, t: int) -> list[Signal]:
                 "floorTag": datum.fixed.floor_tag,
             },
             "open": dict(datum.open),
+            # The cue this return answers — so T2 can match it to the query.
+            "cue": dict(cue),
         }
         out.append(Signal(source_id=STORE_CHANNEL, raw_payload=ret, t=t))
     return out

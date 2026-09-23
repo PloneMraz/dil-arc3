@@ -33,7 +33,8 @@ from ..types import InfoUnit, ModField, RefFrame, Signal
 # Maps a channel's raw signal into a typed value (DECIDE@IMPL, per channel).
 # Returns (info_type, value), or (info_type, value, description) where the
 # description is what the arrival is on the declared open-tag dimensions — the
-# cue T3 asks the store with. No description: nothing to ask with, and no ask.
+# cue T3 asks the store with. It may be a list of descriptions when one arrival
+# is about several things. No description: nothing to ask with, and no ask.
 ChannelTransducer = Callable[[Signal], tuple[Any, ...]]
 
 # The open-tag description of an arrival: registry key → value (§9, tag F).
@@ -117,10 +118,15 @@ class T3(BaseLayer):
             describe = typed[2] if len(typed) > 2 else None
 
             if signal.source_id != STORE_CHANNEL and describe:
-                key = _cue_key(describe)
-                if key not in self._asked:
+                cues = describe if isinstance(describe, (list, tuple)) else [describe]
+                for cue in cues:
+                    if not cue:
+                        continue
+                    key = _cue_key(cue)
+                    if key in self._asked:
+                        continue
                     self._asked.add(key)
-                    emit(store_query(describe))
+                    emit(store_query(cue))
 
             units.append(
                 InfoUnit(

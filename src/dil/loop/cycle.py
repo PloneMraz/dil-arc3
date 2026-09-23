@@ -76,7 +76,7 @@ from .gathers import (
 from .glob_mod import GlobMod
 from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
-from .layers.t3 import is_store_query
+from .layers.t3 import is_store_query, store_query
 from .layers.t4 import T4Input
 from .layers.t5 import T5Input, T5Output
 from .layers.t6 import T6Input
@@ -118,6 +118,8 @@ class DriverState:
     pending_returns: tuple[Signal, ...] = ()
     # Every datum ever recalled from the store — they return only when asked.
     recalled: tuple[str, ...] = ()
+    # Actions layers emitted laterally last cycle, for T2 to read (§6.4).
+    last_lateral: tuple[object, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,7 +225,7 @@ class Cycle:
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
-        "_pending", "_recalled", "_unasked",
+        "_pending", "_recalled", "_unasked", "_last_lateral",
     )
 
     def __init__(
@@ -279,6 +281,10 @@ class Cycle:
         self._recalled: set[str] = set(resume.recalled) if resume is not None else set()
         # Recalled data not arriving this cycle — no absence is owed by them (T7).
         self._unasked: frozenset[str] = frozenset()
+        # What layers emitted laterally last cycle — readable by T2 now (§6.4).
+        self._last_lateral: tuple[object, ...] = (
+            tuple(resume.last_lateral) if resume is not None else ()
+        )
 
     # ── identifiers and the two [event] sinks ──────────────────────────────
 
@@ -325,7 +331,12 @@ class Cycle:
 
         t2 = run_layer(
             L.t2,
-            T2Input(env=t1.output, emitted=self._last_emission, changes=host.changes),
+            T2Input(
+                env=t1.output,
+                emitted=self._last_emission,
+                changes=host.changes,
+                lateral=self._last_lateral,
+            ),
             field,
             datum,
         )
@@ -411,7 +422,12 @@ class Cycle:
         self._log_exit(1)
         ch.publish(1, t1.output)
 
-        t2 = run_layer(L.t2, gather_t2(ch, host, self._last_emission), field, datum)
+        t2 = run_layer(
+            L.t2,
+            gather_t2(ch, host, self._last_emission, self._last_lateral),
+            field,
+            datum,
+        )
         datum = t2.datum
         self._log_exit(2)
         ch.publish(2, t2.output)
@@ -474,6 +490,7 @@ class Cycle:
             last_emission=self._last_emission,
             pending_returns=tuple(self._pending),
             recalled=tuple(sorted(self._recalled)),
+            last_lateral=self._last_lateral,
         )
 
     def run(self, region_input: HostCycleInput) -> CycleResult:
@@ -490,10 +507,27 @@ class Cycle:
         arriving = {returned_entity(s) for s in returned}
         self._recalled |= arriving
         self._unasked = frozenset(self._recalled - arriving)
+        # Each return is also a change the agent's own query produced: its value
+        # is the query that asked, so T2 matches it to that emission and tags it
+        # SELF_WRITTEN — §6.4's closure. The datum's CONTENT is still not the
+        # agent's own; agency and provenance are two different questions.
         host = (
             region_input
             if not returned
-            else replace(region_input, signals=(*region_input.signals, *returned))
+            else replace(
+                region_input,
+                signals=(*region_input.signals, *returned),
+                changes=(
+                    *region_input.changes,
+                    *(
+                        ObservedChange(
+                            id=returned_entity(s),
+                            value=store_query(s.raw_payload["cue"]),
+                        )
+                        for s in returned
+                    ),
+                ),
+            )
         )
         flow: FlowMode = "single-threaded" if self._cycle == 0 else "multi-stream"
         # The host server clock at this cycle, for [event] timestamps.
@@ -811,8 +845,10 @@ class Cycle:
         self._glob.contribute(5, {"resistance": total_resistance}, 1.0)
         self._glob.advance(self._cycle + 1)
 
-        # Feedback and accrual: the response becomes the next cycle's emission.
+        # Feedback and accrual: the response becomes the next cycle's emission,
+        # and every lateral emission of this cycle is readable by T2 next cycle.
         self._last_emission = response
+        self._last_lateral = tuple(e.action for e in pass_.emissions)
         self._cycle += 1
 
         return CycleResult(

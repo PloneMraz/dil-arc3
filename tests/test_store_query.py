@@ -190,3 +190,50 @@ def test_what_was_asked_and_what_is_in_flight_survive_a_snapshot():
     run(resumed, 2)
     assert len(moves(events, DIRECTIVE)) == 1, "the answer in flight still arrived"
     assert t3.snapshot() == {"asked": ['[["object", "region-status"]]']}
+
+
+# ── agency closure (§6.4 rule 3) ──
+
+
+def test_what_a_query_brought_back_is_tagged_self_written():
+    """ "emit → region returns → T1 ingests → T2 matches." The return is a change
+    the agent's own query produced, and T2 must read that query as an action just
+    emitted, or it could only call the return ENV_PUSHED."""
+    data, events = seeded_store(), create_event_log()
+    t2 = create_t2(stability_threshold=1)
+    seen = []
+    inner = t2.process
+
+    def spy(input, field, emit, contribute):  # noqa: A002
+        out = inner(input, field, emit, contribute)
+        seen.append(out)
+        return out
+
+    t2.process = spy
+    layers = Layers(
+        t1=create_t1(), t2=t2, t3=create_t3({"status": described_status}), t4=create_t4(),
+        t5=create_t5(), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+    )
+    cycle = create_cycle(layers=layers, glob=create_glob_mod({"appraisalGain": 1.0}, 0),
+                         data=data, events=events, initial_emission=Emission(action="boot"))
+    run(cycle, 1)
+    run(cycle, 2)
+    (recalled,) = [t for t in seen[1].tagged if t.change.id == DIRECTIVE]
+    assert recalled.agency == "SELF_WRITTEN"
+
+
+# ── one arrival, several things it is about ──
+
+
+def test_an_arrival_about_several_things_asks_about_each():
+    data, events = seeded_store(), create_event_log()
+
+    def both(signal):
+        return ("status", signal.raw_payload, [{"object": "region-status"}, {"object": "things"}])
+
+    cycle = cycle_over(data, events, transducers={"status": both})
+    run(cycle, 1)
+    run(cycle, 2)
+    assert len(queries(events)) == 2
+    assert data.get(DIRECTIVE).fixed.provenance == "running"
+    assert data.get(UNRELATED).fixed.provenance == "running"

@@ -59,6 +59,11 @@ class T2Input:
     env: ActivityEnvironment
     emitted: Emission
     changes: tuple[ObservedChange, ...] = dc_field(default_factory=tuple)
+    # The actions layers emitted laterally last cycle (§6.4) — a T3 query, a T5
+    # test. Every emission "MUST be readable by T2 at the next cycle as 'the
+    # action just emitted'", not only the committed response; without these,
+    # what a query brought back could never be matched to the query (INV-6).
+    lateral: tuple[object, ...] = dc_field(default_factory=tuple)
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +135,7 @@ class T2(BaseLayer):
 
         # Accrue this cycle's emission into the bounded matching window.
         self._recent_emissions.append(input.emitted.action)
+        self._recent_emissions.extend(input.lateral)
         while len(self._recent_emissions) > self._window:
             self._recent_emissions.pop(0)
         self._cycles_run += 1
