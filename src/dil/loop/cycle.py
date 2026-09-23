@@ -146,6 +146,17 @@ class RespondContext:
 
     cycle: int
     appraisal: Appraisal
+    # The modulatory field in force this cycle — read-only background (INV-7).
+    #
+    # WHY IT IS HERE. Behaviour is constructed at this point, and until now this
+    # was the one place the field could not reach: the context carried the
+    # appraisal, the expectations and the host's input, and not the field. So
+    # anything the field came to hold — attention, and whatever stands for want —
+    # could not affect what the agent did. That is the same failure found twice
+    # already in this ring: a channel present in the topology that nothing draws
+    # on. §6 is explicit that the field is "a global gain and bias shifting every
+    # link's parameters at once", and link 5 is a link.
+    field: ModField
     # The loop's expectations this cycle, entity by entity — including each
     # one's confidence and recurrence.
     expectations: tuple[Any, ...]
@@ -626,6 +637,7 @@ class Cycle:
                 RespondContext(
                     cycle=self._cycle,
                     appraisal=appraisal,
+                    field=field,
                     expectations=pass_.t5.results,
                     host=host,
                 )

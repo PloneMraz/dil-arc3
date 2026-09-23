@@ -10,7 +10,7 @@ from arc3.action import Move
 from arc3.observe import move_value, observe
 from arc3.respond import DEFAULT_SWEEP, UNMET_CONFIDENCE, least_resolved
 from dil.loop.cycle import RespondContext
-from dil.loop.types import Appraisal, Expectation, InfoUnit, RefFrame
+from dil.loop.types import Appraisal, Expectation, InfoUnit, ModField, RefFrame
 from arc3.effect import diff
 from tests.test_arc3_effect import framed, marker
 
@@ -34,6 +34,7 @@ def ctx_for(affords, expectations=(), state_to="NOT_FINISHED", cycle=1):
     return RespondContext(
         cycle=cycle,
         appraisal=Appraisal(info_ref="c", valence=0.0, goal_relevance=0.0),
+        field=ModField(),
         expectations=tuple(expectations),
         host=host,
     )
@@ -110,3 +111,37 @@ def test_the_committed_shape_is_what_t2_will_match():
     policy = least_resolved()
     committed = policy(ctx_for((1,)))
     assert committed == move_value(Move(1))
+
+
+# ── the field reaches the place behaviour is constructed ──
+
+
+def test_the_policy_can_read_the_modulatory_field():
+    """Until this existed, the field could not reach link 5.
+
+    §6 calls the field "a global gain and bias shifting every link's parameters
+    at once", and link 5 — respond — is a link. Without the field here, anything
+    the field comes to hold (attention, and whatever stands for want) could not
+    affect what the agent does. Measured before the fix: the field held
+    `{attentionGain: 0.2, resistance: 0.0}` after 60 live cycles and the policy
+    could not see either number.
+    """
+    seen: list[dict[str, float]] = []
+
+    def watching_policy(ctx):
+        seen.append(dict(ctx.field.params))
+        return move_value(Move(1))
+
+    ctx = ctx_for((1,))
+    object.__setattr__(ctx, "field", ModField(params={"attentionGain": 0.25}))
+    watching_policy(ctx)
+    assert seen == [{"attentionGain": 0.25}]
+
+
+def test_the_field_is_read_only_background_here_too():
+    """INV-7: the down-channel. A policy reads it and never writes it."""
+    field = ModField(params={"attentionGain": 0.5})
+    ctx = ctx_for((1,))
+    object.__setattr__(ctx, "field", field)
+    least_resolved()(ctx)
+    assert field.params == {"attentionGain": 0.5}
