@@ -16,21 +16,21 @@ what was worth looking at — the square a move would land on. That was the body
 job done by the mind, and it collapsed a 64x64 world into nine situations, all of
 them exhausted in fifteen cycles.
 
-With `perceive.py` finding the things and `interpret.py` reading what became of
-them, none of that is needed here. No mover to discover, no background to vote
-on, no rigidity filter, no translation invariance to engineer: a thing is already
-a thing and its displacement is already its displacement. What is left is the
-part that is actually thinking — associating a situation with an outcome and
-answering for it.
+With `perceive.py` finding the pieces and `seeing.py` following each one across
+frames, grouping the pieces that move together into one thing and reading what
+lies ahead of it, none of that is needed here. No mover to discover, no
+background to vote on, no rigidity filter, no translation invariance to
+engineer: a thing is already a thing and its displacement is already its
+displacement. What is left is the part that is actually thinking — associating a
+situation with an outcome and answering for it.
 
 Measured on the same 316 real transitions the old model was measured on:
 
-    game    old (hand-coded feature)   new (things)
-    ls20                         94%            93%
-    vc33                         69%            85%
+    game    old (hand-coded feature)   stuff by value   tracked things + what lies ahead
+    ls20                         94%              93%                              99%
+    vc33                         69%              85%                              93%
 
-One point given up where the hand-coded feature was doing the work, sixteen
-gained where it was blind — and the feature is gone.
+The hand-coded feature is gone, and nothing was given up for it.
 """
 
 from __future__ import annotations
