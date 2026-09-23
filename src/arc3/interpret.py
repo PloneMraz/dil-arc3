@@ -1,26 +1,22 @@
-"""Reading what happened to each thing — the model's second act of interpretation.
+"""What an observation about a thing, or about the region, is made of.
 
-`perceive.py` finds the things; this reads what became of them. Both are
-interpretation and both belong to the thinking side. The host carries signals;
-it does not conclude.
-
-WHAT CHANGED FROM THE EARLIER BUILD. `effect.py` computed one signature for the
-WHOLE frame — how many cells changed, which values turned into which, what
-displaced — and the host handed that finished reading to the loop as though it
-were a sensation. It also had to be translation-invariant by hand, because it was
-describing an unsegmented grid and had no idea what a thing was.
-
-Segmenting first makes most of that unnecessary. A thing's displacement is just
-the difference between where it was and where it is; nothing has to be recovered
-from a soup of cell transitions, and nothing has to be filtered for rigidity,
-because a thing is already a thing.
+The shapes a change is reported in. The reading itself — which piece is which,
+which pieces are one thing, what became of each — is `seeing.py`'s, because it
+needs memory across frames. What is left here is what that reading produces.
 
 WHAT AN OBSERVATION ABOUT A THING HAS TO BE. It has to REPEAT, or T5's expectation
 can never match and confidence never ramps. Absolute position does not repeat.
 What repeats is the CHANGE: a thing that moves five rows up moves five rows up
 wherever it started. So what travels inward is what became of the thing, never
-where it is — which is the same lesson the frame-level signature had to learn the
-hard way, arrived at here for free.
+where it is.
+
+WHAT WENT. An earlier version read changes per kind of stuff — every cell of one
+value as one Other — through `changes_of`, `contacts` and `interactions_of`. The
+stuff-level reading is superseded by tracked individuals grouped by common fate
+(`seeing.py`), for a measured reason: value 9 in `ls20` is five pieces, one of
+which moves, and any reading of the stuff was swamped by the four that do not.
+Nothing in production called the stuff-level functions once `seeing.py`
+existed, so they were removed rather than left to be mistaken for what runs.
 """
 
 from __future__ import annotations
@@ -29,7 +25,6 @@ from dataclasses import dataclass
 from typing import Final
 
 from .frame import Frame
-from .perceive import Region, segment
 
 # The region's own status, as an Other in its own right. The game reports its
 # state and its level counter; the agent does not control either, and both can
@@ -39,7 +34,7 @@ REGION_ENTITY: Final = "region"
 
 @dataclass(frozen=True, slots=True)
 class ThingChange:
-    """What became of one kind of stuff between two frames.
+    """What became of one thing between two frames.
 
     Every field is a difference or a flag. Nothing here says where anything is,
     because where a thing is does not repeat and what it did does.
@@ -53,7 +48,7 @@ class ThingChange:
     # How far its centre of mass moved, rounded to whole cells. (0, 0) when it
     # held still; None when it was not there on both sides to be compared.
     moved: tuple[int, int] | None
-    # Change in how many cells the stuff occupies. Growth, shrinkage, or 0.
+    # Change in how many cells it occupies. Growth, shrinkage, or 0.
     grew: int
     # Change in how many separate pieces it is in. A thing splitting in two is
     # something happening, and cell count alone would miss it.
@@ -68,59 +63,6 @@ class ThingChange:
             and self.grew == 0
             and self.pieces == 0
         )
-
-
-def _by_kind(regions: tuple[Region, ...]) -> dict[str, list[Region]]:
-    out: dict[str, list[Region]] = {}
-    for region in regions:
-        out.setdefault(region.kind, []).append(region)
-    return out
-
-
-def _centroid_of(regions: list[Region]) -> tuple[float, float]:
-    """The centre of mass of all the stuff of one kind, weighted by size."""
-    total = sum(r.size for r in regions)
-    return (
-        sum(r.centroid[0] * r.size for r in regions) / total,
-        sum(r.centroid[1] * r.size for r in regions) / total,
-    )
-
-
-def changes_of(prev: Frame, now: Frame) -> dict[str, ThingChange]:
-    """What became of each kind of stuff, between two frames.
-
-    Every kind seen on either side gets an entry, so a thing that vanished is
-    reported as vanished rather than silently dropped — T7 needs to be able to
-    tell "gone" from "never mentioned".
-    """
-    before = _by_kind(segment(prev))
-    after = _by_kind(segment(now))
-
-    out: dict[str, ThingChange] = {}
-    for kind in before.keys() | after.keys():
-        was, is_ = before.get(kind), after.get(kind)
-        if was and is_:
-            br, bc = _centroid_of(was)
-            ar, ac = _centroid_of(is_)
-            out[kind] = ThingChange(
-                persisted=True,
-                appeared=False,
-                vanished=False,
-                moved=(round(ar - br), round(ac - bc)),
-                grew=sum(r.size for r in is_) - sum(r.size for r in was),
-                pieces=len(is_) - len(was),
-            )
-        else:
-            out[kind] = ThingChange(
-                persisted=False,
-                appeared=is_ is not None,
-                vanished=was is not None,
-                moved=None,
-                grew=(sum(r.size for r in is_) if is_ else 0)
-                - (sum(r.size for r in was) if was else 0),
-                pieces=(len(is_) if is_ else 0) - (len(was) if was else 0),
-            )
-    return out
 
 
 def change_value(change: ThingChange) -> dict[str, object]:
@@ -139,58 +81,6 @@ def change_value(change: ThingChange) -> dict[str, object]:
         "pieces": change.pieces,
         "null": change.is_null,
     }
-
-
-def contacts(frame: Frame) -> frozenset[tuple[str, str]]:
-    """Which kinds of stuff touch which, edge to edge, anywhere in the frame.
-
-    Unordered pairs, sorted, so (a, b) and (b, a) are one contact. Background is
-    not stuff and touches nothing. Channels are read one at a time: two things on
-    different channels of the stack are not touching, they are in different
-    senses.
-    """
-    from .perceive import NEIGHBOURS, background_of
-
-    pairs: set[tuple[str, str]] = set()
-    for grid in frame.grids:
-        background = background_of(grid)
-        rows, cols = len(grid), len(grid[0]) if grid else 0
-        for r in range(rows):
-            for c in range(cols):
-                v = grid[r][c]
-                if v == background:
-                    continue
-                for dr, dc in NEIGHBOURS[1::2]:  # down and right: each edge once
-                    nr, nc = r + dr, c + dc
-                    if nr < rows and nc < cols:
-                        w = grid[nr][nc]
-                        if w != background and w != v:
-                            a, b = sorted((f"thing:{v}", f"thing:{w}"))
-                            pairs.add((a, b))
-    return frozenset(pairs)
-
-
-def interactions_of(prev: Frame, now: Frame) -> tuple[tuple[str, str, str], ...]:
-    """Contacts made or broken between two frames — Other-to-Other, no self.
-
-    §6.3's SocialEdge is "an Other↔Other interaction observed with no self
-    present". Two things coming into contact, or parting, is exactly that, and it
-    is what the old affordance reading could never supply: two buttons do not
-    touch. A contact that merely persists is not an interaction — walls resting
-    against a floor every frame would say nothing, in the way a constant field
-    parameter says nothing.
-
-    The self is not a party even when the agent's move brought the contact about:
-    the self is the loop, not a thing in the grid, and T2 has already drawn that
-    line. What T8 records is that two Others met.
-    """
-    before, after = contacts(prev), contacts(now)
-    made = sorted(after - before)
-    broken = sorted(before - after)
-    return tuple(
-        [(a, b, "contact-made") for a, b in made]
-        + [(a, b, "contact-broken") for a, b in broken]
-    )
 
 
 def region_status(prev: Frame, now: Frame) -> dict[str, object]:

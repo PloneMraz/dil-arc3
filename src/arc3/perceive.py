@@ -36,7 +36,7 @@ here to hide them.
 from __future__ import annotations
 
 from collections import Counter, deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Final
 
 from .frame import Frame, Grid
@@ -66,6 +66,11 @@ class Region:
     centroid: tuple[float, float]
     # (min_row, min_col, max_row, max_col) — extent, from which shape follows.
     bbox: tuple[int, int, int, int]
+    # The cells themselves, (row, col). Kept because tracking a piece and reading
+    # what lies ahead of it both need to know which cells are its own. Excluded
+    # from equality and repr: two regions are the same region by what they are,
+    # not by an enumeration of where.
+    cells: tuple[tuple[int, int], ...] = field(default=(), compare=False, repr=False)
 
     @property
     def height(self) -> int:
@@ -75,38 +80,22 @@ class Region:
     def width(self) -> int:
         return self.bbox[3] - self.bbox[1] + 1
 
-    @property
-    def kind(self) -> str:
-        """The identity a thing keeps while it persists.
-
-        MEASURED, not argued. Four readings were tried against 60 real frames
-        per game, scored by churn — how many identities exist overall against how
-        many are present in any one frame. An identity that changes when the
-        thing changes is not an identity:
-
-            identity          overall  per-frame  churn   ls20
-            value + bbox          101       16.3   6.2x
-            value + size          101       16.3   6.2x
-            value                   8        8.0   1.0x   <- chosen
-            value + channel        16        8.0   2.0x
-
-        Value alone holds at 1.0x in BOTH games: every identity present in every
-        frame, nothing appearing or vanishing because a shape shifted. Extent and
-        cell-count both fail, and they fail hard — a thing that changes shape
-        becomes a different thing six to ten times over.
-
-        Channel was tried and rejected on the same evidence: `ls20`'s stack depth
-        varies, so binding identity to a channel makes the same stuff read as two
-        things. DECLARED: the same value on different channels is the same stuff.
-
-        DECLARED LIMIT, and it is a real one. This is a kind of STUFF, not an
-        individual: every cell of value 9 is one Other, however many separate
-        objects they form. Telling individuals apart needs matching across
-        frames, which is a further interpretation and is not done here. What this
-        does buy is what the affordance reading could never buy — six to eight
-        Others present at once, so T8 finally has the N >= 2 it needs.
-        """
-        return f"thing:{self.value}"
+# IDENTITY IS NOT DECIDED HERE. A piece is found in one frame; which thing it is
+# part of, and whether it is the same thing as a piece in another frame, is
+# `seeing.py`'s, because it needs memory. The history, kept because it is how
+# the current answer was reached:
+#
+#   identity                          churn   prediction ls20 / vc33
+#   value + bbox                       6.2x          —
+#   value + cell count                 6.2x          —
+#   value (a kind of stuff)            1.0x      93% / 85%
+#   tracked piece, grouped by common   1.7x      99% / 93%
+#   fate, read with what lies ahead
+#
+# Stuff held identity perfectly and hid the thing that mattered: value 9 in
+# `ls20` is five pieces, one of which moves, and every reading of "thing:9" was
+# swamped by the four that do not. Tracking individuals costs some churn and
+# buys the moving object's blocked-or-not outcome, predicted 100%.
 
 
 def background_of(grid: Grid) -> int:
@@ -161,6 +150,7 @@ def segment_grid(grid: Grid, channel: int = 0) -> tuple[Region, ...]:
                     size=len(cells),
                     centroid=(sum(rs) / len(cells), sum(cs) / len(cells)),
                     bbox=(min(rs), min(cs), max(rs), max(cs)),
+                    cells=tuple(cells),
                 )
             )
     return tuple(regions)

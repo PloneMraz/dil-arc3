@@ -42,14 +42,8 @@ from dil.loop.types import Signal
 
 from .action import IllegalMove, Move
 from .frame import Frame
-from .interpret import (
-    REGION_ENTITY,
-    ThingChange,
-    change_value,
-    changes_of,
-    interactions_of,
-    region_status,
-)
+from .interpret import REGION_ENTITY, ThingChange, change_value, region_status
+from .seeing import Seeing, create_seeing
 
 # The channel things arrive on — the agent's sight of the grid.
 VISION_CHANNEL: Final = "arc3-vision"
@@ -99,31 +93,54 @@ def move_from_value(value: object) -> Move:
     return Move(int(value["actionId"]), value.get("x"), value.get("y"))
 
 
-def thing_payload(kind: str, change: ThingChange, context: str) -> dict[str, object]:
-    return {"entity": kind, "change": change_value(change), "context": context}
+def thing_payload(
+    kind: str, change: ThingChange, context: str, situation: str = ""
+) -> dict[str, object]:
+    """One thing's signal.
+
+    `context` is what the agent did; `situation` is what the thing faced when it
+    did it — what lay ahead of it on every side, read off the frame before the
+    move. They are kept apart because they are read for different purposes: the
+    mind predicts from both, and reports how well it is doing per action.
+    """
+    return {
+        "entity": kind,
+        "change": change_value(change),
+        "context": context,
+        "situation": situation,
+    }
 
 
-def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
+def observe(
+    prev: Frame, move: Move, now: Frame, t: int, seeing: Seeing | None = None
+) -> HostCycleInput:
     """One cycle's input: what became of each Other, and what the agent did.
 
     `prev` is taken as an argument rather than looked up, because a change is a
     relation between two frames and it must be computed from the pair the caller
     actually observed.
+
+    `seeing` is the mind's perceptual stage, and it carries memory — which piece
+    is which across frames, and which pieces move as one. The body holds it and
+    calls it the way a nerve carries what the eye has processed; it does not
+    interpret anything itself. A fresh one is made if none is given, which is
+    right for a single transition and wrong for a run: without memory every
+    frame's pieces are strangers.
     """
     context = action_context(move)
-    changes = changes_of(prev, now)
+    scene = (seeing if seeing is not None else create_seeing()).look(prev, now)
 
     signals: list[Signal] = [
         Signal(
             source_id=VISION_CHANNEL,
             # `entity` is what T4's default resolver binds on. Without it every
             # thing would bind to STRANGER and collapse into one.
-            raw_payload=thing_payload(kind, change, context),
+            raw_payload=thing_payload(thing.entity, thing.change, context, thing.ahead),
             t=t,
         )
         # Sorted so a cycle's signals arrive in a stable order: two runs over the
         # same frames produce the same trace, which an auditor needs.
-        for kind, change in sorted(changes.items())
+        for thing in sorted(scene.things, key=lambda th: th.entity)
     ]
     signals.append(
         Signal(
@@ -150,26 +167,24 @@ def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
             # What the region did. `id` is the entity id T6 reads, so each Other
             # accrues its own independence evidence.
             *(
-                ObservedChange(id=kind, value=change_value(change))
-                for kind, change in sorted(changes.items())
+                ObservedChange(id=thing.entity, value=change_value(thing.change))
+                for thing in sorted(scene.things, key=lambda th: th.entity)
             ),
             ObservedChange(id=REGION_ENTITY, value=region_status(prev, now)),
         ),
         # Other-to-Other interactions: contacts made or broken between two things,
         # read by the mind and carried here. T8 records them as SocialEdges — the
         # thing the affordance reading could never supply, two buttons being
-        # unable to touch. Measured: sparse and real, about five per eighty
-        # transitions, where standing contacts would have been a near-constant.
+        # unable to touch. Standing contacts were measured near-constant and would
+        # have said nothing, so only contacts made or broken travel.
         interactions=tuple(
             ObservedInteraction(a_id=a, b_id=b, observed_interaction=kind)
-            for a, b, kind in interactions_of(prev, now)
+            for a, b, kind in scene.interactions
         ),
         # Which Others the region says are there. T7 registers an absence only
         # against these — and now that means something: a thing that has gone
         # from the grid is genuinely absent, which an affordance never could be.
-        afforded=frozenset(
-            [REGION_ENTITY, *(k for k, c in changes.items() if not c.vanished)]
-        ),
+        afforded=frozenset([REGION_ENTITY, *scene.present]),
     )
 
 

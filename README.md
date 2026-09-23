@@ -11,17 +11,20 @@ the agent leaves the loop to think.
 
 It runs. It learns what the things in a game do. **It completes no levels.**
 
-Two reasons, both measured rather than guessed:
+It explores: over 120 cycles of `ls20` it spreads its moves across all four
+directions and reaches 19 distinct positions, walking in lines toward whatever it
+is still learning about. What it lacks is a reason to go anywhere in particular.
 
-- **Curiosity sticks.** The agent acts on whatever it understands least. In
-  `ls20` the least understood action is the one whose outcome depends on where
-  the agent is — and the mind is not told where it is — so that action is never
-  resolved and curiosity keeps returning to it: 103 of 120 moves. This is the
-  "noisy TV" failure familiar from curiosity-driven exploration.
-- **Want can only avoid.** How the region answers each action is read, accrued,
-  and carried to where behaviour is decided. But the only good answer the region
-  gives is a completed level, and none has ever happened, so the want that exists
-  has only ever learned what to steer away from.
+**Want can only avoid.** How the region answers each action is read, accrued, and
+carried to where behaviour is decided. But the only good answer the region gives
+is a completed level, and none has ever happened, so the want that exists has
+only ever learned what to steer away from. That is measured, not guessed, and it
+is the open problem.
+
+An earlier version also stuck: it acted on whatever it understood least, and took
+one action 103 times in 120 because that action's outcome depended on something
+the mind could not see. That is fixed — see below — and the fix is recorded
+rather than hidden.
 
 Everything below is measured on live games, not asserted. Where a claim has no
 measurement behind it, it says so.
@@ -35,7 +38,7 @@ real mistake this project made.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
 | **host** | the body: receives signals, carries them, executes what was committed. **Concludes nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
-| **mind** | the thinking organ: finds the things in a signal, reads what became of them, says what they will do. **Chooses nothing.** | `src/arc3/perceive.py`, `interpret.py`, `mind.py` |
+| **mind** | the thinking organ: finds the things in a signal, follows them across frames, reads what became of them, says what they will do. **Chooses nothing.** | `src/arc3/perceive.py`, `seeing.py`, `interpret.py`, `mind.py` |
 | **self** | what occurs while the loop runs through them. **It is what acts.** | not a file |
 
 The line that matters: **the mind does not emit.** It supplies an expectation and
@@ -60,16 +63,21 @@ There are no weights, no gradients, and no third-party dependencies at all —
 `dependencies = []` is a requirement, not a boast, because an accelerated Kaggle
 session has no network to install from.
 
-It works in three steps, all of them cheap:
+It works in four steps, all of them cheap:
 
-1. **Perceive** — things are connected runs of one value, four-connected,
+1. **Perceive** — pieces are connected runs of one value, four-connected,
    excluding whatever the grid is mostly made of. The background is *read*, not
    assumed, so a world on a non-zero background still parses.
-2. **Interpret** — what became of each thing between two frames: did it move, by
-   how much, did it grow, split, appear, vanish. Never *where* it is, because
-   position does not repeat and what a thing did does.
-3. **Predict** — associate (thing, action) with what the thing then did, and
-   answer by majority.
+2. **See individuals** — each piece is followed from frame to frame, and pieces
+   that keep moving together, by the same displacement, are learned to be one
+   thing. Nothing is configured: a two-colour object is recognised as one object
+   because its parts always move as one.
+3. **Read the situation** — for each thing, what it faces first on every side, at
+   any distance: another thing, or the edge of the grid. No distance constant, and
+   nothing about what any action does.
+4. **Predict** — associate (thing, action, situation) with what the thing then
+   did, and answer by majority. Report upward, per action, how fast that is being
+   learned and how the region has answered it.
 
 ### Identity was chosen by measurement
 
@@ -77,58 +85,65 @@ A thing has to stay the same thing while it persists, or expectation can never
 match. Four readings were scored against 60 real frames per game by *churn* —
 how many identities exist overall against how many are present in one frame:
 
-| identity | overall | per frame | churn |
-|---|---|---|---|
-| value + bounding box | 101 | 16.3 | 6.2× |
-| value + cell count | 101 | 16.3 | 6.2× |
-| **value** | **8** | **8.0** | **1.0×** |
-| value + channel | 16 | 8.0 | 2.0× |
+| identity | churn | prediction `ls20` / `vc33` |
+|---|---|---|
+| value + bounding box | 6.2× | — |
+| value + cell count | 6.2× | — |
+| value — a kind of stuff | 1.0× | 93% / 85% |
+| **tracked piece, grouped by common fate, read with what lies ahead** | **1.7×** | **99% / 93%** |
 
-Value alone holds at 1.0× in both games. Keying on extent or cell count makes a
-thing that changes shape become a *different thing* six to ten times over.
+Stuff held identity perfectly and hid the thing that mattered. In `ls20`, value 9
+is five separate pieces, one of which moves; every reading of "the 9s" was
+swamped by the four that never move. Tracking individuals costs some churn —
+partly because a thing is renamed when its parts are first grouped — and buys
+this: the moving object's blocked-or-not outcome, predicted **100%**.
 
-**Declared limit:** this is a kind of *stuff*, not an individual. Every cell of
-value 9 is one Other however many separate pieces they form. Telling individuals
-apart needs tracking across frames, and is not done.
+The grouping step is there because of a second measurement. Before it, the
+object's front part was predicted 100% and its back part only 67%: the object is
+drawn in two colours, segmentation splits it, and a ray cast from the back part
+stopped at its own front part and never saw the wall.
 
 ## Measurements
 
 Prediction accuracy, over the same 316 real transitions from two games.
 
-What the mind does, against the cheaper rule it replaces:
-
 | | `ls20` | `vc33` |
 |---|---|---|
-| predict whatever happened last time | 92% | 80% |
-| **majority over accrued evidence** (what it does) | **93%** | **85%** |
+| actions as entities, one hand-written feature | 94% | 69% |
+| kinds of stuff as entities, context = action | 93% | 85% |
+| **tracked things, context = action + what lies ahead** | **99%** | **93%** |
 
-And against the architecture this replaced — which made an *action* the unit of
-experience and read the situation through a hand-written feature:
-
-| | `ls20` | `vc33` |
-|---|---|---|
-| actions as entities, hand-coded feature | 94% | 69% |
-| **things as entities, no hand-coded feature** | **93%** | **85%** |
-
-One point given up where the hand-written feature was doing the work, sixteen
-gained where it was blind, and the feature is gone.
+The first row is the architecture this replaced, which made an *action* the unit
+of experience. Its one strong number came from a feature written by hand for
+this game; the feature is gone, and nothing is given up for it.
 
 Live runs, 120 cycles each:
 
 | | `ls20` | `vc33` |
 |---|---|---|
-| Others perceived per cycle | 9 | 7 |
-| distinct sources of resistance | 8 | 3 |
-| scars recorded | 90 | 119 |
-| of which absences | 1 | 4 |
-| Other-to-Other interactions (`SocialEdge`) | 5 | 14 |
-| moves committed | `1:103 2:9 3:4 4:4` | ACTION6 only, swept |
+| things perceived per cycle | 19 | 12 |
+| Other-to-Other interactions (`SocialEdge`) | 28 | 20 |
+| scars recorded | 54 | 101 |
+| of which absences | 4 | 4 |
+| moves committed | `4:38 1:28 3:28 2:26` | ACTION6 only, swept |
+| distinct positions the moving object reached | 19 | — |
 | **levels completed** | **0** | **0** |
 
-An earlier version of this table came from runs where the agent pressed one key
-every cycle — a regression in how it chose moves, since fixed. Its perception
-figures were sound; its behaviour figures described an agent stuck against a
-wall, and they are gone.
+Two earlier versions of this table are gone, and why is worth keeping. One came
+from runs where the agent pressed a single key every cycle — a regression in how
+it chose moves. The next came from an agent that acted on whatever it understood
+least and took one action 103 times in 120. Their perception figures were sound;
+their behaviour figures described an agent stuck, and they were replaced rather
+than footnoted.
+
+### How curiosity chooses
+
+It follows **learning progress**, not ignorance. Going for whatever is least
+understood sticks to irreducible noise — the "noisy TV" failure of
+curiosity-driven exploration — because noise never becomes understood.
+Following how fast understanding is *changing* instead, noise that cannot be
+learned shows no progress, and curiosity leaves it on its own. Measured, one
+action's share of moves fell from 103/120 to 38/120.
 
 ## Findings
 
@@ -172,10 +187,10 @@ drew on.
    collisions *is*, and it means the store is right for driving change and wrong
    for answering what happens next.
 
-### Gaps in this agent
+### A gap in this agent
 
-6. **Curiosity sticks, and want has nothing to seek**, as the status section
-   says. Local to this repository, not upstream's.
+6. **Want has nothing to seek**, as the status section says. Local to this
+   repository, not upstream's.
 
 ## Running it
 

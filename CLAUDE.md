@@ -803,6 +803,82 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## Individuals, and curiosity that follows progress
+
+Two changes, both approved by Plone, both measured before they were wired.
+
+### (a) Tracked individuals, grouped by common fate
+
+The contact reading proposed to fix curiosity's stickiness helped overall
+prediction (93 → 97%) and did nothing for the moving object (70 → 66%). The data
+said why: under ACTION1, "thing:9" moved (−2,0) 29 times and held (0,0) 12 times —
+a clean blocked-or-not outcome — but value 9 is **five pieces**, one of which
+moves, and any reading of the stuff was the union over all five. The declared
+limit ("a kind of stuff, not an individual") was exactly what blocked the fix.
+
+`seeing.py` follows each piece across frames (nearest centroid within its value),
+groups pieces that repeatedly move together by the same displacement
+(`MIN_COMOVEMENTS = 2`, vetoed outright by any occasion of moving apart), and
+reads for each thing what it faces first on every side. Measured on the 316 saved
+transitions:
+
+| identity | churn | ls20 | vc33 |
+|---|---|---|---|
+| value (stuff) | 1.0× | 93% | 85% |
+| tracked piece + what lies ahead | 1.5× | 98% | 94% |
+| **tracked, grouped by common fate** | **1.7×** | **99%** | **93%** |
+
+Without grouping the moving object's front part was predicted 100% and its back
+part 67%: it is drawn in two colours, segmentation splits it, and a ray from the
+back stopped at its own front and never saw the wall. With grouping the object is
+`thing:9+12`, and its blocked-or-not outcome is predicted **100%** (35 of 35).
+
+**Order is INV-8.** Grouping learns from how pieces moved, and the situation a
+thing is read in predicts how it will move. The scene is read with the groups
+the past formed; this cycle's co-movement is accrued afterwards. A test pins that
+the group appears in the look *after* the one that supplied the deciding
+evidence.
+
+The stuff-level readers in `interpret.py` (`changes_of`, `contacts`,
+`interactions_of`) and `Region.kind` were removed once nothing in production
+called them. Churn rose partly because a thing is renamed when its parts are
+first grouped (`thing:12#8` → `thing:9+12#8`); that is declared, not hidden.
+
+### (b) Curiosity follows learning progress
+
+Least-resolved-first is greedy toward irreducible noise: whatever the mind can
+never predict stays least resolved for ever, and curiosity never leaves it. The
+mind now reports `progress:action:N` — the absolute change in accuracy between
+the last `PROGRESS_WINDOW = 4` uses of an action and the four before — and the
+policy composes it with want as `−(progress + valence)`. Unlearnable noise shows
+no progress; an action whose accuracy starts falling counts again; an action with
+fewer than eight uses counts as still being learned, which is also what puts an
+untried action first.
+
+This replaces the policy's base rather than modulating it, which went beyond the
+earlier approval ("modulate, not replace"); Plone approved it explicitly.
+
+### Live, 120 cycles
+
+| | `ls20` before | `ls20` after | `vc33` after |
+|---|---|---|---|
+| moves committed | `1:103 2:9 3:4 4:4` | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| `resolved:action:*` | 0.91–0.94 | 0.97–0.99 | `6`: 0.93 |
+| things per cycle | 9 | 19 | 12 |
+| situations the mind has met | 45 | 176 | 56 |
+| `SocialEdge` | 5 | 28 | 20 |
+| moving object's distinct positions | not measured | **19** | — |
+| levels completed | 0 | **0** | **0** |
+
+It does not oscillate in place: the last twelve positions of the run walk a
+straight line leftward across the grid, following the one action still showing
+progress (`progress:action:3` = 0.12, all others 0). It did spend five cycles
+pressing into the right-hand wall before that.
+
+**Still 0 levels, and the reason is unchanged: want can only avoid.** Every
+`valence` in `ls20` is 0 because the region has never answered anything with a
+level or a win.
+
 ## A regression in the rebuild, and the technical items closed
 
 ### The regression

@@ -41,6 +41,7 @@ from dil.loop.layers.t2 import Emission
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
 from .observe import STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
+from .seeing import Seeing, create_seeing
 
 # How many state-changing actions a run may spend. RHAE scores
 # (human_baseline / ai_actions)^2, so every action is paid for; deliberation is
@@ -60,7 +61,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "delivered",
+        "_seeing", "delivered",
     )
 
     def __init__(
@@ -68,12 +69,15 @@ class Arc3Source:
         env: Any,
         game_action_cls: Any,
         action_budget: int = DEFAULT_ACTION_BUDGET,
+        seeing: Seeing | None = None,
     ) -> None:
-        # The host holds NO model. It used to hand the raw frame to one and let
-        # it decide what was worth looking at, which was the body's job done by
-        # the mind. Reading the signal now happens on the thinking side
-        # (`perceive.py`, `interpret.py`), called from `observe`; the host carries
-        # signals and concludes nothing.
+        # The host holds NO model and does no interpreting. It carries the mind's
+        # perceptual stage, `seeing`, and calls it once per cycle the way a nerve
+        # carries what the eye has processed: the reading — which piece is which
+        # across frames, which pieces move as one, what lies ahead of each — is
+        # the mind's, and its memory has to live somewhere that persists for the
+        # run. The host is that somewhere, and nothing more.
+        self._seeing = seeing if seeing is not None else create_seeing()
         self._env = env
         self._ga = game_action_cls
         self._frame: Frame | None = None
@@ -109,7 +113,9 @@ class Arc3Source:
             # `deliver` has not run since the last report; nothing new happened.
             return None
 
-        host_input = observe(self._prev, self._pending, self._frame, t=self._t)
+        host_input = observe(
+            self._prev, self._pending, self._frame, t=self._t, seeing=self._seeing
+        )
         self._t += 1
         self._pending = None
         return host_input
@@ -202,9 +208,12 @@ def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
 
 
 def create_source(
-    env: Any, game_action_cls: Any, action_budget: int = DEFAULT_ACTION_BUDGET
+    env: Any,
+    game_action_cls: Any,
+    action_budget: int = DEFAULT_ACTION_BUDGET,
+    seeing: Seeing | None = None,
 ) -> Arc3Source:
-    return Arc3Source(env, game_action_cls, action_budget)
+    return Arc3Source(env, game_action_cls, action_budget, seeing)
 
 
 __all__ = [

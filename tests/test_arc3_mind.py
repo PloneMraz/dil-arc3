@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 
 from arc3 import Move, observe
-from arc3.interpret import changes_of
 from arc3.mind import (
+    PROGRESS_WINDOW,
     CONTEXTS_KNOWN,
     CONTEXT_NOVELTY,
     NO_CONTEXT,
@@ -205,13 +205,17 @@ def test_the_rule_reports_its_reading_of_the_situation_upward():
     entity = unit.content["value"]["entity"]
 
     rule(entity, (), unit, lambda params, weight=1.0: reported.append(dict(params)))
-    assert reported[0][CONTEXT_NOVELTY] == 1.0, "a situation met for the first time"
-    assert reported[0][CONTEXTS_KNOWN] == 0.0
-
     rule(entity, (unit,), units_of(a_cycle())[0],
          lambda params, weight=1.0: reported.append(dict(params)))
-    assert reported[1][CONTEXT_NOVELTY] == 0.0, "and now familiar"
-    assert reported[1][CONTEXTS_KNOWN] == 1.0
+
+    # The rule reports twice per call — its reading of novelty, then its
+    # per-action readings — so pick out the novelty reports.
+    novelty = [r for r in reported if CONTEXT_NOVELTY in r]
+    assert novelty[0][CONTEXT_NOVELTY] == 1.0, "a situation met for the first time"
+    assert novelty[0][CONTEXTS_KNOWN] == 0.0
+    assert novelty[1][CONTEXT_NOVELTY] == 0.0, "and now familiar"
+    assert novelty[1][CONTEXTS_KNOWN] == 1.0
+    assert any(k.startswith("progress:") for r in reported for k in r), "and progress"
 
 
 def test_a_rule_with_nothing_to_report_still_works():
@@ -219,3 +223,42 @@ def test_a_rule_with_nothing_to_report_still_works():
     unit = units_of(a_cycle())[0]
     assert rule(unit.content["value"]["entity"], (), unit) is unit
     assert NO_CONTEXT == ""
+
+
+# ── learning progress, and the noisy-TV failure it exists to avoid ──
+
+
+def test_a_situation_not_yet_used_enough_counts_as_still_being_learned():
+    mind = create_mind()
+    assert mind.progress("action:1") == 1.0
+
+
+def test_noise_that_cannot_be_learned_shows_no_progress():
+    """MEASURED before this existed: curiosity took one action 103 times in 120
+    because its outcome never became predictable. Following progress rather than
+    ignorance, steady unpredictability reads as zero and curiosity moves on."""
+    mind = create_mind()
+    for t in range(2 * PROGRESS_WINDOW):
+        # Half right, half wrong, every use, for ever: irreducible.
+        mind.score("action:1", "a", "a", t)
+        mind.score("action:1", "a", "b", t)
+    assert mind.progress("action:1") == 0.0
+
+
+def test_something_being_learned_shows_progress():
+    mind = create_mind()
+    for t in range(PROGRESS_WINDOW):
+        mind.score("action:1", "a", "b", t)  # wrong at first
+    for t in range(PROGRESS_WINDOW, 2 * PROGRESS_WINDOW):
+        mind.score("action:1", "a", "a", t)  # then right
+    assert mind.progress("action:1") == 1.0
+
+
+def test_a_world_that_changes_under_an_action_is_worth_attention_again():
+    """Absolute progress: accuracy that starts falling counts too."""
+    mind = create_mind()
+    for t in range(PROGRESS_WINDOW):
+        mind.score("action:1", "a", "a", t)
+    for t in range(PROGRESS_WINDOW, 2 * PROGRESS_WINDOW):
+        mind.score("action:1", "a", "b", t)
+    assert mind.progress("action:1") == 1.0

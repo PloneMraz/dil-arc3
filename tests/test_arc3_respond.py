@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from arc3.action import Move
 from arc3.observe import move_value, observe
-from arc3.respond import DEFAULT_SWEEP, UNMET_RESOLUTION, compose, least_resolved
+from arc3.respond import DEFAULT_SWEEP, UNMET_PROGRESS, compose, least_resolved
 from dil.loop.cycle import RespondContext
 from dil.loop.types import Appraisal, ModField
 from tests.test_arc3_perceive import framed
@@ -43,22 +43,22 @@ def test_the_policy_does_not_press_one_key_for_ever():
     assert set(committed) == {1, 2, 3, 4}
 
 
-# ── curiosity, read off the field ──
+# ── curiosity follows learning progress, read off the field ──
 
 
 def test_an_action_the_mind_has_not_reported_on_is_tried_first():
     """The loop reaches for what it does not know before what it does."""
-    assert UNMET_RESOLUTION == 0.0
+    assert UNMET_PROGRESS == 1.0
     policy = least_resolved()
-    ctx = ctx_for((1, 2), {"resolved:action:1": 0.9})
+    ctx = ctx_for((1, 2), {"progress:action:1": 0.1})
     assert policy(ctx) == move_value(Move(2))
 
 
-def test_the_least_resolved_action_is_taken():
+def test_the_action_being_learned_fastest_is_taken():
     policy = least_resolved()
     ctx = ctx_for(
         (1, 2, 3),
-        {"resolved:action:1": 1.0, "resolved:action:2": 0.3, "resolved:action:3": 0.8},
+        {"progress:action:1": 0.0, "progress:action:2": 0.7, "progress:action:3": 0.2},
     )
     assert policy(ctx) == move_value(Move(2))
 
@@ -73,9 +73,9 @@ def test_an_action_the_region_ended_the_game_after_is_avoided():
     ctx = ctx_for(
         (1, 2),
         {
-            "resolved:action:1": 0.0,
+            "progress:action:1": 1.0,
             "valence:action:1": -1.0,
-            "resolved:action:2": 0.9,
+            "progress:action:2": 0.1,
         },
     )
     assert policy(ctx) == move_value(Move(2))
@@ -86,17 +86,17 @@ def test_an_action_the_region_rewarded_is_preferred_however_familiar():
     ctx = ctx_for(
         (1, 2),
         {
-            "resolved:action:1": 1.0,
+            "progress:action:1": 0.0,
             "valence:action:1": 1.0,
-            "resolved:action:2": 0.2,
+            "progress:action:2": 0.8,
         },
     )
     assert policy(ctx) == move_value(Move(1))
 
 
 def test_where_the_region_has_said_nothing_curiosity_decides_alone():
-    assert compose(0.4, 0.0) == 0.4
-    assert compose(0.4, -1.0) > compose(0.9, 0.0)
+    assert compose(0.4, 0.0) == -0.4
+    assert compose(1.0, -1.0) > compose(0.1, 0.0)
 
 
 # ── the self's own record ──
@@ -112,12 +112,12 @@ def test_ties_break_on_what_the_self_has_already_done():
 def test_the_same_field_and_frame_commit_the_same_move():
     """Deterministic, so a third party can replay a run."""
     a, b = least_resolved(), least_resolved()
-    ctx = ctx_for((1, 2, 3), {"resolved:action:2": 0.5})
+    ctx = ctx_for((1, 2, 3), {"progress:action:2": 0.5})
     assert [a(ctx) for _ in range(4)] == [b(ctx) for _ in range(4)]
 
 
 def test_the_field_is_only_read():
-    params = {"resolved:action:1": 0.5}
+    params = {"progress:action:1": 0.5}
     ctx = ctx_for((1, 2), params)
     least_resolved()(ctx)
     assert dict(ctx.field.params) == params

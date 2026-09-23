@@ -48,13 +48,7 @@ from .frame import (
     Grid,
     read_frame,
 )
-from .interpret import (
-    REGION_ENTITY,
-    ThingChange,
-    change_value,
-    changes_of,
-    region_status,
-)
+from .interpret import REGION_ENTITY, ThingChange, change_value, region_status
 from .mind import Mind, create_mind, predict_rule, situation_of
 from .observe import (
     SELF_MOVE_CHANGE,
@@ -67,6 +61,7 @@ from .observe import (
     transducers,
 )
 from .perceive import Region, background_of, segment, segment_grid
+from .seeing import Scene, Seeing, Thing, create_seeing
 
 __all__ = [
     "ACTIONS_ARE_PER_FRAME",
@@ -97,13 +92,16 @@ __all__ = [
     "Mind",
     "Move",
     "Region",
+    "Scene",
+    "Seeing",
+    "Thing",
     "ThingChange",
     "action_context",
     "background_of",
     "change_value",
-    "changes_of",
     "check_afforded",
     "create_mind",
+    "create_seeing",
     "move_from_value",
     "move_value",
     "observe",

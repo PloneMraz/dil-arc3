@@ -1,8 +1,16 @@
 """How the self commits an action — the host's declared RespondPolicy.
 
-The action worth committing is **the one whose consequences are least resolved**,
+The action worth committing is **the one the mind is learning fastest about**,
 shifted by **how the region has answered it**. Curiosity is the base; want
 modulates it rather than replacing it.
+
+CURIOSITY FOLLOWS PROGRESS, NOT IGNORANCE. An earlier version took whatever was
+least resolved, and measured on a live `ls20` run it took one action 103 times in
+120: that action's outcome turned on something the mind could not see, so it
+never became resolved and curiosity never left it — the "noisy TV" failure.
+Following learning progress instead, noise that cannot be learned shows none,
+and curiosity leaves it on its own. An untried action counts as maximal progress,
+so the loop still reaches for what it does not know first.
 
 Where this sits matters. The policy runs at the close of the meaning-channel,
 after appraisal, issuing layer T8 — so the action issues from the whole loop, not
@@ -11,8 +19,8 @@ from the thinking layer. No layer chooses the move.
 IT READS THE FIELD, AND ONLY THE FIELD. Attention and want are compositions of
 context, environment and GLOB-MOD, not constants — so what this policy knows
 about each action arrives the way everything else reaches every link: through the
-modulatory field. The mind reports, per situation, how well it predicts what
-follows (`resolved:action:N`) and how the region has answered it
+modulatory field. The mind reports, per situation, how fast it is learning what
+follows (`progress:action:N`) and how the region has answered it
 (`valence:action:N`); the field carries both; the policy composes them. It never
 reaches into the mind, and the mind never sees this.
 
@@ -34,15 +42,15 @@ from .action import COMPLEX_ACTION, RESET, Move
 from .frame import TERMINAL_STATES
 from .observe import move_value
 
-# Resolution assumed for an action the mind has never reported on. Zero, so an
+# Progress assumed for an action the mind has never reported on. Maximal, so an
 # untried action outranks every tried one: the loop reaches for what it does not
 # know before what it does.
-UNMET_RESOLUTION: Final = 0.0
+UNMET_PROGRESS: Final = 1.0
 
 # The field keys the mind reports under. Read as local strings rather than
 # imported from the mind: the self takes nothing from the mind but what the field
 # carries.
-_RESOLVED: Final = "resolved:action:"
+_PROGRESS: Final = "progress:action:"
 _VALENCE: Final = "valence:action:"
 
 
@@ -83,16 +91,17 @@ def _affords(ctx: RespondContext) -> tuple[int, ...]:
     return ()
 
 
-def compose(resolved: float, valence: float) -> float:
+def compose(progress: float, valence: float) -> float:
     """Curiosity shifted by want (DECLARED; lower is taken first).
 
-    `resolved` is in [0, 1] and `valence` in [-1, 1], so where the region has
-    answered an action at all, its answer outweighs how well that action is
-    understood: an action the region ended the game after is avoided however
-    unfamiliar it is, and one it rewarded is preferred however familiar. Where the
-    region has said nothing (valence 0), curiosity decides alone.
+    `progress` is in [0, 1] and `valence` in [-1, 1], so where the region has
+    answered an action at all, its answer can outweigh how much is still being
+    learned about it: an action the region ended the game after is avoided
+    however much there is to learn, and one it rewarded is preferred however
+    settled it has become. Where the region has said nothing (valence 0),
+    curiosity decides alone.
     """
-    return resolved - valence
+    return -(progress + valence)
 
 
 class LeastResolved:
@@ -138,7 +147,7 @@ class LeastResolved:
         def rank(action_id: int) -> tuple[float, int, int]:
             return (
                 compose(
-                    params.get(f"{_RESOLVED}{action_id}", UNMET_RESOLUTION),
+                    params.get(f"{_PROGRESS}{action_id}", UNMET_PROGRESS),
                     params.get(f"{_VALENCE}{action_id}", 0.0),
                 ),
                 self._taken.get(action_id, 0),

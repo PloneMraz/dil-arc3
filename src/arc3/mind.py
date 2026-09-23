@@ -55,6 +55,15 @@ RESOLVED_PREFIX: Final = "resolved:"
 # Per situation, how the REGION has answered it (INV-7, up-channel):
 # `valence:action:3`. This is where want lives. See `region_valence`.
 VALENCE_PREFIX: Final = "valence:"
+# Per situation, how fast the mind is LEARNING it (INV-7, up-channel):
+# `progress:action:3`. This is what curiosity reads. See `Mind.progress`.
+PROGRESS_PREFIX: Final = "progress:"
+
+# How many uses of an action make one window of learning progress (DECLARED,
+# tunable). Progress compares the last window's accuracy with the one before it,
+# so an action needs twice this many uses before it has a progress at all; until
+# then it counts as still being learned.
+PROGRESS_WINDOW: Final = 4
 
 
 def region_valence(status: object) -> float:
@@ -94,7 +103,9 @@ def _key(value: object) -> str:
 class Mind:
     """Associates (Other, situation) with what the Other then did."""
 
-    __slots__ = ("_table", "_last", "_seen_values", "_hits", "_trials", "_valence")
+    __slots__ = (
+        "_table", "_last", "_seen_values", "_hits", "_trials", "_valence", "_uses",
+    )
 
     def __init__(self) -> None:
         # The accrued evidence: per (entity, context), how often each outcome.
@@ -109,6 +120,10 @@ class Mind:
         self._trials: Counter[str] = Counter()
         # Per situation: every reading of how the region answered it.
         self._valence: dict[str, list[float]] = {}
+        # Per situation, per use (one cycle in which the action was taken): how
+        # many predictions about Others came true, out of how many. Keyed by the
+        # cycle's time, so one use is every Other seen after one action.
+        self._uses: dict[str, dict[int, list[int]]] = {}
 
     # ── what it knows so far (read-only, for reporting) ──
 
@@ -131,7 +146,32 @@ class Mind:
         readings = self._valence.get(context)
         return sum(readings) / len(readings) if readings else None
 
-    def score(self, context: str, predicted: object, outcome: object) -> None:
+    def progress(self, context: str) -> float:
+        """How fast the mind is learning this situation — the size of the change
+        in its accuracy between the last window of uses and the one before.
+
+        WHY CURIOSITY READS THIS AND NOT HOW RESOLVED A SITUATION IS. Going for
+        whatever is least resolved sticks to irreducible noise: measured on a
+        live ls20 run, the agent took one action 103 times out of 120 because its
+        outcome turned on something the mind could not see, so it never became
+        resolved and curiosity never left it — the "noisy TV" failure. Noise that
+        cannot be learned shows no progress, so curiosity that follows progress
+        leaves it on its own. The absolute size is used, so an action whose
+        accuracy starts FALLING — the world changed under it — is worth attention
+        again too.
+
+        A situation with fewer than two windows of uses counts as still being
+        learned (1.0), which is also what makes an untried action come first.
+        """
+        uses = self._uses.get(context, {})
+        accuracies = [h / t for _, (h, t) in sorted(uses.items()) if t]
+        if len(accuracies) < 2 * PROGRESS_WINDOW:
+            return 1.0
+        recent = accuracies[-PROGRESS_WINDOW:]
+        before = accuracies[-2 * PROGRESS_WINDOW : -PROGRESS_WINDOW]
+        return abs(sum(recent) / PROGRESS_WINDOW - sum(before) / PROGRESS_WINDOW)
+
+    def score(self, context: str, predicted: object, outcome: object, t: int = 0) -> None:
         """Record whether a prediction made in this situation came true.
 
         Called AFTER the prediction was formed, never before — comparing an
@@ -139,8 +179,12 @@ class Mind:
         INV-8's concern, which is forming the expectation FROM the answer.
         """
         self._trials[context] += 1
-        if _key(predicted) == _key(outcome):
+        hit = _key(predicted) == _key(outcome)
+        if hit:
             self._hits[context] += 1
+        use = self._uses.setdefault(context, {}).setdefault(t, [0, 0])
+        use[0] += int(hit)
+        use[1] += 1
 
     def answered(self, context: str, status: object) -> None:
         """Record how the region answered this situation."""
@@ -199,12 +243,21 @@ def observed_outcome(unit: InfoUnit) -> object | None:
 
 
 def situation_of(unit: InfoUnit) -> str:
-    """The situation this observation was made in — what the agent just did."""
+    """What the agent just did, as this observation reports it."""
     payload = _payload_of(unit)
     if payload is None:
         return NO_CONTEXT
     context = payload.get("context")
     return context if isinstance(context, str) else NO_CONTEXT
+
+
+def surroundings_of(unit: InfoUnit) -> str:
+    """What the Other faced when the agent acted — what lay ahead of it."""
+    payload = _payload_of(unit)
+    if payload is None:
+        return ""
+    situation = payload.get("situation")
+    return situation if isinstance(situation, str) else ""
 
 
 def predict_rule(mind: Mind, recollection: Any = None):
@@ -233,10 +286,18 @@ def predict_rule(mind: Mind, recollection: Any = None):
         payload = _payload_of(observed)
         if payload is None:
             return observed
+        # Two readings of where the agent is, kept apart. `context` is the action
+        # — what the mind reports on, per action, to the self. `where` is the
+        # action together with what this Other faced — what the mind predicts
+        # from. Measured, reading what lay ahead of each tracked thing took
+        # prediction from 93% to 99% on ls20 and from 85% to 93% on vc33, and
+        # resolved the moving object's blocked-or-not outcome completely.
         context = situation_of(observed)
+        surroundings = surroundings_of(observed)
+        where = f"{context}#{surroundings}" if surroundings else context
 
         # 1. Both sources answer, from the situation alone.
-        from_mind = mind.predict(entity_id, context)
+        from_mind = mind.predict(entity_id, where)
         from_record = (
             recollection.recall(entity_id, observed)
             if recollection is not None
@@ -251,7 +312,7 @@ def predict_rule(mind: Mind, recollection: Any = None):
         if contribute is not None:
             contribute(
                 {
-                    CONTEXT_NOVELTY: 0.0 if mind.has_seen(entity_id, context) else 1.0,
+                    CONTEXT_NOVELTY: 0.0 if mind.has_seen(entity_id, where) else 1.0,
                     CONTEXTS_KNOWN: float(mind.contexts_known()),
                 }
             )
@@ -260,10 +321,10 @@ def predict_rule(mind: Mind, recollection: Any = None):
         outcome = observed_outcome(observed)
         if outcome is not None:
             if from_mind is not None:
-                mind.score(context, from_mind, outcome)
+                mind.score(context, from_mind, outcome, observed.t)
             if "status" in payload:
                 mind.answered(context, outcome)
-            mind.observe(entity_id, context, outcome)
+            mind.observe(entity_id, where, outcome)
 
         # The mind's reading of this situation, reported upward (INV-7). Accrued
         # in the mind, carried by the field: the field's blend averages only the
@@ -276,6 +337,7 @@ def predict_rule(mind: Mind, recollection: Any = None):
             resolution = mind.resolution(context)
             if resolution is not None:
                 reading[RESOLVED_PREFIX + context] = resolution
+            reading[PROGRESS_PREFIX + context] = mind.progress(context)
             valence = mind.valence(context)
             if valence is not None:
                 reading[VALENCE_PREFIX + context] = valence

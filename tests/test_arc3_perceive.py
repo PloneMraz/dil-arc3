@@ -87,41 +87,25 @@ def test_every_channel_of_the_stack_is_looked_at():
     assert sorted((r.channel, r.value) for r in regions) == [(0, 9), (1, 3)]
 
 
-# ── identity, the property everything above T4 rests on ──
+# ── what a piece carries forward ──
+#
+# Identity is not decided here: which thing a piece belongs to, and whether it is
+# the same thing as a piece in another frame, needs memory and is `seeing.py`'s.
 
 
-def test_a_thing_that_moves_is_the_same_thing():
-    here = segment(framed({(5, 5): 9, (5, 6): 9}))[0]
-    there = segment(framed({(30, 40): 9, (30, 41): 9}))[0]
-    assert here.kind == there.kind
-    assert here.centroid != there.centroid
+def test_a_region_keeps_its_own_cells():
+    """Tracking a piece and reading what lies ahead of it both need to know
+    which cells are its own."""
+    region = segment(framed({(4, 6): 9, (4, 7): 9}))[0]
+    assert sorted(region.cells) == [(4, 6), (4, 7)]
 
 
-def test_a_thing_that_changes_shape_is_still_the_same_thing():
-    """Measured: keying identity on extent or cell count made a thing become a
-    different thing six to ten times over across 60 real frames."""
-    small = segment(framed({(5, 5): 9}))[0]
-    big = segment(framed({(5, 5): 9, (5, 6): 9, (6, 5): 9}))[0]
-    assert small.kind == big.kind
-
-
-def test_the_same_value_on_two_channels_is_the_same_stuff():
-    """Declared: ls20's stack depth varies, so binding identity to a channel
-    would make one stuff read as two things."""
-    regions = segment(stacked({(5, 5): 9}, {(20, 20): 9}))
-    assert len({r.kind for r in regions}) == 1
-
-
-def test_identity_does_not_carry_position():
-    assert "5" not in segment(framed({(5, 5): 9}))[0].kind
-
-
-def test_stuff_of_one_value_is_one_Other_however_many_pieces():
-    """The declared limit, stated as a test so it cannot be forgotten: this is a
-    kind of stuff, not an individual."""
-    regions = segment(framed({(5, 5): 9, (30, 30): 9}))
-    assert len(regions) == 2
-    assert len({r.kind for r in regions}) == 1
+def test_cells_do_not_decide_whether_two_regions_are_the_same():
+    """A region is the same region by what it is, not by an enumeration of
+    where — the cells are carried but excluded from equality."""
+    a = segment(framed({(4, 6): 9, (4, 7): 9}))[0]
+    b = segment(framed({(4, 6): 9, (4, 7): 9}))[0]
+    assert a == b
 
 
 # ── what it does not see ──
