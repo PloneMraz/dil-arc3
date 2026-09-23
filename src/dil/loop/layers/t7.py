@@ -6,10 +6,28 @@ PredErr — no observation, signed "-". A single silence against a background of
 returns is a valid mismatch (§4); unbroken silence is a void field, handled by
 the precondition gate, not here.
 
-DEVIATION from dil-core, declared: `T7Input.present` lets the host report which
-entities the region says are there this cycle, and an absence is registered only
-against those. Silence presupposes the chance to speak. `None` — the default —
-restores the original behaviour exactly.
+`T7Input.present` lets the host report which entities the region says are there
+this cycle, and an absence is registered only against those. Silence presupposes
+the chance to speak. `None` — the default — restores the original behaviour
+exactly. (First written here, then carried upstream into dil-core, where the gap
+actually was.)
+
+ATTENTION (INV-7). Without it, expectation is FLAT: every entity ever seen is
+expected back every cycle, for ever. With one entity that is invisible; with N
+entities of which one returns per cycle it is N−1 false absences per cycle —
+measured here at 444 of 481 scars over 159 real `ls20` cycles. The loop could
+not tell "fell silent" from "not being attended to", having no notion of
+attending.
+
+The field supplies it: `attentionGain` scales how long an entity stays expected
+after it was last seen. This is the first layer in either implementation to draw
+on the modulatory field at all.
+
+WHAT ATTENTION MUST NOT DO. §8.2 defines pure Mode-A as a loop where returns
+arrive but are let go unregistered, and §8.4 adds that "a return becomes a datum
+only if it is registered". So this gate touches only what is DEMANDED BACK.
+Every return still arrives, is still bound, still meets its expectation, and is
+still registered. Attention lowers expectation; never registration.
 
 T7 accrues which entities are expected to recur (INV-5): an entity seen at least
 `min_observations_to_expect` times is expected next cycle.
@@ -21,7 +39,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from ..layer import BaseLayer, EmitFn
 from ..types import InfoUnit, ModField
@@ -70,45 +88,77 @@ class T7Output:
     absences: tuple[AbsenceReading, ...] = dc_field(default_factory=tuple)
 
 
+# The field parameter that scales the attention span (INV-7, down-channel).
+ATTENTION_GAIN: Final = "attentionGain"
+
+
 @dataclass(slots=True)
 class _ExpectState:
     predicted: InfoUnit
     seen: int = 0
+    # The tick this entity was last seen at — its recency, and its salience.
+    last_seen: int = 0
 
 
 class T7(BaseLayer):
     index = 7
     consumes: tuple[int, ...] = (5,)
 
-    def __init__(self, min_observations_to_expect: int = 1) -> None:
+    def __init__(
+        self,
+        min_observations_to_expect: int = 1,
+        attention_span: float = float("inf"),
+    ) -> None:
         self._min_seen = min_observations_to_expect
+        # How many cycles an entity stays expected after it was last seen
+        # (DECIDE@IMPL), scaled by the field's gain. Infinity — attend to
+        # everything, for ever — is the reference behaviour.
+        self._base_span = attention_span
         self._expected: dict[str, _ExpectState] = {}
+        # T7 runs once per cycle, so its own call count IS a cycle clock.
+        # Accrued, never loaded (INV-5).
+        self._tick = 0
 
     # §9 snapshot surface; `restore` is recovery-only.
 
     def snapshot(self) -> dict[str, Any]:
         return {
             "expected": [
-                (k, {"predicted": v.predicted, "seen": v.seen})
+                (k, {"predicted": v.predicted, "seen": v.seen, "lastSeen": v.last_seen})
                 for k, v in self._expected.items()
-            ]
+            ],
+            "tick": self._tick,
         }
 
     def restore(self, state: Any) -> None:
+        # A snapshot taken before attention existed carries no lastSeen. It
+        # restores to 0 alongside a tick of 0, so the entity reads as freshly
+        # seen and stays expected: recovery must not silently NARROW what the
+        # loop expects. Dropping out of attention is earned by cycles passing.
         self._expected = {
-            k: _ExpectState(predicted=v["predicted"], seen=v["seen"])
+            k: _ExpectState(
+                predicted=v["predicted"], seen=v["seen"], last_seen=v.get("lastSeen", 0)
+            )
             for k, v in state["expected"]
         }
+        self._tick = state.get("tick", 0)
 
     def process(self, input: T7Input, field: ModField, emit: EmitFn) -> T7Output:  # noqa: A002
+        self._tick += 1
         # Accrue this cycle's expectations into memory.
         for e in input.expectations:
             st = self._expected.get(e.entity_id)
             if st is None:
-                st = _ExpectState(predicted=e.predicted, seen=0)
+                st = _ExpectState(predicted=e.predicted, seen=0, last_seen=self._tick)
                 self._expected[e.entity_id] = st
             st.predicted = e.predicted
             st.seen += 1
+            st.last_seen = self._tick
+
+        # The attention span in force this cycle: the declared span under the
+        # field's gain (INV-7, read as read-only background; T7 never reaches up
+        # into the field).
+        span = self._base_span * field.params.get(ATTENTION_GAIN, 1.0)
 
         # Register absence for expected entities that did not return, naming
         # which entity fell silent and how many times it had been expected, so
@@ -126,6 +176,10 @@ class T7(BaseLayer):
             # Silence presupposes the chance to speak: an entity the region says
             # is not present this cycle is not silent, it is simply not there.
             and (input.present is None or entity_id in input.present)
+            # Out of attention: the loop is no longer demanding this one back,
+            # so its not-returning is not a mismatch. The return itself, if it
+            # comes, is registered as it always was.
+            and self._tick - st.last_seen <= span
         )
         return T7Output(absences=absences)
 
@@ -134,5 +188,7 @@ class T7(BaseLayer):
         return tuple(a.predicted for a in output.absences)
 
 
-def create_t7(min_observations_to_expect: int = 1) -> T7:
-    return T7(min_observations_to_expect)
+def create_t7(
+    min_observations_to_expect: int = 1, attention_span: float = float("inf")
+) -> T7:
+    return T7(min_observations_to_expect, attention_span)

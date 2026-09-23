@@ -637,6 +637,43 @@ Neither game completed a level. The model improves **prediction**, not
 **winning**. Knowing what a control does, and knowing it 94% of the time, is
 still not knowing where to go.
 
+## Attention, and the absence flood dying
+
+Ported from dil-core, where the gap actually was. T7 now carries two gates, both
+additive and defaulted: `present` (the region's word — an entity it says is not
+there is not silent) and `attentionSpan` scaled by the field's `attentionGain`
+(the field's word — an entity the loop is no longer oriented toward is not being
+waited on).
+
+**Measured live on `ls20`, 80 cycles per run:**
+
+| `attentionSpan` | scars | absences | real resistance |
+|---|---|---|---|
+| ∞ (the old behaviour) | 227 | **225** | 2 |
+| 3 | 221 | 219 | 2 |
+| 2 | 149 | 147 | 2 |
+| 1 | 76 | 74 | 2 |
+| 0.5 | 2 | **0** | 2 |
+
+**The right-hand column never moves.** Attention removed 225 false absences and
+not one real collision. That is §8.2's line holding in live data rather than in
+a promise: attention lowers what is demanded back, never what is registered.
+
+`span = 0.5` reaches zero, and is not the answer: §8.1 **C3** requires a
+missing-InfoUnit when an expected event fails to occur, and a loop that expects
+nothing fails C3 by construction. `span = 1` keeps C3 alive while cutting
+225 → 74.
+
+### What this corrects in the earlier entry
+
+The absence flood was reported here as a consequence of the affordance mapping,
+and the open question was whether an affordance that is present but unasked
+counts as silent. That framing was too narrow. The flood is the signature of a
+loop with **no attention at all**: every entity ever seen expected back every
+cycle, for ever. With one entity it is invisible; with N entities of which one
+returns per cycle it is N−1 false absences per cycle, in any host, for any
+domain. The affordance mapping only made it visible.
+
 ## Two bugs in the starter kit on Windows
 
 Both are upstream's, both block a Windows user at the first step, and both are
