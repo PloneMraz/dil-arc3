@@ -803,6 +803,69 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## Entity was the wrong thing, and T8 said so
+
+`entity = affordance` was settled early and it was wrong. §8.4 defines an entity
+as "an other-entity the agent does not control", and §6.3 puts the layers that
+live off it above T4: T6 builds an `OtherModel` of it, T8 builds `RelValue` and
+`SocialEdge` — the latter being "an Other↔Other interaction with **no self
+present**". An entity is an *Other*. It is not the self, which T2 already
+separated, and it is not an action the agent can take.
+
+An affordance passes T4 and T5 and starves everything above. Measured over a
+real run:
+
+```
+T8 over the run:  RelValue = 0   SocialEdge = 0   others/cycle = [1]
+```
+
+**The top layer of the meaning-channel produced nothing, ever.** `RelValue`
+needs N ≥ 2 and there was never more than one Other present; `SocialEdge` needs
+two Others interacting without the agent, and two buttons cannot do that. The
+absence flood was the first symptom of the same error: an affordance does not
+return on its own, so asking whether it fell silent was the wrong question from
+the start. Attention patched the symptom.
+
+### Roles were inverted, both of them
+
+The host handed the loop a finished interpretation — "the thing of value 9 moved
+up five" — while the model reached past the loop into the raw grid to decide what
+was worth looking at. The body was concluding and the mind was sensing. Under the
+biological reading Plone set out — host is the body that receives signals, model
+is the thinking and interpreting part, DIL is how information moves, `store/` is
+memory — both belong the other way round.
+
+### `perceive.py`: the model reads the signal
+
+Things are connected runs of one value, four-connected, excluding whatever the
+grid is mostly made of. The background is *read* rather than assumed, so a world
+on a non-zero background still parses.
+
+**Identity was chosen by measurement, over 60 real frames per game.** The score is
+churn: how many identities exist overall against how many are present in any one
+frame. An identity that changes when the thing changes is not an identity.
+
+| identity | overall | per frame | churn | ever moves |
+|---|---|---|---|---|
+| value + bbox | 101 | 16.3 | 6.2× | 5 |
+| value + size | 101 | 16.3 | 6.2× | 4 |
+| **value** | **8** | **8.0** | **1.0×** | **4** |
+| value + channel | 16 | 8.0 | 2.0× | 3 |
+
+Value alone holds at **1.0× in both games** — every identity present in every
+frame. Extent and cell count fail hard: a thing that changes shape becomes a
+different thing six to ten times over. Channel was rejected on the same
+evidence, because `ls20`'s stack depth varies.
+
+**Declared limit:** this is a kind of *stuff*, not an individual. Every cell of
+value 9 is one Other however many separate pieces they form. Telling individuals
+apart needs matching across frames, which is a further interpretation and is not
+done. What it does buy is what affordances never could — **six to eight Others
+present at once**, so T8 has the N ≥ 2 it has never had.
+
+Segmentation costs ~5.7 ms per frame pair, measured; ~0.6 s over a hundred-cycle
+run.
+
 ## What GLOB-MOD actually holds, read off a live run
 
 Attention is a composition now, not one layer's formula. Each layer contributes
