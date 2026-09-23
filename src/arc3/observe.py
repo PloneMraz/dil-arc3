@@ -188,9 +188,28 @@ def observe(
     )
 
 
-def thing_transducer(signal: Signal) -> tuple[str, object]:
-    """T3's transducer for the vision channel."""
-    return (THING_INFO_TYPE, signal.raw_payload)
+# What an arrival is about, on the open-tag dimensions this host declares (tag F,
+# decisions.OPEN_TAG_KEYS). A stored datum carries the same values when it is
+# about the same thing, and that shared description is the whole of how the one
+# comes to mind when the other arrives (§6.4 T3 query).
+THINGS_OBJECT: Final = "things"
+LEVELS_OBJECT: Final = "levels"
+ACTIONS_OBJECT: Final = "actions"
+VISION_SENSE: Final = "vision"
+
+
+def thing_transducer(
+    signal: Signal,
+) -> tuple[str, object, list[dict[str, str]]]:
+    """T3's transducer for the vision channel.
+
+    A thing's change is about a thing, and it came by sight.
+    """
+    return (
+        THING_INFO_TYPE,
+        signal.raw_payload,
+        [{"object": THINGS_OBJECT}, {"sense": VISION_SENSE}],
+    )
 
 
 # What a status report is about, on the open-tag dimension `object` (tag F). The
@@ -200,14 +219,24 @@ def thing_transducer(signal: Signal) -> tuple[str, object]:
 STATUS_OBJECT: Final = "region-status"
 
 
-def status_transducer(signal: Signal) -> tuple[str, object, dict[str, str]]:
+def status_transducer(
+    signal: Signal,
+) -> tuple[str, object, list[dict[str, str]]]:
     """T3's transducer for the region's status channel.
 
     It also says what the arrival is about, which is what T3 asks the store with
-    (§6.4 query). The vision channel says nothing of the kind yet: a thing's
-    change has no stored datum about it to recall.
+    (§6.4 query). A status report carries the region's state, the change in its
+    level count, and the actions it affords next — so it is about all three.
     """
-    return (STATUS_INFO_TYPE, signal.raw_payload, {"object": STATUS_OBJECT})
+    return (
+        STATUS_INFO_TYPE,
+        signal.raw_payload,
+        [
+            {"object": STATUS_OBJECT},
+            {"object": LEVELS_OBJECT},
+            {"object": ACTIONS_OBJECT},
+        ],
+    )
 
 
 def transducers() -> dict[str, object]:

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from arc3.interpret import REGION_ENTITY
 from arc3.mind import create_mind, predict_rule, region_valence
-from arc3.observe import STATUS_CHANNEL, transducers
+from arc3.observe import STATUS_CHANNEL, VISION_CHANNEL, transducers
 from arc3.prior import DIRECTIVE, RULES
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
@@ -111,12 +111,27 @@ def test_the_first_status_report_brings_the_directive_to_mind():
 
     cycle.run(HostCycleInput(signals=(_status(2, NOTHING),)))
     assert mind.directive() == DIRECTIVE.payload
-    assert data.get(DIRECTIVE.id).fixed.provenance == "running"
-    others = [i.id for i in RULES if i.id != DIRECTIVE.id]
-    assert all(data.get(i).fixed.provenance == "prior" for i in others), (
-        "nothing else was about the region's status, so nothing else came to mind"
-    )
+    # A status report is about the region's status, its levels, and what may be
+    # done next: what is about those came to mind; what is about seeing and about
+    # things did not, because nothing has been seen yet.
+    def provenance(key: str) -> str:
+        return data.get(f"prior:{key}").fixed.provenance
+
+    assert {k: provenance(k) for k in ("directive", "levels", "cost", "actions",
+                                       "seeing", "world")} == {
+        "directive": "running", "levels": "running", "cost": "running",
+        "actions": "running", "seeing": "prior", "world": "prior",
+    }
 
     # From here the region's answers are read against it.
     cycle.run(HostCycleInput(signals=(_status(3, LEVEL),)))
     assert mind.valence("action:1") is not None and mind.valence("action:1") > 0
+
+    # The first thing seen brings what is about things, and about seeing.
+    seen = Signal(source_id=VISION_CHANNEL, raw_payload={
+        "entity": "thing:9#1", "change": {"null": True}, "context": "action:1"}, t=4)
+    cycle.run(HostCycleInput(signals=(_status(4, NOTHING), seen)))
+    cycle.run(HostCycleInput(signals=(_status(5, NOTHING),)))
+    assert provenance("world") == "running"
+    assert provenance("seeing") == "running"
+    assert all(data.get(i.id).fixed.provenance == "running" for i in RULES)

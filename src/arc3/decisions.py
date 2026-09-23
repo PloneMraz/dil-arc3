@@ -83,6 +83,8 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
     "source": "where the datum was read or produced",
     "object": "what the datum is about — the same on a stored datum and on an "
     "arrival, which is what lets the one recall the other",
+    "sense": "which sense the datum concerns — the one an arrival came by, or "
+    "the one a stored datum describes",
 }
 
 # ── Tag H — situation fit ──

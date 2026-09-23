@@ -28,7 +28,8 @@ leaderboard, "You are playing a game. Your goal is to win.", with the published
 rules of the place. Nothing about any particular game, and nothing about how to
 win one. It enters as host data stamped `prior` — not the character's own, not
 yet tested — and stays in the store until the character recalls it: the first
-report of the region's status brings it to mind. The good-or-bad reading of the
+report of the region's status brings the directive to mind, and the first thing
+seen brings what it was told about things and about seeing. The good-or-bad reading of the
 region's answers used to be written into the code; it is now read from that
 recalled directive, and with no directive every answer is neutral.
 

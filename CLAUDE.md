@@ -909,6 +909,56 @@ where it comes from and that an auditor can see it arrive. It does not, by
 itself, get the character through a level; nothing about how to win was ever in
 it.
 
+### The three limits that run left, worked through
+
+**1. Four items were never recalled.** Because no arrival described what they
+were about. The descriptions were made honest rather than the items forced:
+a status report carries the region's state, the change in its level count and
+the actions it affords, so it is about all three (`object`: `region-status`,
+`levels`, `actions`); a thing's change is about a thing and came by sight
+(`object: things`, `sense: vision`). dil-core now lets one arrival carry several
+descriptions. The old `body` item mixed what the body sees with what it can do;
+it is split into `seeing` (`object: frames`, `sense: vision`) and `actions`
+(`object: actions`). `sense` is declared in `OPEN_TAG_KEYS`. All 31 quotes
+re-verified against the sources after the split.
+
+**2. The query's return was never read back by T2.** §6.4 rule 3 wants every
+emission readable by T2 next cycle; T2 only saw the committed response. Fixed in
+dil-core (`9b0bbdf`), ported: T2 also reads last cycle's lateral emissions, and
+each return arrives as an observed change whose value is the query that asked,
+so T2 tags it SELF_WRITTEN. The content stays not-its-own; agency and
+provenance are different questions.
+
+**3. T3 asks each description once — kept, and why.** Re-asking returns the
+same data, already `running` and in use. Nothing added to `[data]` later carries
+these tags, so there is nothing new a second ask could find. Asking every cycle
+would put three to five queries a cycle into T2's matching window of 8, crowding
+out the moves it has to recognise. It would bite if a datum carrying a cue's
+tags entered `[data]` after that cue was asked; none does here. Declared, and
+put to Plone.
+
+Live, 120 cycles, 6 items admitted, 0 rejected:
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| queries | 5 (things, vision, region-status, levels, actions) | same 5 |
+| items `prior → running` | all 6, cycle 1 | all 6, cycle 1 |
+| `self:move` SELF_WRITTEN | 118 / 120 (2 before T2 is stable) | 118 / 120 |
+| store returns | 6, all UNDECIDED | 6, all UNDECIDED |
+| moves | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| levels | 0 | 0 |
+
+**Read the UNDECIDED row correctly.** Every return arrives at cycle 1, and T2
+classifies nothing before `STABILITY_THRESHOLD = 3` cycles have run — its own
+move is UNDECIDED then too. The path is closed and tested (with a threshold of
+1 the return is SELF_WRITTEN); in a live run it simply never has a return to
+close on after cycle 2. The threshold is tag B, inherited, untuned.
+
+**What is still true:** the mind reads one of the six — the directive, whose
+payload is structured. The other five are sentences. They run the layers and are
+in use as data, but nothing in this mind can read English, so they change no
+expectation.
+
 ## Individuals, and curiosity that follows progress
 
 Two changes, both approved by Plone, both measured before they were wired.

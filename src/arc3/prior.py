@@ -20,11 +20,13 @@ through the tagging-gate, stamped `prior` with no cycle-mark (§9, "no side
 door"). An item that cannot be tagged honestly is refused, not smuggled in.
 
 **How it is recalled.** Not poured in. It waits in the store until something
-arrives that it is about: each item's open tag `object` says what that is, on
-the same dimension the status channel describes its reports with, and T3 asks
-the store with that description (§6.4 query). The directive is about the
-region's status, so the first status report brings it to mind. The other items
-are about things no arrival describes yet, and wait.
+arrives that it is about. Each item's open tags say what that is, on the same
+dimensions the channels describe their arrivals with (`object`, and `sense` for
+the item about seeing), and T3 asks the store with those descriptions (§6.4
+query). A status report is about the region's status, its levels and what may be
+done next, so the first one brings the directive, the level structure and both
+items about actions to mind. The first thing seen brings the items about things
+and about seeing.
 
 The directive is the one sentence the competition gives every model on its
 official leaderboard. The character is told no more than that.
@@ -37,7 +39,13 @@ from typing import Final
 
 from dil.host import PreexistingItem
 
-from .observe import STATUS_OBJECT
+from .observe import (
+    ACTIONS_OBJECT,
+    LEVELS_OBJECT,
+    STATUS_OBJECT,
+    THINGS_OBJECT,
+    VISION_SENSE,
+)
 
 # Every item carries these open tags: the gate requires `domain` and at least
 # three in all, and forbids any key that names a verdict.
@@ -60,11 +68,16 @@ def _q(text: str, source: str) -> dict[str, str]:
     return {"text": text, "source": source}
 
 
-def _item(key: str, kind: str, about: str, payload: dict) -> PreexistingItem:
+def _item(
+    key: str, kind: str, about: str, payload: dict, **more: str
+) -> PreexistingItem:
     return PreexistingItem(
         id=f"prior:{key}",
         payload=payload,
-        open={"domain": DOMAIN, "kind": kind, "source": SOURCE_TAG, "object": about},
+        open={
+            "domain": DOMAIN, "kind": kind, "source": SOURCE_TAG, "object": about,
+            **more,
+        },
     )
 
 
@@ -102,7 +115,7 @@ DIRECTIVE: Final = _item(
 LEVELS: Final = _item(
     "levels",
     "structure",
-    "level-structure",
+    LEVELS_OBJECT,
     {
         "says": [
             _q("Environments are developed with a level-based structure, with at "
@@ -120,7 +133,7 @@ LEVELS: Final = _item(
 COST: Final = _item(
     "cost",
     "cost",
-    "action-cost",
+    ACTIONS_OBJECT,
     {
         "says": [
             _q("Each turn where the agent submits a command, move, or input that "
@@ -135,10 +148,11 @@ COST: Final = _item(
     },
 )
 
-BODY: Final = _item(
+# What the body can see — about the frames, and about the sense they come by.
+SEEING: Final = _item(
+    "seeing",
     "body",
-    "body",
-    "body",
+    "frames",
     {
         "says": [
             _q("The agent views a 64x64 grid where each cell is one of 16 "
@@ -147,6 +161,18 @@ BODY: Final = _item(
                "object moving across the screen) between player turns.", REPORT),
             _q("The environment’s state does not change asynchronously from "
                "the agent’s actions.", REPORT),
+        ],
+    },
+    sense=VISION_SENSE,
+)
+
+# What the body can do — about the actions.
+ACTIONS_ITEM: Final = _item(
+    "actions",
+    "body",
+    ACTIONS_OBJECT,
+    {
+        "says": [
             _q("Each game exposes only the subset currently available through the "
                "response's `available_actions` field.", ACTIONS),
             _q("When a game reaches a game-over state, the only valid action is "
@@ -176,7 +202,7 @@ BODY: Final = _item(
 WORLD: Final = _item(
     "world",
     "world",
-    "things",
+    THINGS_OBJECT,
     {
         "says": [
             _q("Objectness: Elements are perceived as coherent, persistent "
@@ -195,7 +221,9 @@ WORLD: Final = _item(
     },
 )
 
-RULES: Final[tuple[PreexistingItem, ...]] = (DIRECTIVE, LEVELS, COST, BODY, WORLD)
+RULES: Final[tuple[PreexistingItem, ...]] = (
+    DIRECTIVE, LEVELS, COST, SEEING, ACTIONS_ITEM, WORLD,
+)
 
 
 class ArcRules:
