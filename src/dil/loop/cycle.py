@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field as dc_field
+from dataclasses import dataclass, field as dc_field, replace
 from typing import Any, Literal, TypeAlias
 
 from ..invariants.types import LayerIndex
@@ -76,12 +76,14 @@ from .gathers import (
 from .glob_mod import GlobMod
 from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
+from .layers.t3 import is_store_query
 from .layers.t4 import T4Input
 from .layers.t5 import T5Input, T5Output
 from .layers.t6 import T6Input
 from .layers.t7 import ExpectedEntity, T7Input, T7Output
 from .layers.t8 import ObservedInteraction, T8Input
 from .meaning_channel import create_meaning_channel
+from .store_query import answer_query, returned_entity
 from .types import Appraisal, Directive, InfoUnit, ModField, PredErr, Signal
 
 # Identifier of the agent's editable state, for the INV-8 appraisal check.
@@ -111,6 +113,11 @@ class DriverState:
 
     cycle: int
     last_emission: Emission
+    # Store query-returns answered at the close of the last cycle and not yet
+    # ingested (§6.4 T3 query). They arrive at T1 of the next cycle.
+    pending_returns: tuple[Signal, ...] = ()
+    # Every datum ever recalled from the store — they return only when asked.
+    recalled: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +223,7 @@ class Cycle:
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
+        "_pending", "_recalled", "_unasked",
     )
 
     def __init__(
@@ -263,6 +271,14 @@ class Cycle:
         )
         # Wall-clock of the cycle currently running.
         self._cycle_t = 0
+        # Store query-returns awaiting ingestion at the next cycle's T1 (§6.4).
+        self._pending: list[Signal] = (
+            list(resume.pending_returns) if resume is not None else []
+        )
+        # Every datum ever recalled; each returns only on a cycle it was asked for.
+        self._recalled: set[str] = set(resume.recalled) if resume is not None else set()
+        # Recalled data not arriving this cycle — no absence is owed by them (T7).
+        self._unasked: frozenset[str] = frozenset()
 
     # ── identifiers and the two [event] sinks ──────────────────────────────
 
@@ -349,6 +365,7 @@ class Cycle:
                     for r in t5.output.results
                 ),
                 observed=frozenset(r.entity_id for r in t5.output.results),
+                unasked=self._unasked,
             ),
             field,
             datum,
@@ -420,7 +437,7 @@ class Cycle:
         self._log_exit(6)
         ch.publish(6, t6.output)
 
-        t7 = run_layer(L.t7, gather_t7(ch, host), field, datum)
+        t7 = run_layer(L.t7, gather_t7(ch, host, self._unasked), field, datum)
         datum = t7.datum
         self._log_exit(7)
         ch.publish(7, t7.output)
@@ -452,10 +469,32 @@ class Cycle:
 
     def snapshot(self) -> DriverState:
         """The driver's accrued state, for the §9 commit snapshot."""
-        return DriverState(cycle=self._cycle, last_emission=self._last_emission)
+        return DriverState(
+            cycle=self._cycle,
+            last_emission=self._last_emission,
+            pending_returns=tuple(self._pending),
+            recalled=tuple(sorted(self._recalled)),
+        )
 
-    def run(self, host: HostCycleInput) -> CycleResult:
+    def run(self, region_input: HostCycleInput) -> CycleResult:
         field = self._glob.current()
+
+        # ── Query-returns join what the region returned (§6, link 1) ──
+        # "Input channels: query returns, messages from an Other, event streams,
+        # the result of a prior action." What T3 asked the store for last cycle
+        # arrives now, at T1, and runs every layer like anything else that
+        # arrives. A return is present on the cycle it arrives, and only then: a
+        # memory that was not recalled is not silent, it was not asked.
+        returned = self._pending
+        self._pending = []
+        arriving = {returned_entity(s) for s in returned}
+        self._recalled |= arriving
+        self._unasked = frozenset(self._recalled - arriving)
+        host = (
+            region_input
+            if not returned
+            else replace(region_input, signals=(*region_input.signals, *returned))
+        )
         flow: FlowMode = "single-threaded" if self._cycle == 0 else "multi-stream"
         # The host server clock at this cycle, for [event] timestamps.
         self._cycle_t = self._now()
@@ -486,6 +525,22 @@ class Cycle:
             )
         )
 
+        # prior → running, for each recalled datum that had not run before (§9):
+        # "Host data, once admitted and once it has run, bears a cycle-mark." It
+        # runs now, so it takes this cycle's mark, and the move is recorded as it
+        # occurs. `prior` is a one-way entry: a datum already in circulation is
+        # returned as it is, and no edge is recorded for being read.
+        for s in returned:
+            datum_id = returned_entity(s)
+            held = self._data.get(datum_id)
+            if held is not None and held.fixed.provenance == "prior":
+                self._data.put(datum_id, to_running(held, self._cycle))
+                self._events.append(
+                    record_provenance(
+                        datum_id, self._cycle, "prior", "running", self._cycle_t
+                    )
+                )
+
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
             if flow == "single-threaded"
@@ -510,6 +565,16 @@ class Cycle:
         # region to push to, the buffer is empty.
         for e in pass_.emissions:
             self._emit(e.issuing_layer, e.action)
+
+        # ── The store answers T3's queries (§6.4, §9 open layer) ──
+        # Answered now, ingested at T1 next cycle. Answering changes nothing in
+        # `[data]`; the datum moves only when it runs.
+        for e in pass_.emissions:
+            if not is_store_query(e.action):
+                continue
+            for s in answer_query(self._data, e.action["cue"], self._cycle_t):
+                if all(returned_entity(p) != returned_entity(s) for p in self._pending):
+                    self._pending.append(s)
 
         # ── Expectation readings: the observable signature of accumulation ──
         # One lean line per observed entity: its prediction confidence and the

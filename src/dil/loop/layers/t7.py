@@ -63,6 +63,10 @@ class T7Input:
     # are going to. See HostCycleInput.afforded for why this exists and what it
     # measured. `None` restores dil-core's behaviour exactly.
     present: frozenset[str] | None = dc_field(default=None)
+    # Entities that return only when asked — data recalled from the agent's own
+    # store (§6.4 T3 query) — and were not asked for this cycle. A memory that
+    # was not recalled is not silent: nothing called it. Driver-supplied.
+    unasked: frozenset[str] = dc_field(default_factory=frozenset)
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,6 +233,9 @@ class T7(BaseLayer):
             # Silence presupposes the chance to speak: an entity the region says
             # is not present this cycle is not silent, it is simply not there.
             and (input.present is None or entity_id in input.present)
+            # Recalled from the store and not asked for again: it had no chance
+            # to speak, so its not-returning is no mismatch.
+            and entity_id not in input.unasked
             # Out of attention: the loop is no longer demanding this one back,
             # so its not-returning is not a mismatch. The return itself, if it
             # comes, is registered as it always was.

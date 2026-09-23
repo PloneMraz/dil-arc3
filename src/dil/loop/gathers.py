@@ -86,7 +86,11 @@ def gather_t6(ch: MeaningChannel) -> T6Input:
     )
 
 
-def gather_t7(ch: MeaningChannel, host: HostCycleInput) -> T7Input:
+def gather_t7(
+    ch: MeaningChannel,
+    host: HostCycleInput,
+    unasked: frozenset[str] = frozenset(),
+) -> T7Input:
     t5: T5Output = _must_read(ch, 7, 5)
     return T7Input(
         expectations=tuple(
@@ -97,6 +101,8 @@ def gather_t7(ch: MeaningChannel, host: HostCycleInput) -> T7Input:
         # Host ingest, like T1's and T3's: which entities the region says are
         # present. Not a channel read, so INV-3 is not in play.
         present=host.afforded,
+        # Driver-supplied: recalled data not asked for this cycle (§6.4 T3 query).
+        unasked=unasked,
     )
 
 
