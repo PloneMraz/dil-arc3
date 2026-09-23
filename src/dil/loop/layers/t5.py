@@ -44,7 +44,12 @@ from .t4 import BoundInfo
 PredictRule = Callable[[str, HistoryWindow, InfoUnit], InfoUnit]
 
 
-def persistence(entity_id: str, window: HistoryWindow, observed: InfoUnit) -> InfoUnit:
+def persistence(
+    entity_id: str,
+    window: HistoryWindow,
+    observed: InfoUnit,
+    contribute: Any = None,
+) -> InfoUnit:
     """dil-core's declared update law: predict the most recent observation.
 
     Satisfies conformance C2 — against a stable entity the prediction matches
@@ -134,7 +139,9 @@ class T5(BaseLayer):
             # The declared prediction rule. dil-core's default is persistence;
             # a host with a thinking organ declares its own. Whatever the rule,
             # what leaves here is an expectation and never a choice.
-            predicted = self._predict(entity_id, tuple(window), observed)
+            # The rule may report upward into the field; the contribution is
+            # bound to T5, since it is T5's declared rule that made it.
+            predicted = self._predict(entity_id, tuple(window), observed, contribute)
             confidence = min(1.0, count / self._recurrence)
 
             matched = _content_equal(observed, predicted)

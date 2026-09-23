@@ -841,6 +841,39 @@ So the composition machinery is right and **the host is not feeding it anything
 that varies**. The field is legible now, and what it legibly says is that it has
 almost no context to compose from.
 
+### The model's interpretation now reaches the field — and the field goes static anyway
+
+`PredictRule` gained `contribute`, so the model reports what only it can read:
+`contextNovelty` (is this situation one I have met?) and `contextsKnown`. Both
+land in the field, bound to T5, and `attentionWidth` composes novelty as a third
+fact. Traced live on `ls20`, 48 cycles:
+
+```
+cyc contextNo contextsK  surprise otherCoun   silence strangene  ->span
+  1     1.000     0.000     0.000     1.000     0.000     0.000   4.000
+  3     0.000     2.000     0.000     2.000     0.000     0.000   2.000
+  6     1.000     4.000     0.000     4.000     1.000     0.000   1.000
+ 10     1.000     8.000     0.000     5.000     0.000     0.000   0.800
+ 16     0.000     9.000     0.000     5.000     0.000     0.000   0.800
+ 48     0.000     9.000     0.000     5.000     0.000     0.000   0.800
+```
+
+`contextNovelty` **does** vary, for about fifteen cycles. Then it is 0 for ever,
+and `contextsKnown` freezes at **9**.
+
+**That is the finding, and it is about the model rather than the field.** The
+landing-patch context collapses a 64×64 world into **nine** distinct situations.
+Five affordances across nine situations is a space the agent exhausts in fifteen
+cycles — after which nothing in the field moves again, there is nothing left to
+be curious about, and no want exists to take over. The environment stops being
+open because the model stopped being able to tell it apart.
+
+So the field being static was never only the field's problem. `strangeness` is
+structurally 0 here because the host always knows which affordance it used, and
+`contextNovelty` saturates because the model's situation space is nine states
+wide. A richer reading of the situation would give the loop an environment it
+does not finish mapping in fifteen moves.
+
 ### Where the missing context is
 
 `strangeness` measures **entity** novelty, and this host has none. The novelty

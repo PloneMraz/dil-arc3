@@ -48,6 +48,11 @@ OFF_GRID: Final = -1
 # as the mover. One observation is a coincidence.
 MIN_MOVER_VOTES: Final = 2
 
+# Whether this situation is one the model has met before (INV-7, up-channel).
+CONTEXT_NOVELTY: Final = "contextNovelty"
+# How many distinct situations the model is holding (INV-7, up-channel).
+CONTEXTS_KNOWN: Final = "contextsKnown"
+
 
 class EffectModel:
     """Predicts an affordance's effect, conditioned on where it would land."""
@@ -109,6 +114,10 @@ class EffectModel:
 
     def contexts_known(self) -> int:
         return len(self._table)
+
+    def has_seen(self, entity: str, context: str) -> bool:
+        """Whether this (affordance, situation) pair has been met before."""
+        return (entity, context) in self._table
 
     # ── perception for prediction ──
 
@@ -240,7 +249,7 @@ def predict_rule(
     """
     from .observe import effect_from_value, effect_value
 
-    def rule(entity_id: str, window, observed):
+    def rule(entity_id: str, window, observed, contribute=None):
         value = observed.content["value"]
         context = value.get("context", NO_CONTEXT)
 
@@ -252,6 +261,22 @@ def predict_rule(
             if recollection is not None
             else None
         )
+
+        # The model's reading of its own situation, reported upward into the
+        # field (INV-7) BEFORE it accrues — otherwise every situation would look
+        # familiar the instant it is met.
+        #
+        # This is the interpretation the field was missing. T4's `strangeness`
+        # measures ENTITY novelty and this host has none: it always knows which
+        # affordance it just used. The novelty that exists here is CONTEXT
+        # novelty, and the model is the only thing that computes it.
+        if contribute is not None:
+            contribute(
+                {
+                    CONTEXT_NOVELTY: 0.0 if model.has_seen(entity_id, context) else 1.0,
+                    CONTEXTS_KNOWN: float(model.contexts_known()),
+                }
+            )
 
         # 2. Then accrue what actually happened. The model learns from the
         #    region whichever source was put up for testing.

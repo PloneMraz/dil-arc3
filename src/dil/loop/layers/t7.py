@@ -99,6 +99,7 @@ SILENCE: Final = "silence"
 # (INV-3): the field is the down-channel and carries no such tie.
 _OTHER_COUNT: Final = "otherCount"
 _STRANGENESS: Final = "strangeness"
+_CONTEXT_NOVELTY: Final = "contextNovelty"
 
 
 def attention_width(params: dict[str, float]) -> float:
@@ -109,20 +110,26 @@ def attention_width(params: dict[str, float]) -> float:
     layer's constant. It is not: it is what the whole field holds. This reads the
     facts each layer reported from its own vantage and composes them —
 
-        otherCount  (T6, accrued)  how many Others the loop is holding
-        strangeness (T4, context)  the share of arrivals that bound to no entity
+        otherCount     (T6, accrued)  how many Others the loop is holding
+        strangeness    (T4, context)  arrivals that bound to no known entity
+        contextNovelty (T5's rule)    whether this SITUATION has been met before
 
-    — so attention narrows as the loop holds more and widens again when what
-    arrives stops being attributable. A strange situation earns a longer look; a
-    crowded familiar one does not. Both inputs are facts from context and
-    environment rather than tuning knobs, which is the point.
+    — so attention narrows as the loop holds more and widens again when either
+    what arrives stops being attributable or the situation itself is new. A
+    strange or unfamiliar moment earns a longer look; a crowded familiar one does
+    not. Every input is a fact from context or environment, not a tuning knob.
+
+    `strangeness` is ENTITY novelty and `contextNovelty` is SITUATION novelty. A
+    host can have plenty of the second and none of the first, and this one does:
+    it always knows which affordance it used, so `strangeness` is 0 for ever.
 
     An empty field composes to 1, so a host that reports nothing keeps the
     reference behaviour exactly.
     """
     others = params.get(_OTHER_COUNT, 0.0)
     strangeness = params.get(_STRANGENESS, 0.0)
-    return (1.0 + strangeness) / max(1.0, others)
+    novelty = params.get(_CONTEXT_NOVELTY, 0.0)
+    return (1.0 + strangeness + novelty) / max(1.0, others)
 
 
 @dataclass(slots=True)
