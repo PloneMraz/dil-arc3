@@ -221,6 +221,35 @@ COMMIT_CADENCE: Final = (
 # How many situations the loop builds from the store per cycle when it
 # forward-builds.
 H_COUNT: Final = 3
+
+# The floor a situation's fit must clear before the loop builds from it — the
+# second half of attention (INV-7), over SITUATIONS rather than over entities.
+#
+# 0 by default, which is the behaviour the loop always had: anything the store
+# supports at all is material. The field's `fitFloor` raises it, and a raised
+# floor means the loop builds only from what it is strongly supported on.
+#
+# WHY ATTENTION GOES HERE AT T5 AND NOT AT THE EXPECTATION ITSELF. Two more
+# obvious readings are both unsafe, and reading the code said so:
+#
+#   - Scaling `Expectation.confidence` by the field. That number is written into
+#     `[event]`, and §13.4 reads it as the accumulation signature: the checker
+#     FAILS a run where "confidence did not rise though recurrence climbed",
+#     calling it the reloading signature (INV-5). A shrinking attention gain
+#     would report a healthy accruing loop as a faked one.
+#   - Skipping low-confidence entities at T5 so no expectation is formed. Then
+#     no PredErr is formed either, and whatever resistance that return carried
+#     goes unregistered — §8.2's definition of pure Mode-A, installed on purpose.
+#
+# Neither touches this floor: every entity still gets its expectation, every
+# return still meets it, every mismatch is still registered, and `confidence`
+# stays a pure function of accrual. What the field shapes is only which of those
+# expectations the loop bothers to BUILD FORWARD from — the selection H_COUNT
+# was already making, now with a floor under it as well as a ceiling over it.
+FIT_FLOOR: Final = 0.0
+
+# The field parameter that raises the fit floor (INV-7, down-channel).
+FIT_FLOOR_PARAM: Final = "fitFloor"
 # Rationale (tunable, NOT derived): a small fixed starting value — enough for a
 # fit-comparison to have alternatives to weigh, not a derived optimum. The loop
 # builds situations only where there is store material to build from; H_COUNT is

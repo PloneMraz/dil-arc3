@@ -41,7 +41,12 @@ from ..store.data_store import (
     to_scar,
     to_simulated,
 )
-from ..store.decisions import CONTEXT_ANCHOR_DEPTH, H_COUNT
+from ..store.decisions import (
+    CONTEXT_ANCHOR_DEPTH,
+    FIT_FLOOR,
+    FIT_FLOOR_PARAM,
+    H_COUNT,
+)
 from ..store.event_log import EventLog
 from ..store.resist_event import (
     ActivityEvent,
@@ -533,7 +538,15 @@ class Cycle:
         # No material (a cold start) and it stays running, reflexing straight to
         # scar on collision (§5, §8.7). This is a CONDITION on the road, not a
         # scheduled step.
-        material = [r for r in pass_.t5.results if r.expectation.confidence > 0]
+        # Attention over situations (INV-7): the field raises the floor a
+        # situation's fit must clear before the loop builds from it. The default
+        # floor is 0, which is what the loop always did. Nothing here skips an
+        # expectation or alters a recorded confidence — see FIT_FLOOR for why
+        # both of those are unsafe.
+        fit_floor = field.params.get(FIT_FLOOR_PARAM, FIT_FLOOR)
+        material = [
+            r for r in pass_.t5.results if r.expectation.confidence > fit_floor
+        ]
         forward_built = False
         projected_units: tuple[InfoUnit, ...] = ()
 

@@ -685,6 +685,29 @@ four affordances), so the gain settles at 0.2:
 **225 → 3 at a declared span of 4**, with C3 still alive, and the real-resistance
 column still untouched.
 
+### The fit floor, and what bounds its reach
+
+Ported from dil-core: the field can raise the floor a situation's fit must clear
+before the loop builds forward from it — attention over *situations*, under the
+`H_COUNT` ceiling. Measured live on `ls20`, 60 cycles:
+
+| `fitFloor` | forward-builds | scars | real resistance |
+|---|---|---|---|
+| 0 (the old behaviour) | 55 | 5 | 2 |
+| 0.5 | 51 | 5 | 2 |
+| 0.99 | 47 | 5 | 2 |
+
+The scar column does not move at any setting: the floor selects what is **built
+forward from**, never what is **registered**. That is the §8.2 line again, held
+in live data.
+
+**Its reach is bounded, and by tag B.** `SUFFICIENT_RECURRENCE` is 3, so
+confidence saturates after three observations of an entity and clears any floor
+below 1 from then on. The floor bites only while confidence is still ramping,
+which in a 60-cycle run is a short window. That is not a flaw in the floor — it
+is the untuned tag B showing through, the one still declared here as inherited
+from dil-core rather than measured.
+
 ### A design error the measurement caught
 
 The contribution was put on T8 first, and it did nothing: the gain sat at 1.0
