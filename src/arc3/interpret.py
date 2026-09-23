@@ -141,6 +141,58 @@ def change_value(change: ThingChange) -> dict[str, object]:
     }
 
 
+def contacts(frame: Frame) -> frozenset[tuple[str, str]]:
+    """Which kinds of stuff touch which, edge to edge, anywhere in the frame.
+
+    Unordered pairs, sorted, so (a, b) and (b, a) are one contact. Background is
+    not stuff and touches nothing. Channels are read one at a time: two things on
+    different channels of the stack are not touching, they are in different
+    senses.
+    """
+    from .perceive import NEIGHBOURS, background_of
+
+    pairs: set[tuple[str, str]] = set()
+    for grid in frame.grids:
+        background = background_of(grid)
+        rows, cols = len(grid), len(grid[0]) if grid else 0
+        for r in range(rows):
+            for c in range(cols):
+                v = grid[r][c]
+                if v == background:
+                    continue
+                for dr, dc in NEIGHBOURS[1::2]:  # down and right: each edge once
+                    nr, nc = r + dr, c + dc
+                    if nr < rows and nc < cols:
+                        w = grid[nr][nc]
+                        if w != background and w != v:
+                            a, b = sorted((f"thing:{v}", f"thing:{w}"))
+                            pairs.add((a, b))
+    return frozenset(pairs)
+
+
+def interactions_of(prev: Frame, now: Frame) -> tuple[tuple[str, str, str], ...]:
+    """Contacts made or broken between two frames — Other-to-Other, no self.
+
+    §6.3's SocialEdge is "an Other↔Other interaction observed with no self
+    present". Two things coming into contact, or parting, is exactly that, and it
+    is what the old affordance reading could never supply: two buttons do not
+    touch. A contact that merely persists is not an interaction — walls resting
+    against a floor every frame would say nothing, in the way a constant field
+    parameter says nothing.
+
+    The self is not a party even when the agent's move brought the contact about:
+    the self is the loop, not a thing in the grid, and T2 has already drawn that
+    line. What T8 records is that two Others met.
+    """
+    before, after = contacts(prev), contacts(now)
+    made = sorted(after - before)
+    broken = sorted(before - after)
+    return tuple(
+        [(a, b, "contact-made") for a, b in made]
+        + [(a, b, "contact-broken") for a, b in broken]
+    )
+
+
 def region_status(prev: Frame, now: Frame) -> dict[str, object]:
     """What the region itself reported, as its own observation.
 

@@ -11,11 +11,17 @@ the agent leaves the loop to think.
 
 It runs. It learns what the things in a game do. **It completes no levels.**
 
-That is not a tuning problem, and the reason is recorded rather than glossed:
-nothing in this repository reads the goal. `levels_completed` — the only thing
-the scorer counts — travels inward with every observation and no component uses
-it to decide anything. The agent carries the goal and drops it. What it has
-instead is curiosity: it acts on whatever it is least certain about.
+Two reasons, both measured rather than guessed:
+
+- **Curiosity sticks.** The agent acts on whatever it understands least. In
+  `ls20` the least understood action is the one whose outcome depends on where
+  the agent is — and the mind is not told where it is — so that action is never
+  resolved and curiosity keeps returning to it: 103 of 120 moves. This is the
+  "noisy TV" failure familiar from curiosity-driven exploration.
+- **Want can only avoid.** How the region answers each action is read, accrued,
+  and carried to where behaviour is decided. But the only good answer the region
+  gives is a completed level, and none has ever happened, so the want that exists
+  has only ever learned what to steer away from.
 
 Everything below is measured on live games, not asserted. Where a claim has no
 measurement behind it, it says so.
@@ -107,15 +113,22 @@ experience and read the situation through a hand-written feature:
 One point given up where the hand-written feature was doing the work, sixteen
 gained where it was blind, and the feature is gone.
 
-Live runs, 60 cycles each:
+Live runs, 120 cycles each:
 
 | | `ls20` | `vc33` |
 |---|---|---|
 | Others perceived per cycle | 9 | 7 |
 | distinct sources of resistance | 8 | 3 |
-| scars recorded | 44 | 61 |
-| of which absences | 1 | 2 |
+| scars recorded | 90 | 119 |
+| of which absences | 1 | 4 |
+| Other-to-Other interactions (`SocialEdge`) | 5 | 14 |
+| moves committed | `1:103 2:9 3:4 4:4` | ACTION6 only, swept |
 | **levels completed** | **0** | **0** |
+
+An earlier version of this table came from runs where the agent pressed one key
+every cycle — a regression in how it chose moves, since fixed. Its perception
+figures were sound; its behaviour figures described an agent stuck against a
+wall, and they are gone.
 
 ## Findings
 
@@ -127,7 +140,7 @@ and they fall into three kinds — which is worth keeping straight.
 ### Gaps between the protocol and its reference implementation
 
 Each was verified by measurement, then fixed in `dil-core` first and ported back.
-All three have the same shape: a channel present in the topology that nothing
+All four have the same shape: a channel present in the topology that nothing
 drew on.
 
 1. **The store was write-only.** §9 says "the self accrues from scars" and defines
@@ -142,10 +155,15 @@ drew on.
    parameter; contributions blend, never last-write-wins." No layer *could*
    contribute; the only caller was the driver, once per cycle, with one
    hard-coded key. With one contributor, blending is last-write.
+4. **The top layer was a sink.** Nothing read T8's output: its relative values
+   and its Other-to-Other interactions were produced every cycle and dropped.
+   INV-1 forbids dead branches, and §6.2 says in as many words that "T8 closes
+   back into the loop, not into a sink". The meaning-channel cannot carry T8's
+   output back down, so it now returns through the field.
 
 ### A property of the protocol's own design
 
-4. **The experience store is a biased sample, by construction.** §9 admits only
+5. **The experience store is a biased sample, by construction.** §9 admits only
    registered mismatches, so what it holds are the region's *surprises*. Asked to
    predict, it lost 62 of 66 contests against the model — not because it is
    wrong, but because an exception loses to a distribution. No verdict is
@@ -154,10 +172,10 @@ drew on.
    collisions *is*, and it means the store is right for driving change and wrong
    for answering what happens next.
 
-### A gap in this agent
+### Gaps in this agent
 
-5. **Nothing reads the goal**, as the status section says. This one is local to
-   this repository and is not upstream's.
+6. **Curiosity sticks, and want has nothing to seek**, as the status section
+   says. Local to this repository, not upstream's.
 
 ## Running it
 

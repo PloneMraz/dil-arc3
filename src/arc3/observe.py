@@ -37,11 +37,19 @@ from typing import Final
 
 from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import ObservedChange
+from dil.loop.layers.t8 import ObservedInteraction
 from dil.loop.types import Signal
 
 from .action import IllegalMove, Move
 from .frame import Frame
-from .interpret import REGION_ENTITY, ThingChange, change_value, changes_of, region_status
+from .interpret import (
+    REGION_ENTITY,
+    ThingChange,
+    change_value,
+    changes_of,
+    interactions_of,
+    region_status,
+)
 
 # The channel things arrive on — the agent's sight of the grid.
 VISION_CHANNEL: Final = "arc3-vision"
@@ -146,6 +154,15 @@ def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
                 for kind, change in sorted(changes.items())
             ),
             ObservedChange(id=REGION_ENTITY, value=region_status(prev, now)),
+        ),
+        # Other-to-Other interactions: contacts made or broken between two things,
+        # read by the mind and carried here. T8 records them as SocialEdges — the
+        # thing the affordance reading could never supply, two buttons being
+        # unable to touch. Measured: sparse and real, about five per eighty
+        # transitions, where standing contacts would have been a near-constant.
+        interactions=tuple(
+            ObservedInteraction(a_id=a, b_id=b, observed_interaction=kind)
+            for a, b, kind in interactions_of(prev, now)
         ),
         # Which Others the region says are there. T7 registers an absence only
         # against these — and now that means something: a thing that has gone

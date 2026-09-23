@@ -1,20 +1,27 @@
 """How the self commits an action — the host's declared RespondPolicy.
 
-Under the settled reading the loop holds an expectation per affordance, so the
-action worth committing is **the one whose expectation is least resolved**. That
-is not exploration bolted on beside a policy; it is the only thing the loop's own
-state recommends, and it is where "the self picks which expectation is worth
-testing" becomes code.
+The action worth committing is **the one whose consequences are least resolved**,
+shifted by **how the region has answered it**. Curiosity is the base; want
+modulates it rather than replacing it.
 
 Where this sits matters. The policy runs at the close of the meaning-channel,
 after appraisal, issuing layer T8 — so the action issues from the whole loop, not
 from the thinking layer. No layer chooses the move.
 
-**The policy accrues its own record** of how resolved each affordance is, one
-cycle at a time, from what T5 published that cycle. It never reads T5's internal
-state and never reloads a history: an affordance it has not met has no entry, and
-an affordance it has met carries the confidence T5 last reported. That is INV-5
-accrual in the host's own ring.
+IT READS THE FIELD, AND ONLY THE FIELD. Attention and want are compositions of
+context, environment and GLOB-MOD, not constants — so what this policy knows
+about each action arrives the way everything else reaches every link: through the
+modulatory field. The mind reports, per situation, how well it predicts what
+follows (`resolved:action:N`) and how the region has answered it
+(`valence:action:N`); the field carries both; the policy composes them. It never
+reaches into the mind, and the mind never sees this.
+
+WHAT THIS REPLACED, AND THE REGRESSION THAT FORCED IT. The earlier policy ranked
+actions by the confidence T5 held for an entity named `action:N`. When the
+entity became a thing rather than an action, no entity was named `action:N` any
+more, every action ranked `(0, 0, id)`, and the lowest id won for ever. Measured
+on a live `ls20` run: ACTION1, forty times out of forty. The agent pressed the
+same key into a wall, and the rebuild's first behaviour figures came from that.
 """
 
 from __future__ import annotations
@@ -27,10 +34,16 @@ from .action import COMPLEX_ACTION, RESET, Move
 from .frame import TERMINAL_STATES
 from .observe import move_value
 
-# Confidence assumed for an affordance the policy has never met. Zero, so an
+# Resolution assumed for an action the mind has never reported on. Zero, so an
 # untried action outranks every tried one: the loop reaches for what it does not
 # know before what it does.
-UNMET_CONFIDENCE: Final = 0.0
+UNMET_RESOLUTION: Final = 0.0
+
+# The field keys the mind reports under. Read as local strings rather than
+# imported from the mind: the self takes nothing from the mind but what the field
+# carries.
+_RESOLVED: Final = "resolved:action:"
+_VALENCE: Final = "valence:action:"
 
 
 def _payload(ctx: RespondContext) -> dict[str, Any] | None:
@@ -70,21 +83,32 @@ def _affords(ctx: RespondContext) -> tuple[int, ...]:
     return ()
 
 
-class LeastResolved:
-    """Commit the afforded action whose expectation is least resolved.
+def compose(resolved: float, valence: float) -> float:
+    """Curiosity shifted by want (DECLARED; lower is taken first).
 
-    Ties break on the fewest observations, then on the lowest action id, so the
-    policy is deterministic: the same accrued state and the same frame commit the
-    same move. A run is reproducible and a third party can replay it.
+    `resolved` is in [0, 1] and `valence` in [-1, 1], so where the region has
+    answered an action at all, its answer outweighs how well that action is
+    understood: an action the region ended the game after is avoided however
+    unfamiliar it is, and one it rewarded is preferred however familiar. Where the
+    region has said nothing (valence 0), curiosity decides alone.
+    """
+    return resolved - valence
+
+
+class LeastResolved:
+    """Commit the afforded action least resolved, as want shifts it.
+
+    Ties break on how often the self has already committed each action, then on
+    the lowest id, so the policy is deterministic: the same field and the same
+    frame commit the same move, and a third party can replay a run.
     """
 
-    __slots__ = ("_confidence", "_seen", "_coords", "_sweeps")
+    __slots__ = ("_taken", "_coords", "_sweeps")
 
     def __init__(self, coords: tuple[tuple[int, int], ...] | None = None) -> None:
-        # Accrued, never loaded: what the loop has reported about each
-        # affordance so far.
-        self._confidence: dict[str, float] = {}
-        self._seen: dict[str, float] = {}
+        # The self's own record of its acts — accrued, never loaded. Not a
+        # reading of the mind: it is what this policy has itself committed.
+        self._taken: dict[int, int] = {}
         # ACTION6 takes (x, y), and under this reading coordinates are CONTEXT,
         # not identity — so the loop holds no expectation about any particular
         # square and has no basis to prefer one. DECLARED LIMIT: they are swept
@@ -95,11 +119,6 @@ class LeastResolved:
         self._sweeps = 0
 
     def __call__(self, ctx: RespondContext) -> Any:
-        # Accrue what the loop published this cycle.
-        for result in ctx.expectations:
-            self._confidence[result.entity_id] = result.expectation.confidence
-            self._seen[result.entity_id] = result.expectation.recurrence
-
         # MEASURED: `vc33` goes GAME_OVER and KEEPS reporting
         # available_actions == (6,). Stepping that action in a terminal state
         # returns an empty frame, which the boundary gate then refuses — which is
@@ -114,15 +133,20 @@ class LeastResolved:
             # terminal frame is left. Still a committed action, register ↔.
             return move_value(Move(RESET))
 
-        def rank(action_id: int) -> tuple[float, float, int]:
-            key = f"action:{action_id}"
+        params = ctx.field.params
+
+        def rank(action_id: int) -> tuple[float, int, int]:
             return (
-                self._confidence.get(key, UNMET_CONFIDENCE),
-                self._seen.get(key, 0.0),
+                compose(
+                    params.get(f"{_RESOLVED}{action_id}", UNMET_RESOLUTION),
+                    params.get(f"{_VALENCE}{action_id}", 0.0),
+                ),
+                self._taken.get(action_id, 0),
                 action_id,
             )
 
         action_id = min(affords, key=rank)
+        self._taken[action_id] = self._taken.get(action_id, 0) + 1
         if action_id == COMPLEX_ACTION:
             x, y = self._coords[self._sweeps % len(self._coords)]
             self._sweeps += 1

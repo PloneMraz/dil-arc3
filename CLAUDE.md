@@ -803,6 +803,76 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## A regression in the rebuild, and the technical items closed
+
+### The regression
+
+The respond policy ranked actions by T5's confidence in an entity named
+`action:N`. The rebuild made entities things, so no entity carried that name,
+every action ranked `(0, 0, id)`, and the lowest id won every cycle. Measured on
+a live `ls20` run: **ACTION1, 40 times out of 40.** The rebuild's first
+behaviour figures — 44 scars, 1 absence, 8 resistance sources — came from an
+agent pressing up into a wall. Its perception figures (9 Others per cycle,
+`RelValue` in the hundreds) were sound; its behaviour figures were not, and they
+were reported without the move distribution that would have shown it. `vc33` was
+unaffected, affording only ACTION6.
+
+### What the policy reads now
+
+Only the field. The mind accrues, per situation (per action, here), how well it
+predicts what follows and how the region has answered — and reports both upward
+as `resolved:action:N` and `valence:action:N`. The field's blend keeps no memory
+of its own (a key contributed this cycle takes this cycle's average), so the
+memory is the mind's and the field carries the current reading. The policy
+composes the two as `resolved − valence`, lower first: curiosity is the base and
+want shifts it. Ties break on the self's own record of what it has committed.
+
+`region_valence` is the one place a sign is put on an outcome: +1 for a
+completed level or a win, −1 for game over, 0 otherwise. Declared, named, and
+not a goal — it reads how the region answered; want is what the composition does
+with that.
+
+### Other-to-Other interactions
+
+The mind reads contacts *made or broken* between two kinds of stuff, and the host
+carries them in as T8's `interactions`. Standing contacts were measured at ~10
+per frame and nearly constant, so they would have said nothing; made-or-broken
+came to about five per eighty transitions — sparse and real. `SocialEdge` went
+from 0 to 5 (`ls20`) and 14 (`vc33`) over 120 cycles.
+
+### T8 was a sink
+
+Nothing read T8's output. INV-1 forbids dead branches and §6.2 says "T8 closes
+back into the loop, not into a sink". T8 now contributes `interactions` and
+`resistanceConcentration` to the field. Fixed in dil-core first (`a1914f3`).
+
+### Live, 120 cycles
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| moves committed | `1:103 2:9 3:4 4:4` | ACTION6 only, swept |
+| `SocialEdge` | 5 | 14 |
+| scars / absences | 90 / 1 | 119 / 4 |
+| `resolved:action:*` | 0.91–0.94 | `6`: 0.86 |
+| `valence:action:*` | all 0 | `6`: −0.02 |
+| levels completed | 0 | 0 |
+
+### What is still wrong, diagnosed
+
+**Curiosity sticks.** ACTION1 took 103 of 120 moves in `ls20` because it is the
+least resolved action (0.91), and it is least resolved because its outcome
+depends on position — blocked or not — while the context is the action alone.
+The mind can never resolve it, so curiosity never leaves it. This is the "noisy
+TV" failure of curiosity-driven exploration, and its cause here is specific: the
+situation the mind reads against is too coarse. The hand-coded landing patch had
+supplied exactly the missing piece; removing it was right, but nothing has yet
+replaced what it carried.
+
+**Want can only avoid.** `valence` is 0 for every action in `ls20` because the
+region never answered anything with a level or a win. In `vc33` a single game
+over registered as −0.02 on ACTION6, and with one afforded action it can change
+nothing. Want exists and is wired; it has never had anything to want.
+
 ## The rebuild, measured end to end
 
 `entity = thing`, `context = action`, and the two rings swapped back:

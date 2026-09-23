@@ -49,6 +49,37 @@ CONTEXT_NOVELTY: Final = "contextNovelty"
 # How many distinct situations the model is holding (INV-7, up-channel).
 CONTEXTS_KNOWN: Final = "contextsKnown"
 
+# Per situation — per action, in this host — how well the mind now predicts what
+# the Others do after it (INV-7, up-channel). One key per action: `resolved:action:3`.
+RESOLVED_PREFIX: Final = "resolved:"
+# Per situation, how the REGION has answered it (INV-7, up-channel):
+# `valence:action:3`. This is where want lives. See `region_valence`.
+VALENCE_PREFIX: Final = "valence:"
+
+
+def region_valence(status: object) -> float:
+    """How the region answered, read as good, bad, or neither (DECLARED).
+
+    The region gives exactly three signals that carry any sense of better or
+    worse: a level completed, the game won, the game over. This reads them as +1,
+    +1 and -1 and everything else as 0. That mapping is a declared reading, not a
+    derivation, and it is the one place in this repository where a sign is put on
+    an outcome — which is why it is a named function rather than a constant
+    buried in the policy.
+
+    What it is NOT is a goal. Nothing here says "complete levels". The mind
+    accrues, per situation, how the region has answered it; the field carries
+    that reading; the self composes it with everything else. Want is what that
+    composition does, not what this function says.
+    """
+    if not isinstance(status, dict):
+        return 0.0
+    if status.get("stateTo") == "GAME_OVER":
+        return -1.0
+    if status.get("stateTo") == "WIN" or (status.get("levelsDelta") or 0) > 0:
+        return 1.0
+    return 0.0
+
 
 def _key(value: object) -> str:
     """A hashable form of an observation, for counting.
@@ -63,7 +94,7 @@ def _key(value: object) -> str:
 class Mind:
     """Associates (Other, situation) with what the Other then did."""
 
-    __slots__ = ("_table", "_last", "_seen_values")
+    __slots__ = ("_table", "_last", "_seen_values", "_hits", "_trials", "_valence")
 
     def __init__(self) -> None:
         # The accrued evidence: per (entity, context), how often each outcome.
@@ -72,6 +103,12 @@ class Mind:
         self._seen_values: dict[str, object] = {}
         # Persistence fallback, per entity: the last thing it did.
         self._last: dict[str, object] = {}
+        # Per situation: how often a prediction about an Other came true. Accrued
+        # (INV-5); the field only ever carries the current reading of it.
+        self._hits: Counter[str] = Counter()
+        self._trials: Counter[str] = Counter()
+        # Per situation: every reading of how the region answered it.
+        self._valence: dict[str, list[float]] = {}
 
     # ── what it knows so far (read-only, for reporting) ──
 
@@ -83,6 +120,31 @@ class Mind:
 
     def has_seen(self, entity: str, context: str) -> bool:
         return (entity, context) in self._table
+
+    def resolution(self, context: str) -> float | None:
+        """How well the mind predicts what happens in this situation, so far."""
+        trials = self._trials.get(context, 0)
+        return self._hits[context] / trials if trials else None
+
+    def valence(self, context: str) -> float | None:
+        """How the region has answered this situation, so far, on average."""
+        readings = self._valence.get(context)
+        return sum(readings) / len(readings) if readings else None
+
+    def score(self, context: str, predicted: object, outcome: object) -> None:
+        """Record whether a prediction made in this situation came true.
+
+        Called AFTER the prediction was formed, never before — comparing an
+        expectation with what happened is what T5 does anyway, and it is not
+        INV-8's concern, which is forming the expectation FROM the answer.
+        """
+        self._trials[context] += 1
+        if _key(predicted) == _key(outcome):
+            self._hits[context] += 1
+
+    def answered(self, context: str, status: object) -> None:
+        """Record how the region answered this situation."""
+        self._valence.setdefault(context, []).append(region_valence(status))
 
     # ── accrual and prediction ──
 
@@ -197,7 +259,28 @@ def predict_rule(mind: Mind, recollection: Any = None):
         # 2. Then accrue what actually happened.
         outcome = observed_outcome(observed)
         if outcome is not None:
+            if from_mind is not None:
+                mind.score(context, from_mind, outcome)
+            if "status" in payload:
+                mind.answered(context, outcome)
             mind.observe(entity_id, context, outcome)
+
+        # The mind's reading of this situation, reported upward (INV-7). Accrued
+        # in the mind, carried by the field: the field's blend averages only the
+        # contributions made THIS cycle and keeps no memory of its own, so the
+        # memory has to be the contributor's. Each key names one situation, so
+        # the field comes to hold a picture of every action the agent has taken,
+        # updated as each is taken again.
+        if contribute is not None and context:
+            reading: dict[str, float] = {}
+            resolution = mind.resolution(context)
+            if resolution is not None:
+                reading[RESOLVED_PREFIX + context] = resolution
+            valence = mind.valence(context)
+            if valence is not None:
+                reading[VALENCE_PREFIX + context] = valence
+            if reading:
+                contribute(reading)
 
         # 3. No arbiter (§6.4). The record, where it speaks, is what is tested.
         chosen = _outcome_of(from_record)
