@@ -48,6 +48,7 @@ from .hash_chain import (
     verify_chain,
 )
 from .resist_event import (
+    RecalledTags,
     ActivityEvent,
     ContextAnchor,
     CrystallizationActivity,
@@ -85,7 +86,7 @@ def _resist_event_dict(event: ResistEvent) -> dict[str, Any]:
 
 
 def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
-    return {
+    out: dict[str, Any] = {
         "cycle": activity.cycle,
         "flow": activity.flow,
         "emitted": activity.emitted,
@@ -93,6 +94,23 @@ def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
         "scars": activity.scars,
         "t": activity.t,
     }
+    # Written only when something was recalled, so every other line is exactly
+    # what it was (and matches dil-core's form byte for byte).
+    if activity.recalled:
+        out["recalled"] = [
+            {
+                "datumId": r.datum_id,
+                "fixed": {
+                    "timestamp": r.fixed.timestamp,
+                    "cycleMark": r.fixed.cycle_mark,
+                    "provenance": r.fixed.provenance,
+                    "floorTag": r.fixed.floor_tag,
+                },
+                "open": dict(r.open),
+            }
+            for r in activity.recalled
+        ]
+    return out
 
 
 def _datum_form(
@@ -331,6 +349,19 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             observed=tuple(act["observed"]),
             scars=act["scars"],
             t=act["t"],
+            recalled=tuple(
+                RecalledTags(
+                    datum_id=r["datumId"],
+                    fixed=FixedTags(
+                        timestamp=r["fixed"]["timestamp"],
+                        cycle_mark=r["fixed"]["cycleMark"],
+                        provenance=r["fixed"]["provenance"],
+                        floor_tag=r["fixed"]["floorTag"],
+                    ),
+                    open=dict(r["open"]),
+                )
+                for r in act.get("recalled", ())
+            ),
         ),
         datum=datum,
         anchor=anchor,

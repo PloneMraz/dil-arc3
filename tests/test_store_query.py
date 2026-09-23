@@ -22,7 +22,10 @@ from dil.loop.layers.t8 import create_t8
 from dil.loop.store_query import answer_query, matches_cue
 from dil.loop.types import Signal
 from dil.store.data_store import create_data_store
+from dil.conformance.checker import check_conformance
 from dil.store.event_log import create_event_log
+from dil.store.event_sink import deserialize_event_record, serialize_event_record
+from dil.store.resist_event import record_provenance
 from dil.store.tagging_gate import HostDatum, admit_host_data
 
 DIRECTIVE = "prior:directive"
@@ -237,3 +240,71 @@ def test_an_arrival_about_several_things_asks_about_each():
     assert len(queries(events)) == 2
     assert data.get(DIRECTIVE).fixed.provenance == "running"
     assert data.get(UNRELATED).fixed.provenance == "running"
+
+
+# ── the recalled datum's own trace (§9, §13.6) ──
+
+
+def seal_of(events, cycle: int):
+    return next(r for r in events.all()
+                if getattr(r, "activity_kind", None) == "cycle-seal" and r.activity.cycle == cycle)
+
+
+def recalled_run():
+    data, events = seeded_store(), create_event_log()
+    cycle = cycle_over(data, events)
+    run(cycle, 1)
+    run(cycle, 2)
+    return data, events, cycle
+
+
+def test_a_recalled_datums_own_path_is_in_the_log():
+    data, events, _ = recalled_run()
+    exits = [(r.cycle_mark, r.layer) for r in events.all()
+             if getattr(r, "activity_kind", None) == "layer-exit" and r.datum_id == DIRECTIVE]
+    assert exits == [(1, layer) for layer in range(1, 9)]
+    assert data.get(DIRECTIVE).fixed.floor_tag == 8, "it names the layer it just exited"
+
+
+def test_the_activity_record_carries_the_tag_set_and_never_the_content():
+    _, events, _ = recalled_run()
+    (tags,) = seal_of(events, 1).activity.recalled
+    assert tags.datum_id == DIRECTIVE
+    assert tags.open == {"domain": "rules", "kind": "directive", "object": "region-status"}
+    assert (tags.fixed.provenance, tags.fixed.cycle_mark) == ("running", 1)
+    assert "Your goal is to win" not in repr(seal_of(events, 1)), (
+        "uncontested content stays out of the agent's memory (§9)"
+    )
+    assert seal_of(events, 0).activity.recalled == ()
+    assert "recalled" not in serialize_event_record(seal_of(events, 0))["activity"], (
+        "a cycle that recalled nothing writes the record exactly as before"
+    )
+
+
+def test_the_recalled_tag_set_survives_the_durable_form():
+    import json
+
+    _, events, _ = recalled_run()
+    seal = seal_of(events, 1)
+    back = deserialize_event_record(json.loads(json.dumps(serialize_event_record(seal))))
+    assert back.activity.recalled == seal.activity.recalled
+
+
+def test_the_checker_reads_the_recalled_path_and_the_gate():
+    _, events, cycle = recalled_run()
+    for t in (3, 4):
+        run(cycle, t)
+    results = {r.id: r for r in check_conformance(events).results}
+    assert any(c.claim.startswith("every recalled datum's path") and c.verdict == "pass"
+               for c in results["3"].claims)
+    assert any(c.claim.startswith("host data entered only via the tagging-gate")
+               and c.verdict == "pass" for c in results["6"].claims)
+
+
+def test_a_datum_that_ran_from_prior_with_no_tags_in_the_trace_is_caught():
+    data, events = seeded_store(), create_event_log()
+    run(cycle_over(data, events), 1)
+    events.append(record_provenance("side-door", 0, "prior", "running", 1))
+    c6 = next(r for r in check_conformance(events).results if r.id == "6")
+    assert c6.verdict == "fail"
+    assert "side-door" in c6.detail

@@ -190,6 +190,15 @@ takes action on any of the games, a submission file for all of the games is
 created." One action secures the entry. Everything above that serves the paper's
 Accuracy criterion, not the entry itself.
 
+**What the agent is a proof of — Plone, 2026-09-23.** "If the aim were a high
+ARC-AGI-3 score, a micromouse would do, and dil-core would not be needed. What we
+are building is a proof of dil-core, for the Paper Track. dil-core's contribution
+is the loop that gathers, processes, learns by itself and enriches data — and,
+most important, that it can be audited: the event log." So the test for any
+change is not whether it raises a score but whether what the loop did can be
+read back, by a third party, from `[event]` alone. A game-specific strategy that
+scored better would work against the paper, not for it.
+
 **The protocol document is not the paper.** `DIL-protocol-v0.3.2.md` is 55 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
@@ -802,6 +811,48 @@ loop with **no attention at all**: every entity ever seen expected back every
 cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
+
+## What a third party can read of the prior, 2026-09-23
+
+Measured by reading a live run's `[event]` log directly, not through this code:
+the five T3 queries were there and `prior:directive` moved `prior → running` at
+cycle 1 — but **960 of 960 layer-exit lines were the cycle datum's**. The
+recalled datums ran T1→T8 and left no path; their floor-tags stayed at 1; their
+tags lived only in mutable `[data]`. So a reader could see that *something named
+`prior:directive` began to run*, and not what class of data it was, nor that it
+came through the gate — which §13.6 asks a third party to confirm from traces.
+
+Re-reading §9 settled the fix and ruled out the first proposal. Writing each
+prior's CONTENT into `[event]` at admission would put uncontested information
+into the agent's memory — the log is also what recollection reads — and §9 keeps
+the trail complete "without letting uncontested information into the agent's
+memory". Admission is not an edge of the provenance graph, so the protocol does
+not ask for it to be logged. What it does ask: "every layer a datum exits MUST
+be recorded", no pass-through layers, and an open layer that makes the log
+"auditable by data class". Plone chose (b): the path, and the tag set, never the
+content.
+
+Fixed in dil-core (`d358902`), ported: a recalled datum's exits are recorded
+under its own id, its floor-tag is stamped as it passes, and the cycle's activity
+record carries its full tag set (fixed and open). A cycle that recalls nothing
+writes exactly what it wrote before. The checker gained two trace claims — a
+recalled datum's path covers T1→T8 (C3), and every datum leaving `prior` shows a
+gate-admissible tag set in that cycle's record (C6, §13.6) — and a test pins that
+a datum appearing from `prior` with no tags in the trace fails.
+
+Live, 120 cycles each, read from the JSONL:
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| layer-exit lines | 960 cycle + 8 × 6 recalled | same |
+| recalled tag sets in the cycle-1 record | 6, floor-tag 8 | 6 |
+| directive text anywhere in the log | 0 | 0 |
+| hash chain | ok, 4 082 records | ok, 3 284 |
+| conformance | 5 pass, 1 partial (C4, by design), 1 unverifiable (C2) | same |
+
+C2 is unverifiable only because the gate result was not handed to the checker;
+the run itself qualified. C4's partial is §7: continuity is attributable only by
+a third party.
 
 ## The prior — what the character may know before it lives, 2026-09-23
 

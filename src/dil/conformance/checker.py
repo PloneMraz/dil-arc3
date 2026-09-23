@@ -43,7 +43,7 @@ from ..store.resist_event import (
     ManifestRecord,
     ProvenanceActivity,
 )
-from ..store.tags import TaggedDatum
+from ..store.tags import TaggedDatum, invalid_open_tag_reason
 from .decisions import CONFORMANCE_DIVERSITY_WINDOW, CONFORMANCE_MIN_DISTINCT_SOURCES
 
 ConformanceVerdict: TypeAlias = Literal["pass", "partial", "fail", "unverifiable"]
@@ -418,11 +418,44 @@ def check_conformance(
             None,
         )
 
+        # A datum recalled from the store runs the layers with the cycle datum,
+        # and its exits are recorded under its own id and that cycle's mark (§9).
+        recalled_runs = [
+            (t.datum_id, r.activity.cycle)
+            for r in cycle_seals
+            for t in r.activity.recalled
+        ]
+        recalled_gap = next(
+            (
+                (d, c)
+                for d, c in recalled_runs
+                if not _covers_all_layers(
+                    {
+                        le.layer
+                        for le in layer_exits
+                        if le.datum_id == d and le.cycle_mark == c
+                    }
+                )
+            ),
+            None,
+        )
+
         claims = [
             _claim(
                 "every cycle datum's path covers T1→T8 (from layer-exit lines)",
                 "trace",
                 "fail" if incomplete else "pass",
+            ),
+            *(
+                [
+                    _claim(
+                        "every recalled datum's path covers T1→T8 in the cycle it ran",
+                        "trace",
+                        "fail" if recalled_gap else "pass",
+                    )
+                ]
+                if recalled_runs
+                else []
             ),
             _claim(
                 "recorded flow mode matches cycle-mark (0 single-threaded, 1+ multi-stream)",
@@ -682,6 +715,29 @@ def check_conformance(
             if r.from_ == "prior":
                 prior_entries[r.datum_id] = prior_entries.get(r.datum_id, 0) + 1
         double_entry = next(((k, n) for k, n in prior_entries.items() if n > 1), None)
+        # §13.6: "host data entered only via the tagging-gate". Every datum that
+        # leaves `prior` must show, in that cycle's activity record, a tag set the
+        # gate would have admitted: the cycle datum embedded whole, a recalled
+        # datum by its tags. One that ran from `prior` with no tag set in the
+        # trace came in by a door the log cannot see.
+        tags_seen: dict[tuple[str, int], dict[str, str]] = {}
+        for r in cycle_seals:
+            tags_seen[(r.datum_id, r.activity.cycle)] = dict(r.datum.open)
+            for t in r.activity.recalled:
+                tags_seen[(t.datum_id, r.activity.cycle)] = dict(t.open)
+        unseen_entry = next(
+            (
+                r
+                for r in provenance_lines
+                if r.from_ == "prior"
+                and (
+                    (r.datum_id, r.cycle_mark) not in tags_seen
+                    or invalid_open_tag_reason(tags_seen[(r.datum_id, r.cycle_mark)])
+                    is not None
+                )
+            ),
+            None,
+        )
 
         claims = [
             _claim(
@@ -704,6 +760,12 @@ def check_conformance(
                 "trace",
                 "fail" if double_entry else "pass",
             ),
+            _claim(
+                "host data entered only via the tagging-gate — every datum leaving "
+                "`prior` shows its gate-admissible tag set in the trace (§13.6)",
+                "trace",
+                "fail" if unseen_entry else "pass",
+            ),
         ]
 
         if first_problem:
@@ -722,6 +784,12 @@ def check_conformance(
             detail = (
                 f"datum {double_entry[0]} entered `prior` more than once; prior is "
                 "a one-way entry (§9)"
+            )
+        elif unseen_entry:
+            detail = (
+                f"datum {unseen_entry.datum_id} left `prior` at cycle "
+                f"{unseen_entry.cycle_mark} with no gate-admissible tag set in the "
+                "trace (§13.6)"
             )
         else:
             detail = (

@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Literal, TypeAlias
 
 from ..invariants.types import LayerIndex
-from .tags import Provenance, TaggedDatum
+from .tags import FixedTags, Provenance, TaggedDatum
 
 # The kind of mismatch a ResistEvent registers.
 MismatchKind: TypeAlias = Literal["value-mismatch", "absence", "unexpected-presence"]
@@ -92,6 +92,24 @@ class ActivityEvent:
     # Collisions recorded as scars this cycle.
     scars: int
     t: int
+    # The full tag set of every datum recalled from the store that ran this
+    # cycle (§6.4 T3 query), as it stands after running. TAGS ONLY, NO CONTENT:
+    # §9's open layer exists so the log is "auditable by data class", and §13.6
+    # asks a third party to confirm "host data entered only via the
+    # tagging-gate" from the trace; the content stays out because an activity
+    # record is trace, not experience ("without letting uncontested information
+    # into the agent's memory"). Empty when nothing was recalled, and then not
+    # written at all, so every other record is byte-identical.
+    recalled: tuple["RecalledTags", ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class RecalledTags:
+    """One recalled datum's tag set, as the activity record carries it."""
+
+    datum_id: str
+    fixed: FixedTags
+    open: dict[str, str]
 
 
 # Activity records — the log's TRACE lines (§9: "an activity record is trace, not

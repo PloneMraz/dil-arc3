@@ -36,6 +36,7 @@ from typing import Any, Literal, TypeAlias
 from ..invariants.types import LayerIndex
 from ..store.data_store import (
     DataStore,
+    stamp_layer,
     to_projected,
     to_running,
     to_scar,
@@ -51,6 +52,7 @@ from ..store.event_log import EventLog
 from ..store.resist_event import (
     ActivityEvent,
     ContextAnchor,
+    RecalledTags,
     ResistEvent,
     record_activity,
     record_crystallization,
@@ -225,7 +227,7 @@ class Cycle:
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
-        "_pending", "_recalled", "_unasked", "_last_lateral",
+        "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
     )
 
     def __init__(
@@ -281,6 +283,10 @@ class Cycle:
         self._recalled: set[str] = set(resume.recalled) if resume is not None else set()
         # Recalled data not arriving this cycle — no absence is owed by them (T7).
         self._unasked: frozenset[str] = frozenset()
+        # Data recalled from the store that run this cycle. They pass the layers
+        # with the cycle datum, so each exit is theirs too: "every layer a datum
+        # exits MUST be recorded" (§9), and there are no pass-through layers.
+        self._running_recalled: tuple[str, ...] = ()
         # What layers emitted laterally last cycle — readable by T2 now (§6.4).
         self._last_lateral: tuple[object, ...] = (
             tuple(resume.last_lateral) if resume is not None else ()
@@ -297,6 +303,10 @@ class Cycle:
         self._events.append(
             record_layer_exit(self._datum_id(), self._cycle, layer, self._cycle_t)
         )
+        for datum_id in self._running_recalled:
+            self._events.append(
+                record_layer_exit(datum_id, self._cycle, layer, self._cycle_t)
+            )
 
     def _emit(self, issuing_layer: LayerIndex, action: Any) -> Any:
         """Emission — link 5 as a lateral capability (§6.4).
@@ -574,6 +584,9 @@ class Cycle:
                         datum_id, self._cycle, "prior", "running", self._cycle_t
                     )
                 )
+        self._running_recalled = tuple(
+            returned_entity(s) for s in returned if self._data.has(returned_entity(s))
+        )
 
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
@@ -581,6 +594,19 @@ class Cycle:
             else self._pass_multi_stream(host, field, admitted)
         )
         datum = pass_.datum
+
+        # Each recalled datum left T8 with the cycle datum: its floor-tag names the
+        # layer it just exited (§9 fixed layer). Its tag set — never its content —
+        # goes into this cycle's activity record, so the trace shows what class of
+        # data entered and that it came through the gate (§9 open layer, §13.6).
+        recalled_tags: list[RecalledTags] = []
+        for datum_id in self._running_recalled:
+            ran = stamp_layer(self._data.get(datum_id), 8)
+            self._data.put(datum_id, ran)
+            recalled_tags.append(
+                RecalledTags(datum_id=datum_id, fixed=ran.fixed, open=dict(ran.open))
+            )
+        self._running_recalled = ()
 
         # ── §7 crystallization: T2 drew the self/environment distinction ──
         # The one-time act where the from-within standpoint begins. Recorded as a
@@ -824,6 +850,7 @@ class Cycle:
                     observed=tuple(r.entity_id for r in pass_.t5.results),
                     scars=scars,
                     t=self._cycle_t,
+                    recalled=tuple(recalled_tags),
                 ),
                 anchor,
             )
