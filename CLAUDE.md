@@ -715,19 +715,44 @@ And the contests themselves, across both games — **66 disagreements**:
 
 The record lost 62 of 66 and roughly doubled the error rate in both games.
 
-### Why, and it is structural rather than a bug
+### Why — a sampling bias, and no verdict anywhere
 
-**§9 admits only scars to the store.** "The self accrues from scars";
-uncontested information is deliberately kept out. So the store holds only the
-occasions on which the agent was *wrong*. A predictor built from that answers
-with the exceptional case by construction, while the model answers with the
-distribution. In `vc33` the record even disagreed with the *outcome* 54 times
-while agreeing with the model — it was reciting old exceptions.
+An earlier draft of this section said the store holds "the occasions on which the
+agent was wrong". That was wrong, and it imported a verdict the protocol
+explicitly refuses. §9: the tag "carries no claim of correctness", and "judging
+correctness is the work of Mode-B and of an external third party reading the
+scar, **never of the store**"; a datum that has met no resistance "is not wrong,
+only not yet tested". §3 defines the unit exactly: a ResistEvent is **a
+registered mismatch between the agent's expectation and what the region
+returned** — divergence, not error.
 
-This is the quantitative form of the worry raised before the design was chosen:
-if only scars enter the store, **the better the agent gets, the less its store
-holds**. In `ls20` the model is right 94% of the time, so 94% of its experience
-is never recorded, and what is recorded is the residue.
+The real mechanism is a **sampling bias**, and it is sharper than the
+correctness story. A scar's `received` field is a genuine return from the
+region; nothing about it is mistaken. But a scar exists *only where the return
+diverged from what was expected*. So conditional on a predictor that mostly
+works, the recalled set is exactly the subset of returns that **surprised** the
+loop — which are the rare ones. The record recites the region's exceptions, and
+recites them faithfully. The model answers with the distribution. Asked "what
+will happen", the exception loses; that is arithmetic, not a defect in either.
+
+`vc33` shows it plainly: the record disagreed with the outcome 54 times while
+*agreeing with the model*. Both named the same thing and the region did something
+else — the record was not contradicting the model, it was reporting an old
+surprise.
+
+This is the quantitative form of a worry raised before the design was chosen,
+now stated correctly: if only mismatches enter the store, **the better the
+predictor gets, the rarer and more exceptional the store's contents become**. In
+`ls20` the model is right 94% of the time, so what the store holds is the 6%
+that surprised it.
+
+### What the record is actually for
+
+Which is not nothing. §9's chain is mismatch → memory → learning → change: a
+ResistEvent is where the region pushed back, and that is what the loop is
+supposed to change *from*. A faithful record of every point where the region
+resisted is exactly right for driving change, and exactly wrong for answering
+"what happens next". The measurement here says only the second thing.
 
 ### What is kept, and what is declared
 
