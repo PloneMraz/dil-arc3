@@ -803,6 +803,64 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## The prior — what the character may know before it lives, 2026-09-23
+
+Settled with Plone. The zero levels are not a defect: the character was put in
+the maze with no problem to solve. A creature put in a box arrives with a very
+long history (genes, and what Others taught it); this one arrives with none, at
+the level of a zygote with a wide range of action. So the least it must be given
+is **a directive**, tagged `prior`, and everything after that is its own thinking
+and interpretation. Plone: "Đừng tự làm khó mình và làm khó nhân vật" — give it
+what the rules allow it to know.
+
+### What the rules allow it to know, verified
+
+Read in full on 2026-09-23: the ARC-AGI-3 Technical Report, the docs pages
+game-schema, actions, methodology and competition_mode, and the Kaggle rules
+(rendered through a headless browser, since the page needs JavaScript).
+
+- The directive: the official leaderboard gives every model the same system
+  prompt, "You are playing a game. Your goal is to win." (report, §4.3.1).
+- `WIN` = "The objective was completed successfully", `GAME_OVER` = "The run
+  ended without a win" (game-schema).
+- Structure, cost, body and the world's core-knowledge priors (objectness,
+  geometry and topology, basic physics, agentness; no language or cultural
+  symbols).
+- The Kaggle rules permit external data that is "publicly available and equally
+  accessible to use by all Participants" (§6.a) and forbid "information from hand
+  labeling or human prediction of the validation dataset or test data records".
+  Public documentation is the first and none of the second.
+
+What the report warns against is a different thing: a harness carrying
+"ARC-AGI-3 specific strategies". The rules of the place are not a strategy;
+nothing here says how to win any game.
+
+### `src/arc3/prior.py`
+
+Five items (`directive`, `levels`, `cost`, `body`, `world`), 31 sentences, each
+quoted verbatim with the document it was read in. All 31 were checked
+programmatically against the downloaded sources. The host declares them as
+`StoreDeclaration.preexisting`; the runtime's requisition admits each through
+the tagging-gate as `prior`, cycle-mark null. A test pins that an item carrying
+a verdict tag is refused and reported, not admitted.
+
+Declared: admission happens only with a real substrate (`store_root`). The
+in-memory fixture the live measurement scripts ran on has no requisition step.
+
+### What is NOT done yet, and why
+
+**Nothing reads the prior once it is admitted.** It sits in `[data]` stamped
+`prior`, and no layer, no mind and no driver ever takes it up, so it never makes
+the `prior → running` transition §9 defines. This is a sixth instance of the
+shape the Findings list: a channel present in the topology that nothing draws
+on. It is a gap in the protocol implementation, so by direction (b) it is fixed
+in dil-core first. How the prior enters the loop is a skeleton-level decision
+and is waiting on Plone.
+
+Until it is fixed, `region_valence` keeps its hard-coded signs. Plone approved
+removing them, but they are to be replaced by the directive being read, and
+removing them first would leave the character with no want at all.
+
 ## Individuals, and curiosity that follows progress
 
 Two changes, both approved by Plone, both measured before they were wired.

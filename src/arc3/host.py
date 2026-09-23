@@ -31,6 +31,7 @@ from dil.host import (
     ChannelDeclaration,
     EmitterDeclaration,
     HostDeclaration,
+    PreexistingMemory,
     ResilienceDeclaration,
     StoreDeclaration,
     TraceDeclaration,
@@ -41,6 +42,7 @@ from dil.loop.layers.t2 import Emission
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
 from .observe import STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
+from .prior import ArcRules
 from .seeing import Seeing, create_seeing
 
 # How many state-changing actions a run may spend. RHAE scores
@@ -169,11 +171,21 @@ class Arc3Source:
         self.delivered.append(move)
 
 
-def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
+def declaration(
+    game_id: str,
+    store_root: str | None = None,
+    prior: PreexistingMemory | None = None,
+) -> HostDeclaration:
     """What this host declares about itself, read once by the precondition gate.
 
     Every field is a claim about this deployment that the gate checks before the
     loop is allowed to run, so each is stated from what the code actually does.
+
+    `prior` is what the character may know before it has lived a cycle — by
+    default the directive and the published rules, `ArcRules`. It reaches the
+    store only through the runtime's tagging-gate, and only when the host
+    declares a real substrate (`store_root`): the in-memory fixture a test runs
+    on has no requisition step, so nothing is admitted there.
     """
     return HostDeclaration(
         # A frame arrives, a move goes out: the boundary is real and crossable.
@@ -195,6 +207,7 @@ def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
         store=StoreDeclaration(
             persists_across_cycles=True,
             root=store_root,
+            preexisting=prior if prior is not None else ArcRules(),
         ),
         # The `[event]` log is the one trace §13 turns on, and it is a plain
         # append-only file a third party can read without this code.
