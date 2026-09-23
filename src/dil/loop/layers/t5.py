@@ -25,7 +25,7 @@ from typing import Any
 from collections.abc import Callable
 
 from ..decisions import BASELINE_WINDOW, SUFFICIENT_RECURRENCE
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import Expectation, HistoryWindow, InfoUnit, ModField, PredErr
 from .t4 import BoundInfo
 
@@ -112,7 +112,13 @@ class T5(BaseLayer):
         self._windows = {k: list(v) for k, v in state["windows"]}
         self._counts = dict(state["counts"])
 
-    def process(self, input: T5Input, field: ModField, emit: EmitFn) -> T5Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T5Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T5Output:
         results: list[T5Result] = []
 
         for b in input.bound:

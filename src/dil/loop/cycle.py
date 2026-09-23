@@ -69,7 +69,7 @@ from .gathers import (
     gather_t8,
 )
 from .glob_mod import GlobMod
-from .layer import LayerEmission, LayerSpec, run_layer
+from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
 from .layers.t4 import T4Input
 from .layers.t5 import T5Input, T5Output
@@ -189,6 +189,9 @@ class _LayerPass:
     # Lateral emissions raised by any layer this pass (§6.4), each bound to its
     # issuer.
     emissions: tuple[LayerEmission, ...]
+    # Field contributions declared by any layer this pass (INV-7), each bound to
+    # its issuer.
+    contributions: tuple[LayerContribution, ...] = ()
 
 
 class Cycle:
@@ -341,12 +344,16 @@ class Cycle:
         emissions = tuple(
             e for r in (t1, t2, t3, t4, t5, t6, t7, t8) for e in r.emissions
         )
+        contributions = tuple(
+            c for r in (t1, t2, t3, t4, t5, t6, t7, t8) for c in r.contributions
+        )
         return _LayerPass(
             datum=datum,
             t5=t5.output,
             t7=t7.output,
             crystallized=t2.output.crystallized,
             emissions=emissions,
+            contributions=contributions,
         )
 
     def _pass_multi_stream(
@@ -402,12 +409,16 @@ class Cycle:
         emissions = tuple(
             e for r in (t1, t2, t3, t4, t5, t6, t7, t8) for e in r.emissions
         )
+        contributions = tuple(
+            c for r in (t1, t2, t3, t4, t5, t6, t7, t8) for c in r.contributions
+        )
         return _LayerPass(
             datum=datum,
             t5=t5.output,
             t7=t7.output,
             crystallized=t2.output.crystallized,
             emissions=emissions,
+            contributions=contributions,
         )
 
     # ── the cycle ──────────────────────────────────────────────────────────
@@ -675,6 +686,14 @@ class Cycle:
 
         # ── GLOB-MOD: contribute this cycle's resistance, advance to N+1 ──
         total_resistance = sum(e.delta for e in pred_errs)
+        # INV-7: "Every layer contributes to it as one competing parameter;
+        # contributions blend, re-weighted each cycle, never last-write-wins."
+        # Each layer's own contributions go in first, bound to its index by
+        # `run_layer`; the driver adds the cycle's total resistance last, as it
+        # always did. With more than one contributor the blend finally does what
+        # its name says.
+        for c in pass_.contributions:
+            self._glob.contribute(c.layer, c.params, c.weight)
         self._glob.contribute(5, {"resistance": total_resistance}, 1.0)
         self._glob.advance(self._cycle + 1)
 

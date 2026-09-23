@@ -146,7 +146,7 @@ def unit_for(move, prev, now, context):
     host = observe(prev, move, now, diff(prev, now), t=0, context=context)
     t3 = create_t3({GAME_CHANNEL: game_transducer})
     units = t3.process(
-        T3Input(signals=host.signals), ModField(), lambda *a, **k: None
+        T3Input(signals=host.signals), ModField(), lambda *a, **k: None, lambda *a, **k: None
     ).units
     return units[0]
 

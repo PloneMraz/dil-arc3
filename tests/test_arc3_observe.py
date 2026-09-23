@@ -28,6 +28,10 @@ def noop_emit(*a, **kw):  # the layers here never emit
     raise AssertionError("no emission expected")
 
 
+def noop_contribute(*a, **kw):  # nor do they feed the field here
+    return None
+
+
 def a_transition(move: Move):
     prev, now = framed(marker(30, 30)), framed(marker(25, 30))
     return observe(prev, move, now, diff(prev, now), t=7)
@@ -88,8 +92,8 @@ def test_t4s_default_resolver_binds_the_affordance():
     host = a_transition(Move(3))
     t3 = create_t3({GAME_CHANNEL: game_transducer})
     t4 = create_t4()
-    units = t3.process(T3Input(signals=host.signals), ModField(), noop_emit).units
-    bound = t4.process(T4Input(units=units), ModField(), noop_emit).bound
+    units = t3.process(T3Input(signals=host.signals), ModField(), noop_emit, noop_contribute).units
+    bound = t4.process(T4Input(units=units), ModField(), noop_emit, noop_contribute).bound
     assert [b.entity_id for b in bound] == ["action:3"]
     assert bound[0].entity_id != STRANGER
 
@@ -144,9 +148,9 @@ def test_unexercised_affordances_register_as_absences():
     absences_seen = []
     for move in (Move(1), Move(2), Move(1), Move(2)):
         host = a_transition(move)
-        units = t3.process(T3Input(signals=host.signals), ModField(), noop_emit).units
-        bound = t4.process(T4Input(units=units), ModField(), noop_emit).bound
-        t5out = t5.process(T5Input(bound=bound), ModField(), noop_emit)
+        units = t3.process(T3Input(signals=host.signals), ModField(), noop_emit, noop_contribute).units
+        bound = t4.process(T4Input(units=units), ModField(), noop_emit, noop_contribute).bound
+        t5out = t5.process(T5Input(bound=bound), ModField(), noop_emit, noop_contribute)
         t7out = t7.process(
             T7Input(
                 expectations=tuple(
@@ -157,6 +161,7 @@ def test_unexercised_affordances_register_as_absences():
             ),
             ModField(),
             noop_emit,
+            noop_contribute,
         )
         absences_seen.append(tuple(a.entity_id for a in t7out.absences))
 

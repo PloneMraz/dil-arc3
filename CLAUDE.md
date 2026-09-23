@@ -664,6 +664,35 @@ missing-InfoUnit when an expected event fails to occur, and a loop that expects
 nothing fails C3 by construction. `span = 1` keeps C3 alive while cutting
 225 → 74.
 
+### The loop sets its own attention width
+
+The span no longer has to be hand-tuned per game. T6 — the layer that *accrues*
+Others — contributes `attentionGain = 1/N` upward into the field through the new
+INV-7 up-channel, and T7 reads it at N+1. The host declares a span meaning "how
+long I would wait if I had one thing to watch"; the loop divides by how many
+things it is actually holding.
+
+Measured live on `ls20`, where T6 accrues five entities (`action:0` plus the
+four affordances), so the gain settles at 0.2:
+
+| declared span | effective | absences | real resistance |
+|---|---|---|---|
+| ∞ | ∞ | 225 | 2 |
+| 8 | 1.6 | 76 | 2 |
+| **4** | **0.8** | **3** | **2** |
+| 2 | 0.4 | 1 | 2 |
+
+**225 → 3 at a declared span of 4**, with C3 still alive, and the real-resistance
+column still untouched.
+
+### A design error the measurement caught
+
+The contribution was put on T8 first, and it did nothing: the gain sat at 1.0
+for all 80 cycles. T8 ranks the Others *present this cycle*, and in this host one
+affordance returns per cycle, so T8 saw N = 1 every time. How many Others the
+loop holds is **accrued** knowledge, and T6 is the layer that accrues it. Fixed
+upstream in dil-core first, with a test pinning it there.
+
 ### What this corrects in the earlier entry
 
 The absence flood was reported here as a consequence of the affordance mapping,

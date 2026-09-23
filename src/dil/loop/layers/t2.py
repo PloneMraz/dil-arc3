@@ -27,7 +27,7 @@ from typing import Any
 from ...invariants.guards import assert_agency_classified
 from ...invariants.types import AgencyTag, Change
 from ..decisions import MATCHING_WINDOW, STABILITY_THRESHOLD
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ActivityEnvironment, ModField
 
 
@@ -115,7 +115,13 @@ class T2(BaseLayer):
         self._recent_emissions = list(state["recentEmissions"])
         self._cycles_run = state["cyclesRun"]
 
-    def process(self, input: T2Input, field: ModField, emit: EmitFn) -> T2Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T2Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T2Output:
         # The crystallization of §7: T2 first drawing the self/environment
         # distinction. Zero cycles run is true only on the very first run — after
         # recovery it is false, because a restored count means the self already

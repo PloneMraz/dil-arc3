@@ -12,7 +12,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final
 
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField
 
 # The positional "unknown entity" binding.
@@ -59,7 +59,13 @@ class T4(BaseLayer):
     def __init__(self, resolve: ContextResolver | None = None) -> None:
         self._resolve = resolve if resolve is not None else default_resolver
 
-    def process(self, input: T4Input, field: ModField, emit: EmitFn) -> T4Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T4Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T4Output:
         return T4Output(
             bound=tuple(
                 BoundInfo(unit=unit, entity_id=self._resolve(unit))

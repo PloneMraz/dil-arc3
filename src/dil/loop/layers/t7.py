@@ -41,7 +41,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final, Literal
 
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField
 
 
@@ -143,7 +143,13 @@ class T7(BaseLayer):
         }
         self._tick = state.get("tick", 0)
 
-    def process(self, input: T7Input, field: ModField, emit: EmitFn) -> T7Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T7Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T7Output:
         self._tick += 1
         # Accrue this cycle's expectations into memory.
         for e in input.expectations:

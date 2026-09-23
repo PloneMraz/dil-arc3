@@ -13,7 +13,7 @@ Ported from dil-core against DIL protocol v0.3.2.
 from collections.abc import Sequence
 from typing import Any
 
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ActivityEnvironment, InfoUnit, ModField, RefFrame, Signal
 
 # The root reference frame every higher layer ultimately refers to.
@@ -28,8 +28,12 @@ class T1(BaseLayer):
     index = 1
     consumes: tuple[int, ...] = ()
 
-    def process(
-        self, input: Sequence[Signal], field: ModField, emit: EmitFn  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: Sequence[Signal],
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
     ) -> ActivityEnvironment:
         # Presence confirmed as the root reference frame. No self/environment
         # line is drawn here; the content only digests what is present.

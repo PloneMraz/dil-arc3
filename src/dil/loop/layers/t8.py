@@ -18,7 +18,7 @@ from dataclasses import dataclass, field as dc_field
 
 from ...invariants.guards import assert_correlational
 from ...invariants.types import RunningOutput
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ModField, OtherModel, RelValue, SocialEdge
 
 
@@ -51,7 +51,14 @@ class T8(BaseLayer):
     index = 8
     consumes: tuple[int, ...] = (6,)
 
-    def process(self, input: T8Input, field: ModField, emit: EmitFn) -> T8Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T8Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T8Output:
+
         # RelValue exists only when N ≥ 2.
         rel_values: tuple[RelValue, ...] = ()
         if len(input.others) >= 2:

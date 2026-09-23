@@ -13,7 +13,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any
 
-from ..layer import BaseLayer, EmitFn
+from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField, RefFrame, Signal
 
 # Maps a channel's raw signal into a typed value (DECIDE@IMPL, per channel).
@@ -43,7 +43,13 @@ class T3(BaseLayer):
     def __init__(self, transducers: dict[str, ChannelTransducer] | None = None) -> None:
         self._transducers = dict(transducers or {})
 
-    def process(self, input: T3Input, field: ModField, emit: EmitFn) -> T3Output:  # noqa: A002
+    def process(  # noqa: A002
+        self,
+        input: T3Input,
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> T3Output:
         units: list[InfoUnit] = []
         for signal in input.signals:
             transduce = self._transducers.get(signal.source_id, default_transducer)

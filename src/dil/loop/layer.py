@@ -46,6 +46,31 @@ from .types import InfoUnit, ModField
 # is judged only by the next cycle's return (§6.4).
 EmitFn = Callable[[Any], None]
 
+# The UP-channel into the modulatory field (INV-7) — the third of the three
+# directions a layer can move in: `field` descends into `process` as read-only
+# background (down), `emit` projects out to the region (lateral), `contribute`
+# reaches up into the field.
+#
+# WHY IT HAD TO EXIST. INV-7 reads: "Every layer contributes to it as one
+# competing parameter; contributions blend, re-weighted each cycle, never
+# last-write-wins." No layer could contribute at all: `process` received `field`
+# and `emit` and nothing else, and the sole caller of `glob.contribute` was the
+# driver, once per cycle, with one hard-coded key at a fixed weight. With a
+# single contributor every clause of that sentence was empty — one contribution
+# blended IS the last write. The blending machinery existed, was tested, and
+# nothing could reach it.
+#
+# It does NOT breach INV-3, which governs the meaning-channel. §5 says plainly
+# that "when an upper layer alters GLOB-MOD it changes the field, which then
+# conditions every layer from above", and the conditioning still lands at N+1.
+#
+# PORT DIFFERENCE, declared. In dil-core this cost nothing: TypeScript lets a
+# function with fewer parameters satisfy a signature with more, so the seven
+# layers that want neither `emit` nor `contribute` were left untouched. Python
+# has no such rule — a positional argument must be accepted — so every layer
+# here declares the parameter whether it uses it or not.
+ContributeFn = Callable[..., None]
+
 
 @runtime_checkable
 class LayerSpec(Protocol):
@@ -59,12 +84,15 @@ class LayerSpec(Protocol):
         """Precondition — raises if the input does not satisfy the contract."""
         ...
 
-    def process(self, input: Any, field: ModField, emit: EmitFn) -> Any:
+    def process(
+        self, input: Any, field: ModField, emit: EmitFn, contribute: ContributeFn
+    ) -> Any:
         """The layer's work.
 
-        Reads the modulatory field as read-only background (down-channel), and
-        MAY invoke `emit` to push a committed action to the region (§6.4,
-        lateral). Most layers never emit and ignore the argument.
+        Reads the modulatory field as read-only background (down-channel), MAY
+        invoke `emit` to push a committed action to the region (§6.4, lateral),
+        and MAY invoke `contribute` to feed the field (INV-7, up). Most layers
+        use neither and ignore both arguments.
         """
         ...
 
@@ -97,7 +125,13 @@ class BaseLayer:
     def info_units(self, output: Any) -> Sequence[InfoUnit]:
         return ()
 
-    def process(self, input: Any, field: ModField, emit: EmitFn) -> Any:  # noqa: A002
+    def process(
+        self,
+        input: Any,  # noqa: A002
+        field: ModField,
+        emit: EmitFn,
+        contribute: ContributeFn,
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -140,6 +174,15 @@ class LayerEmission:
 
 
 @dataclass(frozen=True, slots=True)
+class LayerContribution:
+    """One layer's contribution to the field this cycle, bound to its issuer."""
+
+    layer: LayerIndex
+    params: dict[str, float]
+    weight: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
 class LayerRun:
     output: Any
     # The datum after this layer stamped its floor-tag.
@@ -148,6 +191,11 @@ class LayerRun:
     # to this layer's index. The driver records one activity record per emission;
     # the layer itself never touches `[event]`. Empty for layers that do not emit.
     emissions: tuple[LayerEmission, ...] = ()
+    # The contributions this layer made to the modulatory field during `process`
+    # (INV-7), each already bound to this layer's index. The driver hands them to
+    # GLOB-MOD, where they blend with every other layer's and take effect at N+1;
+    # `run_layer` never touches the field itself.
+    contributions: tuple["LayerContribution", ...] = ()
 
 
 def run_layer(
@@ -161,9 +209,10 @@ def run_layer(
     Order: precondition → process (with the lateral emit capability) → INV-4
     check on emitted InfoUnits → postcondition → stamp the floor-tag.
 
-    Emissions the layer declares through `emit` are buffered here, bound to the
-    layer's index so the layer never states its own issuing layer, and returned
-    for the driver to record. `run_layer` never writes to `[event]`.
+    Emissions the layer declares through `emit`, and contributions it declares
+    through `contribute`, are buffered here — both bound to the layer's index, so
+    a layer never states its own — and returned for the driver to act on.
+    `run_layer` itself never writes to `[event]` and never touches the field.
     """
     spec.pre(input)
 
@@ -172,11 +221,23 @@ def run_layer(
     def emit(action: Any) -> None:
         emissions.append(LayerEmission(issuing_layer=spec.index, action=action))
 
-    output = spec.process(input, field, emit)
+    contributions: list[LayerContribution] = []
+
+    def contribute(params: dict[str, float], weight: float = 1.0) -> None:
+        contributions.append(
+            LayerContribution(layer=spec.index, params=dict(params), weight=weight)
+        )
+
+    output = spec.process(input, field, emit, contribute)
 
     for unit in spec.info_units(output):
         assert_referred(unit)  # INV-4: a reference frame is present
 
     spec.post(output)
     stamped = stamp_layer(datum, spec.index)
-    return LayerRun(output=output, datum=stamped, emissions=tuple(emissions))
+    return LayerRun(
+        output=output,
+        datum=stamped,
+        emissions=tuple(emissions),
+        contributions=tuple(contributions),
+    )
