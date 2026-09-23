@@ -42,12 +42,14 @@ def _payload(ctx: RespondContext) -> dict[str, Any] | None:
 
 def _state(ctx: RespondContext) -> str:
     """The state the region is in now, read off the effect it just reported."""
-    payload = _payload(ctx)
-    effect = payload.get("effect") if payload else None
-    if isinstance(effect, dict):
-        state = effect.get("stateTo")
-        if isinstance(state, str):
-            return state
+    for signal in ctx.host.signals:
+        payload = signal.raw_payload
+        if isinstance(payload, dict):
+            status = payload.get("status")
+            if isinstance(status, dict):
+                state = status.get("stateTo")
+                if isinstance(state, str):
+                    return state
     return ""
 
 

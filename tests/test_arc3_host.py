@@ -11,7 +11,7 @@ import pytest
 
 from arc3.action import IllegalMove, Move
 from arc3.host import Arc3Source, StepFailed, declaration
-from arc3.observe import GAME_CHANNEL, move_value
+from arc3.observe import VISION_CHANNEL, move_value
 from dil.loop.layers.t2 import Emission
 from dil.runtime.host_source import HostSource
 from tests.test_arc3_frame import FakeFrameData, grid
@@ -48,8 +48,16 @@ class FakeEnv:
         return self._frames.pop(0)
 
 
-def f(fill: int = 0, **kw):
-    return FakeFrameData([grid(fill)], **kw)
+def f(mark: int = 0, **kw):
+    """A frame with one thing in it, placed at `mark` rows down.
+
+    A uniform grid holds no things at all — every cell is the background — so a
+    fixture without a mark would test segmentation finding nothing.
+    """
+    g = grid(0)
+    g[mark][5] = 9
+    g[mark][6] = 9
+    return FakeFrameData([g], **kw)
 
 
 def a_source(frames, opening=None, budget=10):
@@ -68,10 +76,16 @@ def test_cycle_zero_reports_the_reset_with_a_null_effect():
     the agent has done nothing observable yet is accurate."""
     src = a_source([f()], opening=f())
     host_input = src.next()
-    payload = host_input.signals[0].raw_payload
-    assert payload["entity"] == "action:0"
-    assert payload["effect"]["null"] is True
-    assert host_input.signals[0].source_id == GAME_CHANNEL
+    # Cycle 0 differences the opening frame against itself, so nothing moved.
+    payload = host_input.signals[-1].raw_payload
+    assert payload["entity"] == "region"
+    assert payload["status"]["levelsDelta"] == 0
+    things = [
+        sig.raw_payload for sig in host_input.signals
+        if sig.raw_payload["entity"].startswith("thing:")
+    ]
+    assert things and all(t["change"]["null"] for t in things), things
+    assert host_input.signals[0].source_id == VISION_CHANNEL
 
 
 def test_an_empty_opening_frame_is_reset_until_the_game_starts():
@@ -115,8 +129,11 @@ def test_the_following_next_reports_what_the_act_did():
     src.next()
     src.deliver(Emission(action=move_value(Move(1))))
     host_input = src.next()
-    assert host_input.signals[0].raw_payload["entity"] == "action:1"
-    assert host_input.signals[0].raw_payload["effect"]["null"] is False
+    # The region's status signal is always last; a thing that changed reports
+    # before it.
+    entities = {sig.raw_payload["entity"] for sig in host_input.signals}
+    assert "region" in entities
+    assert any(e.startswith("thing:") for e in entities), entities
 
 
 def test_next_returns_none_when_nothing_has_happened_since_the_last_report():
@@ -170,7 +187,7 @@ def test_the_action_budget_stops_the_run():
 def test_the_declaration_states_what_this_host_actually_does():
     d = declaration("ls20")
     assert d.boundary.present
-    assert d.channels[0].id == GAME_CHANNEL
+    assert d.channels[0].id == VISION_CHANNEL
     assert d.channels[0].can_return
     assert d.emitter.can_emit_first_action
     assert d.trace.externally_readable

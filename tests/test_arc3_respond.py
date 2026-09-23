@@ -11,8 +11,7 @@ from arc3.observe import move_value, observe
 from arc3.respond import DEFAULT_SWEEP, UNMET_CONFIDENCE, least_resolved
 from dil.loop.cycle import RespondContext
 from dil.loop.types import Appraisal, Expectation, InfoUnit, ModField, RefFrame
-from arc3.effect import diff
-from tests.test_arc3_effect import framed, marker
+from tests.test_arc3_perceive import framed
 
 
 class FakeResult:
@@ -25,12 +24,12 @@ class FakeResult:
 
 
 def ctx_for(affords, expectations=(), state_to="NOT_FINISHED", cycle=1):
-    prev = framed(marker(30, 30), actions=affords or (1,))
-    now = framed(marker(25, 30), actions=affords or (1,), state=state_to,
-                 **({} if state_to == "NOT_FINISHED" else {}))
-    if state_to != "NOT_FINISHED":
-        now = framed(marker(25, 30), state=state_to, actions=affords or ())
-    host = observe(prev, Move(1), now, diff(prev, now), t=cycle)
+    prev = framed({(30, 30): 9, (30, 31): 9}, actions=affords or (1,))
+    if state_to == "NOT_FINISHED":
+        now = framed({(25, 30): 9, (25, 31): 9}, actions=affords or (1,))
+    else:
+        now = framed({(25, 30): 9, (25, 31): 9}, state=state_to, actions=affords or ())
+    host = observe(prev, Move(1), now, t=cycle)
     return RespondContext(
         cycle=cycle,
         appraisal=Appraisal(info_ref="c", valence=0.0, goal_relevance=0.0),

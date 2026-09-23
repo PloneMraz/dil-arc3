@@ -39,9 +39,8 @@ from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import Emission
 
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
-from .effect import diff
 from .frame import Frame, read_frame
-from .observe import GAME_CHANNEL, move_from_value, observe
+from .observe import STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
 
 # How many state-changing actions a run may spend. RHAE scores
 # (human_baseline / ai_actions)^2, so every action is paid for; deliberation is
@@ -61,7 +60,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "_model", "_context", "delivered",
+        "delivered",
     )
 
     def __init__(
@@ -69,14 +68,12 @@ class Arc3Source:
         env: Any,
         game_action_cls: Any,
         action_budget: int = DEFAULT_ACTION_BUDGET,
-        model: Any = None,
     ) -> None:
-        # The thinking organ, if one is declared. The body does not think with
-        # it — it only asks it to NAME the situation a move is made from, and
-        # carries that name inward with the observation. The expectation itself
-        # is formed inside the loop, at T5.
-        self._model = model
-        self._context = ""
+        # The host holds NO model. It used to hand the raw frame to one and let
+        # it decide what was worth looking at, which was the body's job done by
+        # the mind. Reading the signal now happens on the thinking side
+        # (`perceive.py`, `interpret.py`), called from `observe`; the host carries
+        # signals and concludes nothing.
         self._env = env
         self._ga = game_action_cls
         self._frame: Frame | None = None
@@ -112,14 +109,7 @@ class Arc3Source:
             # `deliver` has not run since the last report; nothing new happened.
             return None
 
-        host_input = observe(
-            self._prev,
-            self._pending,
-            self._frame,
-            diff(self._prev, self._frame),
-            t=self._t,
-            context=self._context,
-        )
+        host_input = observe(self._prev, self._pending, self._frame, t=self._t)
         self._t += 1
         self._pending = None
         return host_input
@@ -166,13 +156,6 @@ class Arc3Source:
         if raw is None:
             raise StepFailed(f"the engine returned nothing for {move}")
 
-        # Name the situation BEFORE the move lands, off the frame it was made
-        # from. Naming it afterwards would name the consequence.
-        self._context = (
-            self._model.context(self._frame, f"action:{move.action_id}")
-            if self._model is not None
-            else ""
-        )
         self._prev = self._frame
         self._frame = read_frame(raw)
         self._pending = move
@@ -191,9 +174,15 @@ def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
         boundary=BoundaryDeclaration(present=True),
         channels=(
             ChannelDeclaration(
-                id=GAME_CHANNEL,
+                id=VISION_CHANNEL,
                 # The game returns, and it resists: it is the Mode-B source of
                 # tag D. An agent cannot write a frame.
+                can_return=True,
+            ),
+            ChannelDeclaration(
+                # The region's own status is a separate kind of signal, so it is
+                # a separate channel — which is what T3's content-typing is for.
+                id=STATUS_CHANNEL,
                 can_return=True,
             ),
         ),
@@ -213,12 +202,9 @@ def declaration(game_id: str, store_root: str | None = None) -> HostDeclaration:
 
 
 def create_source(
-    env: Any,
-    game_action_cls: Any,
-    action_budget: int = DEFAULT_ACTION_BUDGET,
-    model: Any = None,
+    env: Any, game_action_cls: Any, action_budget: int = DEFAULT_ACTION_BUDGET
 ) -> Arc3Source:
-    return Arc3Source(env, game_action_cls, action_budget, model)
+    return Arc3Source(env, game_action_cls, action_budget)
 
 
 __all__ = [

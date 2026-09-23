@@ -1,34 +1,34 @@
-"""The bridge: a frame transition, as the loop consumes it.
+"""The bridge: what the host carries inward, and nothing more.
 
-This is the sense organ reporting inward. It turns "I made move M, and the
-region came back with frame F" into the `HostCycleInput` the cycle driver takes,
-and it does so under the settled reading: the unit is the **affordance**, so what
-goes inward is the EFFECT of the move, not the frame.
+The host is the body. It receives signals and carries them; it does not
+conclude. Everything that reads the signal — finding the things in it
+(`perceive.py`), reading what became of them (`interpret.py`) — is the model's
+work, and the host calls into it the way a nervous system carries what the eye
+has already processed. What travels inward is one signal per Other, on the
+declared channels, through T3.
 
-Three things are decided here, and each is a declaration rather than a
-convenience.
+WHAT THIS REPLACES, AND WHY. The earlier version sent ONE signal per cycle,
+carrying a finished frame-level interpretation, bound to an entity that was the
+ACTION just taken. §8.4 defines an entity as "an other-entity the agent does not
+control", and an action is not that. Measured, the consequences were exact:
 
-**The entity is the affordance, one per action id.** ACTION6 carries `(x, y)`,
-and treating each coordinate as its own affordance would create 4096 entities
-that each recur once — nothing would ever accrue and the agent would learn
-nothing. Coordinates are therefore context, not identity. Bucketing them into
-coarse regions would be tidier, but there is no measurement behind any particular
-bucketing, and §12 exists to stop exactly that kind of invention. The limit is
-declared instead: under ACTION6 the effect varies with a coordinate the entity id
-does not carry, so the expectation for `action:6` stays unstable, and the loop
-will register that as persistent resistance rather than as learning.
+  - T8 produced RelValue = 0 and SocialEdge = 0 over every cycle of a real run.
+    `RelValue` needs N >= 2 and there was never more than one Other; two buttons
+    cannot have an Other-to-Other interaction with no self present.
+  - T7's absences were meaningless — 444 of 481 scars — because an affordance
+    does not return on its own, so asking whether it fell silent was the wrong
+    question. Attention patched the symptom.
 
-**The agent authors moves; it never authors frames.** So T2 sees exactly one
-self-written change — the move it just made, observed back — and every change the
-frame shows is environment-pushed. That is not a formality that empties INV-6: it
-is the architectural line stated plainly, and it makes each affordance an Other
-under T6, something that returns and resists rather than something the agent
-wrote. It is also what tag D already claims about this environment.
+Now: **entity is a thing, context is the action**. The Other is what is out
+there; what the agent just did is the situation it is in. Measured on the same
+316 transitions the old mapping was measured on, prediction went 94% -> 93% on
+`ls20` and 69% -> 85% on `vc33` — and the hand-coded landing-patch feature that
+carried the old `ls20` number is gone.
 
-**The loop is handed no coordinates.** Under this reading the agent learns what
-its controls do and does not learn where anything is. That is a real limit of the
-affordance reading, declared here rather than discovered later: knowing the
-control scheme is not the same as knowing how to win a level.
+THE REGION IS AN OTHER TOO. Its state and level counter are the game speaking
+about itself, and the agent controls neither. They are not properties of any
+thing in the grid, so they travel as their own entity rather than being folded
+into one.
 """
 
 from __future__ import annotations
@@ -40,41 +40,37 @@ from dil.loop.layers.t2 import ObservedChange
 from dil.loop.types import Signal
 
 from .action import IllegalMove, Move
-from .effect import Effect
 from .frame import Frame
+from .interpret import REGION_ENTITY, ThingChange, change_value, changes_of, region_status
 
-# The physical channel the game arrives on (T3 content-typing).
-GAME_CHANNEL: Final = "arc3-game"
-# The info-type the transducer stamps on it.
-EFFECT_INFO_TYPE: Final = "affordance-effect"
+# The channel things arrive on — the agent's sight of the grid.
+VISION_CHANNEL: Final = "arc3-vision"
+# The channel the region's own status arrives on. A separate channel because it
+# is a separate kind of signal, which is what T3's content-typing is for.
+STATUS_CHANNEL: Final = "arc3-status"
+
+# The info-types the transducers stamp.
+THING_INFO_TYPE: Final = "thing-change"
+STATUS_INFO_TYPE: Final = "region-status"
+
 # The id of the one self-written change: the agent's own move, observed back.
 SELF_MOVE_CHANGE: Final = "self:move"
 
 
-def affordance_key(move: Move) -> str:
-    """The entity id for a move. One per action id — see the module docstring."""
-    return f"action:{move.action_id}"
+def action_context(move: Move) -> str:
+    """The situation a thing's change is read against: what the agent just did.
 
+    This is where the affordance went. It is not an entity — the agent is not an
+    Other to itself — it is the **action channel**, and an action channel names a
+    context, not a thing that returns.
 
-def effect_value(effect: Effect) -> dict[str, object]:
-    """The effect as plain data.
-
-    T5 compares expectations by `json.dumps(..., sort_keys=True)`, so the value
-    has to be JSON-shaped: a dataclass would serialise through `default=str` and
-    two structurally identical effects could still differ by repr. Lists rather
-    than tuples, for the same reason — `json.dumps` renders both as arrays, but
-    only one survives a snapshot round-trip unchanged.
+    ACTION6's coordinates are deliberately not part of it. Folding them in would
+    make 4096 contexts that each recur once, and nothing would accrue. Declared
+    cost: under ACTION6 the outcome varies with a coordinate the context does not
+    carry, so its expectations stay unstable and the loop registers that as
+    persistent resistance rather than as learning.
     """
-    return {
-        "cellsChanged": effect.cells_changed,
-        "transitions": [list(t) for t in effect.transitions],
-        "displacements": [list(d) for d in effect.displacements],
-        "depthDelta": effect.depth_delta,
-        "levelsDelta": effect.levels_delta,
-        "stateFrom": effect.state_from,
-        "stateTo": effect.state_to,
-        "null": effect.is_null,
-    }
+    return f"action:{move.action_id}"
 
 
 def move_value(move: Move) -> dict[str, object]:
@@ -82,9 +78,8 @@ def move_value(move: Move) -> dict[str, object]:
 
     This exact shape is BOTH what the respond policy commits and what the host
     reports back as the self-written change, because T2 classifies agency by
-    structural equality against the emission it recorded. If the two shapes
-    drifted apart the agent's own move would be tagged ENV_PUSHED — it would
-    stop recognising its own act.
+    structural equality against the emission it recorded. If the two drifted
+    apart the agent would stop recognising its own act.
     """
     return {"kind": "move", "actionId": move.action_id, "x": move.x, "y": move.y}
 
@@ -96,81 +91,81 @@ def move_from_value(value: object) -> Move:
     return Move(int(value["actionId"]), value.get("x"), value.get("y"))
 
 
-def game_transducer(signal: Signal) -> tuple[str, object]:
-    """T3's per-channel transducer for the game.
+def thing_payload(kind: str, change: ThingChange, context: str) -> dict[str, object]:
+    return {"entity": kind, "change": change_value(change), "context": context}
 
-    It hands the payload through unchanged, typed. The payload already carries
-    the `entity` key that T4's default resolver reads, so the affordance binding
-    needs no custom resolver — the loop's own DECIDE@IMPL seam takes it as it is.
+
+def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
+    """One cycle's input: what became of each Other, and what the agent did.
+
+    `prev` is taken as an argument rather than looked up, because a change is a
+    relation between two frames and it must be computed from the pair the caller
+    actually observed.
     """
-    return (EFFECT_INFO_TYPE, signal.raw_payload)
+    context = action_context(move)
+    changes = changes_of(prev, now)
 
-
-def effect_from_value(value: object) -> Effect:
-    """Rebuild an Effect from the plain data `effect_value` produced."""
-    if not isinstance(value, dict):
-        raise IllegalMove(f"not an effect: {value!r}")
-    return Effect(
-        cells_changed=int(value["cellsChanged"]),
-        transitions=tuple(tuple(t) for t in value["transitions"]),  # type: ignore[misc]
-        displacements=tuple(tuple(d) for d in value["displacements"]),  # type: ignore[misc]
-        depth_delta=int(value["depthDelta"]),
-        levels_delta=int(value["levelsDelta"]),
-        state_from=str(value["stateFrom"]),
-        state_to=str(value["stateTo"]),
+    signals: list[Signal] = [
+        Signal(
+            source_id=VISION_CHANNEL,
+            # `entity` is what T4's default resolver binds on. Without it every
+            # thing would bind to STRANGER and collapse into one.
+            raw_payload=thing_payload(kind, change, context),
+            t=t,
+        )
+        # Sorted so a cycle's signals arrive in a stable order: two runs over the
+        # same frames produce the same trace, which an auditor needs.
+        for kind, change in sorted(changes.items())
+    ]
+    signals.append(
+        Signal(
+            source_id=STATUS_CHANNEL,
+            raw_payload={
+                "entity": REGION_ENTITY,
+                "status": region_status(prev, now),
+                "context": context,
+                "game": now.game_id,
+                # What the region offers next. The respond policy reads it from
+                # here, because it is the region's report and not a thing's.
+                "affords": list(now.available_actions),
+            },
+            t=t,
+        )
     )
 
-
-def observe(
-    prev: Frame,
-    move: Move,
-    now: Frame,
-    effect: Effect,
-    t: int,
-    context: str = "",
-) -> HostCycleInput:
-    """One cycle's input: what the move was, and what the region did about it.
-
-    `prev` is not sent inward. It is taken as an argument because the effect is a
-    relation between two frames and the signature should be computed from the
-    pair the caller actually observed, never from a frame this module went
-    looking for.
-    """
-    entity = affordance_key(move)
     return HostCycleInput(
-        # Which affordances the region said were there when this move was
-        # chosen. T7 registers an absence only against these: an action the game
-        # did not offer is not silent, it simply was not there to answer. Read
-        # off `prev`, because that is the frame the move was chosen from — `now`
-        # reports what is afforded for the NEXT choice.
-        afforded=frozenset(
-            f"action:{a}" for a in prev.available_actions
-        ),
-        signals=(
-            Signal(
-                source_id=GAME_CHANNEL,
-                # `entity` is what T4's default resolver binds on; without it the
-                # unit would bind to STRANGER and every affordance would collapse
-                # into one.
-                raw_payload={
-                    "entity": entity,
-                    "effect": effect_value(effect),
-                    "game": now.game_id,
-                    "affords": list(now.available_actions),
-                    # The situation the move was made FROM, named by the model.
-                    # It travels with the observation so the expectation can be
-                    # conditioned on it without the grid entering the loop.
-                    "context": context,
-                },
-                t=t,
-            ),
-        ),
+        signals=tuple(signals),
         changes=(
             # The agent's own act, observed back. T2 matches this against the
             # emission it recorded and tags it SELF_WRITTEN.
             ObservedChange(id=SELF_MOVE_CHANGE, value=move_value(move)),
-            # What the region did. `id` is the entity id T6 reads, so the
-            # affordance accrues independence evidence as an Other.
-            ObservedChange(id=entity, value=effect_value(effect)),
+            # What the region did. `id` is the entity id T6 reads, so each Other
+            # accrues its own independence evidence.
+            *(
+                ObservedChange(id=kind, value=change_value(change))
+                for kind, change in sorted(changes.items())
+            ),
+            ObservedChange(id=REGION_ENTITY, value=region_status(prev, now)),
+        ),
+        # Which Others the region says are there. T7 registers an absence only
+        # against these — and now that means something: a thing that has gone
+        # from the grid is genuinely absent, which an affordance never could be.
+        afforded=frozenset(
+            [REGION_ENTITY, *(k for k, c in changes.items() if not c.vanished)]
         ),
     )
+
+
+def thing_transducer(signal: Signal) -> tuple[str, object]:
+    """T3's transducer for the vision channel."""
+    return (THING_INFO_TYPE, signal.raw_payload)
+
+
+def status_transducer(signal: Signal) -> tuple[str, object]:
+    """T3's transducer for the region's status channel."""
+    return (STATUS_INFO_TYPE, signal.raw_payload)
+
+
+def transducers() -> dict[str, object]:
+    """The per-channel transducers this host declares (T3, DECIDE@IMPL)."""
+    return {VISION_CHANNEL: thing_transducer, STATUS_CHANNEL: status_transducer}

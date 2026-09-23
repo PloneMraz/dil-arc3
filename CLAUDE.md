@@ -803,6 +803,63 @@ cycle, for ever. With one entity it is invisible; with N entities of which one
 returns per cycle it is N−1 false absences per cycle, in any host, for any
 domain. The affordance mapping only made it visible.
 
+## The rebuild, measured end to end
+
+`entity = thing`, `context = action`, and the two rings swapped back:
+
+| ring | files | job |
+|---|---|---|
+| **body** | `frame.py`, `action.py`, `host.py`, `observe.py` | receives, gates, carries, executes. **Concludes nothing.** |
+| **mind** | `perceive.py`, `interpret.py`, `mind.py` | finds things, reads what became of them, says what they will do. **Chooses nothing.** |
+
+`effect.py` and the old `model.py` are gone. Nothing in production referenced
+them once `perceive.py` and `interpret.py` existed — segmenting first makes the
+frame-level signature unnecessary, because a thing's displacement is just where
+it was against where it is, with no rigidity filter and no translation
+invariance to engineer.
+
+### Prediction, on the same 316 transitions the old mapping was measured on
+
+| | old (affordance + hand-coded landing patch) | new (things) |
+|---|---|---|
+| `ls20` | 94% | **93%** |
+| `vc33` | 69% | **85%** |
+
+One point given up where the hand-coded feature was doing the work, **sixteen
+gained** where it was blind — and the feature is gone.
+
+### Live runs, 60 cycles each
+
+| | `ls20` before | `ls20` after | `vc33` after |
+|---|---|---|---|
+| Others per cycle | 1 | **9** | **7** |
+| T8 `RelValue` | **0** | **540** | **420** |
+| T8 `SocialEdge` | 0 | 0 | 0 |
+| total scars | 227 | 44 | 61 |
+| of which absences | **225** | **1** | **2** |
+| distinct resistance sources | 2 | **8** | 3 |
+| `channelActivity` in the field | 1.0 constant | **9.0** | **7.0** |
+
+**T8 produced nothing at all before and produces hundreds of `RelValue`s now** —
+the top of the meaning-channel has work for the first time.
+
+**The absence flood is gone structurally, not patched.** 225 → 1. Attention was
+holding it down; the real cause was that an affordance cannot be absent, and a
+thing can: it either is in the frame or it is not. §13.7's source diversity also
+stops being nominal — resistance now arrives from eight distinct Others instead
+of one.
+
+### Still zero, and declared
+
+`SocialEdge` is **0**. It needs Other↔Other interactions, which the host never
+supplies — `HostCycleInput.interactions` is left empty. Under the old mapping the
+idea was meaningless (two buttons cannot interact without the agent); under this
+one it is perfectly meaningful — `thing:9` touching `thing:5` is exactly that —
+and it is simply not implemented.
+
+`levels_completed` is **0** on both games. Nothing reads the goal; that is
+unchanged and is not a consequence of this rebuild.
+
 ## Entity was the wrong thing, and T8 said so
 
 `entity = affordance` was settled early and it was wrong. §8.4 defines an entity
