@@ -32,7 +32,9 @@ Each was run on 2026-09-24 and completed.
 
 | script | what it measures | args |
 |---|---|---|
-| `wm_probe.py` | can a local model write an executable world model of `ls20` (exact-grid replay, counterexample feedback) | `--game ls20 --endpoint URL` or `--baseline-only` |
+| `wm_probe.py` | can an open model write an executable world model of `ls20` (exact-grid replay, counterexample feedback that keeps the best program) | `--game ls20 --endpoint URL [--no-think] [--data transitions.json]` or `--baseline-only` |
+| `export_transitions.py` | exports the recorded transitions as plain JSON, so the probe runs without this code | `[OUT.json]` |
+| `kaggle/build_probe_run.py` | builds the Kaggle dataset and notebook that run the probe on an RTX Pro 6000 with vLLM, after checking every model file against Hugging Face's published hashes (`kaggle/qwen3_6_27b_fp8.manifest.json`) | `[--rounds N] [--runs-per-mode N] [--max-tokens N]` |
 | `run_prior.py` | a live game with the prior admitted: recall, provenance, T2 agency | `GAME CYCLES` |
 | `run_things.py` | a live game: what reaches T8, moves, scars | `GAME CYCLES` |
 | `dump_frames.py` | records transitions from both games | `OUT.pkl` |

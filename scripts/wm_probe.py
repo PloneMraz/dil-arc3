@@ -11,10 +11,18 @@ Model-agnostic: it talks to any OpenAI-compatible chat endpoint.
 
     python wm_probe.py --game ls20 --endpoint http://127.0.0.1:8080/v1 --rounds 3
     python wm_probe.py --game ls20 --baseline-only
+    python wm_probe.py --data ls20_transitions.json ...   # no dil-arc3 code needed
+
+The transitions come from scripts/data/frames.pkl by default. A JSON export of
+them (scripts/export_transitions.py) lets the probe run on its own, away from
+this repository — on a Kaggle GPU, for one.
 """
 
 from __future__ import annotations
-from _paths import SRC, DATA  # noqa: E402 — see scripts/_paths.py
+try:
+    from _paths import SRC, DATA  # noqa: E402 — see scripts/_paths.py
+except ImportError:  # running on its own, with --data
+    SRC, DATA = None, None
 
 import argparse
 import json
@@ -27,12 +35,20 @@ import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path.insert(0, str(SRC))
+if SRC is not None:
+    sys.path.insert(0, str(SRC))
 
 HEX = "0123456789abcdef"
 
 
-def load(game: str):
+def load(game: str, data: str | None = None):
+    """(action, grid before, grid after) for each recorded transition of a game.
+
+    From a JSON export when `data` names one, otherwise from frames.pkl.
+    """
+    if data is not None:
+        rows = json.loads(Path(data).read_text(encoding="utf-8"))
+        return [(r["action"], r["before"], r["after"]) for r in rows if r["game"] == game]
     rows = pickle.loads((DATA / "frames.pkl").read_bytes())
     out = []
     for gid, act, prev, now in rows:
@@ -85,9 +101,14 @@ Some it got wrong (expected vs yours, as changed cells relative to the grid befo
 Revise `predict` so it explains all the evidence. Return only one ```python code block."""
 
 
-def chat(endpoint: str, model: str, messages, max_tokens: int, timeout: int) -> tuple[str, dict]:
-    body = json.dumps({"model": model, "messages": messages, "temperature": 0.2,
-                       "max_tokens": max_tokens}).encode()
+def chat(endpoint: str, model: str, messages, max_tokens: int, timeout: int,
+         think: bool = True, temperature: float = 0.2) -> tuple[str, dict]:
+    payload = {"model": model, "messages": messages, "temperature": temperature,
+               "max_tokens": max_tokens}
+    if not think:
+        # Qwen3-family chat templates read this; other models ignore it.
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
+    body = json.dumps(payload).encode()
     req = urllib.request.Request(endpoint.rstrip("/") + "/chat/completions", data=body,
                                  headers={"Content-Type": "application/json"})
     t0 = time.time()
@@ -95,7 +116,12 @@ def chat(endpoint: str, model: str, messages, max_tokens: int, timeout: int) -> 
         resp = json.loads(r.read())
     usage = resp.get("usage", {})
     usage["seconds"] = round(time.time() - t0, 1)
-    return resp["choices"][0]["message"]["content"], usage
+    msg = resp["choices"][0]["message"]
+    # What the model reasoned before answering, when the server extracts it:
+    # counted, so the cost of thinking is on the record.
+    usage["reasoning_chars"] = len(msg.get("reasoning_content") or msg.get("reasoning") or "")
+    usage["finish_reason"] = resp["choices"][0].get("finish_reason")
+    return msg.get("content") or "", usage
 
 
 def extract(text: str) -> str | None:
@@ -149,9 +175,13 @@ def main() -> None:
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--baseline-only", action="store_true")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--data", default=None, help="a JSON export of the transitions")
+    ap.add_argument("--temperature", type=float, default=0.2)
+    ap.add_argument("--no-think", action="store_true",
+                    help="ask the model to answer without a reasoning phase")
     a = ap.parse_args()
 
-    data = load(a.game)
+    data = load(a.game, a.data)
     train, held = data[: a.train], data[a.train:]
     ident = "def predict(grid, action):\n    return grid\n"
     b_tr, _ = score(ident, train)
@@ -173,22 +203,40 @@ def main() -> None:
         sys.exit(f"shown transitions are not one chain (breaks at {breaks}); shorten --shown")
     shown = "\n".join(describe(i, act, b, c) for i, (act, b, c) in enumerate(sample))
     messages = [{"role": "user", "content": PROMPT.format(grid=show(train[0][1]), transitions=shown)}]
-    log = {"game": a.game, "model": a.model, "rounds": []}
+    # Counterexample-guided revision that keeps what worked: each round sees the
+    # task, the BEST program so far and where that program fails — never the
+    # whole transcript. A round that returns no program, or a worse one, leaves
+    # the best standing; the context stays bounded however many rounds run.
+    task = messages[0]
+    best = None  # (train ok, held ok, code, per-transition results, round)
+    log = {"game": a.game, "model": a.model, "think": not a.no_think, "rounds": []}
     for rnd in range(a.rounds):
-        text, usage = chat(a.endpoint, a.model, messages, a.max_tokens, a.timeout)
+        text, usage = chat(a.endpoint, a.model, messages, a.max_tokens, a.timeout,
+                           think=not a.no_think, temperature=a.temperature)
         code = extract(text)
         ok_tr, res_tr = score(code, train)
         ok_he, _ = score(code, held)
         print(f"round {rnd}: train {ok_tr}/{len(train)}  held-out {ok_he}/{len(held)}  "
               f"tokens in {usage.get('prompt_tokens')} out {usage.get('completion_tokens')}  "
-              f"{usage.get('seconds')}s")
+              f"{usage.get('seconds')}s  reasoning {usage.get('reasoning_chars')} chars  "
+              f"finish {usage.get('finish_reason')}", flush=True)
         log["rounds"].append({"round": rnd, "train": ok_tr, "held": ok_he, "usage": usage, "code": code,
                               "reply": text})
-        if ok_tr == len(train):
+        if code is not None and (best is None or ok_tr > best[0]):
+            best = (ok_tr, ok_he, code, res_tr, rnd)
+        if best is not None and best[0] == len(train):
             break
-        messages += [{"role": "assistant", "content": text},
-                     {"role": "user", "content": FEEDBACK.format(ok=ok_tr, n=len(train),
-                                                                 fails=fail_text(train, res_tr))}]
+        if best is None:
+            messages = [task]  # nothing usable yet: ask again from the task
+            continue
+        messages = [task,
+                    {"role": "assistant", "content": f"```python\n{best[2]}```"},
+                    {"role": "user", "content": FEEDBACK.format(ok=best[0], n=len(train),
+                                                                fails=fail_text(train, best[3]))}]
+    if best is not None:
+        print(f"best: round {best[4]}  train {best[0]}/{len(train)}  held-out {best[1]}/{len(held)}",
+              flush=True)
+        log["best"] = {"round": best[4], "train": best[0], "held": best[1], "code": best[2]}
     if a.out:
         Path(a.out).write_text(json.dumps(log, indent=1), encoding="utf-8")
         print("log ->", a.out)
