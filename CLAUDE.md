@@ -1750,11 +1750,12 @@ there (`44309b7`) and ported here:
 - A bug the commit test caught on the way: a written datum's arrival carried its
   fixed tags as a dataclass, which the snapshot could not store; it now takes
   the store-return form.
-- **Known limit, pre-existing and not fixed here**: the Python daemon's snapshot
-  payload keeps only the driver's `cycle` and `lastEmission`, not pending
-  returns, `recalled`, `last_lateral` or `pending_writes`, so a recovery from a
-  commit drops whatever was on its way to T1. dil-core snapshots the whole
-  driver state.
+- **A pre-existing gap, fixed the same day (`f1b4491`)**: the Python daemon's
+  snapshot payload kept only the driver's `cycle` and `lastEmission`, not
+  pending returns, `recalled`, `last_lateral` or `pending_writes`, so a recovery
+  from a commit dropped whatever was on its way to T1. It now keeps the whole
+  driver state, as dil-core does; snapshots in the old form still restore. A
+  recovery test failed before the change and passes after.
 
 Live, `ls20`, 60 cycles after the port: moves, positions, scars and recall
 identical to before; `[event]` 11,162 records, 1,202 fewer than before — exactly
