@@ -1659,6 +1659,26 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
 - **Follow the rules as written**: keep the Writeup within 1,500 words rather
   than relying on the PDF route to go past it.
 
+### Direction C, placed in the loop (Plone, same day)
+
+The world-model probe (`scripts/wm_probe.py`) ran **entirely outside dil-arc3**:
+it imports nothing from `src/`, its transitions came from a scripted agent in
+`dump_frames.py`, and its score-and-rewrite loop was the probe's own. It recorded
+no mismatch, no ResistEvent, no scar and no `[event]` line, so it is evidence
+only that an open model *can* write such a program — not evidence about this
+agent, and nothing the paper's claim can rest on. It also poured 80 transitions
+into one prompt, the load INV-5 names. Its measurements stay as a feasibility
+result; the next ones run inside the loop.
+
+- **A program the model writes is `running` data** — the character's own, from
+  running — not `prior`.
+- **There is no trigger for rewriting it, and no constant to declare.** The model
+  sits at the **mind**: it is the thinking. When its expectation meets the region
+  and does not hold, the loop registers the mismatch, the ResistEvent and, where
+  it holds, the scar; adjusting is what thinking does with that. If it does not
+  adjust, the mismatch recurs. Rewriting is the consequence of mismatch, not a
+  step scheduled by the host.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
