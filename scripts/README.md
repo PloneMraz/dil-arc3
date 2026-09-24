@@ -1,0 +1,76 @@
+# scripts/
+
+The measurement and run scripts behind the numbers in `README.md` and
+`CLAUDE.md`. They were written in a session scratchpad on Windows and moved here
+on 2026-09-24, so that the work is kept with the code it measured.
+
+Run them from the repository root with the starter kit's interpreter, which has
+the game engine:
+
+```sh
+PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
+$PY scripts/<script>.py [args]
+```
+
+`_paths.py` works out where the repository, its `src/` and the starter kit are,
+from where it sits, so nothing depends on where the workspace is mounted.
+
+## Data
+
+`scripts/data/` is git-ignored output.
+
+- `frames.pkl` — 316 real transitions (`ls20` 159, `vc33` 157), the set every
+  offline measurement here was scored on. **Reproducible exactly**:
+  `$PY scripts/dump_frames.py scripts/data/frames.pkl` regenerated it on
+  2026-09-24 and all 316 transitions were identical to the original.
+- `prior-<game>-*/` — the durable store and `[event]` log of each `run_prior.py`
+  run.
+
+## Scripts that run against the current code
+
+Each was run on 2026-09-24 and completed.
+
+| script | what it measures | args |
+|---|---|---|
+| `wm_probe.py` | can a local model write an executable world model of `ls20` (exact-grid replay, counterexample feedback) | `--game ls20 --endpoint URL` or `--baseline-only` |
+| `run_prior.py` | a live game with the prior admitted: recall, provenance, T2 agency | `GAME CYCLES` |
+| `run_things.py` | a live game: what reaches T8, moves, scars | `GAME CYCLES` |
+| `dump_frames.py` | records transitions from both games | `OUT.pkl` |
+| `verify_gate.py` | the host's boundary gate against live frames | — |
+| `probe_frame.py` | the real shape and value range of frames | — |
+| `identity.py` | which reading of identity keeps a thing the same thing | `frames.pkl` |
+| `seeing_measure.py` | `Seeing` on the saved transitions | `frames.pkl` |
+| `track.py`, `track_mover.py` | tracking individual pieces, and whether it pays | `frames.pkl` |
+| `try_reprs.py` | candidate effect representations | `frames.pkl` |
+| `readlog.py` | reads a downloaded Kaggle kernel log | `LOG.json [N]` — not re-run, needs a log |
+| `rules_text.js` | the rendered text of a JavaScript page (Kaggle rules, leaderboard) | `node scripts/rules_text.js URL OUT` |
+
+## Scripts written against code that has since been removed
+
+They are kept because the numbers recorded in `CLAUDE.md` came from them. Run
+them against the commit they were written for, from a worktree:
+
+```sh
+git worktree add ../dil-arc3-at-321d9e0 321d9e0
+DIL_ARC3_SRC=../dil-arc3-at-321d9e0/src $PY scripts/model_vs_persistence.py scripts/data/frames.pkl
+git worktree remove ../dil-arc3-at-321d9e0
+```
+
+| commit | what it still had | scripts |
+|---|---|---|
+| `321d9e0` | `arc3.model`, `arc3.effect`, `affordance_key` — the affordance era | run and completed: `diagnose.py`, `model_vs_persistence.py`, `three_arms.py`, `verify_shipped.py`, `run_loop.py`, `debug_vc33.py` · imports verified, not re-run (live games, minutes each): `field_trace.py`, `measure_recollection.py`, `run_agent.py`, `store_demo.py`, `measure_effect.py` |
+| `147aab3` | the stuff-level readers `changes_of`, `contacts`, `interactions_of`, and `Region.kind` | run and completed: `see.py`, `contacts.py`, `surround.py`, `surround2.py`, `thing_repeat.py` |
+
+`model_vs_persistence.py` reproduces the recorded figures exactly at `321d9e0`:
+`ls20` 76% → 94%, `vc33` 41% → 69%. It carried a bug of its own — its last
+loop built an ACTION6 move without coordinates and raised after printing the
+results — fixed on the way in.
+
+## What was not kept
+
+The one-shot edit scripts (`port_*.py`, `mind_directive.py`, `prior_object.py`,
+`arc3_describe.py`, `readme_prior.py`) replaced exact passages of source that
+have since been committed; re-running them would fail on text that is no longer
+there, and their effect is in the history. Scripts that served `dil-core` or the
+website stay with the Windows backup until they are moved to their own
+repositories.

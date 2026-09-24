@@ -15,3 +15,11 @@ venv/
 .env.*
 !.env.example
 scratch/
+
+# Measurement output: transitions dumped from live games, stores of live runs.
+# Reproducible with the scripts; not source.
+scripts/data/
+
+# Game source the arc_agi engine caches into the working directory when the
+# scripts play a live game. Not ours, and never to be read for strategy.
+environment_files/
