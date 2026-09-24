@@ -19,8 +19,7 @@ This module supplies the MECHANISM only:
 WHO the reader is stays deployment-open in the protocol, like tag D. For this
 project it is settled (tag E, CLAUDE.md): a Kaggle evaluation session has no third
 party and no network, so the reader is a peer agent in the same session, reading
-this agent's log through `peer.py`. The live run (`scripts/run_game.py`) does not
-wire a peer yet.
+this agent's log through `peer.py`, wired in `scripts/run_game.py --peer`.
 
 Ported from dil-core against DIL protocol v0.3.3.
 """
@@ -123,9 +122,22 @@ def reflection_signal(
     """
     return Signal(
         source_id=channel_id,
-        raw_payload={"entity": reading.reader_id, "value": reading},
+        raw_payload={"entity": reading.reader_id, "value": reading_payload(reading)},
         t=t,
     )
+
+
+def reading_payload(reading: ReflectionReading) -> dict[str, Any]:
+    """A reading as plain data, so it can be held in [data] and in a snapshot."""
+    about = reading.about
+    return {
+        "reader": reading.reader_id,
+        "about": {
+            "index": about.index, "cycle": about.cycle, "source_id": about.source_id,
+            "mismatch_kind": about.mismatch_kind, "t": about.t,
+        },
+        "reading": reading.reading,
+    }
 
 
 def reflection_transducer(signal: Signal) -> tuple[str, Any]:

@@ -1706,3 +1706,47 @@ cell without one "will become a hard error in future nbformat versions". The
 built notebook validates under nbformat with warnings raised as errors. The other
 lines in that log — `frozen modules` from the debugger, `SyntaxWarning` from
 `mistune` and `nbconvert` — come from Kaggle's own packages, not from this code.
+
+## 2026-09-25
+
+### The peer reader wired, and the peers echo (Plone: wire it, then test C7)
+
+Tag E's mechanism had never run in this repository: no test touched `peer.py`,
+and the measurement that gave §13.5/§13.7 `pass` with a peer (2026-09-22) came
+from a scratchpad script no longer here. Wiring it found three things wrong:
+
+- **It dropped presence.** `PeerReflectingSource.next()` rebuilt the cycle's
+  input without `afforded`, so behind a peer T7 would have lost the region's
+  word on what is there.
+- **A reading was a dataclass**, which `[data]` and a snapshot cannot hold. It
+  is plain data now (`reading_payload`).
+- **"Read-only" was a type, not a fact.** `ReadableEventLog` is a Protocol;
+  handing a peer the log would have handed it `append`. `read_only` is a view
+  that reads and holds nothing to write through, and it reads late, so each
+  agent can be given the other's view before either store exists.
+
+The host keeps readings as data (`domain: reflection`, `kind: peer-reading`),
+declares the reflection transducer for `peer-reflection`, and
+`scripts/run_game.py --peer GAME` runs a second agent — its own mind, its own
+store — beside the first, each reading the other. Tests pin the three fixes, the
+bound of two readings per peer per cycle, and that an agent alone establishes
+diversity-loss. Taking out the presence fix fails one test, taking out the
+plain-data fix fails two.
+
+Live on this machine, `ls20` with `vc33` as its peer, 12 cycles each, no model
+reachable, real stores (3 commits each, readings in the snapshots):
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| scars from the frame | 11 | 11 |
+| scars from the peer's readings | 18 | 19 |
+| of which about the peer's own frame | 7 | 7 |
+| of which about a reading this agent sent | **11** | **12** |
+| C5 / C7 | pass / pass | pass / pass |
+
+**The peers echo.** A reading collides with the standing expectation (nothing
+predicts what a peer will say next), that collision is a scar in this agent's
+log, and the other peer reads it back as a new collision to report. Already at
+12 cycles most readings are about readings, and the supply grows faster than
+the two a cycle that are read. So C7's `pass` here is partly earned by the peers
+reflecting each other, not by the region. Not settled; put to Plone.

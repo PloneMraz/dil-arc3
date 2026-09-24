@@ -33,18 +33,48 @@ Ported concepts from dil-core; the peer arrangement is this host's own choice.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass, field as dc_field
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 
 from ..loop.cycle import HostCycleInput
 from ..loop.layers.t2 import Emission
 from ..store.event_log import ReadableEventLog
+from ..store.resist_event import EventRecord, LogRecord
 from .host_source import HostSource
 from .reflection import CollisionCoordinate, collision_coordinates, form_reading, reflection_signal
 
 # The channel a peer's reading enters on. T3 must have the reflection transducer
 # registered for this id, so the reading is typed `reflection` rather than raw.
 PEER_REFLECTION_CHANNEL = "peer-reflection"
+
+
+class ReadOnlyEventLog:
+    """A view of another agent's [event] log that can be read and nothing else.
+
+    `ReadableEventLog` is a Protocol, so handing a peer the log itself would give
+    it `append` in fact if not in type. This view holds no reference a caller can
+    write through: it reads, and it reads late — the log is looked up at each call,
+    so a peer built before the other agent's store exists sees it once it does.
+    """
+
+    __slots__ = ("_get",)
+
+    def __init__(self, log: ReadableEventLog | Callable[[], ReadableEventLog]) -> None:
+        self._get = log if callable(log) and not hasattr(log, "all") else (lambda: log)
+
+    def all(self) -> list[LogRecord]:
+        return self._get().all()
+
+    def size(self) -> int:
+        return self._get().size()
+
+    def by_source_id(self, source_id: str) -> list[EventRecord]:
+        return self._get().by_source_id(source_id)
+
+
+def read_only(log: ReadableEventLog | Callable[[], ReadableEventLog]) -> ReadOnlyEventLog:
+    """A read-only view of `log`, or of whatever log `log()` returns when read."""
+    return ReadOnlyEventLog(log)
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,15 +154,23 @@ class PeerReflectingSource:
         if not readings:
             return host_input
 
+        # Everything the inner source said is kept, presence included: the
+        # readings add signals and change nothing else about the cycle.
         return HostCycleInput(
             signals=(*host_input.signals, *readings),
             changes=host_input.changes,
             interactions=host_input.interactions,
+            afforded=host_input.afforded,
         )
 
     def deliver(self, response: Emission) -> None:
         self.delivered.append(response)
         self._inner.deliver(response)
+
+    @property
+    def inner(self) -> HostSource:
+        """The source this one wraps — the body that plays."""
+        return self._inner
 
 
 def peer_reflecting_source(

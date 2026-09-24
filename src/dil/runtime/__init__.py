@@ -26,7 +26,9 @@ from .peer import (
     PEER_REFLECTION_CHANNEL,
     PeerLog,
     PeerReflectingSource,
+    ReadOnlyEventLog,
     peer_reflecting_source,
+    read_only,
 )
 from .reflection import (
     CollisionCoordinate,
@@ -34,6 +36,7 @@ from .reflection import (
     ReflectionReading,
     collision_coordinates,
     form_reading,
+    reading_payload,
     reflection_signal,
     reflection_transducer,
 )
@@ -56,6 +59,7 @@ __all__ = [
     "DiversityMonitor",
     "HostSource",
     "PeerLog",
+    "ReadOnlyEventLog",
     "PeerReflectingSource",
     "ReflectionError",
     "ReflectionReading",
@@ -75,6 +79,8 @@ __all__ = [
     "form_reading",
     "measure_absorption",
     "peer_reflecting_source",
+    "read_only",
+    "reading_payload",
     "reflection_signal",
     "reflection_transducer",
     "requisition",

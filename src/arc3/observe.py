@@ -31,6 +31,8 @@ from typing import Final
 from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import ObservedChange
 from dil.loop.types import Signal
+from dil.runtime.peer import PEER_REFLECTION_CHANNEL
+from dil.runtime.reflection import reflection_transducer
 from dil.store.tagging_gate import HostDatum
 
 from .action import IllegalMove, Move
@@ -182,8 +184,16 @@ def status_transducer(signal: Signal) -> tuple[str, object, list[dict[str, str]]
 
 
 def transducers() -> dict[str, object]:
-    """The per-channel transducers this host declares (T3, DECIDE@IMPL)."""
-    return {FRAME_CHANNEL: frame_transducer, STATUS_CHANNEL: status_transducer}
+    """The per-channel transducers this host declares (T3, DECIDE@IMPL).
+
+    Three channels: the frame, the region's status, and a peer's reading of this
+    agent's recorded collisions (tag E), which arrives only when a peer is wired.
+    """
+    return {
+        FRAME_CHANNEL: frame_transducer,
+        STATUS_CHANNEL: status_transducer,
+        PEER_REFLECTION_CHANNEL: reflection_transducer,
+    }
 
 
 # The class of data a region return is, once it is a datum of its own (§9
@@ -191,14 +201,19 @@ def transducers() -> dict[str, object]:
 OBSERVATION_DOMAIN: Final = "observation"
 FRAME_KIND: Final = "frame"
 STATUS_KIND: Final = "status"
+# A peer's reading is not the region's return: it is another agent's account of
+# where this one collided (§8.4, tag E), so it is its own class of data.
+REFLECTION_DOMAIN: Final = "reflection"
+PEER_READING_KIND: Final = "peer-reading"
 
 
 def admit(signal: Signal) -> HostDatum | None:
     """Which region returns this host keeps as data of their own (§10, DECIDE@IMPL).
 
-    Both: what the region returned is what the character met, and a return it
-    does not keep can neither be asked for later nor be the datum that collides
-    when the expectation about it fails.
+    All three: what the region returned is what the character met, and a return
+    it does not keep can neither be asked for later nor be the datum that
+    collides when the expectation about it fails. A peer's reading is kept on the
+    same ground, as `domain: reflection`.
     """
     if signal.source_id == FRAME_CHANNEL:
         open_tags = {
@@ -209,6 +224,11 @@ def admit(signal: Signal) -> HostDatum | None:
         open_tags = {
             "domain": OBSERVATION_DOMAIN, "kind": STATUS_KIND,
             "source": STATUS_CHANNEL, "object": STATUS_OBJECT,
+        }
+    elif signal.source_id == PEER_REFLECTION_CHANNEL:
+        open_tags = {
+            "domain": REFLECTION_DOMAIN, "kind": PEER_READING_KIND,
+            "source": PEER_REFLECTION_CHANNEL,
         }
     else:
         return None
