@@ -32,8 +32,8 @@ WHAT IT DOES NOT REACH, declared. The record was written under the same lens
 that now reads it. A standing bias is recorded and returned and agrees with
 itself, so recollection catches drift ACROSS time and not bias that never moved.
 It is a genuine Mode-B channel and it is weaker than a foreign one; §8.4's
-reflection — a third party reading a collision into coordinates — is a different
-mechanism and is not replaced by this.
+reflection — a third party's own view, pointed at a place in the trace — is a
+different mechanism and is not replaced by this.
 
 Ported from dil-core.
 """

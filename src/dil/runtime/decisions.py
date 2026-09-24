@@ -7,7 +7,9 @@ thresholds (§11, conformance criterion 7).
 **Tag E is settled for this host.** Reflection needs a third party, and a Kaggle
 evaluation session has neither a network nor a human. The reader here is an
 onlooker — an Other outside the agent, a piece of code judging its behaviour
-(`arc3/onlooker.py`); the mechanism a reading enters by is `reflection.py`.
+(`arc3/onlooker.py`). Its remark enters through the host's own transducer on
+the `onlooker` channel; it does not use `reflection.py`, which is kept as
+ported from dil-core and not used here.
 
 Ported from dil-core against DIL protocol v0.3.3.
 """

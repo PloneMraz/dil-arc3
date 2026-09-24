@@ -1802,3 +1802,15 @@ collision read into coordinates", is left as it is.
 Ported to `src/dil/runtime/reflection.py` with four tests (this repository had
 none for it). `peer.py`, built wholly on the retelling, was removed with its
 tests. 244 tests.
+
+### `reflection.py` is not used here, and a line said it was
+
+Asked by Plone what `reflection.*` does, a check found nothing in this
+repository calling it: the onlooker sends its remark through the host's own
+transducer, and cannot use `form_reading`, which reads the agent's log to check
+the cycle — a log the onlooker, by design, never sees. The tag E header in
+`src/dil/runtime/decisions.py` had said "the mechanism a reading enters by is
+`reflection.py`", which was false; corrected. `recollection.py` still carried the
+old "a collision read into coordinates" wording, fixed in dil-core but missed in
+the port; corrected. Plone chose to keep `reflection.py` so that `src/dil/`
+stays a faithful port of dil-core, declared as not used by this host.

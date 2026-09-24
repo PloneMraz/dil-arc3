@@ -25,9 +25,11 @@ This module supplies the MECHANISM only:
   - `reflection_signal` and `reflection_transducer` — the T3 ingestion convention.
 
 WHO the reader is, and its lens, stay deployment-open in the protocol, like tag
-D. For this project it is settled (tag E, CLAUDE.md): an onlooker judging the
-agent's behaviour (`arc3/onlooker.py`), which points at the cycle a pattern of
-moves began.
+D. NOT USED BY THIS HOST: kept so that `src/dil/` stays a faithful port of
+dil-core. This host's reader is the onlooker (`arc3/onlooker.py`, tag E), which
+does not use it: `form_reading` reads the agent's trace to check the cycle, and
+the onlooker, by design, sees only the agent's moves and never its log. Its
+remark enters through the host's own transducer on the `onlooker` channel.
 
 Ported from dil-core `3a186b4`, which replaced the reading of a recorded
 collision with this (Plone, 2026-09-25; LOG.md).
