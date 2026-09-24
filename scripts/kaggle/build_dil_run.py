@@ -151,8 +151,8 @@ tar = DATA_DIR / "dil-arc3.tar"
 if tar.exists():
     with tarfile.open(tar) as tf:
         tf.extractall(W)
-else:  # Kaggle unpacked the archive into the dataset
-    shutil.copytree(find("run_world_model.py").parent.parent, REPO)
+else:  # Kaggle unpacked the archive into the dataset: find() gives scripts/, its parent is the repo
+    shutil.copytree(find("run_world_model.py").parent, REPO)
 print(sorted(p.name for p in (REPO / "src").iterdir()))''',
     # ── 7 ──
     '''# The run: the agent plays, the model thinks when the expectation fails.
