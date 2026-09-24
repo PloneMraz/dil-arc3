@@ -1582,6 +1582,46 @@ Cost: 0.33 h of GPU quota (0.49 h used before, 0.82 h after, of 30 h a week).
 Downloading the outputs was cut off by the local 600 s timeout; every probe's log
 is present, but the notebook's own log was not downloaded.
 
+### What the thinking runs got wrong, read off their programs
+
+The reasoning itself cannot be read: the probe kept only its length, not its
+text, so whether the model tried to run the grid by hand in its reasoning is
+unknown. Fixed for later runs — the log now keeps the reasoning whole, and the
+temperature used. What can be read is every program, and
+`scripts/compare_programs.py` re-scores each one and says where its wrong cells
+are:
+
+| log | round | train | held | wrong cells per miss | misses only in the bar |
+|---|---|---|---|---|---|
+| thinking 0 | 1 | 12 | 0 | 49.2 | 7 |
+| thinking 3 | 1 | 0 | 0 | **17.1** | **64 of 80** |
+| no thinking 1 | 0 | 63 | 58 | 52.4 | 1 |
+| no thinking 1 | 2 | 78 | 75 | 70.0 | 1 |
+
+- **Most thinking programs fitted the examples literally.** Coordinates copied from
+  them — a start at (40, 34), the bar at column `13 + step`, fixed tracks at
+  columns 34–38 and rows 45–49, clamps at rows 20–40; one kept its own position in
+  state across calls instead of reading it from the grid; three described the
+  10×5 region that changes (old place plus new) as a "wave" to paint, not as an
+  object that moves. None checked whether the target cells were free — the rule
+  the 95% programs have.
+- **One came within a line of the no-thinking result.** Thinking 3, round 1, found
+  the 5×5 object by its pattern and moved it five cells; 64 of its 80 train misses
+  are only in the bar, because it took the first column where rows 61 and 62 are
+  equal and not 3 to be the marker — column 0, value 4, not the 11s. Its other 16
+  misses are as many as the no-thinking round-0 programs have without the
+  blocked-move check. The round that should have fixed it hit the 45,000 cap
+  after 100,141 characters of reasoning and wrote no code.
+- **The comparison was not run as Qwen recommends, for either mode.** Every run
+  sent temperature 0.2 and nothing else, and the server was started with
+  `--generation-config vllm`, which by vLLM's engine-argument documentation loads
+  no generation config and uses vLLM's defaults instead of the model's. The
+  Qwen3.6-35B-A3B-FP8 model card recommends, for thinking on precise coding tasks,
+  `temperature=0.6, top_p=0.95, top_k=20, presence_penalty=0.0`; for non-thinking,
+  `temperature=0.7, top_p=0.80, top_k=20, presence_penalty=1.5`; and an output
+  length of 32,768 tokens for most queries, 81,920 for competition-level
+  problems. "Thinking made it worse" holds for these settings only.
+
 ## Settled from the Paper Track's Overview page, 2026-09-24
 
 Read in full from the competition's own Overview page (rendered through a

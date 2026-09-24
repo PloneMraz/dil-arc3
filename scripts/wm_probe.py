@@ -102,7 +102,7 @@ Revise `predict` so it explains all the evidence. Return only one ```python code
 
 
 def chat(endpoint: str, model: str, messages, max_tokens: int, timeout: int,
-         think: bool = True, temperature: float = 0.2) -> tuple[str, dict]:
+         think: bool = True, temperature: float = 0.2) -> tuple[str, dict, str]:
     payload = {"model": model, "messages": messages, "temperature": temperature,
                "max_tokens": max_tokens}
     if not think:
@@ -117,11 +117,12 @@ def chat(endpoint: str, model: str, messages, max_tokens: int, timeout: int,
     usage = resp.get("usage", {})
     usage["seconds"] = round(time.time() - t0, 1)
     msg = resp["choices"][0]["message"]
-    # What the model reasoned before answering, when the server extracts it:
-    # counted, so the cost of thinking is on the record.
-    usage["reasoning_chars"] = len(msg.get("reasoning_content") or msg.get("reasoning") or "")
+    # What the model reasoned before answering, when the server extracts it: kept
+    # whole, so what thinking did can be read afterwards, not only what it cost.
+    reasoning = msg.get("reasoning_content") or msg.get("reasoning") or ""
+    usage["reasoning_chars"] = len(reasoning)
     usage["finish_reason"] = resp["choices"][0].get("finish_reason")
-    return msg.get("content") or "", usage
+    return msg.get("content") or "", usage, reasoning
 
 
 def extract(text: str) -> str | None:
@@ -209,9 +210,10 @@ def main() -> None:
     # the best standing; the context stays bounded however many rounds run.
     task = messages[0]
     best = None  # (train ok, held ok, code, per-transition results, round)
-    log = {"game": a.game, "model": a.model, "think": not a.no_think, "rounds": []}
+    log = {"game": a.game, "model": a.model, "think": not a.no_think,
+           "temperature": a.temperature, "rounds": []}
     for rnd in range(a.rounds):
-        text, usage = chat(a.endpoint, a.model, messages, a.max_tokens, a.timeout,
+        text, usage, reasoning = chat(a.endpoint, a.model, messages, a.max_tokens, a.timeout,
                            think=not a.no_think, temperature=a.temperature)
         code = extract(text)
         ok_tr, res_tr = score(code, train)
@@ -221,7 +223,7 @@ def main() -> None:
               f"{usage.get('seconds')}s  reasoning {usage.get('reasoning_chars')} chars  "
               f"finish {usage.get('finish_reason')}", flush=True)
         log["rounds"].append({"round": rnd, "train": ok_tr, "held": ok_he, "usage": usage, "code": code,
-                              "reply": text})
+                              "reply": text, "reasoning": reasoning})
         if code is not None and (best is None or ok_tr > best[0]):
             best = (ok_tr, ok_he, code, res_tr, rnd)
         if best is not None and best[0] == len(train):
