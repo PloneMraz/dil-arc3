@@ -73,6 +73,10 @@ class RecalledFrom:
     entity_id: str
     cycle: int
     t: int
+    # The `[data]` key of the recalled scar: the datum the record names — the
+    # region's return that collided — or, where it names none (an absence), the
+    # cycle datum `cycle-N` that stood for it. Ported from dil-core dc7a9a7.
+    datum_id: str = ""
 
 
 class Recollection(Protocol):
@@ -149,7 +153,10 @@ class LogRecollection:
             if self._key(past) == wanted:
                 self._recalled.append(
                     RecalledFrom(
-                        entity_id=entity_id, cycle=record.anchor.cycle, t=event.t
+                        entity_id=entity_id,
+                        cycle=record.anchor.cycle,
+                        t=event.t,
+                        datum_id=record.datum_id or f"cycle-{record.anchor.cycle}",
                     )
                 )
                 return past

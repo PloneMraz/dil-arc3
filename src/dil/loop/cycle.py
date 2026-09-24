@@ -903,10 +903,17 @@ class Cycle:
         # resting place. The datum key is the recalled scar's own (`cycle-N`),
         # not this cycle's: it is that datum which moved, not this one.
         if self._recollection is not None:
+            # The move is the datum's own and happens once: a scar recalled
+            # again once it is back in use does not move again, and `[data]`
+            # follows the log. Ported from dil-core dc7a9a7.
             for recalled in self._recollection.drain():
+                held = self._data.get(recalled.datum_id)
+                if held is None or held.fixed.provenance != "scar":
+                    continue
+                self._data.put(recalled.datum_id, to_running(held, self._cycle))
                 self._events.append(
                     record_provenance(
-                        f"cycle-{recalled.cycle}",
+                        recalled.datum_id,
                         self._cycle,
                         "scar",
                         "running",
@@ -931,6 +938,8 @@ class Cycle:
         ]
         forward_built = False
         projected_units: tuple[InfoUnit, ...] = ()
+        # The entities whose outcome the cycle datum cast: what it carries into collision.
+        cast: frozenset[str] = frozenset()
 
         if material:
             # running → simulated: the loop takes the datum up into building.
@@ -958,6 +967,7 @@ class Cycle:
                 )
             )
             projected_units = tuple(r.expectation.predicted for r in situations)
+            cast = frozenset(r.entity_id for r in situations)
             forward_built = True
 
         # ── Appraisal step (INV-8), under the cycle's field context (§8.5) ──
@@ -1011,11 +1021,25 @@ class Cycle:
         scars = 0
         collision_sources: list[str] = []
 
-        if collisions:
-            scar_datum = to_scar(datum, True)
+        # The cycle datum collides only when what it carries does (§9): an
+        # outcome it cast — `projected → scar`, "the emission was made, the region
+        # returned, and the datum collided and held" — or a collision that has no
+        # return of its own to hold the scar (an absence, where nothing returned;
+        # a return the host kept out; a store arrival), for which it stands.
+        # Otherwise the region's return is the datum that collided, and a cast
+        # that did not collide returns to use: `projected → running`. Ported from
+        # dil-core 6c74f0c; settled with Plone.
+        def return_of(e) -> str | None:
+            return datum_of.get(id(e.observed)) if e.observed is not None else None
+
+        cycle_collides = any(
+            return_of(e) is None or (forward_built and source_id in cast)
+            for source_id, e in collisions
+        )
+        scar_datum = to_scar(datum, True) if cycle_collides else None
+        if cycle_collides:
             # → scar: from `projected` if a cast preceded the collision, else a
-            # direct running → scar (reflex, §5, §8.7). Which road it was depends
-            # on whether the store afforded a forward-cast — a situational fact.
+            # direct running → scar (reflex, §5, §8.7).
             self._events.append(
                 record_provenance(
                     self._datum_id(),
@@ -1025,14 +1049,13 @@ class Cycle:
                     self._cycle_t,
                 )
             )
+        if collisions:
             for source_id, e in collisions:
-                # Where what collided is a datum of its own, that datum is the
-                # one that collided and held (§9 `running → scar`), and the
-                # record embeds and names it. Otherwise, as in dil-core, the
-                # cycle datum stands for the cycle's collision.
-                collided_id = (
-                    datum_of.get(id(e.observed)) if e.observed is not None else None
-                )
+                # What collided is the return the expectation was compared
+                # against: that datum moves to `scar` (§9 `running → scar`), and
+                # the record embeds and names it. Where there is no such return,
+                # the cycle datum stands for the collision.
+                collided_id = return_of(e)
                 collided = scar_datum
                 if collided_id is not None:
                     held = self._data.get(collided_id)
@@ -1066,6 +1089,7 @@ class Cycle:
                 if source_id not in collision_sources:
                     collision_sources.append(source_id)
                 scars += 1
+        if scar_datum is not None:
             datum = scar_datum
         elif forward_built:
             # projected → running: the cast produced no scar; the datum returns

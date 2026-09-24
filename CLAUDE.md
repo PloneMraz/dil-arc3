@@ -1762,6 +1762,34 @@ identical to before; `[event]` 11,162 records, 1,202 fewer than before — exact
 the 1,142 region returns' and 60 cycle datums' `prior → running` lines v0.3.3
 drops; conformance unchanged. 267 tests.
 
+### When the cycle datum scars, and which datum a recalled scar is (Plone, same day)
+
+The deferred item from dil-core's README, settled with Plone and fixed there
+first (`6c74f0c`, `dc7a9a7`), then ported:
+
+- **The cycle datum goes to `scar` only when what it carries collides**: an
+  outcome it cast (`projected → scar`), or a collision with no return of its own
+  to hold the scar — an absence, a return the host kept out, a store arrival —
+  for which it stands. A cast that did not collide returns to use
+  (`projected → running`) even when another return collided; with no cast it
+  stays `running`. ResistEvents and scar records are unchanged.
+- **A recalled scar is the datum its record names**: since the return holds the
+  scar, recollection now reports that datum (`cycle-N` only for an absence), and
+  the driver moves it `scar → running` once, while it is a scar, with `[data]`
+  following the line. Before, it recorded the move for `cycle-N` on every
+  recall and never touched `[data]` — a gap opened when the scar moved onto the
+  return.
+- Left open, in both repositories: a store arrival that mismatches (a revised
+  datum arriving against persistence's "nothing changed") is not tied to its
+  own datum; the cycle datum stands for it. This mind returns store arrivals as
+  they are, so it does not arise here.
+
+Live, `ls20`, 60 cycles: behaviour identical; 12 cycles had a collision and in
+none did the cycle datum go to `scar` — every one of its 59 casts ended
+`projected → running`. The three situations it casts (`H_COUNT = 3`, the most
+confident) never collided; every collision was on another thing's return, which
+holds the scar (20 of 20 records name it). 275 tests.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
