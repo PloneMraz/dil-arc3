@@ -2,8 +2,8 @@
 
 The protocol leaves tags A, B, F and H open because they depend on the
 environment. This file declares them for ARC-AGI-3, and every figure in it was
-**read off real frames**, not copied from a type hint or a docs page — the shape of an
-observation turned out to differ from what the documentation implied.
+**read off real frames**, not copied from a type hint or a docs page — the shape
+of an observation turned out to differ from what the documentation implied.
 
 Ported nothing: this is the host's own declaration.
 """
@@ -85,10 +85,12 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 #
 # DECLARED: the frame's fit is exact equality, cell for cell, of the grid the
 # mind's program predicted with the grid the region returned — the last of each
-# stack, which is the mind's reading (`mind.transition_of`). Nothing looser: a program
-# that is right on most cells is still wrong, and the mismatch is what the mind
-# thinks from. The region's status fits when it is what the standing
-# expectation said. Never against a correct answer: none is revealed in a run.
+# stack, which is the mind's reading (`mind.transition_of`). Nothing looser: a
+# program that is right on most cells is still wrong, and the mismatch is what
+# the mind thinks from. The region's status fits when the region reports what it
+# reported last; its `context`, the action just taken, is the self's act and is
+# not expected back (`mind.standing_status`). Never against a correct answer:
+# none is revealed in a run.
 # The earlier declaration (equality of an effect signature, `effect.py`) and its
 # measurements are in LOG.md.
 TAG_H_STATUS: Final = "declared — exact equality of the predicted and returned grid"

@@ -539,6 +539,25 @@ def _content_value(unit: InfoUnit) -> Any:
     return content.get("value") if isinstance(content, dict) else None
 
 
+def standing_status(held: InfoUnit, payload: dict[str, Any]) -> InfoUnit:
+    """What the region is expected to report: what it reported last, under this action.
+
+    The status payload carries the action just taken as its `context`, and that
+    is the self's act, not the region's word — T2 classifies it, and the self
+    knows it before the region answers. Expecting last cycle's action back would
+    register every change of move as the region resisting: on the first Kaggle
+    run, 42 of 45 status scars were that and nothing else (LOG.md, 2026-09-24).
+    So the standing expectation holds what the region said, and takes the context
+    as it is.
+    """
+    value = _content_value(held)
+    if not isinstance(value, dict) or "context" not in payload or value.get("context") == payload["context"]:
+        return held
+    content = held.content if isinstance(held.content, dict) else {}
+    return InfoUnit(content={**content, "value": {**value, "context": payload["context"]}},
+                    ref_frame=held.ref_frame, t=held.t)
+
+
 def mind_rule(mind: Mind) -> Callable[..., InfoUnit]:
     """The mind at T5's seam (`PredictRule`): one rule, one mind, every arrival."""
 
@@ -581,7 +600,8 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit]:
             # The program does not predict the region's status: the standing
             # expectation holds. What the region said is read against the
             # directive — how it answered the action just taken.
-            predicted = persistence(entity_id, window, observed, contribute, ask, write)
+            predicted = standing_status(
+                persistence(entity_id, window, observed, contribute, ask, write), payload)
             context = str(payload.get("context") or "")
             if context and "status" in payload:
                 mind._valence.setdefault(context, []).append(
@@ -605,5 +625,5 @@ __all__ = [
     "PROGRESS_PREFIX", "PROGRESS_WINDOW", "RESOLVED_PREFIX", "SCARRED_FRAMES", "VALENCE_PREFIX",
     "Mind", "ModelEndpoint", "ProgramError", "Thought", "Transition",
     "chat", "compile_program", "create_mind", "mind_rule", "region_valence", "render_evidence",
-    "run_program", "score", "transition_of",
+    "run_program", "score", "standing_status", "transition_of",
 ]

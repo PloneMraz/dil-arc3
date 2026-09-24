@@ -220,3 +220,16 @@ def test_the_region_is_answered_against_the_directive_and_the_status_is_the_stan
     scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
     assert [r.event.source_id for r in scars] == ["region"], "the status changed against 'it stays as it was'"
     assert model.prompts == [], "the model is not asked about the status"
+
+
+def test_a_change_of_move_is_not_the_region_resisting():
+    model = Script()
+    wm, cycle, data, events = loop(model)
+    run(cycle, status(action=1))
+    run(cycle, status(action=2))                 # the self changed its move; the region said the same
+    run(cycle, status(action=1))
+    scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
+    assert scars == [], "the action is the self's, not something the region returned"
+    run(cycle, status(state="GAME_OVER", action=2))
+    scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
+    assert [r.event.source_id for r in scars] == ["region"], "what the region said still collides"

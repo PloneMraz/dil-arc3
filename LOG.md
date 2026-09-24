@@ -1681,3 +1681,28 @@ most 12,288 tokens a thought. Outputs in `scripts/data/kaggle/dil-run/output/`
   resisting. The other 3 differ in what the region reported (`status`). The
   cycle datum's cast collided on 49 cycles (`projected → scar`), including the 11
   in which only the status scarred. Not fixed; put to Plone.
+
+### The status stops colliding on the agent's own move (Plone, same day)
+
+Approved by Plone after the Kaggle run above. The mind's standing expectation of
+the region's status now holds what the region reported last and takes the
+`context` — the action just taken, the self's act — as it is
+(`mind.standing_status`). A test pins it: a change of move leaves no scar; a
+change in what the region says still does. It fails on the old code.
+
+Live, `ls20`, 8 cycles on this machine with no model reachable (every frame
+misses): 0 status scars across moves `1:2 2:2 3:2 4:2`, against 42 of 45 on
+Kaggle.
+
+**What the fix uncovered.** On Kaggle, C5 and C7 passed because those false
+status scars were a second resistance source. With them gone the frame is the
+only one: 12 cycles give C5 `partial` ("1 distinct resistance source") and C7
+`fail` ("diversity-loss established from traces: only 1 distinct source(s) over
+the last 8 records"). The earlier passes were earned by the defect. The declared
+remedy is tag E's peer reader, which the live run does not wire yet.
+
+The notebook builders also give every cell an `id`: Kaggle's log warned that a
+cell without one "will become a hard error in future nbformat versions". The
+built notebook validates under nbformat with warnings raised as errors. The other
+lines in that log — `frozen modules` from the debugger, `SyntaxWarning` from
+`mistune` and `nbconvert` — come from Kaggle's own packages, not from this code.

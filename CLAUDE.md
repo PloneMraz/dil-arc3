@@ -137,6 +137,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   T5.
 - Nothing that arrives is about "things" now, so the prior item about the
   world's things is never recalled; the one about seeing is, on the first frame.
+- **With the status no longer colliding on the agent's own move, the frame is the
+  one resistance source**, so C5 renders `partial` and C7 `fail` (diversity-loss)
+  once eight collisions are recorded. The declared remedy is tag E's peer reader,
+  not wired into the live run yet.
 - Want has nothing to seek: the directive says what counts as reaching the goal,
   not how to get there, and no level has been completed to learn from.
 
@@ -188,7 +192,8 @@ are below.
   (`scripts/run_game.py`) does not wire a peer yet.
 - **Tag H — situation fit.** The frame fits when the grid the mind's program
   predicted equals, cell for cell, the grid the region returned (the last of each
-  stack); the region's status, when it is what the standing expectation said.
+  stack); the region's status, when the region reports what it reported last —
+  its `context`, the action just taken, is the self's and is not expected back.
   Not against a correct answer: no answer is ever revealed during a run.
 - **Tag F — open-tag keys.** Declared in `src/arc3/decisions.py`
   (`OPEN_TAG_KEYS`): `domain`, `kind`, `source`, `object`, `sense`, each naming

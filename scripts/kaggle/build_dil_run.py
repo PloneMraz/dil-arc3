@@ -228,8 +228,10 @@ def main() -> None:
         "nbformat": 4, "nbformat_minor": 5,
         "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"},
                      "language_info": {"name": "python"}},
-        "cells": [{"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [],
-                   "source": src} for src in cells],
+        # nbformat 4.5 requires an id on every cell; without one Kaggle warns that
+        # it will become a hard error.
+        "cells": [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
+                   "outputs": [], "source": src} for i, src in enumerate(cells)],
     }
     (kernel / "run.ipynb").write_text(json.dumps(nb, indent=1))
     (kernel / "kernel-metadata.json").write_text(json.dumps({
