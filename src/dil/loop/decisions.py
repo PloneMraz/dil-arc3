@@ -12,8 +12,8 @@ than buried in a layer.
 
 **Carried over from dil-core's minimal host and not yet re-declared for
 ARC-AGI-3.** The tag A entries in particular describe a host-shaped payload; the
-ARC declarations — a grid of at most 64×64 with cells 0–15 — belong here once the
-host lands, and CLAUDE.md records that as outstanding.
+ARC declarations — a stack of 64×64 grids with cells 0–15 — are the host's, in
+`src/arc3/decisions.py`.
 
 Ported from dil-core against DIL protocol v0.3.3.
 """

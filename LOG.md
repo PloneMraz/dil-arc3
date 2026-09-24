@@ -1623,3 +1623,61 @@ under the old slug, `dil-arc3-world-model-run`, keeps it.
 
 At Plone's request: the README says what the agent is, `CLAUDE.md` holds the rules
 and declarations in force, and every entry above moved here unchanged.
+
+### Stale declarations brought to the one mind, and a rule for history
+
+Found while moving the history, fixed at Plone's request:
+
+- The hard constraint said "Never modify `dil-core`. This repo *imports* it."
+  Neither held: `src/dil/` is a Python port, and every gap in the mechanism has
+  been fixed in dil-core first, at Plone's direction. It now says so.
+- `src/arc3/decisions.py` still declared the entity as "affordance" and tag H as
+  equality of an effect signature in `effect.py`, a file removed in the rebuild.
+  It now declares the frame and the region as the entities, and the frame's fit
+  as exact equality of the predicted and returned grid (the last of each stack).
+- `src/dil/runtime/reflection.py` called the tag E reader "unresolved"; it was
+  written at 19:13 on 2026-09-22 and tag E was settled at 23:31 the same day (a
+  peer agent, `peer.py`). It now says so, and that the live run does not wire a
+  peer yet.
+- `CLAUDE.md` gained the rule: history goes in `LOG.md`; `README.md` and
+  `CLAUDE.md` say only what holds now.
+
+### The one mind's first run on Kaggle
+
+Kernel `dil-arc3-world-model-run` v2, code `13d5f9c`: `ls20`, 60 cycles,
+Qwen3.6-35B-A3B-FP8 on vLLM 0.19, RTX Pro 6000, no thinking, temperature 0.2, at
+most 12,288 tokens a thought. Outputs in `scripts/data/kaggle/dil-run/output/`
+(git-ignored): `run.txt`, the notebook log, the vLLM log, and the whole store.
+
+- **Time.** Notebook 1,136 s: the 56 model files (37.5 GB) checked against
+  Hugging Face's hashes in 76 s, no problem; vLLM ready 195 s after it started;
+  the game 746 s. By wall time that is about 0.32 h of GPU quota — not read from
+  Kaggle's quota page.
+- **The notebook's log said nothing for those 746 s.** Cell 7 sent the run's
+  lines only to `run.txt`, so a run in progress could not be told from a hung
+  one. Fixed in the builder afterwards (`d5ce8b3`): each line now reaches the log
+  as it comes.
+- **The program.** `written-1-0` entered at `nascent` at cycle 1 and moved to
+  `running` at cycle 2; it was revised at cycles 2, 3, 4, 21 and 35 — six
+  versions, five bare `revision` lines. Each written entry in its cycle's seal
+  names what it was built from: 2, 3, 4, 5, 21 and 24 datum ids. 31 thoughts,
+  3.9–76.3 s each; two stopped at the 12,288-token cap with no code.
+- **The frame.** The expectation failed on every cycle from 1 to 21, then on 10
+  of the last 38 (33, 35, 38, 39, 41, 42, 43, 46, 48, 50). Version 5 held for 11
+  cycles in a row (22–32), version 6 for the last 9 (51–59).
+- **Keep-best held a program that was slipping.** Version 6 explained 22 of the
+  24 transitions shown at cycle 36 and 16 of 24 by cycle 51; no candidate
+  explained more, so none was kept.
+- **What the mind ended with** names fixed 5×5 blocks by coordinate (rows
+  40–49, columns 29–43) and swaps them by action, reading a cursor from row 61. It
+  does not find the object, as the probe's 95% programs did.
+- Moves `1:13 2:21 3:15 4:11`; 0 levels; the game ended `NOT_FINISHED`.
+- `[event]`: 6,341 records, 12 commits; conformance C1, C3,
+  C5, C6, C7 pass, C4 partial, C2 unverifiable. Store queries: 31 from T5 (the
+  mind, every one `{"kind": "frame", "provenance": "scar"}`) and 4 from T3.
+- **Read off `[event]`: 42 of the 45 status scars are the agent's own move.**
+  The status payload carries `context: action:N`, and the standing expectation
+  repeats the whole payload, so every change of move was registered as the region
+  resisting. The other 3 differ in what the region reported (`status`). The
+  cycle datum's cast collided on 49 cycles (`projected → scar`), including the 11
+  in which only the status scarred. Not fixed; put to Plone.

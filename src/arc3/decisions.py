@@ -1,8 +1,8 @@
 """DECIDE@IMPL declarations for the ARC-AGI-3 host (protocol §12).
 
-The protocol leaves tags A, B and H open because they depend on the environment.
-This file declares them for ARC-AGI-3, and every figure in it was **read off real
-frames**, not copied from a type hint or a docs page — the shape of an
+The protocol leaves tags A, B, F and H open because they depend on the
+environment. This file declares them for ARC-AGI-3, and every figure in it was
+**read off real frames**, not copied from a type hint or a docs page — the shape of an
 observation turned out to differ from what the documentation implied.
 
 Ported nothing: this is the host's own declaration.
@@ -55,19 +55,13 @@ COMPLEX_ACTION_COORD_MAX: Final = 63
 # gives grounds to change them.
 TAG_B_STATUS: Final = "inherited from dil-core's minimal host; not yet tuned on measurements"
 
-# ── The entity, settled with Plone 2026-09-22 ──
+# ── The entities — the Others the region says are there ──
 #
-# The unit of experience is the AFFORDANCE, not the frame and not the cell. The
-# loop holds an expectation about what an action DOES, and a collision is the
-# action doing something other than expected. This is what the game is actually
-# about — discovering the controls — and it is what RHAE rewards, since winning
-# a level in few actions means learning the mechanics fast.
-#
-# It needed no change to the loop. T4's context resolver is already DECIDE@IMPL
-# and pluggable, so the entity id becomes the affordance; T5's persistence rule
-# then accrues a window of observed effects per affordance, with confidence
-# ramping over recurrence, which IS learning what each control does.
-ENTITY: Final = "affordance — one per action the region affords"
+# Two, one per channel the host carries in (`observe.py`): the frame the region
+# returned, and the region itself speaking about its state. The mind predicts
+# the first; the second holds the standing expectation. What an entity was
+# before — an affordance, then a "thing" computed from the grid — is in LOG.md.
+ENTITY: Final = "the frame and the region — one per signal the host carries in"
 
 # ── Tag F — the open-tag registry beyond `domain`, and the store's index ──
 #
@@ -89,19 +83,12 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 
 # ── Tag H — situation fit ──
 #
-# DECLARED: fit is equality of the effect signature in `effect.py`. Two uses of a
-# control are the same situation exactly when the change they produced has the
-# same shape — translation-invariant, so the same control used at two places
-# reads as the same event.
-#
-# Measured on 316 real transitions rather than asserted. In `ls20` the signature
-# recovers the control scheme unaided (ACTION1 up, 2 down, 3 left, 4 right, five
-# cells, 29-33 consistent observations each) and each action lands on 2-4
-# signatures out of 10, 79% of them unique to one action. The shared remainder is
-# the blocked move, which is genuinely direction-blind.
-#
-# LIMIT, declared: in `vc33` the signature carried NO information — across 157
-# transitions the click position never changed it. Whether that is this
-# representation failing or those clicks genuinely doing nothing is unresolved,
-# and is not being guessed at.
-TAG_H_STATUS: Final = "declared — equality of the effect signature; see effect.py"
+# DECLARED: the frame's fit is exact equality, cell for cell, of the grid the
+# mind's program predicted with the grid the region returned — the last of each
+# stack, which is the mind's reading (`mind.transition_of`). Nothing looser: a program
+# that is right on most cells is still wrong, and the mismatch is what the mind
+# thinks from. The region's status fits when it is what the standing
+# expectation said. Never against a correct answer: none is revealed in a run.
+# The earlier declaration (equality of an effect signature, `effect.py`) and its
+# measurements are in LOG.md.
+TAG_H_STATUS: Final = "declared — exact equality of the predicted and returned grid"

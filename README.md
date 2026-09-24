@@ -22,9 +22,10 @@ from, the frames it failed on — is in `[event]`, and a checker reads it back.
 
 **What is measured of the one mind so far**: nothing on a scored run yet. Of the
 model alone, outside the loop: it wrote an `ls20` program exact on 95% of held-out
-transitions in two runs of four (`LOG.md`, 2026-09-24). Of the model inside
-the loop, before the rebuild: ten cycles on this machine, too little evidence
-reached it to write a program that held (`LOG.md`).
+transitions in two runs of four. Inside the loop, 60 cycles of `ls20` on Kaggle:
+six versions of its program; the last, from cycle 35, held the frame on 16 of
+the 24 cycles after it, all of the final 9, while naming fixed blocks by
+coordinate rather than finding the object. No level (`LOG.md`, 2026-09-24).
 
 **What it is told.** It arrives with no history, so the least it is given is a
 directive: the one sentence the competition gives every model on its official

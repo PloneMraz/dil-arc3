@@ -16,10 +16,11 @@ This module supplies the MECHANISM only:
     happened;
   - `reflection_signal` and `reflection_transducer` — the T3 ingestion convention.
 
-WHO the reader is stays deployment-open, like tag D. **For this project that is
-the open question**: a Kaggle evaluation session has no third party and no
-network, so nothing can perform the read mid-run. The mechanism is ported intact;
-whether it can be used here is unresolved and recorded in CLAUDE.md.
+WHO the reader is stays deployment-open in the protocol, like tag D. For this
+project it is settled (tag E, CLAUDE.md): a Kaggle evaluation session has no third
+party and no network, so the reader is a peer agent in the same session, reading
+this agent's log through `peer.py`. The live run (`scripts/run_game.py`) does not
+wire a peer yet.
 
 Ported from dil-core against DIL protocol v0.3.3.
 """

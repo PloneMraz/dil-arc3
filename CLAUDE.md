@@ -3,13 +3,20 @@
 An ARC-AGI-3 agent host built on the DIL protocol, for ARC Prize 2026.
 
 This file keeps what is in force; its history — the measurements, the designs
-replaced, the corrections — is in [LOG.md](LOG.md), and new history goes there.
+replaced, the corrections — is in [LOG.md](LOG.md).
 
 ## Hard constraints
 
-- **Never modify `dil-core`.** This repo *imports* it. If something in dil-core
-  blocks the work, report it and stop; do not edit that repository to make this
-  one easier.
+- **dil-core is changed only at Plone's direction.** This repo does not import
+  it: `src/dil/` is a Python port of it. A gap in the mechanism is fixed in
+  dil-core first, when Plone directs it, and then ported here. Otherwise, if
+  something in dil-core blocks the work, report it and stop; do not edit that
+  repository to make this one easier.
+- **History goes in `LOG.md`.** A measurement, a run's result, a design replaced,
+  a correction — anything that says what happened — is written in `LOG.md`,
+  under its date. `README.md` and `CLAUDE.md` say only what holds now: when
+  something changes, they are edited to the new state, and how it changed is
+  logged.
 - **MIT-0 from the first commit.** ARC Prize requires every file authored by the
   submitter to carry a permissive public-domain licence. Nothing enters this repo
   under a licence that keeps an attribution clause.
@@ -176,9 +183,13 @@ are below.
   catches *accrued* drift and is blind to bias in the *mechanism*, which every
   peer shares equally. It is a real Mode-B channel and it is weaker than a
   genuinely foreign reader.
-- **Tag H — situation fit.** Fit is measured between the frame the loop predicted
-  and the frame the region returned. Not against a correct answer: no answer is
-  ever revealed during a run.
+
+  The mechanism is `src/dil/runtime/peer.py` and `reflection.py`. The live run
+  (`scripts/run_game.py`) does not wire a peer yet.
+- **Tag H — situation fit.** The frame fits when the grid the mind's program
+  predicted equals, cell for cell, the grid the region returned (the last of each
+  stack); the region's status, when it is what the standing expectation said.
+  Not against a correct answer: no answer is ever revealed during a run.
 - **Tag F — open-tag keys.** Declared in `src/arc3/decisions.py`
   (`OPEN_TAG_KEYS`): `domain`, `kind`, `source`, `object`, `sense`, each naming
   one dimension wherever it appears, which is what lets an arrival's description
