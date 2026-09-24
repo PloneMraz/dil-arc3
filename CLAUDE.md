@@ -1502,15 +1502,34 @@ of 198. Accuracy then contributes to a ranking rather than standing as a gate
 that forecloses everything, and the paper's quality is what decides the outcome.
 Treat the pool as upside, never as the plan.
 
+## Settled from the Paper Track's Overview page, 2026-09-24
+
+Read in full from the competition's own Overview page (rendered through a
+headless browser; the text is kept in `Downloads/pages/` in the workspace).
+
+- **The 1,500-word limit is real.** "Your Writeup should not exceed 1,500
+  words. Submissions over this limit may be subject to penalty." So the paper is
+  1,500 words set against a 55 KB specification: it states the claim, the
+  evidence and the limits, and points to the repository for the rest.
+- **The score is a mean.** "Each criterion is scored on a scale from 0 (lowest)
+  to 5 (highest), with the final score calculated as the average of all six."
+  The bonus pool therefore needs a mean above 4.5, which confirms the reading in
+  "Which prize this aims at": aim at the three ranked prizes.
+- **A valid submission is four things**: the Writeup, a **Media Gallery with a
+  required cover image**, an **attached public Notebook** ("If you use a private
+  Kaggle Notebook, it will automatically be made public after the deadline"),
+  and optionally a public project link.
+- **Accuracy is tied to one submission**: "you will be asked to provide your
+  submission ID to match your notebook to your submission". The notebook the
+  paper describes must be the one that scored.
+- **A PDF may replace the Writeup text** through the Public Project Link: "It
+  should be publicly accessible and not require a login or paywall."
+
 ## Still unverified
 
-- **Whether the 1,500-word limit is real**, and what it counts. Two competitors
-  on the Paper Track forum treat it as a known constraint; no host ever replied,
-  and it is not in the rules. It is the last thing that would reshape the paper,
-  so confirm it on the competition's Overview page before drafting.
-- **How the 4.5 is computed.** The rules say "papers that score above 4.5/5 on
-  the paper rubric" without saying whether that is a mean across the six
-  criteria. It matters less now that the pool is known to be discretionary.
+- **Whether the 1,500-word limit also binds a PDF** submitted through the Public
+  Project Link. The Overview states the limit for the Writeup and does not say
+  either way for the PDF.
 - The two official sources disagree on the Milestone 1 split: arcprize.org says
   $25K/$10K/$2.5K, Kaggle says $25,000/$7,500/$5,000. Both total $37,500. Which
   is authoritative is unknown; it does not affect this plan, but it is a reason
