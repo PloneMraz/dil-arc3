@@ -17,9 +17,11 @@ This module supplies the MECHANISM only:
   - `reflection_signal` and `reflection_transducer` — the T3 ingestion convention.
 
 WHO the reader is stays deployment-open in the protocol, like tag D. For this
-project it is settled (tag E, CLAUDE.md): a Kaggle evaluation session has no third
-party and no network, so the reader is a peer agent in the same session, reading
-this agent's log through `peer.py`, wired in `scripts/run_game.py --peer`.
+project it is settled (tag E, CLAUDE.md): an onlooker judging the agent's
+behaviour (`arc3/onlooker.py`). This module is not used by it. Reading the agent's
+own recorded collisions back to it only retells what the agent already wrote —
+what the reader must bring is its own view, and the collision is between the two
+(Plone, 2026-09-25; LOG.md).
 
 Ported from dil-core against DIL protocol v0.3.3.
 """

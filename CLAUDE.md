@@ -137,11 +137,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   T5.
 - Nothing that arrives is about "things" now, so the prior item about the
   world's things is never recalled; the one about seeing is, on the first frame.
-- **Alone, the frame is the one resistance source**, so C5 renders `partial` and
-  C7 `fail` (diversity-loss) once eight collisions are recorded. With a peer both
-  pass — but **the peers echo**: a collision with a reading is itself a collision
-  the other peer reads, so readings about readings multiply (11 of 18 in the first
-  local run). Not settled.
+- **C7 is `fail` wherever the agent does not look stuck.** The onlooker speaks
+  only when it judges the agent stuck, so an agent that keeps varying its moves
+  meets one resistance source, the frame, and C7 establishes diversity-loss.
+  Declared, not arranged: the diversity C7 asks for is only as real as the
+  onlooker's reasons to object.
 - Want has nothing to seek: the directive says what counts as reaching the goal,
   not how to get there, and no level has been completed to learn from.
 
@@ -168,33 +168,36 @@ are below.
   not control) … any region that returns and can resist", and an ARC-AGI-3 game
   is exactly that: it returns frames, the agent does not control it, and it
   resists prediction. The game is the Mode-B source.
-- **Tag E — settled: the reader is a peer agent.** §8.4 puts reflection outside
-  the agent, and §10 makes it an obligation — "a private store … MUST carry the
-  resistance-retrieval channel, otherwise drift is certain". A Kaggle session has
-  neither network nor human, so the usual reader cannot exist. The reader here is
-  **another agent running in the same session**, reading this agent's recorded
-  collisions out of its log. Tag E's own wording already admits it: "WHO reads (a
-  user, **another agent**, a critic service) stays deliberately deployment-open".
+- **Tag E — the reader is an onlooker: an Other outside the agent, judging how
+  it behaves** (Plone, 2026-09-25). §8.4 puts reflection outside the agent — "a
+  collision read into coordinates by a third party ('you drifted at this point')"
+  — and a Kaggle session has no person to be that party. An Other is a position,
+  not a kind (§2: "any entity occupying the relational position not-Self"), and
+  a B-source may be "a hard third party … so long as it can resist" (spec,
+  DECIDE@IMPL-D). So the reader is **a separate piece of code, not an agent and
+  not a mind**: `src/arc3/onlooker.py`.
 
-  This is the private-store branch done properly, not §10's shared-store branch:
-  each agent keeps its own store and the retrieval channel is what crosses
-  between them. The peer holds a read-only log view and no store handle, so
-  §8.4's "Mode-B returns; it does not write" is kept by the type, and
-  `form_reading` refuses a coordinate naming no real record, so a reflection
-  cannot be fabricated about a collision that never happened.
+  - **It judges the agent's behaviour, not the region.** It sees the moves the
+    agent commits and whether the level moved; not the grid, not the agent's
+    store, `[event]` or program. It plays no game.
+  - **Its stance**: "repeating" (the same move `REPEAT_AT = 4` times running, the
+    level unchanged — **not measured**, declared as chosen) and "back-and-forth"
+    (x y x y, the level unchanged). Each remark points at the cycle the pattern
+    began. It has no claim of being right.
+  - **The mismatch is between the agent and the onlooker.** The agent's standing
+    expectation is that the onlooker says nothing (it does not think it is
+    stuck); a change of stance collides, and the scar is on the remark's datum
+    (`domain: reflection`, `kind: remark`). While the onlooker keeps its stance,
+    nothing collides.
+  - It returns and does not write: its one channel is `onlooker`, declared by the
+    host (`declaration(onlooker=True)`); it holds no handle on the agent.
+  - `scripts/run_game.py` has it stand by; `--alone` leaves it out.
 
-  **The limit, which the paper must state rather than bury**: peers run the same
-  implementation, with the same update law and thresholds. Peer reflection
-  catches *accrued* drift and is blind to bias in the *mechanism*, which every
-  peer shares equally. It is a real Mode-B channel and it is weaker than a
-  genuinely foreign reader.
+  **Not the peer.** A peer agent relaying this agent's recorded collisions only
+  retells what the agent already wrote — a compliant source, re-authorable by the
+  agent (§8.3, §8.4) — and two peers echo each other. `src/dil/runtime/peer.py`
+  stays as ported, its plumbing fixed and tested, and is not used.
 
-  The mechanism is `src/dil/runtime/peer.py` and `reflection.py`; the live run
-  wires it with `scripts/run_game.py --peer GAME`: a second agent, with its own
-  mind and store, plays another game cycle for cycle, and each reads the other's
-  collisions through `read_only`, a view with no way to write. A reading enters
-  on `peer-reflection` and is kept as data (`domain: reflection`,
-  `kind: peer-reading`).
 - **Tag H — situation fit.** The frame fits when the grid the mind's program
   predicted equals, cell for cell, the grid the region returned (the last of each
   stack); the region's status, when the region reports what it reported last —
@@ -204,10 +207,6 @@ are below.
   (`OPEN_TAG_KEYS`): `domain`, `kind`, `source`, `object`, `sense`, each naming
   one dimension wherever it appears, which is what lets an arrival's description
   recall a stored datum.
-
-With a peer reader, §13.5 and §13.7 pass where an agent alone renders `partial`
-(measured, `LOG.md`, 2026-09-22): the peer is a real source that returns
-something this agent did not author.
 
 ### Declared deviations from dil-core
 

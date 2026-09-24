@@ -1750,3 +1750,39 @@ log, and the other peer reads it back as a new collision to report. Already at
 12 cycles most readings are about readings, and the supply grows faster than
 the two a cycle that are read. So C7's `pass` here is partly earned by the peers
 reflecting each other, not by the region. Not settled; put to Plone.
+
+### The peer was a retelling; the reader is an onlooker (Plone, same day)
+
+Plone, on the peer: what B passed to A was A's own recorded collision, told back
+— "đơn thuần là kể lại" — and so a mechanism built to get past C7. The idea of
+the protocol is a real difference of view: A does not think it is stumbling, B
+thinks it is and says so; a contribution with no claim of being right, and a
+mismatch between A and B, not B describing A's mismatch with the region. Read
+against the text it holds: §8.3 wants a source that "resists the lens itself,
+mismatching in a way the agent cannot re-author", and §8.4 calls a compliant
+source "useless however much it supplies"; a collision the agent recorded is
+one it authored. The literal phrase "a collision read into coordinates" is what
+`collision_coordinates` was built from, in dil-core too; that is left to Plone.
+
+Settled with Plone: B need not be an agent or have a mind. An Other is a
+position (§2), and a B-source may be "a hard third party … so long as it can
+resist" (spec, DECIDE@IMPL-D). B is `src/arc3/onlooker.py`, a separate piece of
+code that judges the agent's behaviour and not the region: it sees the moves
+committed and whether the level moved, nothing else, and says "repeating" (the
+same move 4 times, level unchanged; the 4 not measured) or "back-and-forth"
+(x y x y), pointing at the cycle the pattern began. The agent expects it to say
+nothing; a change of stance collides, and the scar is on the remark's datum.
+`--peer` is gone from the run; `peer.py` stays as ported, unused, its plumbing
+tests kept and the test that asserted C7 passing through it removed.
+
+Tests: the two remarks, their stable coordinate, a level or a RESET clearing
+them, clicks at different places being different moves; in the loop, a mismatch
+only at each change of stance (cycles 4, 8 and 10 of a scripted run), every
+remark kept as data. 243 tests.
+
+Live, `ls20`, 60 cycles, no model reachable: the policy cycles the four moves
+(15 each), the onlooker never objects, and C7 is `fail` with it as without it
+("only 1 distinct source(s) over the last 8 records"). Replaying the Kaggle
+run's 60 moves past it: it would have said "repeating" at cycle 44 (ACTION1 since
+cycle 40), taken it back at 45, and said it again at 56 (ACTION2 since 52). What
+C7 renders with the model in the loop is not yet measured.

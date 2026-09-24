@@ -1,17 +1,16 @@
-"""The peer reader (tag E): another agent's reading of this one's collisions.
+"""The peer mechanism ported from dil-core: its plumbing, not its use.
 
-A Kaggle session has no third party, so the reader is a peer agent in the same
-session. Its readings arrive through T3 on their own channel, are kept as data
-(`domain: reflection`), and can resist like any Other's return — which is what
-gives an agent playing one game a second resistance source (§11, C5 and C7).
+This host does not use a peer (tag E is the onlooker, `arc3/onlooker.py`): a
+peer that relays another agent's recorded collisions only retells them, and the
+diversity it gave C7 was the peers echoing each other (LOG.md, 2026-09-25).
+What is pinned here is that the mechanism, if used, keeps the region's presence,
+carries plain data, and reads without being able to write.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from arc3.observe import admit, transducers
-from dil.conformance.checker import check_conformance
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
@@ -24,8 +23,9 @@ from dil.loop.layers.t7 import create_t7
 from dil.loop.layers.t8 import create_t8
 from dil.loop.types import Signal
 from dil.runtime.host_source import scripted_source
-from dil.runtime.peer import PeerLog, peer_reflecting_source, read_only
-from dil.runtime.reflection import ReflectionError, form_reading
+from dil.runtime.peer import PEER_REFLECTION_CHANNEL, PeerLog, peer_reflecting_source, read_only
+from dil.runtime.reflection import ReflectionError, form_reading, reflection_transducer
+from dil.store.tagging_gate import HostDatum
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
 from dil.store.event_sink import deserialize_event_record, serialize_event_record
@@ -41,9 +41,18 @@ def inputs(n: int) -> list[HostCycleInput]:
                            afforded=frozenset({"weather"})) for t in range(n)]
 
 
+def admit(signal):
+    """Keep a reading as data, so the test can see what it carries."""
+    if signal.source_id != PEER_REFLECTION_CHANNEL:
+        return None
+    return HostDatum(payload=signal.raw_payload, admitting_layer=1,
+                     open={"domain": "reflection", "kind": "peer-reading", "source": signal.source_id})
+
+
 def make_cycle(data, events):
     layers = Layers(
-        t1=create_t1(), t2=create_t2(stability_threshold=1), t3=create_t3(transducers()),
+        t1=create_t1(), t2=create_t2(stability_threshold=1),
+        t3=create_t3({PEER_REFLECTION_CHANNEL: reflection_transducer}),
         t4=create_t4(), t5=create_t5(), t6=create_t6(), t7=create_t7(), t8=create_t8(),
     )
     return create_cycle(layers=layers, glob=create_glob_mod({"appraisalGain": 1.0}, 0),
@@ -66,36 +75,17 @@ def peer_log(n: int = 12):
     return events
 
 
-def sources(events) -> set[str]:
-    return {r.event.source_id for r in events.all() if type(r).__name__ == "EventRecord"}
-
-
-def verdict(events, criterion: str) -> str:
-    return next(r.verdict for r in check_conformance(events).results if r.id == criterion)
-
-
-def test_alone_one_source_and_diversity_loss_is_established():
-    events = create_event_log()
-    play(scripted_source(inputs(12)), create_data_store(), events)
-    assert sources(events) == {"weather"}
-    assert verdict(events, "5") == "partial"
-    assert verdict(events, "7") == "fail"
-
-
-def test_with_a_peer_its_readings_are_data_that_resist_and_diversity_holds():
+def test_the_readings_keep_presence_and_are_plain_data_kept_as_data():
     b = peer_log()
     data, events = create_data_store(), create_event_log()
     source = peer_reflecting_source(scripted_source(inputs(12)), [PeerLog("peer:B", read_only(b))])
     seen = play(source, data, events)
 
     assert all(inp.afforded == frozenset({"weather"}) for inp in seen), "presence survives the wrapper"
-    readings = [(k, d) for k, d in data.entries() if d.open.get("domain") == "reflection"]
-    assert readings and all(d.open["kind"] == "peer-reading" for _, d in readings)
-    first = readings[0][1].payload["value"]
+    readings = [d for _, d in data.entries() if d.open.get("domain") == "reflection"]
+    assert readings, "a reading can be held in [data]"
+    first = readings[0].payload["value"]
     assert first["reader"] == "peer:B" and first["about"]["source_id"] == "weather"
-    assert sources(events) == {"weather", "peer:B"}
-    assert verdict(events, "5") == "pass"
-    assert verdict(events, "7") == "pass"
     for rec in events.all():
         assert deserialize_event_record(serialize_event_record(rec)) == rec
 

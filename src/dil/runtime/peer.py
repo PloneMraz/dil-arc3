@@ -1,4 +1,9 @@
-"""Peer reflection — the reader is another agent in the same run (tag E).
+"""Peer reflection — the reader is another agent in the same run.
+
+NOT USED BY THIS HOST. Tag E here is the onlooker (`arc3/onlooker.py`): a peer
+that relays another agent's recorded collisions only retells them, and two peers
+echo each other (LOG.md, 2026-09-25). Kept as ported, its plumbing fixed and
+tested. What follows is the case as it was made for it.
 
 **The problem this solves.** §8.4 puts reflection outside the agent: "a collision
 read into coordinates by a third party … entering through T3 tagged ENV_PUSHED",

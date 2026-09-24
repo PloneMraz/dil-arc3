@@ -30,22 +30,23 @@ MODE_B_SOURCE: Final = "host-source (live external input the agent does not cont
 
 # DECIDE@IMPL tag E — the read-collision-into-coordinates mechanism (§8.4).
 REFLECTION_MECHANISM: str = (
-    "peer-agent event-coordinate reading: another agent running in the same "
-    "session reads a recorded collision out of this agent's [event] log into "
-    "coordinates (collision_coordinates / form_reading) and returns it through "
-    "the declared T3 channel `peer-reflection` (reflection_signal + "
-    "reflection_transducer); the agency-gate classifies it ENV_PUSHED. The peer "
-    "holds a read-only log view and no store handle, so §8.4's "
-    "'Mode-B returns; it does not write' is kept by the type. LIMIT, declared: "
-    "peers run the same implementation, so this catches accrued drift and not "
-    "bias in the mechanism itself"
+    "an onlooker: an Other outside the agent, a separate piece of code and not an "
+    "agent, that watches the moves the agent commits and whether the level moved, "
+    "and says when it judges the agent stuck — 'repeating' (the same move 4 times, "
+    "the level unchanged; not measured) or 'back-and-forth' (x y x y), each pointing "
+    "at the cycle the pattern began (arc3/onlooker.py). Its remark enters on the "
+    "declared T3 channel `onlooker`, is kept as data (domain reflection), and "
+    "collides when the onlooker changes its stance: a mismatch between the agent and "
+    "the onlooker, never a retelling of a collision the agent already recorded. It "
+    "returns and does not write. LIMIT, declared: its stance is two written rules, "
+    "so it objects only to what they name"
 )
-# Rationale: the coordinate system is the [event] log itself — the one trace a
-# third party already reads (§13); a coordinate addresses one recorded collision
-# by index, cycle, source and mismatch kind. `form_reading` refuses a coordinate
-# that references no real record: a reflection cannot be fabricated about a
-# collision that never happened. WHO reads stays deployment-open, like tag D. No
-# internal self-reflection faculty exists, per §8.4. Typed `str` rather than a
+# Rationale: §8.4's reader is a third party with a view of its own, and an Other
+# is a position, not a kind — a hard third party may fill it so long as it can
+# resist. The onlooker's coordinate is the cycle in the agent's behaviour it
+# points at. The declaration it replaces — a peer agent relaying this agent's
+# recorded collisions — only retold them, and two peers echoed each other
+# (LOG.md, 2026-09-25). No internal self-reflection faculty exists, per §8.4. Typed `str` rather than a
 # frozen literal so the conformance checker's "is it still deferred?" comparison
 # stays a genuine runtime read.
 

@@ -41,7 +41,7 @@ from dil.loop.layers.t2 import Emission
 
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
-from .observe import FRAME_CHANNEL, STATUS_CHANNEL, move_from_value, observe
+from .observe import FRAME_CHANNEL, ONLOOKER_CHANNEL, STATUS_CHANNEL, move_from_value, observe
 from .prior import ArcRules
 
 # How many state-changing actions a run may spend. RHAE scores
@@ -169,6 +169,7 @@ def declaration(
     game_id: str,
     store_root: str | None = None,
     prior: PreexistingMemory | None = None,
+    onlooker: bool = False,
 ) -> HostDeclaration:
     """What this host declares about itself, read once by the precondition gate.
 
@@ -180,6 +181,8 @@ def declaration(
     store only through the runtime's tagging-gate, and only when the host
     declares a real substrate (`store_root`): the in-memory fixture a test runs
     on has no requisition step, so nothing is admitted there.
+
+    `onlooker` declares the third channel, when the onlooker (tag E) stands by.
     """
     return HostDeclaration(
         # A frame arrives, a move goes out: the boundary is real and crossable.
@@ -197,6 +200,12 @@ def declaration(
                 id=STATUS_CHANNEL,
                 can_return=True,
             ),
+            *((ChannelDeclaration(
+                # An Other outside the agent, judging how it behaves: it returns,
+                # and the agent does not control what it says.
+                id=ONLOOKER_CHANNEL,
+                can_return=True,
+            ),) if onlooker else ()),
         ),
         store=StoreDeclaration(
             persists_across_cycles=True,
