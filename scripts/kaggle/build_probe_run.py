@@ -1,6 +1,7 @@
 """Build the Kaggle dataset and notebook that run the world-model probe on a GPU.
 
-    python scripts/kaggle/build_probe_run.py [--rounds 3] [--runs-per-mode 2] [--max-tokens 16384]
+    python scripts/kaggle/build_probe_run.py [--model 27b|35b-a3b] [--rounds 3]
+        [--runs-per-mode 2] [--max-tokens 16384]
 
 Writes two folders under scripts/data/kaggle/ (git-ignored), ready for the CLI:
 
@@ -13,9 +14,10 @@ Writes two folders under scripts/data/kaggle/ (git-ignored), ready for the CLI:
 The notebook follows the one way of serving an open model offline on this
 competition's hardware that a public notebook has shown to work (Tufa Labs'
 Milestone-1 notebook): vLLM installed from a public offline wheelhouse, on an RTX
-Pro 6000, internet off. It serves Qwen3.6-27B-FP8 — the official Qwen
-quantisation, mirrored on Kaggle Models — and before using it checks every file
-against the sizes and hashes Hugging Face publishes (qwen3_6_27b_fp8.manifest.json).
+Pro 6000, internet off. It serves an official Qwen FP8 quantisation mirrored on
+Kaggle Models — Qwen3.6-27B-FP8 or Qwen3.6-35B-A3B-FP8 — and before using it
+checks every file against the sizes and hashes Hugging Face publishes (the
+matching *.manifest.json beside this script).
 It then runs several probes at once against the server, with and without
 thinking, and writes each run's log to /kaggle/working.
 
@@ -36,8 +38,14 @@ OWNER = "plonemraz"
 DATASET_SLUG = "dil-arc3-probe"
 KERNEL_SLUG = "dil-arc3-world-model-probe"
 WHEELHOUSE = "driessmit1/arc3-vllm-h100-wheelhouse-v3"
-MODEL = "michaelpoluektov/qwen3-6-27b-fp8/transformers/default/1"
-SERVED_NAME = "qwen3.6-27b-fp8"
+# Official Qwen FP8 releases, mirrored on Kaggle Models by a third party; each is
+# checked file by file against Hugging Face before it is used.
+MODELS = {
+    "27b": ("michaelpoluektov/qwen3-6-27b-fp8/transformers/default/1",
+            "qwen3_6_27b_fp8.manifest.json", "qwen3.6-27b-fp8"),
+    "35b-a3b": ("michaelpoluektov/qwen3-6-35b-a3b-fp8/transformers/default/1",
+                "qwen3_6_35b_a3b_fp8.manifest.json", "qwen3.6-35b-a3b-fp8"),
+}
 
 CELLS = [
     # ── 1 ──
@@ -66,9 +74,10 @@ print("wheelhouse :", WHEELS)
 print(subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
                      capture_output=True, text=True).stdout)''',
     # ── 2 ──
-    '''# Every model file against the size and hash Hugging Face publishes for Qwen/Qwen3.6-27B-FP8.
+    '''# Every model file against the size and hash Hugging Face publishes for the official release.
 # A third party's mirror is used only if it is byte-for-byte the official release.
-man = json.loads((DATA_DIR / "qwen3_6_27b_fp8.manifest.json").read_text())
+man = json.loads((DATA_DIR / "MANIFEST").read_text())
+print("model manifest:", man["source"])
 
 def check(item):
     rel, e = item
@@ -107,11 +116,11 @@ ENV = dict(os.environ, PYTHONPATH=str(SITE), VLLM_NO_USAGE_STATS="1", USE_TF="0"
 print(subprocess.run([sys.executable, "-c", "import vllm, torch; print(vllm.__version__, torch.__version__)"],
                      env=ENV, capture_output=True, text=True).stdout)''',
     # ── 4 ──
-    f'''# The server. Its PID is kept, and only that PID is stopped at the end.
+    '''# The server. Its PID is kept, and only that PID is stopped at the end.
 LOG = W / "vllm-server.log"
 server = subprocess.Popen(
     [sys.executable, "-m", "vllm.entrypoints.openai.api_server", "--model", str(MODEL_DIR),
-     "--served-model-name", "{SERVED_NAME}", "--host", "127.0.0.1", "--port", "8000",
+     "--served-model-name", "SERVED", "--host", "127.0.0.1", "--port", "8000",
      "--enable-prefix-caching", "--reasoning-parser", "qwen3", "--generation-config", "vllm",
      "--max-model-len", "65536"],
     env=ENV, stdout=open(LOG, "w"), stderr=subprocess.STDOUT)
@@ -124,7 +133,7 @@ while time.time() - t < 1200:
         urllib.request.urlopen(BASE + "/models", timeout=5); break
     except Exception:
         time.sleep(5)
-print(f"server ready in {{time.time() - t:.0f}}s")''',
+print(f"server ready in {time.time() - t:.0f}s")''',
     # ── 5 ──
     '''# The probes, several at once: vLLM batches concurrent requests.
 RUNS = []
@@ -158,6 +167,7 @@ print("server stopped")''',
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--model", choices=sorted(MODELS), default="27b")
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--runs-per-mode", type=int, default=2)
     ap.add_argument("--max-tokens", type=int, default=16384)
@@ -170,7 +180,9 @@ def main() -> None:
 
     shutil.copy(SCRIPTS / "wm_probe.py", dataset)
     shutil.copy(SCRIPTS / "data" / "transitions.json", dataset)
-    shutil.copy(HERE / "qwen3_6_27b_fp8.manifest.json", dataset)
+    for _handle, manifest, _served in MODELS.values():
+        shutil.copy(HERE / manifest, dataset)
+    handle, manifest, served = MODELS[a.model]
     (dataset / "dataset-metadata.json").write_text(json.dumps({
         "title": "dil-arc3 probe",
         "id": f"{OWNER}/{DATASET_SLUG}",
@@ -179,8 +191,9 @@ def main() -> None:
 
     params = (f"ROUNDS = {a.rounds}\nRUNS_PER_MODE = {a.runs_per_mode}\n"
               f"MAX_TOKENS = {a.max_tokens}\n")
-    cells = list(CELLS)
-    cells[4] = params + cells[4].replace('"SERVED"', f'"{SERVED_NAME}"')
+    cells = [c.replace('"MANIFEST"', f'"{manifest}"').replace('"SERVED"', f'"{served}"')
+             for c in CELLS]
+    cells[4] = params + cells[4]
     nb = {
         "nbformat": 4, "nbformat_minor": 5,
         "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"},
@@ -204,10 +217,11 @@ def main() -> None:
         "dataset_sources": [WHEELHOUSE, f"{OWNER}/{DATASET_SLUG}"],
         "competition_sources": ["arc-prize-2026-arc-agi-3"],
         "kernel_sources": [],
-        "model_sources": [MODEL],
+        "model_sources": [handle],
     }, indent=1))
     print(f"dataset -> {dataset}\nkernel  -> {kernel}\n"
-          f"rounds {a.rounds}, runs per mode {a.runs_per_mode}, max tokens {a.max_tokens}")
+          f"model {a.model} ({handle}), rounds {a.rounds}, runs per mode {a.runs_per_mode}, "
+          f"max tokens {a.max_tokens}")
 
 
 if __name__ == "__main__":
