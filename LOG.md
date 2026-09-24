@@ -1814,3 +1814,39 @@ the cycle — a log the onlooker, by design, never sees. The tag E header in
 old "a collision read into coordinates" wording, fixed in dil-core but missed in
 the port; corrected. Plone chose to keep `reflection.py` so that `src/dil/`
 stays a faithful port of dil-core, declared as not used by this host.
+
+### The onlooker's first run on Kaggle, with the model in the loop
+
+Kernel `dil-arc3-run` v1 (code `18d39e6`, packed before the reflection port,
+which it does not use): `ls20`, 60 cycles, the same model and settings as the
+v2 run above. Outputs in `scripts/data/kaggle/dil-run/output-onlooker/`.
+Notebook 1,101 s — the model files checked in 55 s, vLLM ready in 195 s, the
+game 748 s — about 0.31 h of GPU quota by wall time, not read from Kaggle's
+page. The notebook's log now showed each cycle as it ran.
+
+- **The run is the v2 run again, move for move.** The 31 thoughts (which
+  transition, scores, adoption, completion tokens), the final program and the
+  moves `1:13 2:21 3:15 4:11` are identical; only seconds differ. At temperature
+  0.2 with vLLM's defaults the model answered the same prompts the same way, so
+  a third party re-running this notebook should get this trace. Neither change
+  since v2 reaches behaviour: the status expectation does not feed the policy,
+  and nothing reads the onlooker.
+- **Scars by source**: frame 31 (the same cycles as v2), region 3, onlooker 3.
+  The status scars fell from 45 to 3, and the 3 are the region's own word: the
+  stack depth went 0 → 5 → −5 → 0 over cycles 43–45.
+- **The onlooker spoke three times**, as the replay predicted: at cycle 44,
+  "repeating" ACTION1 since cycle 40; at 45 it took that back; at 56, "repeating"
+  ACTION2 since cycle 52, held to the end. Each change of stance is one scar on
+  its remark.
+- **C5 pass, C7 pass**: "3 distinct sources over the last 8 records" — region
+  44, onlooker 44, region 45, onlooker 45, frame 46, 48, 50, onlooker 56. Every
+  source is real and none is manufactured, but the pass is thin: it rests on the
+  frame going quiet after cycle 50 and the onlooker objecting at 56. A run in
+  which the agent kept varying its moves while the frame kept colliding would
+  render `fail` again.
+- **Registered, and inert.** Nothing reads the remarks — not the mind, not the
+  respond policy — so the onlooker's objection at cycle 56 was followed by four
+  more ACTION2s. §8.4 names three conditions for a return to re-lean the store:
+  deliberate (met — it is registered), accumulated and long-run (not met — no
+  reader). Put to Plone with the gap between what the mind learns and what the
+  self does.

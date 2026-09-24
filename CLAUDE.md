@@ -142,6 +142,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   meets one resistance source, the frame, and C7 establishes diversity-loss.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
+- **Nothing reads the onlooker's remarks.** They are registered — kept as data,
+  a scar when its stance changes — but neither the mind nor the respond policy
+  reads them, so a remark changes no behaviour: on Kaggle the run with the
+  onlooker committed exactly the moves of the run without it. §8.4's
+  "accumulated" and "long-run" conditions are not met; the embedding is present
+  in the topology and inert in fact.
 - Want has nothing to seek: the directive says what counts as reaching the goal,
   not how to get there, and no level has been completed to learn from.
 
