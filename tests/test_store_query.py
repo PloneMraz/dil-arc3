@@ -13,9 +13,9 @@ from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
 from dil.loop.layers.t2 import Emission, create_t2
-from dil.loop.layers.t3 import STORE_CHANNEL, create_t3
+from dil.loop.layers.t3 import STORE_CHANNEL, create_t3, store_query
 from dil.loop.layers.t4 import create_t4
-from dil.loop.layers.t5 import create_t5
+from dil.loop.layers.t5 import create_t5, persistence
 from dil.loop.layers.t6 import create_t6
 from dil.loop.layers.t7 import create_t7
 from dil.loop.layers.t8 import create_t8
@@ -308,3 +308,75 @@ def test_a_datum_that_ran_from_prior_with_no_tags_in_the_trace_is_caught():
     c6 = next(r for r in check_conformance(events).results if r.id == "6")
     assert c6.verdict == "fail"
     assert "side-door" in c6.detail
+
+
+# ── the rule asks: thinking chooses what to read (§6.4) ──
+
+
+def cycle_with_rule(data, events, predict):
+    """A cycle whose T3 describes nothing, so any query is the rule's own."""
+    layers = Layers(
+        t1=create_t1(), t2=create_t2(), t3=create_t3({}), t4=create_t4(),
+        t5=create_t5(predict=predict), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+    )
+    return create_cycle(
+        layers=layers, glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data,
+        events=events, initial_emission=Emission(action="boot"),
+    )
+
+
+def asking_rule(met: list):
+    """Asks about the world once, the first time it meets anything; records what it met."""
+    asked = []
+
+    def rule(entity_id, window, observed, contribute=None, ask=None):
+        met.append(observed.content)
+        if not asked:
+            asked.append(True)
+            ask({"kind": "world"})
+        return persistence(entity_id, window, observed, contribute, ask)
+
+    return rule
+
+
+def emissions_from(events, layer: int):
+    return [r for r in events.all()
+            if getattr(r, "activity_kind", None) == "emission" and r.issuing_layer == layer]
+
+
+def test_the_rule_asks_the_store_traced_to_t5_with_register_bidirectional():
+    events = create_event_log()
+    run(cycle_with_rule(seeded_store(), events, asking_rule([])), 1)
+
+    assert queries(events) == [], "T3 described nothing, so it asked nothing"
+    q = emissions_from(events, 5)
+    assert len(q) == 1
+    assert q[0].action == store_query({"kind": "world"})
+    assert q[0].register == "↔"
+
+
+def test_what_the_rule_asked_for_reaches_it_next_cycle_and_nothing_else_is_recalled():
+    data = seeded_store()
+    events = create_event_log()
+    met: list = []
+    cycle = cycle_with_rule(data, events, asking_rule(met))
+
+    run(cycle, 1)
+    assert data.get(UNRELATED).fixed.provenance == "prior", "nothing arrives in the cycle that asks"
+
+    run(cycle, 2)
+    assert UNRELATED in observed_at(events, 1), "the answer ran the layers up to T5"
+    assert any("Something about something else." in repr(c) for c in met), "the rule met what it asked for"
+    assert data.get(UNRELATED).fixed.provenance == "running"
+    assert data.get(DIRECTIVE).fixed.provenance == "prior", "what was not asked for stays where it was"
+    assert DIRECTIVE not in observed_at(events, 1)
+
+
+def test_a_rule_that_asks_leaves_a_trace_the_checker_accepts():
+    events = create_event_log()
+    cycle = cycle_with_rule(seeded_store(), events, asking_rule([]))
+    for t in (1, 2, 3):
+        run(cycle, t)
+
+    failed = [f"{r.id}: {r.detail}" for r in check_conformance(events).results if r.verdict == "fail"]
+    assert failed == []

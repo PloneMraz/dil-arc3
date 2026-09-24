@@ -27,6 +27,7 @@ from collections.abc import Callable
 from ..decisions import BASELINE_WINDOW, SUFFICIENT_RECURRENCE
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import Expectation, HistoryWindow, InfoUnit, ModField, PredErr
+from .t3 import Description, store_query
 from .t4 import BoundInfo
 
 # Builds the expectation for one entity (DECIDE@IMPL, host-declared).
@@ -34,14 +35,25 @@ from .t4 import BoundInfo
 # DEVIATION from dil-core, declared. dil-core hard-codes persistence because its
 # minimal host has no model; **this is the seam the thinking organ plugs into**.
 # A model supplies the EXPECTATION here and nothing else — it never sees the
-# afforded set and never reaches the emission, so it cannot choose. That is the
-# settled architecture in the type: the model thinks, the self acts.
+# afforded set and never reaches the committed action, so it cannot choose. That
+# is the settled architecture in the type: the model thinks, the self acts.
+#
+# It can ASK. Thinking that meets a problem goes to memory for what bears on it:
+# the rule chooses what to read, and the store is not poured into it. §6.4 makes
+# emission "a lateral capability any layer MAY invoke … to obtain what it lacks",
+# so the rule receives `ask(cue)`, which emits a store query and nothing else —
+# register ↔, one activity record naming T5, its answer arriving at T1 next
+# cycle and running every layer, so what the rule read is in the trace. Nothing
+# counts or limits how often it asks.
 #
 # It receives the entity, the accrued window for that entity, and this cycle's
 # observation — which carries the context the move was made under. It must NOT
 # read the observation's effect: that is the answer it is being asked to
 # predict, and using it would make the prediction error self-scoring (INV-8).
-PredictRule = Callable[[str, HistoryWindow, InfoUnit], InfoUnit]
+PredictRule = Callable[..., InfoUnit]
+
+# A store query from the rule, by cue (§6.4, §9). It emits nothing else.
+AskFn = Callable[[Description], None]
 
 
 def persistence(
@@ -49,6 +61,7 @@ def persistence(
     window: HistoryWindow,
     observed: InfoUnit,
     contribute: Any = None,
+    ask: Any = None,
 ) -> InfoUnit:
     """dil-core's declared update law: predict the most recent observation.
 
@@ -130,6 +143,10 @@ class T5(BaseLayer):
     ) -> T5Output:
         results: list[T5Result] = []
 
+        # The rule's one road outward: a query to the store, issued from T5.
+        def ask(cue: Description) -> None:
+            emit(store_query(cue))
+
         for b in input.bound:
             entity_id = b.entity_id
             observed = b.unit
@@ -140,8 +157,9 @@ class T5(BaseLayer):
             # a host with a thinking organ declares its own. Whatever the rule,
             # what leaves here is an expectation and never a choice.
             # The rule may report upward into the field; the contribution is
-            # bound to T5, since it is T5's declared rule that made it.
-            predicted = self._predict(entity_id, tuple(window), observed, contribute)
+            # bound to T5, since it is T5's declared rule that made it. It may
+            # also ask the store; the query is traced to T5 for the same reason.
+            predicted = self._predict(entity_id, tuple(window), observed, contribute, ask)
             confidence = min(1.0, count / self._recurrence)
 
             matched = _content_equal(observed, predicted)

@@ -54,9 +54,12 @@ real mistake this project made.
 | **mind** | the thinking organ: finds the things in a signal, follows them across frames, reads what became of them, says what they will do. **Chooses nothing.** | `src/arc3/perceive.py`, `seeing.py`, `interpret.py`, `mind.py` |
 | **self** | what occurs while the loop runs through them. **It is what acts.** | not a file |
 
-The line that matters: **the mind does not emit.** It supplies an expectation and
-nothing else — it never sees which actions are available and never reaches the
-emission. An earlier build had these inverted, with the body handing the loop a
+The line that matters: **the mind does not act.** It supplies an expectation —
+it never sees which actions are available and never reaches the committed action.
+The one thing it may send out is a question to its own memory: a store query,
+by cue, that it chooses itself (§6.4 — emission is "a lateral capability any
+layer MAY invoke … to obtain what it lacks"). The query is traced like any
+emission, so what the mind read is in `[event]`. An earlier build had these inverted, with the body handing the loop a
 finished interpretation while the mind reached past the loop into the raw grid to
 pick what to look at. Both are the other way round now.
 

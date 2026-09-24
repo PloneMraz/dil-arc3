@@ -1,8 +1,9 @@
 """The thinking algorithm: what this Other will do, given what I just did.
 
 It plugs into T5's `PredictRule` seam and supplies the **expectation**. It never
-sees the afforded set and never reaches the emission, so it cannot choose. The
-model thinks; the self acts.
+sees the afforded set and never reaches the committed action, so it cannot
+choose. The model thinks; the self acts. What it may do is ask the store, through
+the rule's `ask` — reading memory is thinking's, acting on the region is not.
 
 WHAT IT IS NOT. It is not a downloaded network, for three reasons each sufficient
 on its own: the scored games are unseen and their mechanics are the thing to be
@@ -314,7 +315,7 @@ def predict_rule(mind: Mind, recollection: Any = None):
     make an identical outcome read as a mismatch.
     """
 
-    def rule(entity_id: str, window, observed, contribute=None):
+    def rule(entity_id: str, window, observed, contribute=None, ask=None):
         payload = _payload_of(observed)
         if payload is None:
             return observed

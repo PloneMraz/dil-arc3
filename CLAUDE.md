@@ -1678,6 +1678,15 @@ result; the next ones run inside the loop.
   it holds, the scar; adjusting is what thinking does with that. If it does not
   adjust, the mismatch recurs. Rewriting is the consequence of mismatch, not a
   step scheduled by the host.
+- **The mind reads by asking; nothing is poured into it.** It has the right to
+  read anything in the store, and it chooses what: meeting a problem, it goes to
+  memory for what bears on that problem. Only T3 could query the store, and only
+  about what had just arrived, so this was a gap — fixed in dil-core first
+  (`1e2d826`) and ported: T5 hands its rule `ask(cue)`, which emits a store query
+  and nothing else, traced to T5 with register ↔, answered at T1 next cycle. The
+  settled line narrows from "the mind does not emit" to **"the mind does not
+  act"**: the one thing it sends out is a question to its own memory, and that
+  question is in `[event]`.
 
 ## Still unverified
 
