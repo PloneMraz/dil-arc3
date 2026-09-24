@@ -2,8 +2,9 @@
 
 One whole-state payload per marker. The snapshot covers the ENTIRE system, not
 just the store: the stateful layers' accrued state (T2, T5, T6, T7 through their
-snapshot surfaces), the GLOB-MOD field, the cycle driver's counter and last
-emission, and the `[data]` working memory.
+snapshot surfaces), the GLOB-MOD field, the cycle driver's whole state — its
+counter, last emission, the store returns and writes on their way to T1, what it
+has recalled, and what was emitted laterally — and the `[data]` working memory.
 
 Restoring re-instates state this very loop accrued — resuming the causal line,
 never pre-loading fabricated history (INV-5) — and rewrites ONLY memory-side
@@ -17,11 +18,11 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Any, Final
 
-from ..loop.cycle import DriverState, Layers
+from ..loop.cycle import DriverState, Layers, PendingWrite
 from ..loop.glob_mod import GlobMod
 from ..loop.layer import is_snapshottable
 from ..loop.layers.t2 import Emission
-from ..loop.types import Expectation, InfoUnit, RefFrame
+from ..loop.types import Expectation, InfoUnit, RefFrame, Signal
 from ..store.data_store import DataStore
 from ..store.tags import FixedTags, TaggedDatum
 
@@ -120,5 +121,8 @@ def decode_snapshot_value(value: Any) -> Any:
 
 _SNAPSHOT_TYPES: Final[dict[str, type]] = {
     cls.__name__: cls
-    for cls in (Emission, Expectation, FixedTags, InfoUnit, RefFrame, TaggedDatum)
+    for cls in (
+        DriverState, Emission, Expectation, FixedTags, InfoUnit, PendingWrite,
+        RefFrame, Signal, TaggedDatum,
+    )
 }

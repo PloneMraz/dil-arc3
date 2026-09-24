@@ -345,10 +345,10 @@ def _snapshot_payload(snap: SystemSnapshot) -> dict[str, Any]:
     return {
         "layers": encode_snapshot_value(snap.layers),
         "glob": snap.glob,
-        "driver": {
-            "cycle": snap.driver.cycle,
-            "lastEmission": encode_snapshot_value(snap.driver.last_emission.action),
-        },
+        # The driver's whole state, as dil-core keeps it: a recovery that
+        # dropped the returns and writes on their way to T1 would lose what the
+        # agent asked for and what it wrote in the cycle before the commit.
+        "driver": encode_snapshot_value(snap.driver),
         "data": encode_snapshot_value(snap.data),
     }
 
@@ -357,14 +357,26 @@ def _snapshot_from_payload(payload: Any) -> SystemSnapshot:
     return SystemSnapshot(
         layers=decode_snapshot_value(payload["layers"]),
         glob=payload["glob"],
-        driver=DriverState(
-            cycle=payload["driver"]["cycle"],
-            last_emission=Emission(
-                action=decode_snapshot_value(payload["driver"]["lastEmission"])
-            ),
-        ),
+        driver=_driver_from_payload(payload["driver"]),
         data=[(k, v) for k, v in decode_snapshot_value(payload["data"])],
     )
+
+
+def _driver_from_payload(value: Any) -> DriverState:
+    """The driver state a snapshot carries.
+
+    Snapshots written before 2026-09-24 kept only the counter and the last
+    emission; those still restore, with nothing on its way to T1.
+    """
+    if isinstance(value, dict) and "cycle" in value and "lastEmission" in value:
+        return DriverState(
+            cycle=value["cycle"],
+            last_emission=Emission(action=decode_snapshot_value(value["lastEmission"])),
+        )
+    driver = decode_snapshot_value(value)
+    if not isinstance(driver, DriverState):
+        raise ValueError("snapshot carries no driver state")
+    return driver
 
 
 def create_daemon(**kwargs: Any) -> Daemon:

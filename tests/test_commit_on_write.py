@@ -90,3 +90,66 @@ def test_every_cycle_that_writes_is_committed_and_each_version_is_in_its_snapsho
         entries = dict(decode_snapshot_value(state["data"]))
         held[m.cycle] = entries["written-1-0"].payload["code"]
     assert held == {2: "v1", 4: "v2"}, "each version of what was written is in a snapshot"
+
+
+def test_a_recovery_keeps_what_was_on_its_way_to_t1(tmp_path):
+    """The snapshot carries the driver's whole state, as dil-core's does: a
+    datum written in the cycle before the commit still arrives after recovery."""
+    cycle_no = [0]
+
+    def make_layers(plan):
+        last = [-1]
+
+        def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
+            if cycle_no[0] != last[0]:
+                last[0] = cycle_no[0]
+                if cycle_no[0] in plan:
+                    write(plan[cycle_no[0]])
+            return persistence(entity_id, window, observed, contribute, ask, write)
+
+        return Layers(
+            t1=create_t1(), t2=create_t2(), t3=create_t3({}), t4=create_t4(),
+            t5=create_t5(predict=rule), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+        )
+
+    clock = [1_800_000_000_000]
+
+    def now():
+        clock[0] += 1000
+        return clock[0]
+
+    first = Daemon(
+        host=declaration("ls20", store_root=str(tmp_path)), source=Script(2),
+        layers=make_layers({1: WriteRequest(payload={"code": "v1"}, open=TAGS)}),
+        glob=create_glob_mod(), initial_emission=Emission(action=None), now=now,
+        commit_every=10_000,
+    )
+    first.start()
+    for c in range(2):
+        cycle_no[0] = c
+        first.step()
+    marker = first._commits.head()
+    first.stop()
+
+    resumed = Daemon(
+        host=declaration("ls20", store_root=str(tmp_path)), source=Script(1),
+        layers=make_layers({}), glob=create_glob_mod(), initial_emission=Emission(action=None),
+        now=now, commit_every=10_000, recover_from=marker,
+    )
+    resumed.start()
+    cycle_no[0] = 2
+    assert resumed.step()
+    moved = [
+        (r.from_, r.to) for r in resumed._events.all()
+        if getattr(r, "activity_kind", None) == "provenance" and r.datum_id == "written-1-0"
+    ]
+    assert moved == [("nascent", "running")], "the write made before the commit arrived after recovery"
+
+
+def test_a_snapshot_written_before_the_whole_driver_was_kept_still_restores():
+    from dil.runtime.daemon import _driver_from_payload
+
+    driver = _driver_from_payload({"cycle": 7, "lastEmission": {"kind": "respond"}})
+    assert driver.cycle == 7
+    assert driver.last_emission.action == {"kind": "respond"}
+    assert driver.pending_writes == () and driver.pending_returns == ()
