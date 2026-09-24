@@ -1502,6 +1502,46 @@ of 198. Accuracy then contributes to a ranking rather than standing as a gate
 that forecloses everything, and the paper's quality is what decides the outcome.
 Treat the pool as upside, never as the plan.
 
+## Direction C: can an open model write the world model? First measurements, 2026-09-24
+
+Settled with Plone: the mind's thinking can be done by an open model that writes
+an **executable world model** — a program `predict(grid, action) -> grid` — which
+DIL then tests against the region, as data in the store, expectation → mismatch →
+scar → rewrite. The model thinks; it does not choose. Before any architecture,
+the question measured is whether a model that can run offline writes such a
+program at all. Probe: `scripts/wm_probe.py`, on the 159 recorded `ls20`
+transitions (80 train, 79 held out), scored by **exact** match of the whole 64×64
+grid. Baseline "nothing changes": 0/159 — every step changes at least two cells.
+
+| where | model | mode | runs | best program, train / held out |
+|---|---|---|---|---|
+| this machine, CPU + GTX 1050 Ti | Qwen3.6-35B-A3B, IQ4_XS | no thinking | 1st | **64/80 / 60/79 (76%)** |
+| this machine | same | no thinking | 2nd | 1/80 / 0/79 |
+| Kaggle RTX Pro 6000, vLLM | Qwen3.6-27B-FP8 | no thinking | 2 | 0/80 / 0/79 both |
+| Kaggle RTX Pro 6000, vLLM | Qwen3.6-27B-FP8 | thinking | 2 | no program: every round hit the 16,384-token cap inside its reasoning |
+
+What the numbers say, and do not:
+
+- **The capability exists and is not reliable.** One run wrote a program exact on
+  76% of transitions it had never seen; its 35 misses were almost all movement,
+  the step counter being right. The next run with the same model and data wrote
+  one right once in 80. Two runs cannot give a rate.
+- **The 27B dense model did worse here than the 35B-A3B MoE**: six programs, all
+  loading and running, none exact once. Four runs are not enough to rank models
+  either.
+- **Thinking needs a far larger budget.** 26–44k characters of reasoning per round
+  never reached code within 16,384 tokens.
+- The first local run's two failed rounds were the probe's fault — a 4,096-token
+  cap, and each revision seeing the whole transcript. Fixed before the next runs:
+  the probe keeps the best program and shows only it and its failures.
+
+The pipeline itself is proven: the notebook checked all 80 model files (30.9 GB)
+against Hugging Face's published hashes, installed vLLM 0.19 offline, served
+65k-token contexts with a 199k-token KV cache (≈11 full-length requests at
+once), and generated about 33 tokens/s per stream with four streams. The run used
+0.48 h of the 30 h weekly GPU quota; the RTX machine was not charged at more than
+wall-clock time. Locally the same probe costs 25–45 minutes a run.
+
 ## Settled from the Paper Track's Overview page, 2026-09-24
 
 Read in full from the competition's own Overview page (rendered through a
