@@ -96,6 +96,7 @@ class ActivityEvent:
     observed: tuple[str, ...]
     # Collisions recorded as scars this cycle.
     scars: int
+    # When the cycle began (host clock, epoch-ms): the cycle datum's timestamp.
     t: int
     # The full tag set of every datum recalled from the store that ran this
     # cycle (§6.4 T3 query), as it stands after running. TAGS ONLY, NO CONTENT:
@@ -120,6 +121,10 @@ class ActivityEvent:
     # layer. Empty, and then not written, when nothing was written. Ported from
     # dil-core 44309b7 (v0.3.3).
     written: tuple["RecalledTags", ...] = ()
+    # When the cycle closed, as its seal was written. With `t`, how long the
+    # cycle took; with every other record's own time, where inside it the time
+    # went. None on records written before it was kept. Ported from dil-core 9073ddf.
+    closed_at: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

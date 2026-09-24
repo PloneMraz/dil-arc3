@@ -95,6 +95,8 @@ def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
         "scars": activity.scars,
         "t": activity.t,
     }
+    if activity.closed_at is not None:
+        out["closedAt"] = activity.closed_at
     # Written only when something was recalled, so every other line is exactly
     # what it was (and matches dil-core's form byte for byte).
     if activity.recalled:
@@ -389,6 +391,7 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             recalled=tuple(_tags_of(r) for r in act.get("recalled", ())),
             admitted=tuple(_tags_of(r) for r in act.get("admitted", ())),
             written=tuple(_tags_of(r) for r in act.get("written", ())),
+            closed_at=act.get("closedAt"),
         ),
         datum=datum,
         anchor=anchor,

@@ -349,7 +349,10 @@ class Cycle:
         self._last_emission = (
             resume.last_emission if resume is not None else initial_emission
         )
-        # Wall-clock of the cycle currently running.
+        # Wall-clock at which the cycle currently running began: the cycle datum's
+        # timestamp and the seal's `t`. Every record takes the clock at the moment
+        # it is appended instead (§9: "records each transition as it occurs").
+        # Ported from dil-core 9073ddf.
         self._cycle_t = 0
         # Store query-returns awaiting ingestion at the next cycle's T1 (§6.4).
         self._pending: list[Signal] = (
@@ -376,12 +379,13 @@ class Cycle:
 
     def _log_exit(self, layer: LayerIndex) -> None:
         """Log one `layer-exit` line as the cycle datum leaves a layer (§9)."""
+        at = self._now()
         self._events.append(
-            record_layer_exit(self._datum_id(), self._cycle, layer, self._cycle_t)
+            record_layer_exit(self._datum_id(), self._cycle, layer, at)
         )
         for datum_id in (*self._running_recalled, *self._running_admitted, *self._running_written):
             self._events.append(
-                record_layer_exit(datum_id, self._cycle, layer, self._cycle_t)
+                record_layer_exit(datum_id, self._cycle, layer, at)
             )
 
     def _emit(self, issuing_layer: LayerIndex, action: Any) -> Any:
@@ -397,7 +401,7 @@ class Cycle:
         """
         self._events.append(
             record_emission(
-                self._datum_id(), self._cycle, issuing_layer, action, self._cycle_t
+                self._datum_id(), self._cycle, issuing_layer, action, self._now()
             )
         )
         return action
@@ -668,7 +672,7 @@ class Cycle:
                 self._data.put(datum_id, to_running(held, self._cycle))
                 self._events.append(
                     record_provenance(
-                        datum_id, self._cycle, "prior", "running", self._cycle_t
+                        datum_id, self._cycle, "prior", "running", self._now()
                     )
                 )
         self._running_recalled = tuple(
@@ -685,7 +689,7 @@ class Cycle:
                 self._data.put(written_id, to_running(held, self._cycle))
                 self._events.append(
                     record_provenance(
-                        written_id, self._cycle, "nascent", "running", self._cycle_t
+                        written_id, self._cycle, "nascent", "running", self._now()
                     )
                 )
         self._running_written = tuple(dict.fromkeys(w.action["datum"] for w in written_back))
@@ -701,7 +705,7 @@ class Cycle:
             if declared is None:
                 continue
             datum_id = f"signal-{self._cycle}-{i}"
-            self._data.put(datum_id, admit_arrival(declared, self._cycle_t, self._cycle))
+            self._data.put(datum_id, admit_arrival(declared, self._now(), self._cycle))
             admitted_ids[i] = datum_id
         self._running_admitted = tuple(admitted_ids.values())
         admitted_now = frozenset(self._running_admitted)
@@ -755,7 +759,7 @@ class Cycle:
         # crystallized and T2 does not re-signal.
         if pass_.crystallized:
             self._events.append(
-                record_crystallization(self._datum_id(), self._cycle, self._cycle_t)
+                record_crystallization(self._datum_id(), self._cycle, self._now())
             )
 
         # ── Lateral emissions raised during the pass (§6.4) ──
@@ -774,7 +778,7 @@ class Cycle:
         for e in pass_.emissions:
             if not is_store_query(e.action):
                 continue
-            for s in answer_query(self._data, e.action["cue"], self._cycle_t):
+            for s in answer_query(self._data, e.action["cue"], self._now()):
                 if returned_entity(s) in admitted_now:
                     continue
                 if all(returned_entity(p) != returned_entity(s) for p in self._pending):
@@ -810,7 +814,7 @@ class Cycle:
                             open=dict(w.open) if w.open is not None else held.open),
                 )
                 self._events.append(
-                    record_revision(written_id, self._cycle, 5, self._cycle_t)
+                    record_revision(written_id, self._cycle, 5, self._now())
                 )
             else:
                 if w.open is None:
@@ -821,7 +825,7 @@ class Cycle:
                     written_id,
                     admit_nascent(
                         HostDatum(payload=w.payload, admitting_layer=5, open=dict(w.open)),
-                        self._cycle_t,
+                        self._now(),
                         self._cycle,
                     ),
                 )
@@ -852,7 +856,7 @@ class Cycle:
                             },
                             "open": dict(d.open),
                         },
-                        t=self._cycle_t,
+                        t=self._now(),
                     ),
                     action=action,
                 )
@@ -875,7 +879,7 @@ class Cycle:
                     r.expectation.confidence,
                     r.expectation.recurrence,
                     r.pred_err.delta,
-                    self._cycle_t,
+                    self._now(),
                 )
             )
 
@@ -894,7 +898,7 @@ class Cycle:
                     a.recurrence,
                     a.delta,
                     "-",
-                    self._cycle_t,
+                    self._now(),
                 )
             )
 
@@ -917,7 +921,7 @@ class Cycle:
                         self._cycle,
                         "scar",
                         "running",
-                        self._cycle_t,
+                        self._now(),
                     )
                 )
 
@@ -946,7 +950,7 @@ class Cycle:
             datum = to_simulated(datum)
             self._events.append(
                 record_provenance(
-                    self._datum_id(), self._cycle, "running", "simulated", self._cycle_t
+                    self._datum_id(), self._cycle, "running", "simulated", self._now()
                 )
             )
             # Build up to H_COUNT situations — a ceiling, not a quota. Fit is the
@@ -963,7 +967,7 @@ class Cycle:
                     self._cycle,
                     "simulated",
                     "projected",
-                    self._cycle_t,
+                    self._now(),
                 )
             )
             projected_units = tuple(r.expectation.predicted for r in situations)
@@ -1001,7 +1005,7 @@ class Cycle:
             ),
             issuing_layer=8,
             built_from=(appraisal,),
-            t=self._cycle_t,
+            t=self._now(),
         )
         response = Emission(action=directive.committed_action)
 
@@ -1046,7 +1050,7 @@ class Cycle:
                     self._cycle,
                     "projected" if forward_built else "running",
                     "scar",
-                    self._cycle_t,
+                    self._now(),
                 )
             )
         if collisions:
@@ -1067,7 +1071,7 @@ class Cycle:
                             self._cycle,
                             held.fixed.provenance,
                             "scar",
-                            self._cycle_t,
+                            self._now(),
                         )
                     )
                 self._events.append(
@@ -1080,7 +1084,7 @@ class Cycle:
                             mismatch_kind=(
                                 "absence" if e.observed is None else "value-mismatch"
                             ),
-                            t=self._cycle_t,
+                            t=self._now(),
                         ),
                         anchor,
                         datum_id=collided_id,
@@ -1097,7 +1101,7 @@ class Cycle:
             datum = to_running(datum, self._cycle)
             self._events.append(
                 record_provenance(
-                    self._datum_id(), self._cycle, "projected", "running", self._cycle_t
+                    self._datum_id(), self._cycle, "projected", "running", self._now()
                 )
             )
 
@@ -1118,6 +1122,7 @@ class Cycle:
                     observed=tuple(r.entity_id for r in pass_.t5.results),
                     scars=scars,
                     t=self._cycle_t,
+                    closed_at=self._now(),
                     recalled=tuple(recalled_tags),
                     admitted=tuple(admitted_tags),
                     written=tuple(written_tags.values()),

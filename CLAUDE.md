@@ -1790,6 +1790,23 @@ none did the cycle datum go to `scar` — every one of its 59 casts ended
 confident) never collided; every collision was on another thing's return, which
 holds the scar (20 of 20 records name it). 275 tests.
 
+### Every record takes the clock when it happens (Plone, same day)
+
+Found by reading back the first live run with the model in the loop: dil-core
+read the clock once per cycle and stamped every record and datum in it with
+that reading. Seventeen minutes of thinking inside T5 showed nowhere in
+`[event]` — every line of the cycle bore its start — and the program the model
+wrote bore that time too, though written at the end. §9 asks for "each
+transition as it occurs" and a timestamp "when the datum is first stamped".
+Fixed in dil-core (`9073ddf`) and ported: every record takes the clock when it
+is appended, region returns and written data when they enter, the cycle datum
+keeps its cycle's start, and the seal adds `closedAt`. Tests with a ticking
+clock, two mutations caught in dil-core. 283 tests.
+
+Still not in the log, by the law as it stands: a thought the mind does not keep
+changes no datum, so it leaves no line beyond the query it asked with; the time
+it took shows only as the gap between T4 and T5.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
