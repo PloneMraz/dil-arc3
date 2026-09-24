@@ -51,10 +51,17 @@ VISION_CHANNEL: Final = "arc3-vision"
 # The channel the region's own status arrives on. A separate channel because it
 # is a separate kind of signal, which is what T3's content-typing is for.
 STATUS_CHANNEL: Final = "arc3-status"
+# The channel the whole frame arrives on, when the host is asked to carry it: the
+# pair of grid stacks it observed, before and after the move, as they are. It is
+# what a world model of the game predicts, so it is carried only for a mind that
+# has one (see `observe(frames=...)`).
+FRAME_CHANNEL: Final = "arc3-frame"
+FRAME_ENTITY: Final = "frame"
 
 # The info-types the transducers stamp.
 THING_INFO_TYPE: Final = "thing-change"
 STATUS_INFO_TYPE: Final = "region-status"
+FRAME_INFO_TYPE: Final = "frame"
 
 # The id of the one self-written change: the agent's own move, observed back.
 SELF_MOVE_CHANGE: Final = "self:move"
@@ -112,8 +119,25 @@ def thing_payload(
     }
 
 
+def frame_payload(prev: Frame, move: Move, now: Frame, context: str) -> dict[str, object]:
+    """The frame signal: the two grid stacks the host observed, and the move between.
+
+    Carried as they are — every grid of each stack, no grid chosen as "the" view
+    (`Frame.top` stays a probe's accessor). Which grid a mind reads is the mind's
+    reading, not the body's.
+    """
+    return {
+        "entity": FRAME_ENTITY,
+        "before": [[list(row) for row in grid] for grid in prev.grids],
+        "grids": [[list(row) for row in grid] for grid in now.grids],
+        "move": move_value(move),
+        "context": context,
+    }
+
+
 def observe(
-    prev: Frame, move: Move, now: Frame, t: int, seeing: Seeing | None = None
+    prev: Frame, move: Move, now: Frame, t: int, seeing: Seeing | None = None,
+    frames: bool = False,
 ) -> HostCycleInput:
     """One cycle's input: what became of each Other, and what the agent did.
 
@@ -143,6 +167,10 @@ def observe(
         # same frames produce the same trace, which an auditor needs.
         for thing in sorted(scene.things, key=lambda th: th.entity)
     ]
+    if frames:
+        signals.append(
+            Signal(source_id=FRAME_CHANNEL, raw_payload=frame_payload(prev, move, now, context), t=t)
+        )
     signals.append(
         Signal(
             source_id=STATUS_CHANNEL,
@@ -185,7 +213,7 @@ def observe(
         # Which Others the region says are there. T7 registers an absence only
         # against these — and now that means something: a thing that has gone
         # from the grid is genuinely absent, which an affordance never could be.
-        afforded=frozenset([REGION_ENTITY, *scene.present]),
+        afforded=frozenset([REGION_ENTITY, *scene.present, *([FRAME_ENTITY] if frames else [])]),
     )
 
 
@@ -240,9 +268,22 @@ def status_transducer(
     )
 
 
+def frame_transducer(signal: Signal) -> tuple[str, object]:
+    """T3's transducer for the frame channel.
+
+    It describes nothing for T3 to ask about: a frame is recalled when the mind
+    asks for it, by its tags, not on its own arrival.
+    """
+    return (FRAME_INFO_TYPE, signal.raw_payload)
+
+
 def transducers() -> dict[str, object]:
     """The per-channel transducers this host declares (T3, DECIDE@IMPL)."""
-    return {VISION_CHANNEL: thing_transducer, STATUS_CHANNEL: status_transducer}
+    return {
+        VISION_CHANNEL: thing_transducer,
+        STATUS_CHANNEL: status_transducer,
+        FRAME_CHANNEL: frame_transducer,
+    }
 
 
 # The class of data a region return is, once it is a datum of its own (§9
@@ -250,6 +291,7 @@ def transducers() -> dict[str, object]:
 OBSERVATION_DOMAIN: Final = "observation"
 THING_KIND: Final = "thing"
 STATUS_KIND: Final = "status"
+FRAME_KIND: Final = "frame"
 
 
 def admit(signal: Signal) -> HostDatum | None:
@@ -270,6 +312,11 @@ def admit(signal: Signal) -> HostDatum | None:
         open_tags = {
             "domain": OBSERVATION_DOMAIN, "kind": STATUS_KIND,
             "source": STATUS_CHANNEL, "object": STATUS_OBJECT,
+        }
+    elif signal.source_id == FRAME_CHANNEL:
+        open_tags = {
+            "domain": OBSERVATION_DOMAIN, "kind": FRAME_KIND,
+            "source": FRAME_CHANNEL, "sense": VISION_SENSE,
         }
     else:
         return None

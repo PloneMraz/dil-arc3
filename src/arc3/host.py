@@ -41,7 +41,7 @@ from dil.loop.layers.t2 import Emission
 
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
-from .observe import STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
+from .observe import FRAME_CHANNEL, STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
 from .prior import ArcRules
 from .seeing import Seeing, create_seeing
 
@@ -63,7 +63,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "_seeing", "delivered",
+        "_seeing", "delivered", "_frames",
     )
 
     def __init__(
@@ -72,7 +72,12 @@ class Arc3Source:
         game_action_cls: Any,
         action_budget: int = DEFAULT_ACTION_BUDGET,
         seeing: Seeing | None = None,
+        frames: bool = False,
     ) -> None:
+        # Whether the whole frame is carried as a signal of its own — for a mind
+        # that predicts it (a world model). Off, the body reports what it always
+        # has, and every run without a world model is unchanged.
+        self._frames = frames
         # The host holds NO model and does no interpreting. It carries the mind's
         # perceptual stage, `seeing`, and calls it once per cycle the way a nerve
         # carries what the eye has processed: the reading — which piece is which
@@ -116,7 +121,8 @@ class Arc3Source:
             return None
 
         host_input = observe(
-            self._prev, self._pending, self._frame, t=self._t, seeing=self._seeing
+            self._prev, self._pending, self._frame, t=self._t, seeing=self._seeing,
+            frames=self._frames,
         )
         self._t += 1
         self._pending = None
@@ -175,6 +181,7 @@ def declaration(
     game_id: str,
     store_root: str | None = None,
     prior: PreexistingMemory | None = None,
+    frames: bool = False,
 ) -> HostDeclaration:
     """What this host declares about itself, read once by the precondition gate.
 
@@ -203,6 +210,8 @@ def declaration(
                 id=STATUS_CHANNEL,
                 can_return=True,
             ),
+            # The whole frame, when the host carries it for a world model.
+            *((ChannelDeclaration(id=FRAME_CHANNEL, can_return=True),) if frames else ()),
         ),
         store=StoreDeclaration(
             persists_across_cycles=True,
@@ -225,8 +234,9 @@ def create_source(
     game_action_cls: Any,
     action_budget: int = DEFAULT_ACTION_BUDGET,
     seeing: Seeing | None = None,
+    frames: bool = False,
 ) -> Arc3Source:
-    return Arc3Source(env, game_action_cls, action_budget, seeing)
+    return Arc3Source(env, game_action_cls, action_budget, seeing, frames)
 
 
 __all__ = [
