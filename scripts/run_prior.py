@@ -11,6 +11,7 @@ from arc_agi import OperationMode
 from arcengine import GameAction
 
 from arc3 import transducers
+from arc3.observe import admit
 from arc3.host import create_source, declaration
 from arc3.mind import create_mind, predict_rule
 from arc3.respond import least_resolved
@@ -30,6 +31,8 @@ from dil.store.event_log import create_event_log
 
 game = sys.argv[1] if len(sys.argv) > 1 else "ls20"
 budget = int(sys.argv[2]) if len(sys.argv) > 2 else 60
+# "admit": keep every region return as a datum of its own (see arc3.observe.admit).
+admitting = len(sys.argv) > 3 and sys.argv[3] == "admit"
 
 arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
 mind = create_mind()
@@ -71,6 +74,7 @@ store_root = tempfile.mkdtemp(prefix=f"prior-{game}-", dir=str(DATA))
 daemon = Daemon(
     host=declaration(game, store_root=store_root), source=source, layers=layers, glob=glob,
     initial_emission=Emission(action=None), now=now, respond=least_resolved(),
+    admit=admit if admitting else None,
 )
 gate = daemon.start()
 rep = daemon._requisitioned
@@ -104,7 +108,8 @@ fp = glob.current().params
 print(f"  field (per action)    : {({k: round(v,2) for k,v in sorted(fp.items()) if k.startswith(('progress:','valence:'))})}")
 print(f"  field (facts)         : {({k: round(v,2) for k,v in sorted(fp.items()) if not k.startswith(('progress:','valence:'))})}")
 print(f"  scars by source       : {dict(scars.most_common(8))}")
-print(f"  total scars           : {sum(scars.values())}  (absences: {scars.get('region',0)})")
+absences = sum(1 for r in recs if type(r).__name__ == "EventRecord" and r.event.mismatch_kind == "absence")
+print(f"  total scars           : {sum(scars.values())}  (absences: {absences})")
 print(f"  moves committed       : {dict(collections.Counter((m.action_id, m.x, m.y) if m.action_id == 6 else m.action_id for m in source.delivered).most_common(6))}")
 pos = [q for q in positions if q is not None]
 print(f"  mover positions       : {len(set(pos))} distinct over {len(pos)} cycles; last 12: {pos[-12:]}")
@@ -116,3 +121,17 @@ print(f"  directive in mind at  : cycle {directive_at}")
 print(f"  [data] priors now     : {[(k, d.fixed.provenance, d.fixed.cycle_mark) for k, d in daemon._data.entries() if k.startswith('prior:')]}")
 print(f"  T2 agency             : {dict(sorted(agency.items()))}")
 print(f"  final state           : {source.frame.state}  levels={source.frame.levels_completed}")
+
+if admitting:
+    from dil.conformance.checker import check_conformance
+    kept = [(k, d) for k, d in daemon._data.entries() if k.startswith("signal-")]
+    print(f"  region data kept      : {len(kept)}; by provenance "
+          f"{dict(collections.Counter(d.fixed.provenance for _, d in kept))}")
+    named = [r for r in recs if type(r).__name__ == "EventRecord" and r.datum_id]
+    print(f"  scars naming a datum  : {len(named)} of {sum(scars.values())}")
+    back = [t.datum_id for r in recs if getattr(r, "activity_kind", None) == "cycle-seal"
+            for t in r.activity.recalled if t.datum_id.startswith("signal-")]
+    print(f"  region data recalled  : {len(back)} {back[:6]}")
+    print(f"  [event] records       : {len(recs)}")
+    report = check_conformance(daemon._events)
+    print(f"  conformance           : {[(r.id, r.verdict) for r in report.results]}")

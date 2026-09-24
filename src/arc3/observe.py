@@ -39,6 +39,7 @@ from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import ObservedChange
 from dil.loop.layers.t8 import ObservedInteraction
 from dil.loop.types import Signal
+from dil.store.tagging_gate import HostDatum
 
 from .action import IllegalMove, Move
 from .frame import Frame
@@ -242,3 +243,34 @@ def status_transducer(
 def transducers() -> dict[str, object]:
     """The per-channel transducers this host declares (T3, DECIDE@IMPL)."""
     return {VISION_CHANNEL: thing_transducer, STATUS_CHANNEL: status_transducer}
+
+
+# The class of data a region return is, once it is a datum of its own (§9
+# `domain`). The prior's is the rules it was told; this is what it met.
+OBSERVATION_DOMAIN: Final = "observation"
+THING_KIND: Final = "thing"
+STATUS_KIND: Final = "status"
+
+
+def admit(signal: Signal) -> HostDatum | None:
+    """Which region returns this host keeps as data of their own (§10, DECIDE@IMPL).
+
+    All of them: what the region returned is what the character met, and a
+    return it does not keep can neither be asked for later nor be the datum that
+    collides when the expectation about it fails. Each carries the channel's own
+    description — the same `object` and `sense` values T3 asks with and the
+    prior is tagged with, because it is about the same things (tag F).
+    """
+    if signal.source_id == VISION_CHANNEL:
+        open_tags = {
+            "domain": OBSERVATION_DOMAIN, "kind": THING_KIND,
+            "source": VISION_CHANNEL, "object": THINGS_OBJECT, "sense": VISION_SENSE,
+        }
+    elif signal.source_id == STATUS_CHANNEL:
+        open_tags = {
+            "domain": OBSERVATION_DOMAIN, "kind": STATUS_KIND,
+            "source": STATUS_CHANNEL, "object": STATUS_OBJECT,
+        }
+    else:
+        return None
+    return HostDatum(payload=signal.raw_payload, admitting_layer=1, open=open_tags)

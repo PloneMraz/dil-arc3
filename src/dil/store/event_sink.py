@@ -97,20 +97,36 @@ def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
     # Written only when something was recalled, so every other line is exactly
     # what it was (and matches dil-core's form byte for byte).
     if activity.recalled:
-        out["recalled"] = [
-            {
-                "datumId": r.datum_id,
-                "fixed": {
-                    "timestamp": r.fixed.timestamp,
-                    "cycleMark": r.fixed.cycle_mark,
-                    "provenance": r.fixed.provenance,
-                    "floorTag": r.fixed.floor_tag,
-                },
-                "open": dict(r.open),
-            }
-            for r in activity.recalled
-        ]
+        out["recalled"] = [_tags_dict(r) for r in activity.recalled]
+    if activity.admitted:
+        out["admitted"] = [_tags_dict(r) for r in activity.admitted]
     return out
+
+
+def _tags_dict(r: RecalledTags) -> dict[str, Any]:
+    return {
+        "datumId": r.datum_id,
+        "fixed": {
+            "timestamp": r.fixed.timestamp,
+            "cycleMark": r.fixed.cycle_mark,
+            "provenance": r.fixed.provenance,
+            "floorTag": r.fixed.floor_tag,
+        },
+        "open": dict(r.open),
+    }
+
+
+def _tags_of(r: dict[str, Any]) -> RecalledTags:
+    return RecalledTags(
+        datum_id=r["datumId"],
+        fixed=FixedTags(
+            timestamp=r["fixed"]["timestamp"],
+            cycle_mark=r["fixed"]["cycleMark"],
+            provenance=r["fixed"]["provenance"],
+            floor_tag=r["fixed"]["floorTag"],
+        ),
+        open=dict(r["open"]),
+    )
 
 
 def _datum_form(
@@ -152,7 +168,9 @@ def _datum_form(
 def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
     """Project a LogRecord into its serialized form (tags in fixed order)."""
     if isinstance(rec, EventRecord):
-        return _datum_form("scar", rec.scar, event=rec.event, anchor=rec.anchor)
+        return _datum_form(
+            "scar", rec.scar, event=rec.event, datum_id=rec.datum_id, anchor=rec.anchor
+        )
 
     if isinstance(rec, ManifestRecord):
         return {
@@ -337,6 +355,7 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             ),
             scar=datum,
             anchor=anchor,
+            datum_id=rec.get("datumId"),
         )
 
     act = rec["activity"]
@@ -349,19 +368,8 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             observed=tuple(act["observed"]),
             scars=act["scars"],
             t=act["t"],
-            recalled=tuple(
-                RecalledTags(
-                    datum_id=r["datumId"],
-                    fixed=FixedTags(
-                        timestamp=r["fixed"]["timestamp"],
-                        cycle_mark=r["fixed"]["cycleMark"],
-                        provenance=r["fixed"]["provenance"],
-                        floor_tag=r["fixed"]["floorTag"],
-                    ),
-                    open=dict(r["open"]),
-                )
-                for r in act.get("recalled", ())
-            ),
+            recalled=tuple(_tags_of(r) for r in act.get("recalled", ())),
+            admitted=tuple(_tags_of(r) for r in act.get("admitted", ())),
         ),
         datum=datum,
         anchor=anchor,

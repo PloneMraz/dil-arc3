@@ -73,6 +73,12 @@ class EventRecord:
     scar: TaggedDatum
     anchor: ContextAnchor
     kind: Literal["scar"] = "scar"
+    # DEVIATION from dil-core, declared. The `[data]` id of the datum that
+    # collided, where it is a datum of its own — a region return the host
+    # admitted (see `admit` in the cycle driver). dil-core's only collided datum
+    # is the cycle datum, whose id the provenance line already carries. None,
+    # and not written, otherwise.
+    datum_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +107,12 @@ class ActivityEvent:
     # into the agent's memory"). Empty when nothing was recalled, and then not
     # written at all, so every other record is byte-identical.
     recalled: tuple["RecalledTags", ...] = ()
+    # DEVIATION from dil-core, declared. The full tag set of every region
+    # return the host admitted as a datum this cycle (`admit` in the cycle
+    # driver), as it stands after running. Tags only, no content, for the same
+    # reason as `recalled`. Empty, and then not written, when the host admits
+    # nothing — so a host that does not declare `admit` writes dil-core's form.
+    admitted: tuple["RecalledTags", ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -412,7 +424,12 @@ def record_emission(
     )
 
 
-def record_scar(scar: TaggedDatum, event: ResistEvent, anchor: ContextAnchor) -> EventRecord:
+def record_scar(
+    scar: TaggedDatum,
+    event: ResistEvent,
+    anchor: ContextAnchor,
+    datum_id: str | None = None,
+) -> EventRecord:
     """Build an [event] record from the scar datum that produced it.
 
     The datum MUST be a `scar` (only collision-and-hold reaches the [event] log,
@@ -423,4 +440,4 @@ def record_scar(scar: TaggedDatum, event: ResistEvent, anchor: ContextAnchor) ->
             f'datum is "{scar.fixed.provenance}", not a scar; '
             "only collision-and-hold reaches [event]"
         )
-    return EventRecord(event=event, scar=scar, anchor=anchor)
+    return EventRecord(event=event, scar=scar, anchor=anchor, datum_id=datum_id)

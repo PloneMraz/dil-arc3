@@ -425,10 +425,31 @@ def check_conformance(
             for r in cycle_seals
             for t in r.activity.recalled
         ]
+        # So does a region return the host admitted as a datum of its own
+        # (DEVIATION from dil-core, declared: see `admit` in the cycle driver).
+        admitted_runs = [
+            (t.datum_id, r.activity.cycle)
+            for r in cycle_seals
+            for t in r.activity.admitted
+        ]
         recalled_gap = next(
             (
                 (d, c)
                 for d, c in recalled_runs
+                if not _covers_all_layers(
+                    {
+                        le.layer
+                        for le in layer_exits
+                        if le.datum_id == d and le.cycle_mark == c
+                    }
+                )
+            ),
+            None,
+        )
+        admitted_gap = next(
+            (
+                (d, c)
+                for d, c in admitted_runs
                 if not _covers_all_layers(
                     {
                         le.layer
@@ -455,6 +476,17 @@ def check_conformance(
                     )
                 ]
                 if recalled_runs
+                else []
+            ),
+            *(
+                [
+                    _claim(
+                        "every admitted region datum's path covers T1→T8 in the cycle it arrived",
+                        "trace",
+                        "fail" if admitted_gap else "pass",
+                    )
+                ]
+                if admitted_runs
                 else []
             ),
             _claim(
@@ -723,7 +755,7 @@ def check_conformance(
         tags_seen: dict[tuple[str, int], dict[str, str]] = {}
         for r in cycle_seals:
             tags_seen[(r.datum_id, r.activity.cycle)] = dict(r.datum.open)
-            for t in r.activity.recalled:
+            for t in (*r.activity.recalled, *r.activity.admitted):
                 tags_seen[(t.datum_id, r.activity.cycle)] = dict(t.open)
         unseen_entry = next(
             (

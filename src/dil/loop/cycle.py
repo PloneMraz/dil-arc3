@@ -178,6 +178,12 @@ class RespondContext:
 # Builds the cycle's committed action (DECIDE@IMPL, host-declared).
 RespondPolicy: TypeAlias = Callable[[RespondContext], Any]
 
+# Which region returns become data of their own (§10 store representation,
+# DECIDE@IMPL): the host's declaration for a signal — payload and open tags —
+# or None to leave it as dil-core leaves every signal, information that runs the
+# layers without a datum of its own. See `Cycle.__init__`.
+AdmitPolicy: TypeAlias = Callable[[Signal], HostDatum | None]
+
 
 def default_respond(ctx: RespondContext) -> Any:
     """dil-core's minimal-host response: a marker, carrying no action.
@@ -219,6 +225,9 @@ class _LayerPass:
     # Field contributions declared by any layer this pass (INV-7), each bound to
     # its issuer.
     contributions: tuple[LayerContribution, ...] = ()
+    # T3's units, one per signal and in the signals' order: how the driver finds
+    # which admitted datum a T5 observation came from.
+    units: tuple[InfoUnit, ...] = ()
 
 
 class Cycle:
@@ -228,6 +237,7 @@ class Cycle:
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
         "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
+        "_admit", "_running_admitted",
     )
 
     def __init__(
@@ -241,7 +251,19 @@ class Cycle:
         resume: DriverState | None = None,
         respond: RespondPolicy | None = None,
         recollection: Any = None,
+        admit: AdmitPolicy | None = None,
     ) -> None:
+        # DEVIATION from dil-core, declared. Which region returns become data
+        # of their own, and with which open tags, is the host's to declare:
+        # §10 leaves "store representation" and "selective-write … versus
+        # store-all" to the implementation, and dil-core, having no host, keeps
+        # none — its one datum per cycle is the driver's own cycle datum. A host
+        # that declares `admit` has each signal it accepts enter `[data]` through
+        # the tagging-gate, run as `running`, leave its own line at every layer
+        # it exits, and — when the expectation about it fails — move to `scar`
+        # itself, the ResistEvent naming it. Without `admit`, nothing changes.
+        self._admit = admit
+        self._running_admitted: tuple[str, ...] = ()
         # The host's resistance-retrieval channel (§10), if one is declared. The
         # driver does not call it — T5 does, through its declared PredictRule.
         # The driver only asks which scars it returned, so their return can be
@@ -303,7 +325,7 @@ class Cycle:
         self._events.append(
             record_layer_exit(self._datum_id(), self._cycle, layer, self._cycle_t)
         )
-        for datum_id in self._running_recalled:
+        for datum_id in (*self._running_recalled, *self._running_admitted):
             self._events.append(
                 record_layer_exit(datum_id, self._cycle, layer, self._cycle_t)
             )
@@ -416,6 +438,7 @@ class Cycle:
             crystallized=t2.output.crystallized,
             emissions=emissions,
             contributions=contributions,
+            units=tuple(t3.output.units),
         )
 
     def _pass_multi_stream(
@@ -486,6 +509,7 @@ class Cycle:
             crystallized=t2.output.crystallized,
             emissions=emissions,
             contributions=contributions,
+            units=tuple(t3.output.units),
         )
 
     # ── the cycle ──────────────────────────────────────────────────────────
@@ -588,6 +612,27 @@ class Cycle:
             returned_entity(s) for s in returned if self._data.has(returned_entity(s))
         )
 
+        # prior → running, for each region return the host admits as a datum of
+        # its own (see `admit`). It enters through the tagging-gate like any host
+        # data, and runs now, so it takes this cycle's mark. The region's signals
+        # come first in `host.signals`, so index i is the i-th T3 unit too.
+        admitted_ids: dict[int, str] = {}
+        if self._admit is not None:
+            for i, signal in enumerate(region_input.signals):
+                declared = self._admit(signal)
+                if declared is None:
+                    continue
+                datum_id = f"signal-{self._cycle}-{i}"
+                entered = admit_host_data(declared, self._cycle_t)
+                self._data.put(datum_id, to_running(entered, self._cycle))
+                self._events.append(
+                    record_provenance(
+                        datum_id, self._cycle, "prior", "running", self._cycle_t
+                    )
+                )
+                admitted_ids[i] = datum_id
+        self._running_admitted = tuple(admitted_ids.values())
+
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
             if flow == "single-threaded"
@@ -607,6 +652,24 @@ class Cycle:
                 RecalledTags(datum_id=datum_id, fixed=ran.fixed, open=dict(ran.open))
             )
         self._running_recalled = ()
+
+        # The same for each admitted region return: it left T8 with the cycle
+        # datum, and its tag set — never its content — goes into the record.
+        admitted_tags: list[RecalledTags] = []
+        for datum_id in self._running_admitted:
+            ran = stamp_layer(self._data.get(datum_id), 8)
+            self._data.put(datum_id, ran)
+            admitted_tags.append(
+                RecalledTags(datum_id=datum_id, fixed=ran.fixed, open=dict(ran.open))
+            )
+        self._running_admitted = ()
+        # Which admitted datum each observation came from, by the unit itself:
+        # T4 and T5 carry T3's units through unchanged.
+        datum_of = {
+            id(pass_.units[i]): datum_id
+            for i, datum_id in admitted_ids.items()
+            if i < len(pass_.units)
+        }
 
         # ── §7 crystallization: T2 drew the self/environment distinction ──
         # The one-time act where the from-within standpoint begins. Recorded as a
@@ -804,9 +867,30 @@ class Cycle:
                 )
             )
             for source_id, e in collisions:
+                # Where what collided is a datum of its own, that datum is the
+                # one that collided and held (§9 `running → scar`), and the
+                # record embeds and names it. Otherwise, as in dil-core, the
+                # cycle datum stands for the cycle's collision.
+                collided_id = (
+                    datum_of.get(id(e.observed)) if e.observed is not None else None
+                )
+                collided = scar_datum
+                if collided_id is not None:
+                    held = self._data.get(collided_id)
+                    collided = to_scar(held, True)
+                    self._data.put(collided_id, collided)
+                    self._events.append(
+                        record_provenance(
+                            collided_id,
+                            self._cycle,
+                            held.fixed.provenance,
+                            "scar",
+                            self._cycle_t,
+                        )
+                    )
                 self._events.append(
                     record_scar(
-                        scar_datum,
+                        collided,
                         ResistEvent(
                             source_id=source_id,
                             expected=e.predicted.content,
@@ -817,6 +901,7 @@ class Cycle:
                             t=self._cycle_t,
                         ),
                         anchor,
+                        datum_id=collided_id,
                     )
                 )
                 if source_id not in collision_sources:
@@ -851,6 +936,7 @@ class Cycle:
                     scars=scars,
                     t=self._cycle_t,
                     recalled=tuple(recalled_tags),
+                    admitted=tuple(admitted_tags),
                 ),
                 anchor,
             )
@@ -899,6 +985,7 @@ def create_cycle(
     resume: DriverState | None = None,
     respond: RespondPolicy | None = None,
     recollection: Any = None,
+    admit: AdmitPolicy | None = None,
 ) -> Cycle:
     return Cycle(
         layers=layers,
@@ -910,4 +997,5 @@ def create_cycle(
         resume=resume,
         respond=respond,
         recollection=recollection,
+        admit=admit,
     )

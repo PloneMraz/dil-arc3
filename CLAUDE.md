@@ -1687,6 +1687,33 @@ result; the next ones run inside the loop.
   settled line narrows from "the mind does not emit" to **"the mind does not
   act"**: the one thing it sends out is a question to its own memory, and that
   question is in `[event]`.
+- **Every region return is a datum of its own** (Plone, same day; cost accepted).
+  dil-core is the mechanism and has no host, so it keeps no region data: its one
+  datum per cycle is the driver's own cycle datum (payload a signal count, open
+  tags `domain: cycle`), which is what went to `scar` on any collision, while
+  what actually collided lived only in the ResistEvent. §10 leaves store
+  representation to the implementation, so this is decided here, not in
+  dil-core. DEVIATION from dil-core, declared: the driver takes a host-declared
+  `admit` (Signal → HostDatum | None). A signal it accepts enters `[data]`
+  through the tagging-gate as `signal-<cycle>-<i>`, runs as `running`, leaves a
+  line at every layer it exits, and its tags (never its content) go into the
+  cycle's activity record under `admitted`; when the expectation about it fails,
+  **that datum** moves `running → scar` and the scar record embeds it and names it
+  (`datumId`). The cycle datum still stands for the cycle, as in dil-core. The
+  checker reads `admitted` for C3 (path T1→T8) and C6 (entered through the gate).
+  Without `admit`, every record is dil-core's form byte for byte.
+  `arc3.observe.admit` keeps all of them, tagged with the channel's own `object`
+  and `sense` values plus `domain: observation`, `kind`, `source`.
+
+  Live, `ls20`, 60 cycles (`scripts/run_prior.py ls20 60 admit` against `plain`):
+  moves, positions and scars **identical** in both; 1,142 region data kept (1,122
+  `running`, 20 `scar`); 20 of 20 scar records name their datum; 12,535 `[event]`
+  records; conformance unchanged (C1, C3, C5, C6, C7 pass, C4 partial, C2
+  unverifiable). One consequence to settle: T3's first cues are asked after that
+  cycle's returns are admitted, so 19 of cycle 0's own arrivals came back as
+  "recalled" at cycle 1 — the character recalling what it is seeing.
+  `run_prior.py` also counted absences as scars sourced `region`, which is the
+  status entity's name too; it now counts them by `mismatch_kind` (0 here).
 
 ## Still unverified
 
