@@ -1,29 +1,36 @@
-"""Reflection — read-collision-into-coordinates (protocol §8.4, DECIDE@IMPL tag E).
+"""Reflection — a third party's view, pointed at a place in the agent's trace
+(protocol §8.4, DECIDE@IMPL tag E).
 
 The agent is blind to its own time-derivative (§7): it cannot self-reflect on
 call, and no self-reflection faculty exists here. Reflection is a THIRD PARTY's
-act. The reader looks at the agent's `[event]` log — the one trace a third party
-already reads (§13) — reads a recorded collision into coordinates ("you drifted
-at this point"), and returns the reading through a declared T3 channel; the
-agency-gate classifies it ENV_PUSHED, since the agent never emitted it.
+act: the reader, from its own lens, holds that the agent drifted and says where
+— "you drifted at this point" — and the reading returns through a declared T3
+channel; the agency-gate classifies it ENV_PUSHED, since the agent never
+emitted it.
+
+WHAT A READING IS, AND IS NOT. It is the reader's view, carrying no claim of
+being right (§9): a place in the agent's trace and what the reader makes of it.
+It is NOT the agent's own recorded collision handed back. A collision the agent
+recorded is one it already authored — a source relaying it is compliant and
+re-authorable (§8.3, §8.4) — and the drift a reader is for is the kind the agent
+does not see (§8.2). So the place a reading points at need not hold a scar.
+When the reading collides, the mismatch is between the agent and the reader.
 
 This module supplies the MECHANISM only:
 
-  - `collision_coordinates` — mechanical extraction of scar coordinates a reader
-    can address; the judgment stays the reader's, like the store inspector;
-  - `form_reading` — build a reading that MUST reference a real recorded
-    collision, so a reflection cannot be fabricated about a collision that never
-    happened;
+  - `trace_cycles` — the cycles the agent's trace recorded, the places a reader
+    can point at (read-only; carries no judgment);
+  - `form_reading` — anchor a reading to one of them; a cycle the trace never
+    recorded is refused;
   - `reflection_signal` and `reflection_transducer` — the T3 ingestion convention.
 
-WHO the reader is stays deployment-open in the protocol, like tag D. For this
-project it is settled (tag E, CLAUDE.md): an onlooker judging the agent's
-behaviour (`arc3/onlooker.py`). This module is not used by it. Reading the agent's
-own recorded collisions back to it only retells what the agent already wrote —
-what the reader must bring is its own view, and the collision is between the two
-(Plone, 2026-09-25; LOG.md).
+WHO the reader is, and its lens, stay deployment-open in the protocol, like tag
+D. For this project it is settled (tag E, CLAUDE.md): an onlooker judging the
+agent's behaviour (`arc3/onlooker.py`), which points at the cycle a pattern of
+moves began.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core `3a186b4`, which replaced the reading of a recorded
+collision with this (Plone, 2026-09-25; LOG.md).
 """
 
 from __future__ import annotations
@@ -33,7 +40,7 @@ from typing import Any
 
 from ..loop.types import Signal
 from ..store.event_log import ReadableEventLog
-from ..store.resist_event import EventRecord, MismatchKind
+from ..store.resist_event import CycleSealActivity
 
 
 class ReflectionError(Exception):
@@ -42,75 +49,52 @@ class ReflectionError(Exception):
 
 
 @dataclass(frozen=True, slots=True)
-class CollisionCoordinate:
-    """The address of one recorded collision in the [event] log."""
+class TraceCoordinate:
+    """A place in the agent's trace: one recorded cycle, addressed by its seal."""
 
-    # Position of the record in the log (append order).
-    index: int
-    # The cycle anchored with the record.
     cycle: int
-    source_id: str
-    mismatch_kind: MismatchKind
+    # Position of the cycle's seal in the log (append order) — a stable address.
+    index: int
+    # When the cycle began.
     t: int
 
 
-def collision_coordinates(log: ReadableEventLog) -> list[CollisionCoordinate]:
-    """Mechanically extract the coordinates of every recorded collision.
-
-    For a reader to browse and address. Read-only; carries no judgment.
-    """
-    # Coordinates address SCARS (collisions); the index stays the record's
-    # absolute position in the log, so a coordinate is a stable address.
+def trace_cycles(log: ReadableEventLog) -> list[TraceCoordinate]:
+    """The cycles the agent's trace recorded, oldest first: the places a reader can
+    point at. Read-only; carries no judgment."""
     return [
-        CollisionCoordinate(
-            index=index,
-            cycle=rec.anchor.cycle,
-            source_id=rec.event.source_id,
-            mismatch_kind=rec.event.mismatch_kind,
-            t=rec.event.t,
-        )
+        TraceCoordinate(cycle=rec.activity.cycle, index=index, t=rec.activity.t)
         for index, rec in enumerate(log.all())
-        if isinstance(rec, EventRecord)
+        if isinstance(rec, CycleSealActivity)
     ]
 
 
 @dataclass(frozen=True, slots=True)
 class ReflectionReading:
-    """A third party's reading of one collision, anchored to its coordinate."""
+    """A third party's view of the agent, pointed at a place in its trace."""
 
-    about: CollisionCoordinate
-    # The reader's account of where or why the agent drifted.
+    about: TraceCoordinate
+    # The reader's view — where or why it holds the agent drifted. No verdict.
     reading: object
-    # The reader — an Other in the region — who authored the reading.
+    # The reader — an Other — who holds that view.
     reader_id: str
 
 
 def form_reading(
-    log: ReadableEventLog, index: int, reader_id: str, reading: Any
+    log: ReadableEventLog, cycle: int, reader_id: str, reading: Any
 ) -> ReflectionReading:
-    """Form a reading about the [event] record at `index`.
+    """Point a reading at `cycle` of the agent's trace.
 
-    Raises if no such record exists: a reflection MUST reference a real recorded
-    collision.
+    Raises if the trace recorded no such cycle: a reader cannot point at a place
+    that is not there.
     """
-    records = log.all()
-    rec = records[index] if 0 <= index < len(records) else None
-    if not isinstance(rec, EventRecord):
+    about = next((c for c in trace_cycles(log) if c.cycle == cycle), None)
+    if about is None:
         raise ReflectionError(
-            f"no collision record at index {index}; a reading must reference a "
-            "real recorded collision (not an activity record)"
+            f"the trace recorded no cycle {cycle}; a reading must point at a place "
+            "in the agent's trace"
         )
-    return ReflectionReading(
-        about=CollisionCoordinate(
-            index=index,
-            cycle=rec.anchor.cycle,
-            source_id=rec.event.source_id,
-            mismatch_kind=rec.event.mismatch_kind,
-            t=rec.event.t,
-        ),
-        reading=reading,
-        reader_id=reader_id,
-    )
+    return ReflectionReading(about=about, reading=reading, reader_id=reader_id)
 
 
 def reflection_signal(
@@ -120,7 +104,8 @@ def reflection_signal(
 
     It enters through T3 like any external input — no side door. The payload
     carries the reader as the entity, so T4 binds the reading to the
-    reader-as-Other.
+    reader-as-Other. The reading travels as plain data, so it can be held in
+    [data] and in a snapshot.
     """
     return Signal(
         source_id=channel_id,
@@ -130,14 +115,11 @@ def reflection_signal(
 
 
 def reading_payload(reading: ReflectionReading) -> dict[str, Any]:
-    """A reading as plain data, so it can be held in [data] and in a snapshot."""
+    """A reading as plain data."""
     about = reading.about
     return {
         "reader": reading.reader_id,
-        "about": {
-            "index": about.index, "cycle": about.cycle, "source_id": about.source_id,
-            "mismatch_kind": about.mismatch_kind, "t": about.t,
-        },
+        "about": {"cycle": about.cycle, "index": about.index, "t": about.t},
         "reading": reading.reading,
     }
 

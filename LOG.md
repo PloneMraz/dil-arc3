@@ -1786,3 +1786,19 @@ Live, `ls20`, 60 cycles, no model reachable: the policy cycles the four moves
 run's 60 moves past it: it would have said "repeating" at cycle 44 (ACTION1 since
 cycle 40), taken it back at 45, and said it again at 56 (ACTION2 since 52). What
 C7 renders with the model in the loop is not yet measured.
+
+### Reflection fixed in dil-core, ported; the peer removed (Plone, same day)
+
+Approved by Plone: the retelling was in dil-core's mechanism too. There,
+`formReading` required a reading to address a recorded scar and
+`collisionCoordinates` listed only scars, so any reader built on it could only
+hand the agent a collision it had authored. Fixed in dil-core (`3a186b4`,
+changelog `2404e98`, 365 tests): a reading points at a cycle the agent's trace
+recorded, with or without a scar, and carries the reader's own view; a cycle
+the trace never recorded is refused; `traceCycles` replaces
+`collisionCoordinates`; tag E redeclared. The protocol's own phrase in §8.4, "a
+collision read into coordinates", is left as it is.
+
+Ported to `src/dil/runtime/reflection.py` with four tests (this repository had
+none for it). `peer.py`, built wholly on the retelling, was removed with its
+tests. 244 tests.

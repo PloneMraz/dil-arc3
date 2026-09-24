@@ -4,12 +4,10 @@ This is the outermost ring — where DIL meets the host. It declares the live
 Mode-B source (tag D), the reflection mechanism (tag E), and the diversity-loss
 thresholds (§11, conformance criterion 7).
 
-**Tag E is settled for this host, and differently from dil-core's deployment.**
-Reflection needs a third party, and a Kaggle evaluation session has neither a
-network nor a human. The reader here is **another agent in the same run**, which
-tag E's own wording already admits: "WHO reads (a user, another agent, a critic
-service) stays deliberately deployment-open". See `peer.py` for the mechanism and
-for what it does not reach.
+**Tag E is settled for this host.** Reflection needs a third party, and a Kaggle
+evaluation session has neither a network nor a human. The reader here is an
+onlooker — an Other outside the agent, a piece of code judging its behaviour
+(`arc3/onlooker.py`); the mechanism a reading enters by is `reflection.py`.
 
 Ported from dil-core against DIL protocol v0.3.3.
 """
@@ -46,9 +44,9 @@ REFLECTION_MECHANISM: str = (
 # resist. The onlooker's coordinate is the cycle in the agent's behaviour it
 # points at. The declaration it replaces — a peer agent relaying this agent's
 # recorded collisions — only retold them, and two peers echoed each other
-# (LOG.md, 2026-09-25). No internal self-reflection faculty exists, per §8.4. Typed `str` rather than a
-# frozen literal so the conformance checker's "is it still deferred?" comparison
-# stays a genuine runtime read.
+# (LOG.md, 2026-09-25); it was removed. No internal self-reflection faculty
+# exists, per §8.4. Typed `str` rather than a frozen literal so the conformance
+# checker's "is it still deferred?" comparison stays a genuine runtime read.
 
 # DECIDE@IMPL — diversity-loss monitor window and minimum source count (§11).
 DIVERSITY_WINDOW: Final = 8

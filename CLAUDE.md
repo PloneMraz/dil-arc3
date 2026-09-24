@@ -195,8 +195,10 @@ are below.
 
   **Not the peer.** A peer agent relaying this agent's recorded collisions only
   retells what the agent already wrote — a compliant source, re-authorable by the
-  agent (§8.3, §8.4) — and two peers echo each other. `src/dil/runtime/peer.py`
-  stays as ported, its plumbing fixed and tested, and is not used.
+  agent (§8.3, §8.4) — and two peers echo each other. It was removed; the
+  mechanism a reading enters by (`src/dil/runtime/reflection.py`, ported from
+  dil-core `3a186b4`) now points a reader's view at a cycle of the trace, with or
+  without a scar, instead of handing back a recorded collision.
 
 - **Tag H — situation fit.** The frame fits when the grid the mind's program
   predicted equals, cell for cell, the grid the region returned (the last of each
