@@ -157,17 +157,23 @@ else:  # Kaggle unpacked the archive into the dataset: find() gives scripts/, it
 print(sorted(p.name for p in (REPO / "src").iterdir()))''',
     # ── 7 ──
     '''# The run: the agent plays, the model thinks when the expectation fails.
+# Every line goes to run.txt and, as it comes, to this log, so a run in progress
+# shows its cycles instead of hours of silence.
 RUN = W / "run.txt"
 t = time.time()
 with open(RUN, "w") as out:
-    proc = subprocess.run(
-        [sys.executable, str(REPO / "scripts" / "run_game.py"), GAME, str(CYCLES),
+    proc = subprocess.Popen(
+        [sys.executable, "-u", str(REPO / "scripts" / "run_game.py"), GAME, str(CYCLES),
          "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
          "--offline-dir", str(ENVS), "--out", str(W / "store")],
-        stdout=out, stderr=subprocess.STDOUT, cwd=str(REPO))
-print(f"run exit {proc.returncode} after {time.time() - t:.0f}s")
-text = RUN.read_text()
-print("\\n".join(l for l in text.splitlines() if " INFO " not in l)[-12000:])''',
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(REPO))
+    for line in proc.stdout:
+        out.write(line)
+        out.flush()
+        if " INFO " not in line:
+            print(f"[{time.time() - t:6.0f}s] {line}", end="", flush=True)
+    proc.wait()
+print(f"run exit {proc.returncode} after {time.time() - t:.0f}s")''',
     # ── 8 ──
     '''print("==== vLLM throughput lines (last 5)")
 print("\\n".join([l for l in LOG.read_text().splitlines() if "throughput" in l][-5:]))
