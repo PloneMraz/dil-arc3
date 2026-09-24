@@ -1809,7 +1809,7 @@ it took shows only as the gap between T4 and T5.
 
 ### First live run with the model in the loop, this machine (2026-09-24)
 
-`scripts/run_world_model.py ls20 10`, Qwen3.6-35B-A3B IQ4_XS on llama.cpp
+`scripts/run_world_model.py ls20 10` (renamed `run_game.py` since), Qwen3.6-35B-A3B IQ4_XS on llama.cpp
 (CPU + GTX 1050 Ti), no thinking, temperature 0.2. Store:
 `scripts/data/wm-ls20-cobmhzp2/` (git-ignored). Code as of `949883e` — the run
 started before the per-record clock, so its `[event]` still stamps each cycle

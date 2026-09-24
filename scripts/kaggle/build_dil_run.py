@@ -4,8 +4,9 @@
         [--cycles 60] [--max-tokens 12288] [--max-model-len 65536]
 
 Not the probe: the probe ran a model on its own. This runs the agent — DIL's
-loop over a live ARC-AGI-3 game, the host carrying the frame, the world-model
-mind asking the store, writing its program as data, revising it on mismatch —
+loop over a live ARC-AGI-3 game, the host carrying the frame, the one mind —
+the model and the program it writes — asking the store, writing its program as
+data, revising it on mismatch —
 with the model served by vLLM on the competition's RTX Pro 6000, internet off.
 The game is played offline from the competition's own `environment_files`,
 the runtime installed from its own wheelhouse (as Tufa Labs' public notebook
@@ -14,7 +15,7 @@ does). The run's store — `[event]` log, `[data]`, commits — is left in
 
 Writes, under scripts/data/kaggle/dil-run/ (git-ignored):
 
-    dataset/   dil-arc3.tar (src/, scripts/_paths.py, scripts/run_world_model.py),
+    dataset/   dil-arc3.tar (src/, scripts/_paths.py, scripts/run_game.py),
                the model manifests, dataset-metadata.json
                -> kaggle datasets create -p .../dataset      (first time)
                -> kaggle datasets version -p .../dataset -m "..."
@@ -38,7 +39,7 @@ OUT = SCRIPTS / "data" / "kaggle" / "dil-run"
 
 OWNER = "plonemraz"
 DATASET_SLUG = "dil-arc3-src"
-KERNEL_SLUG = "dil-arc3-world-model-run"
+KERNEL_SLUG = "dil-arc3-run"
 WHEELHOUSE = "driessmit1/arc3-vllm-h100-wheelhouse-v3"
 COMPETITION = "arc-prize-2026-arc-agi-3"
 MODELS = {
@@ -152,7 +153,7 @@ if tar.exists():
     with tarfile.open(tar) as tf:
         tf.extractall(W)
 else:  # Kaggle unpacked the archive into the dataset: find() gives scripts/, its parent is the repo
-    shutil.copytree(find("run_world_model.py").parent, REPO)
+    shutil.copytree(find("run_game.py").parent, REPO)
 print(sorted(p.name for p in (REPO / "src").iterdir()))''',
     # ── 7 ──
     '''# The run: the agent plays, the model thinks when the expectation fails.
@@ -160,7 +161,7 @@ RUN = W / "run.txt"
 t = time.time()
 with open(RUN, "w") as out:
     proc = subprocess.run(
-        [sys.executable, str(REPO / "scripts" / "run_world_model.py"), GAME, str(CYCLES),
+        [sys.executable, str(REPO / "scripts" / "run_game.py"), GAME, str(CYCLES),
          "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
          "--offline-dir", str(ENVS), "--out", str(W / "store")],
         stdout=out, stderr=subprocess.STDOUT, cwd=str(REPO))
@@ -186,7 +187,7 @@ def _pack(dest: Path) -> None:
 
     with tarfile.open(dest, "w") as tf:
         tf.add(REPO / "src", arcname="dil-arc3/src", filter=keep)
-        for name in ("_paths.py", "run_world_model.py"):
+        for name in ("_paths.py", "run_game.py"):
             tf.add(SCRIPTS / name, arcname=f"dil-arc3/scripts/{name}")
 
 
@@ -226,7 +227,7 @@ def main() -> None:
     }
     (kernel / "run.ipynb").write_text(json.dumps(nb, indent=1))
     (kernel / "kernel-metadata.json").write_text(json.dumps({
-        "id": f"{OWNER}/{KERNEL_SLUG}", "title": "dil-arc3 world-model run",
+        "id": f"{OWNER}/{KERNEL_SLUG}", "title": "dil-arc3 run",
         "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
         "is_private": True, "enable_gpu": True, "enable_tpu": False, "enable_internet": False,
         "machine_shape": "NvidiaRtxPro6000", "keywords": [],

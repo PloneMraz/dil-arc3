@@ -256,7 +256,7 @@ uv run --with pytest python -m pytest tests/ -q
 
 # a live game, with the model served at an OpenAI-compatible endpoint
 PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
-$PY scripts/run_world_model.py ls20 10 --endpoint http://127.0.0.1:8080/v1
+$PY scripts/run_game.py ls20 10 --endpoint http://127.0.0.1:8080/v1
 ```
 
 Playing a game needs the ARC-AGI-3 environment, which is not vendored here: point
@@ -271,7 +271,7 @@ from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.respond import least_resolved
 ```
 
-`scripts/run_world_model.py` shows the whole wiring; `src/arc3/decisions.py`
+`scripts/run_game.py` shows the whole wiring; `src/arc3/decisions.py`
 records what this host declares for the protocol's deferred constants.
 
 ## Layout

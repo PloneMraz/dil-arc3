@@ -1,6 +1,6 @@
 """A live game with the one mind in the loop: the model thinks, DIL runs.
 
-    $PY scripts/run_world_model.py GAME CYCLES --endpoint URL [--model NAME]
+    $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
         [--max-tokens N] [--think] [--out DIR]
 
 The host carries the whole frame; the mind predicts it with the program the
@@ -63,7 +63,7 @@ layers = Layers(
     t5=create_t5(predict=mind_rule(wm)), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
-store_root = a.out or tempfile.mkdtemp(prefix=f"wm-{a.game}-", dir=str(DATA))
+store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
 daemon = Daemon(
     host=declaration(a.game, store_root=store_root), source=source, layers=layers,
     glob=create_glob_mod(), initial_emission=Emission(action=None), respond=least_resolved(),
