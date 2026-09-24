@@ -1862,6 +1862,41 @@ chose (b) with the trace closed:
 
 287 tests.
 
+### One mind, and it is the model (Plone, 2026-09-24)
+
+The run that put the model in the loop had wrapped it around the older mind
+instead of replacing it: the frame went to the model's program, everything else
+— "things" a computation of the grid had found, and the region's status — to the
+counting mind, and only the counting mind's readings reached the field the self
+chooses from. Plone: two brains in one body is off the design — which of them
+would the self crystallize from? One mind; use the model and nothing muddled.
+
+- **Removed**: `perceive.py`, `seeing.py`, `interpret.py` (the computation of the
+  grid into things) and the counting `Mind` with `predict_rule`, with their tests.
+  Their code is at `b7b64d3`; the scripts that measured them run there.
+- **The host takes in and computes nothing**: two signals a cycle — the frame
+  (both grid stacks and the move, as returned) and the region's status. Frame
+  datums are tagged `sense: vision`; a status is about the region's status, its
+  levels and its actions.
+- **The one mind** (`src/arc3/mind.py`, formerly `world_model.py`): the model and
+  its program predict the frame; the status keeps the standing expectation (it
+  stays as it was — the absence of an understanding, not a second one); what the
+  region says is read against the recalled directive. Per action it reports to
+  the field `resolved`, `progress` and `valence`, all from the program's hold on
+  the frame and the region's answers — what `respond.py` reads, unchanged.
+- **Terminology, settled with Plone**: seeing is the eye's, computing is the
+  brain's. The host is the eye — it takes the signal in; the mind computes and
+  interprets. Never name a computation of the mind with a verb of the senses: the
+  old `seeing.py` did that, and the misname hid a second mind inside the host.
+- Consequence to watch: nothing that arrives is about "things" now, so the prior
+  item about the world's things is never recalled; the one about seeing is, on the
+  first frame.
+
+Offline check before any GPU: three cycles, the mind asked the store on each
+mismatch, the field carried its readings per action, conformance unchanged, 156
+`[event]` records for three cycles (468 for two before, most of them the thing
+data). 234 tests.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public

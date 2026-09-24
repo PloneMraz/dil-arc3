@@ -1,34 +1,27 @@
 """The bridge: what the host carries inward, and nothing more.
 
-The host is the body. It receives signals and carries them; it does not
-conclude. Everything that reads the signal — finding the things in it
-(`perceive.py`), reading what became of them (`interpret.py`) — is the model's
-work, and the host calls into it the way a nervous system carries what the eye
-has already processed. What travels inward is one signal per Other, on the
-declared channels, through T3.
+The host is the body. Like an eye it takes the signal in — the frame the engine
+returns, read and gated by `frame.py` — and carries it inward; it computes
+nothing from it. Working out what the grid means is the mind's, and the mind is
+one: the program the model writes (`mind.py`).
 
-WHAT THIS REPLACES, AND WHY. The earlier version sent ONE signal per cycle,
-carrying a finished frame-level interpretation, bound to an entity that was the
-ACTION just taken. §8.4 defines an entity as "an other-entity the agent does not
-control", and an action is not that. Measured, the consequences were exact:
+Two signals travel each cycle, on two channels, through T3:
 
-  - T8 produced RelValue = 0 and SocialEdge = 0 over every cycle of a real run.
-    `RelValue` needs N >= 2 and there was never more than one Other; two buttons
-    cannot have an Other-to-Other interaction with no self present.
-  - T7's absences were meaningless — 444 of 481 scars — because an affordance
-    does not return on its own, so asking whether it fell silent was the wrong
-    question. Attention patched the symptom.
+  - **the frame** — the stack of grids before the move and the stack after, and
+    the move between, exactly as the engine returned them. It is what the mind
+    predicts.
+  - **the region's status** — the game speaking about itself: its state, the
+    change in its level count, what it offers next. The agent controls none of
+    it, so it is an Other's report, and the self reads from it what may be done.
 
-Now: **entity is a thing, context is the action**. The Other is what is out
-there; what the agent just did is the situation it is in. Measured on the same
-316 transitions the old mapping was measured on, prediction went 94% -> 93% on
-`ls20` and 69% -> 85% on `vc33` — and the hand-coded landing-patch feature that
-carried the old `ls20` number is gone.
-
-THE REGION IS AN OTHER TOO. Its state and level counter are the game speaking
-about itself, and the agent controls neither. They are not properties of any
-thing in the grid, so they travel as their own entity rather than being folded
-into one.
+WHAT THIS REPLACED, 2026-09-24. The host used to call into a computation of the
+grid — `perceive.py` found pieces, `seeing.py` followed them across frames,
+`interpret.py` read what became of them — and send one signal per "thing" it
+found. That computation was a second mind: the grid read one way by counting
+things and another by the model's program, two understandings of one world that
+never met, and only the first reached the self. It was also misnamed: seeing is
+the eye's; what those modules did was compute. They are gone; the host takes in,
+the mind computes.
 """
 
 from __future__ import annotations
@@ -37,48 +30,36 @@ from typing import Final
 
 from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import ObservedChange
-from dil.loop.layers.t8 import ObservedInteraction
 from dil.loop.types import Signal
 from dil.store.tagging_gate import HostDatum
 
 from .action import IllegalMove, Move
 from .frame import Frame
-from .interpret import REGION_ENTITY, ThingChange, change_value, region_status
-from .seeing import Seeing, create_seeing
 
-# The channel things arrive on — the agent's sight of the grid.
-VISION_CHANNEL: Final = "arc3-vision"
+# The channel the frame arrives on: the pair of grid stacks the host took in,
+# before and after the move, as they are.
+FRAME_CHANNEL: Final = "arc3-frame"
+FRAME_ENTITY: Final = "frame"
 # The channel the region's own status arrives on. A separate channel because it
 # is a separate kind of signal, which is what T3's content-typing is for.
 STATUS_CHANNEL: Final = "arc3-status"
-# The channel the whole frame arrives on, when the host is asked to carry it: the
-# pair of grid stacks it observed, before and after the move, as they are. It is
-# what a world model of the game predicts, so it is carried only for a mind that
-# has one (see `observe(frames=...)`).
-FRAME_CHANNEL: Final = "arc3-frame"
-FRAME_ENTITY: Final = "frame"
+# The Other that is the game itself: its state and level counter.
+REGION_ENTITY: Final = "region"
 
 # The info-types the transducers stamp.
-THING_INFO_TYPE: Final = "thing-change"
-STATUS_INFO_TYPE: Final = "region-status"
 FRAME_INFO_TYPE: Final = "frame"
+STATUS_INFO_TYPE: Final = "region-status"
 
 # The id of the one self-written change: the agent's own move, observed back.
 SELF_MOVE_CHANGE: Final = "self:move"
 
 
 def action_context(move: Move) -> str:
-    """The situation a thing's change is read against: what the agent just did.
+    """What the agent just did, as the situation an arrival is read against.
 
-    This is where the affordance went. It is not an entity — the agent is not an
-    Other to itself — it is the **action channel**, and an action channel names a
-    context, not a thing that returns.
-
-    ACTION6's coordinates are deliberately not part of it. Folding them in would
-    make 4096 contexts that each recur once, and nothing would accrue. Declared
-    cost: under ACTION6 the outcome varies with a coordinate the context does not
-    carry, so its expectations stay unstable and the loop registers that as
-    persistent resistance rather than as learning.
+    Not an entity — the agent is not an Other to itself — but the action channel,
+    which names a context. ACTION6's coordinates are not part of it; they travel
+    in the frame's `move`, where the mind's program reads them.
     """
     return f"action:{move.action_id}"
 
@@ -101,30 +82,12 @@ def move_from_value(value: object) -> Move:
     return Move(int(value["actionId"]), value.get("x"), value.get("y"))
 
 
-def thing_payload(
-    kind: str, change: ThingChange, context: str, situation: str = ""
-) -> dict[str, object]:
-    """One thing's signal.
-
-    `context` is what the agent did; `situation` is what the thing faced when it
-    did it — what lay ahead of it on every side, read off the frame before the
-    move. They are kept apart because they are read for different purposes: the
-    mind predicts from both, and reports how well it is doing per action.
-    """
-    return {
-        "entity": kind,
-        "change": change_value(change),
-        "context": context,
-        "situation": situation,
-    }
-
-
 def frame_payload(prev: Frame, move: Move, now: Frame, context: str) -> dict[str, object]:
-    """The frame signal: the two grid stacks the host observed, and the move between.
+    """The frame signal: the two grid stacks the host took in, and the move between.
 
     Carried as they are — every grid of each stack, no grid chosen as "the" view
-    (`Frame.top` stays a probe's accessor). Which grid a mind reads is the mind's
-    reading, not the body's.
+    (`Frame.top` stays a probe's accessor). Which grid the mind reads is the
+    mind's reading, not the body's.
     """
     return {
         "entity": FRAME_ENTITY,
@@ -135,122 +98,76 @@ def frame_payload(prev: Frame, move: Move, now: Frame, context: str) -> dict[str
     }
 
 
-def observe(
-    prev: Frame, move: Move, now: Frame, t: int, seeing: Seeing | None = None,
-    frames: bool = False,
-) -> HostCycleInput:
-    """One cycle's input: what became of each Other, and what the agent did.
+def region_status(prev: Frame, now: Frame) -> dict[str, object]:
+    """What the region itself reported, from the two frames it returned.
+
+    The game's state and level counter are the region speaking about itself; the
+    agent controls neither, so they belong to an Other — this one.
+    """
+    return {
+        "stateFrom": prev.state,
+        "stateTo": now.state,
+        "levelsDelta": now.levels_completed - prev.levels_completed,
+        "depthDelta": now.depth - prev.depth,
+    }
+
+
+def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
+    """One cycle's input: the frame the region returned, and its report on itself.
 
     `prev` is taken as an argument rather than looked up, because a change is a
-    relation between two frames and it must be computed from the pair the caller
-    actually observed.
-
-    `seeing` is the mind's perceptual stage, and it carries memory — which piece
-    is which across frames, and which pieces move as one. The body holds it and
-    calls it the way a nerve carries what the eye has processed; it does not
-    interpret anything itself. A fresh one is made if none is given, which is
-    right for a single transition and wrong for a run: without memory every
-    frame's pieces are strangers.
+    relation between two frames and must be read from the pair the host took in.
     """
     context = action_context(move)
-    scene = (seeing if seeing is not None else create_seeing()).look(prev, now)
-
-    signals: list[Signal] = [
-        Signal(
-            source_id=VISION_CHANNEL,
-            # `entity` is what T4's default resolver binds on. Without it every
-            # thing would bind to STRANGER and collapse into one.
-            raw_payload=thing_payload(thing.entity, thing.change, context, thing.ahead),
-            t=t,
-        )
-        # Sorted so a cycle's signals arrive in a stable order: two runs over the
-        # same frames produce the same trace, which an auditor needs.
-        for thing in sorted(scene.things, key=lambda th: th.entity)
-    ]
-    if frames:
-        signals.append(
-            Signal(source_id=FRAME_CHANNEL, raw_payload=frame_payload(prev, move, now, context), t=t)
-        )
-    signals.append(
+    status = region_status(prev, now)
+    signals = (
+        Signal(source_id=FRAME_CHANNEL, raw_payload=frame_payload(prev, move, now, context), t=t),
         Signal(
             source_id=STATUS_CHANNEL,
             raw_payload={
                 "entity": REGION_ENTITY,
-                "status": region_status(prev, now),
+                "status": status,
                 "context": context,
                 "game": now.game_id,
                 # What the region offers next. The respond policy reads it from
-                # here, because it is the region's report and not a thing's.
+                # here, because it is the region's report.
                 "affords": list(now.available_actions),
             },
             t=t,
-        )
+        ),
     )
-
     return HostCycleInput(
-        signals=tuple(signals),
+        signals=signals,
         changes=(
             # The agent's own act, observed back. T2 matches this against the
             # emission it recorded and tags it SELF_WRITTEN.
             ObservedChange(id=SELF_MOVE_CHANGE, value=move_value(move)),
-            # What the region did. `id` is the entity id T6 reads, so each Other
-            # accrues its own independence evidence.
-            *(
-                ObservedChange(id=thing.entity, value=change_value(thing.change))
-                for thing in sorted(scene.things, key=lambda th: th.entity)
-            ),
-            ObservedChange(id=REGION_ENTITY, value=region_status(prev, now)),
+            # What the region did to itself.
+            ObservedChange(id=REGION_ENTITY, value=status),
         ),
-        # Other-to-Other interactions: contacts made or broken between two things,
-        # read by the mind and carried here. T8 records them as SocialEdges — the
-        # thing the affordance reading could never supply, two buttons being
-        # unable to touch. Standing contacts were measured near-constant and would
-        # have said nothing, so only contacts made or broken travel.
-        interactions=tuple(
-            ObservedInteraction(a_id=a, b_id=b, observed_interaction=kind)
-            for a, b, kind in scene.interactions
-        ),
-        # Which Others the region says are there. T7 registers an absence only
-        # against these — and now that means something: a thing that has gone
-        # from the grid is genuinely absent, which an affordance never could be.
-        afforded=frozenset([REGION_ENTITY, *scene.present, *([FRAME_ENTITY] if frames else [])]),
+        # The Others the region says are there: itself, and the frame it returned.
+        # T7 registers an absence only against these.
+        afforded=frozenset([REGION_ENTITY, FRAME_ENTITY]),
     )
 
 
 # What an arrival is about, on the open-tag dimensions this host declares (tag F,
 # decisions.OPEN_TAG_KEYS). A stored datum carries the same values when it is
-# about the same thing, and that shared description is the whole of how the one
-# comes to mind when the other arrives (§6.4 T3 query).
+# about the same thing, and that shared description is how the one comes to mind
+# when the other arrives (§6.4 T3 query). The prior's items are tagged with them.
 THINGS_OBJECT: Final = "things"
 LEVELS_OBJECT: Final = "levels"
 ACTIONS_OBJECT: Final = "actions"
+STATUS_OBJECT: Final = "region-status"
 VISION_SENSE: Final = "vision"
 
 
-def thing_transducer(
-    signal: Signal,
-) -> tuple[str, object, list[dict[str, str]]]:
-    """T3's transducer for the vision channel.
-
-    A thing's change is about a thing, and it came by sight.
-    """
-    return (
-        THING_INFO_TYPE,
-        signal.raw_payload,
-        [{"object": THINGS_OBJECT}, {"sense": VISION_SENSE}],
-    )
+def frame_transducer(signal: Signal) -> tuple[str, object, list[dict[str, str]]]:
+    """T3's transducer for the frame channel. A frame came by sight."""
+    return (FRAME_INFO_TYPE, signal.raw_payload, [{"sense": VISION_SENSE}])
 
 
-# What a status report is about, on the open-tag dimension `object` (tag F). The
-# directive is tagged with the same value, because it is about the same thing:
-# the states the region reports. That shared description is the whole of how the
-# one comes to mind when the other arrives.
-STATUS_OBJECT: Final = "region-status"
-
-
-def status_transducer(
-    signal: Signal,
-) -> tuple[str, object, list[dict[str, str]]]:
+def status_transducer(signal: Signal) -> tuple[str, object, list[dict[str, str]]]:
     """T3's transducer for the region's status channel.
 
     It also says what the arrival is about, which is what T3 asks the store with
@@ -260,63 +177,38 @@ def status_transducer(
     return (
         STATUS_INFO_TYPE,
         signal.raw_payload,
-        [
-            {"object": STATUS_OBJECT},
-            {"object": LEVELS_OBJECT},
-            {"object": ACTIONS_OBJECT},
-        ],
+        [{"object": STATUS_OBJECT}, {"object": LEVELS_OBJECT}, {"object": ACTIONS_OBJECT}],
     )
-
-
-def frame_transducer(signal: Signal) -> tuple[str, object]:
-    """T3's transducer for the frame channel.
-
-    It describes nothing for T3 to ask about: a frame is recalled when the mind
-    asks for it, by its tags, not on its own arrival.
-    """
-    return (FRAME_INFO_TYPE, signal.raw_payload)
 
 
 def transducers() -> dict[str, object]:
     """The per-channel transducers this host declares (T3, DECIDE@IMPL)."""
-    return {
-        VISION_CHANNEL: thing_transducer,
-        STATUS_CHANNEL: status_transducer,
-        FRAME_CHANNEL: frame_transducer,
-    }
+    return {FRAME_CHANNEL: frame_transducer, STATUS_CHANNEL: status_transducer}
 
 
 # The class of data a region return is, once it is a datum of its own (§9
 # `domain`). The prior's is the rules it was told; this is what it met.
 OBSERVATION_DOMAIN: Final = "observation"
-THING_KIND: Final = "thing"
-STATUS_KIND: Final = "status"
 FRAME_KIND: Final = "frame"
+STATUS_KIND: Final = "status"
 
 
 def admit(signal: Signal) -> HostDatum | None:
     """Which region returns this host keeps as data of their own (§10, DECIDE@IMPL).
 
-    All of them: what the region returned is what the character met, and a
-    return it does not keep can neither be asked for later nor be the datum that
-    collides when the expectation about it fails. Each carries the channel's own
-    description — the same `object` and `sense` values T3 asks with and the
-    prior is tagged with, because it is about the same things (tag F).
+    Both: what the region returned is what the character met, and a return it
+    does not keep can neither be asked for later nor be the datum that collides
+    when the expectation about it fails.
     """
-    if signal.source_id == VISION_CHANNEL:
+    if signal.source_id == FRAME_CHANNEL:
         open_tags = {
-            "domain": OBSERVATION_DOMAIN, "kind": THING_KIND,
-            "source": VISION_CHANNEL, "object": THINGS_OBJECT, "sense": VISION_SENSE,
+            "domain": OBSERVATION_DOMAIN, "kind": FRAME_KIND,
+            "source": FRAME_CHANNEL, "sense": VISION_SENSE,
         }
     elif signal.source_id == STATUS_CHANNEL:
         open_tags = {
             "domain": OBSERVATION_DOMAIN, "kind": STATUS_KIND,
             "source": STATUS_CHANNEL, "object": STATUS_OBJECT,
-        }
-    elif signal.source_id == FRAME_CHANNEL:
-        open_tags = {
-            "domain": OBSERVATION_DOMAIN, "kind": FRAME_KIND,
-            "source": FRAME_CHANNEL, "sense": VISION_SENSE,
         }
     else:
         return None

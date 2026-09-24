@@ -9,15 +9,14 @@ directive reaches the mind by the protocol's road, not a side door.
 
 from __future__ import annotations
 
-from arc3.interpret import REGION_ENTITY
-from arc3.mind import create_mind, predict_rule, region_valence
-from arc3.observe import STATUS_CHANNEL, VISION_CHANNEL, transducers
+from arc3.mind import create_mind, mind_rule, region_valence
+from arc3.observe import FRAME_CHANNEL, REGION_ENTITY, STATUS_CHANNEL, admit, transducers
 from arc3.prior import DIRECTIVE, RULES
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
 from dil.loop.layers.t2 import Emission, create_t2
-from dil.loop.layers.t3 import create_t3
+from dil.loop.layers.t3 import STORE_CHANNEL, create_t3
 from dil.loop.layers.t4 import create_t4
 from dil.loop.layers.t5 import create_t5
 from dil.loop.layers.t6 import create_t6
@@ -53,26 +52,26 @@ def test_the_directive_says_which_answers_are_toward_and_which_away():
 
 def test_the_mind_takes_up_a_recalled_directive_and_nothing_else():
     mind = create_mind()
-    mind.recall({"entity": "prior:world", "payload": {"says": []}})
+    mind.take_return({"entity": "prior:world", "payload": {"says": []}, "open": {}}, None)
     assert mind.directive() is None
-    mind.recall({"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload})
+    mind.take_return({"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}, None)
     assert mind.directive() == DIRECTIVE.payload
 
 
 def test_a_recalled_datum_is_read_not_predicted_as_an_other():
     mind = create_mind()
-    rule = predict_rule(mind)
+    rule = mind_rule(mind)
     from dil.loop.types import InfoUnit, RefFrame
 
     unit = InfoUnit(
-        content={"infoType": "raw", "channel": "store",
-                 "value": {"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload}},
-        ref_frame=RefFrame(bound_layer=3, ref="channel:store"),
+        content={"infoType": "raw", "channel": STORE_CHANNEL,
+                 "value": {"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}},
+        ref_frame=RefFrame(bound_layer=3, ref=f"channel:{STORE_CHANNEL}"),
         t=1,
     )
     assert rule(DIRECTIVE.id, (), unit) is unit
     assert mind.directive() == DIRECTIVE.payload
-    assert mind.contexts_known() == 0, "it did not become an Other the mind predicts"
+    assert mind.frame_calls == 0 and mind.valence("action:1") is None, "it did not become an Other the mind predicts"
 
 
 # ── end to end: status arrives, the directive is recalled, the mind reads it ──
@@ -100,7 +99,7 @@ def test_the_first_status_report_brings_the_directive_to_mind():
     data, events = _store_with_rules(), create_event_log()
     layers = Layers(
         t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-        t5=create_t5(predict=predict_rule(mind)), t6=create_t6(), t7=create_t7(),
+        t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(),
         t8=create_t8(),
     )
     cycle = create_cycle(layers=layers, glob=create_glob_mod({}, 0), data=data,
@@ -112,8 +111,8 @@ def test_the_first_status_report_brings_the_directive_to_mind():
     cycle.run(HostCycleInput(signals=(_status(2, NOTHING),)))
     assert mind.directive() == DIRECTIVE.payload
     # A status report is about the region's status, its levels, and what may be
-    # done next: what is about those came to mind; what is about seeing and about
-    # things did not, because nothing has been seen yet.
+    # done next: what is about those came to mind; what is about seeing did not,
+    # because nothing has been seen yet.
     def provenance(key: str) -> str:
         return data.get(f"prior:{key}").fixed.provenance
 
@@ -127,11 +126,15 @@ def test_the_first_status_report_brings_the_directive_to_mind():
     cycle.run(HostCycleInput(signals=(_status(3, LEVEL),)))
     assert mind.valence("action:1") is not None and mind.valence("action:1") > 0
 
-    # The first thing seen brings what is about things, and about seeing.
-    seen = Signal(source_id=VISION_CHANNEL, raw_payload={
-        "entity": "thing:9#1", "change": {"null": True}, "context": "action:1"}, t=4)
+    # The first frame seen brings what the character was told about seeing. What
+    # it was told about the world's things has no arrival that is about things
+    # now — the host carries the frame, not things found in it — so it stays
+    # where it was: not asked for is not recalled.
+    grid = [[0, 0], [0, 0]]
+    seen = Signal(source_id=FRAME_CHANNEL, raw_payload={
+        "entity": "frame", "before": [grid], "grids": [grid],
+        "move": {"kind": "move", "actionId": 1, "x": None, "y": None}, "context": "action:1"}, t=4)
     cycle.run(HostCycleInput(signals=(_status(4, NOTHING), seen)))
     cycle.run(HostCycleInput(signals=(_status(5, NOTHING),)))
-    assert provenance("world") == "running"
     assert provenance("seeing") == "running"
-    assert all(data.get(i.id).fixed.provenance == "running" for i in RULES)
+    assert provenance("world") == "prior"

@@ -1,4 +1,4 @@
-"""A live game with the world-model mind in the loop: the model thinks, DIL runs.
+"""A live game with the one mind in the loop: the model thinks, DIL runs.
 
     $PY scripts/run_world_model.py GAME CYCLES --endpoint URL [--model NAME]
         [--max-tokens N] [--think] [--out DIR]
@@ -24,10 +24,9 @@ from arcengine import GameAction
 
 from arc3 import transducers
 from arc3.host import create_source, declaration
-from arc3.mind import create_mind, predict_rule
+from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.observe import admit
 from arc3.respond import least_resolved
-from arc3.world_model import ModelEndpoint, WorldModel, world_model_rule
 from dil.conformance.checker import check_conformance
 from dil.loop.cycle import Layers
 from dil.loop.glob_mod import create_glob_mod
@@ -57,16 +56,16 @@ if a.offline_dir:
     arc = arc_agi.Arcade(operation_mode=OperationMode.OFFLINE, environments_dir=a.offline_dir)
 else:
     arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
-source = create_source(arc.make(a.game), GameAction, action_budget=a.cycles, frames=True)
-wm = WorldModel(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, think=a.think))
+source = create_source(arc.make(a.game), GameAction, action_budget=a.cycles)
+wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, think=a.think))
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-    t5=create_t5(predict=world_model_rule(predict_rule(create_mind()), wm)), t6=create_t6(),
+    t5=create_t5(predict=mind_rule(wm)), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
 store_root = a.out or tempfile.mkdtemp(prefix=f"wm-{a.game}-", dir=str(DATA))
 daemon = Daemon(
-    host=declaration(a.game, store_root=store_root, frames=True), source=source, layers=layers,
+    host=declaration(a.game, store_root=store_root), source=source, layers=layers,
     glob=create_glob_mod(), initial_emission=Emission(action=None), respond=least_resolved(),
     admit=admit,
 )
@@ -108,6 +107,7 @@ print(f"  thoughts              : {[(t.frame_call, t.evidence, t.held_score, t.c
 print(f"  [event] records       : {len(recs)}")
 print(f"  conformance           : {[(r.id, r.verdict) for r in report.results]}")
 print(f"  moves committed       : {dict(collections.Counter(m.action_id for m in source.delivered))}")
+print(f"  field, per action     : {({k: round(v, 3) for k, v in sorted(daemon._glob.current().params.items()) if k.startswith(('resolved:', 'progress:', 'valence:'))})}")
 print(f"  final state           : {source.frame.state}  levels={source.frame.levels_completed}")
 if wm.code:
     print("\n--- the program the mind holds ---\n" + wm.code)

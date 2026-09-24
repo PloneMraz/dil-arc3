@@ -1,264 +1,222 @@
-"""The thinking algorithm, and the bridge it plugs into.
+"""The mind — one, the model and its program — in the loop, with a scripted model.
 
-It supplies the expectation and nothing else — no test here hands it an afforded
-set or asks it for a move, because it can do neither.
+A 3x3 "game": ACTION1 moves the one lit cell a step right. The mind predicts the
+frame from the situation alone, thinks when the expectation fails, writes the
+program as data, learns its datum's id when it arrives, and revises it — and the
+trace a third party reads says so.
 """
 
 from __future__ import annotations
 
-import json
-
-from arc3 import Move, observe
 from arc3.mind import (
-    PROGRESS_WINDOW,
-    CONTEXTS_KNOWN,
-    CONTEXT_NOVELTY,
-    NO_CONTEXT,
-    create_mind,
-    observed_outcome,
-    predict_rule,
-    situation_of,
+    PROGRAM_TAGS, SCARRED_FRAMES, ModelEndpoint, Transition,
+    compile_program, create_mind, mind_rule, render_evidence, run_program,
 )
-from arc3.observe import VISION_CHANNEL, transducers
-from dil.loop.layers.t3 import T3Input, create_t3
-from dil.loop.layers.t4 import STRANGER, T4Input, create_t4
-from dil.loop.types import ModField
-from tests.test_arc3_perceive import framed
-
-
-def thing(r: int, c: int, value: int = 9, **kw):
-    return framed({(r, c): value, (r, c + 1): value}, **kw)
-
-
-def a_cycle(move=Move(1), before=None, after=None):
-    before = before if before is not None else thing(30, 30)
-    after = after if after is not None else thing(25, 30)
-    return observe(before, move, after, t=7)
-
-
-def units_of(host):
-    t3 = create_t3(transducers())
-    return t3.process(
-        T3Input(signals=host.signals), ModField(), lambda *a: None, lambda *a: None
-    ).units
-
-
-NO_OP = lambda *a, **k: None
-
-
-# ── what travels inward ──
-
-
-def test_one_signal_per_Other_and_one_for_the_region():
-    host = a_cycle()
-    entities = [s.raw_payload["entity"] for s in host.signals]
-    assert "region" in entities
-    assert any(e.startswith("thing:") for e in entities)
-    assert len(entities) == len(set(entities)), "one signal per Other"
-
-
-def test_things_arrive_on_the_vision_channel():
-    host = a_cycle()
-    vision = [s for s in host.signals if s.source_id == VISION_CHANNEL]
-    assert vision and all(s.raw_payload["entity"].startswith("thing:") for s in vision)
-
-
-def test_the_context_is_what_the_agent_just_did():
-    host = a_cycle(Move(3))
-    assert all(s.raw_payload["context"] == "action:3" for s in host.signals)
-
-
-def test_action6_coordinates_are_not_part_of_the_context():
-    """Declared: 4096 contexts that each recur once would let nothing accrue."""
-    a = a_cycle(Move(6, 1, 1)).signals[0].raw_payload["context"]
-    b = a_cycle(Move(6, 50, 20)).signals[0].raw_payload["context"]
-    assert a == b == "action:6"
-
-
-def test_the_payload_is_json_shaped_so_t5_can_compare_it():
-    payload = a_cycle().signals[0].raw_payload
-    assert json.loads(json.dumps(payload)) == payload
-
-
-def test_the_grid_never_travels_inward():
-    for signal in a_cycle().signals:
-        assert "grids" not in signal.raw_payload
-        assert "cells" not in signal.raw_payload
-
-
-# ── the loop's own seams bind it ──
-
-
-def test_t4s_default_resolver_binds_every_Other():
-    """No custom resolver needed: the payload carries the `entity` key T4's
-    declared default reads."""
-    bound = create_t4().process(
-        T4Input(units=units_of(a_cycle())), ModField(), NO_OP, NO_OP
-    ).bound
-    ids = [b.entity_id for b in bound]
-    assert STRANGER not in ids
-    assert "region" in ids
-
-
-def test_several_Others_reach_T4_at_once():
-    """What the affordance reading could never do — and why T8 produced nothing.
-    T8's RelValue needs N >= 2."""
-    before = framed({(5, 5): 9, (20, 20): 3, (40, 40): 7})
-    after = framed({(6, 5): 9, (20, 20): 3, (40, 40): 7})
-    bound = create_t4().process(
-        T4Input(units=units_of(observe(before, Move(1), after, t=1))),
-        ModField(), NO_OP, NO_OP,
-    ).bound
-    assert len({b.entity_id for b in bound}) >= 4
-
-
-# ── the mind ──
-
-
-def test_an_unmet_Other_has_nothing_to_predict():
-    assert create_mind().predict("thing:9", "action:1") is None
-
-
-def test_a_situation_met_before_answers_by_majority():
-    mind = create_mind()
-    mind.observe("thing:9", "action:1", {"moved": [0, 0]})
-    mind.observe("thing:9", "action:1", {"moved": [-5, 0]})
-    mind.observe("thing:9", "action:1", {"moved": [-5, 0]})
-    assert mind.predict("thing:9", "action:1") == {"moved": [-5, 0]}
-
-
-def test_an_unmet_situation_falls_back_to_what_the_Other_last_did():
-    mind = create_mind()
-    mind.observe("thing:9", "action:1", {"moved": [-5, 0]})
-    assert mind.predict("thing:9", "action:4") == {"moved": [-5, 0]}
-
-
-def test_two_Others_are_kept_apart():
-    mind = create_mind()
-    mind.observe("thing:9", "action:1", {"moved": [-5, 0]})
-    mind.observe("thing:3", "action:1", {"moved": [0, 0]})
-    assert mind.predict("thing:9", "action:1") != mind.predict("thing:3", "action:1")
-    assert mind.entities_known() == 2
-
-
-# ── reading an observation ──
-
-
-def test_a_thing_reports_a_change_and_the_region_a_status():
-    units = units_of(a_cycle())
-    outcomes = [observed_outcome(u) for u in units]
-    assert all(o is not None for o in outcomes)
-    assert any("moved" in o for o in outcomes if isinstance(o, dict))
-    assert any("levelsDelta" in o for o in outcomes if isinstance(o, dict))
-
-
-def test_the_situation_is_read_off_the_observation():
-    assert situation_of(units_of(a_cycle(Move(2)))[0]) == "action:2"
-
-
-# ── the rule, and the order that is INV-8 in code ──
-
-
-def test_the_first_sighting_predicts_the_observation_itself():
-    rule = predict_rule(create_mind())
-    unit = units_of(a_cycle())[0]
-    assert rule(unit.content["value"]["entity"], (), unit) is unit
-
-
-def test_the_rule_predicts_before_it_accrues():
-    """INV-8 in code. Two cycles in the SAME situation with DIFFERENT outcomes:
-    the second prediction must be the FIRST outcome. If accrual ran first it
-    would be the second — the answer predicting itself."""
-    mind = create_mind()
-    rule = predict_rule(mind)
-
-    first = units_of(a_cycle(Move(1), thing(30, 30), thing(25, 30)))[0]
-    entity = first.content["value"]["entity"]
-    rule(entity, (), first)
-
-    second = units_of(a_cycle(Move(1), thing(30, 30), thing(30, 30)))[0]
-    predicted = rule(entity, (first,), second)
-
-    assert predicted.content["value"]["change"]["moved"] == [-5, 0]
-    assert predicted.content["value"]["change"] != second.content["value"]["change"]
-
-
-def test_only_the_outcome_is_replaced_in_the_predicted_unit():
-    mind = create_mind()
-    rule = predict_rule(mind)
-    first = units_of(a_cycle())[0]
-    entity = first.content["value"]["entity"]
-    rule(entity, (), first)
-    second = units_of(a_cycle())[0]
-    predicted = rule(entity, (first,), second)
-
-    for key in ("entity", "context"):
-        assert predicted.content["value"][key] == second.content["value"][key]
-    assert predicted.ref_frame == second.ref_frame
-
-
-def test_the_rule_reports_its_reading_of_the_situation_upward():
-    mind = create_mind()
-    reported: list[dict[str, float]] = []
-    rule = predict_rule(mind)
-    unit = units_of(a_cycle())[0]
-    entity = unit.content["value"]["entity"]
-
-    rule(entity, (), unit, lambda params, weight=1.0: reported.append(dict(params)))
-    rule(entity, (unit,), units_of(a_cycle())[0],
-         lambda params, weight=1.0: reported.append(dict(params)))
-
-    # The rule reports twice per call — its reading of novelty, then its
-    # per-action readings — so pick out the novelty reports.
-    novelty = [r for r in reported if CONTEXT_NOVELTY in r]
-    assert novelty[0][CONTEXT_NOVELTY] == 1.0, "a situation met for the first time"
-    assert novelty[0][CONTEXTS_KNOWN] == 0.0
-    assert novelty[1][CONTEXT_NOVELTY] == 0.0, "and now familiar"
-    assert novelty[1][CONTEXTS_KNOWN] == 1.0
-    assert any(k.startswith("progress:") for r in reported for k in r), "and progress"
-
-
-def test_a_rule_with_nothing_to_report_still_works():
-    rule = predict_rule(create_mind())
-    unit = units_of(a_cycle())[0]
-    assert rule(unit.content["value"]["entity"], (), unit) is unit
-    assert NO_CONTEXT == ""
-
-
-# ── learning progress, and the noisy-TV failure it exists to avoid ──
-
-
-def test_a_situation_not_yet_used_enough_counts_as_still_being_learned():
-    mind = create_mind()
-    assert mind.progress("action:1") == 1.0
-
-
-def test_noise_that_cannot_be_learned_shows_no_progress():
-    """MEASURED before this existed: curiosity took one action 103 times in 120
-    because its outcome never became predictable. Following progress rather than
-    ignorance, steady unpredictability reads as zero and curiosity moves on."""
-    mind = create_mind()
-    for t in range(2 * PROGRESS_WINDOW):
-        # Half right, half wrong, every use, for ever: irreducible.
-        mind.score("action:1", "a", "a", t)
-        mind.score("action:1", "a", "b", t)
-    assert mind.progress("action:1") == 0.0
-
-
-def test_something_being_learned_shows_progress():
-    mind = create_mind()
-    for t in range(PROGRESS_WINDOW):
-        mind.score("action:1", "a", "b", t)  # wrong at first
-    for t in range(PROGRESS_WINDOW, 2 * PROGRESS_WINDOW):
-        mind.score("action:1", "a", "a", t)  # then right
-    assert mind.progress("action:1") == 1.0
-
-
-def test_a_world_that_changes_under_an_action_is_worth_attention_again():
-    """Absolute progress: accuracy that starts falling counts too."""
-    mind = create_mind()
-    for t in range(PROGRESS_WINDOW):
-        mind.score("action:1", "a", "a", t)
-    for t in range(PROGRESS_WINDOW, 2 * PROGRESS_WINDOW):
-        mind.score("action:1", "a", "b", t)
-    assert mind.progress("action:1") == 1.0
+from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
+from arc3.prior import DIRECTIVE
+from dil.conformance.checker import check_conformance
+from dil.loop.cycle import HostCycleInput, Layers, create_cycle
+from dil.loop.glob_mod import create_glob_mod
+from dil.loop.layers.t1 import create_t1
+from dil.loop.layers.t2 import Emission, create_t2
+from dil.loop.layers.t3 import create_t3, store_query
+from dil.loop.layers.t4 import create_t4
+from dil.loop.layers.t5 import create_t5
+from dil.loop.layers.t6 import create_t6
+from dil.loop.layers.t7 import create_t7
+from dil.loop.layers.t8 import create_t8
+from dil.loop.types import Signal
+from dil.store.data_store import create_data_store
+from dil.store.event_log import create_event_log
+
+RIGHT = '''
+def predict(grid, action, x=None, y=None):
+    g = [row[:] for row in grid]
+    if action == 1:
+        for r, row in enumerate(grid):
+            for c, v in enumerate(row):
+                if v == 1 and c + 1 < len(row):
+                    g[r][c] = 0
+                    g[r][c + 1] = 1
+    return g
+'''
+STILL = '''
+def predict(grid, action, x=None, y=None):
+    return [row[:] for row in grid]
+'''
+
+
+def lit(c: int) -> list[list[int]]:
+    return [[1 if col == c else 0 for col in range(3)], [0, 0, 0], [0, 0, 0]]
+
+
+def frame(before, after, action=1) -> Signal:
+    return Signal(source_id=FRAME_CHANNEL, t=1, raw_payload={
+        "entity": "frame", "before": [before], "grids": [after],
+        "move": {"kind": "move", "actionId": action, "x": None, "y": None},
+        "context": f"action:{action}",
+    })
+
+
+class Script:
+    """A model that answers each prompt with the next program in its list."""
+
+    def __init__(self, *programs: str) -> None:
+        self.programs = list(programs)
+        self.prompts: list[list[dict[str, str]]] = []
+
+    def __call__(self, endpoint, messages):
+        self.prompts.append(messages)
+        code = self.programs.pop(0)
+        return f"```python\n{code}```", {"completion_tokens": 10, "seconds": 0.0}
+
+
+def loop(model: Script):
+    wm = create_mind(ModelEndpoint(), chat_fn=model)
+    rule = mind_rule(wm)
+    data, events = create_data_store(), create_event_log()
+    glob = create_glob_mod({"appraisalGain": 1.0}, 0)
+    cycle = create_cycle(
+        layers=Layers(
+            t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+            t5=create_t5(predict=rule), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+        ),
+        glob=glob, data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    loop.glob = glob
+    return wm, cycle, data, events
+
+
+def run(cycle, *signals):
+    cycle.run(HostCycleInput(signals=tuple(signals)))
+
+
+def of_kind(events, kind):
+    return [r for r in events.all() if getattr(r, "activity_kind", None) == kind]
+
+
+def test_a_program_runs_on_a_transition_and_a_bad_one_is_caught():
+    t = Transition(before=lit(0), action=1, x=None, y=None, after=lit(1))
+    assert run_program(compile_program(RIGHT), t) == lit(1)
+    assert "Starting from this grid" in render_evidence([t])
+
+
+def test_no_mismatch_no_thinking_and_the_standing_expectation_is_nothing_changes():
+    model = Script()
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(0)))
+    assert model.prompts == [] and wm.thoughts == []
+    assert [r for r in events.all() if type(r).__name__ == "EventRecord"] == []
+
+
+def test_a_mismatch_makes_it_ask_and_think_and_the_program_is_written_as_data():
+    model = Script(RIGHT)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))  # nothing-changes fails: think
+
+    assert len(model.prompts) == 1
+    queries = [r.action for r in of_kind(events, "emission") if r.issuing_layer == 5]
+    assert queries == [store_query(SCARRED_FRAMES)], "the mind asked for what collided"
+    written = data.get("written-0-0")
+    assert written.fixed.provenance == "nascent"
+    assert written.payload == {"code": RIGHT, "version": 1}
+    assert written.open == PROGRAM_TAGS
+    assert data.get("signal-0-0").fixed.provenance == "scar", "the frame the expectation failed on"
+
+    written = [t for r in of_kind(events, "cycle-seal") for t in r.activity.written]
+    assert [(w.datum_id, w.built_from) for w in written] == [("written-0-0", ("signal-0-0",))], \
+        "the program says it was built from the frame in front of it"
+
+    run(cycle, frame(lit(1), lit(2)))  # the program now predicts it
+    assert wm.datum_id == "written-0-0", "the mind learned its datum when it arrived"
+    assert data.get("written-0-0").fixed.provenance == "running"
+    assert data.get("signal-1-0").fixed.provenance == "running", "the expectation held: no scar"
+    assert len(model.prompts) == 1, "no mismatch, no thinking"
+
+
+def test_a_better_program_revises_the_datum_and_the_log_says_so():
+    model = Script(STILL, RIGHT)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))  # no program: the first one is kept, wrong as it is
+    run(cycle, frame(lit(1), lit(2)))  # STILL fails; RIGHT explains more, and is kept
+    run(cycle, frame(lit(2), lit(2)))
+
+    assert wm.version == 2 and wm.code == RIGHT
+    revisions = [(r.datum_id, r.cycle_mark) for r in of_kind(events, "revision")]
+    assert revisions == [("written-0-0", 1)]
+    assert data.get("written-0-0").payload == {"code": RIGHT, "version": 2}
+    assert data.get("written-0-0").fixed.provenance == "running", "a revision moves nothing"
+    # The second prompt shows the held program and where it failed, and its
+    # evidence already holds the first frame: T5's window, not a store answer.
+    assert "Your function was run" in model.prompts[1][-1]["content"]
+    assert wm.thoughts[1].evidence == 2
+    written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
+    assert written["written-0-0"] == ("signal-0-0", "signal-1-0"), "the revision names both frames it drew on"
+    assert [t.adopted for t in wm.thoughts] == [True, True]
+
+    report = check_conformance(events)
+    assert [f"{r.id}: {r.detail}" for r in report.results if r.verdict == "fail"] == []
+
+
+def test_a_worse_program_is_not_kept():
+    model = Script(RIGHT, STILL)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))
+    run(cycle, frame(lit(2), lit(0), action=2))  # RIGHT does not know ACTION2 wraps; STILL is no better
+    assert wm.code == RIGHT and wm.version == 1
+    assert of_kind(events, "revision") == []
+    assert wm.thoughts[-1].adopted is False
+
+
+def test_evidence_that_would_not_fit_the_context_is_dropped_oldest_first(monkeypatch):
+    import arc3.mind as wmod
+
+    monkeypatch.setattr(wmod, "MAX_EVIDENCE_CHARS", 200)  # room for one small chain only
+    model = Script(STILL, STILL)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))
+    run(cycle, frame(lit(2), lit(0), action=2))  # not a chain with the first: two full grids
+    assert wm.thoughts[-1].evidence == 1, "the older transition was dropped to fit"
+
+
+# ── what the one mind reports to the field, which is all the self reads ──
+
+
+def status(state: str = "NOT_FINISHED", levels: int = 0, action: int = 1) -> Signal:
+    return Signal(source_id=STATUS_CHANNEL, t=1, raw_payload={
+        "entity": "region", "status": {"stateTo": state, "levelsDelta": levels},
+        "context": f"action:{action}", "affords": [1, 2],
+    })
+
+
+def test_the_mind_reports_per_action_how_its_program_holds_and_how_fast_that_moves():
+    model = Script(RIGHT)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))            # miss: nothing changes was wrong
+    run(cycle, frame(lit(1), lit(2)))            # hit: the program holds
+    field = loop.glob.current().params
+    assert field["resolved:action:1"] == 0.5, "one frame of two after ACTION1 predicted"
+    assert field["progress:action:1"] == 1.0, "too few uses to have a progress: still being learned"
+    assert wm.resolution("action:1") == 0.5
+
+
+def test_progress_is_the_change_between_the_last_two_windows_of_uses():
+    wm = create_mind(ModelEndpoint(), chat_fn=Script())
+    wm._uses["action:1"] = [0, 0, 0, 0, 1, 1, 1, 1]
+    assert wm.progress("action:1") == 1.0, "a revision that suddenly explains it: learning"
+    wm._uses["action:1"] = [1] * 8
+    assert wm.progress("action:1") == 0.0, "held and settled: nothing left to learn here"
+
+
+def test_the_region_is_answered_against_the_directive_and_the_status_is_the_standing_expectation():
+    model = Script()
+    wm, cycle, data, events = loop(model)
+    wm.take_return({"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}, None)
+    run(cycle, status())
+    run(cycle, status(levels=1))                 # a level: toward the objective
+    field = loop.glob.current().params
+    assert field["valence:action:1"] > 0
+    scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
+    assert [r.event.source_id for r in scars] == ["region"], "the status changed against 'it stays as it was'"
+    assert model.prompts == [], "the model is not asked about the status"

@@ -1,88 +1,164 @@
-"""The thinking algorithm: what this Other will do, given what I just did.
+"""The mind — one, and it thinks with a language model.
 
-It plugs into T5's `PredictRule` seam and supplies the **expectation**. It never
-sees the afforded set and never reaches the committed action, so it cannot
-choose. The model thinks; the self acts. What it may do is ask the store, through
-the rule's `ask` — reading memory is thinking's, acting on the region is not.
+The mind is the thinking: the model (Qwen3.6, served over HTTP) and the program
+it writes, `predict(grid, action, x, y) -> grid`, kept as data in the store. It
+supplies expectations and reports how its understanding stands; it never sees
+the afforded set and never reaches the committed action. The self acts.
 
-WHAT IT IS NOT. It is not a downloaded network, for three reasons each sufficient
-on its own: the scored games are unseen and their mechanics are the thing to be
-discovered, so foreign weights predict the wrong world; the evaluation session has
-no network; and INV-5 names the alternative outright — "refeeding the whole game
-history into a context window each step is a load, not an accrual".
+What it thinks about each arrival:
 
-WHAT REPLACED THE EARLIER ONE, AND WHY IT IS SMALLER. The previous model did its
-own perceiving: it reached past the loop into the raw grid and decided for itself
-what was worth looking at — the square a move would land on. That was the body's
-job done by the mind, and it collapsed a 64x64 world into nine situations, all of
-them exhausted in fifteen cycles.
+- **The frame.** Predicted from the situation alone (INV-8): the grid before the
+  move and the move, run through the program; with no program yet, the standing
+  expectation — nothing changes. When the expectation fails, the mind thinks. No
+  trigger, no constant: it asks the store for the frames that collided
+  (`{"kind": "frame", "provenance": "scar"}`) and has the model write a program
+  for what it has — what the store answered last, what T5's window holds of the
+  frame (§6.1 `Expectation.built_from: history_window`), and the transition in
+  front of it. It keeps a new program only if it explains that evidence better.
+  The first program is written anew (`nascent`), each later one revises that
+  datum; every write records what it was built from (v0.3.4) — exactly the
+  evidence the model was shown.
+- **The region's status.** The program does not predict it, so the standing
+  expectation holds: it stays as it was (dil-core's reference law). That is the
+  absence of an understanding, not a second one. What the status says is read
+  against the directive, once recalled.
+- **What the store returns.** The directive (what the character was told it is
+  for), scarred frames it asked for, its own program coming back.
 
-With `perceive.py` finding the pieces and `seeing.py` following each one across
-frames, grouping the pieces that move together into one thing and reading what
-lies ahead of it, none of that is needed here. No mover to discover, no
-background to vote on, no rigidity filter, no translation invariance to
-engineer: a thing is already a thing and its displacement is already its
-displacement. What is left is the part that is actually thinking — associating a
-situation with an outcome and answering for it.
+What it reports upward into the field (INV-7), per action, from its one
+understanding — the program:
 
-Measured on the same 316 real transitions the old model was measured on:
+- `resolved:action:k` — how often the program has predicted the frame after k;
+- `progress:action:k` — how fast that is changing, which curiosity follows;
+- `valence:action:k` — how the region has answered k, read against the directive.
 
-    game    old (hand-coded feature)   stuff by value   tracked things + what lies ahead
-    ls20                         94%              93%                              99%
-    vc33                         69%              85%                              93%
+The self's respond policy reads the field and nothing else.
 
-The hand-coded feature is gone, and nothing was given up for it.
+WHAT THIS REPLACED, 2026-09-24. Until then the loop ran two minds at T5: this one
+for the frame, and an older one — counting what each "thing" did after each
+action, over things a computation of the grid had found — for everything else,
+and only the older one reached the self. Two understandings of one world never
+met, and nothing said which of them the self crystallized from. Settled with
+Plone: one mind, and it is the model.
+
+The model is reached over an OpenAI-compatible HTTP endpoint (llama.cpp locally,
+vLLM on Kaggle) with the standard library only — `dependencies = []` holds.
 """
 
 from __future__ import annotations
 
 import json
-from collections import Counter
-from typing import Any, Final
+import re
+import signal
+import threading
+import time
+import urllib.request
+from dataclasses import dataclass, field
+from typing import Any, Callable, Final
 
 from dil.loop.layers.t3 import STORE_CHANNEL
+from dil.loop.layers.t5 import WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
-# The context for an observation that names none.
-NO_CONTEXT: Final = ""
+from .observe import FRAME_CHANNEL, FRAME_KIND, STATUS_CHANNEL
 
-# Whether this situation is one the model has met before (INV-7, up-channel).
-CONTEXT_NOVELTY: Final = "contextNovelty"
-# How many distinct situations the model is holding (INV-7, up-channel).
-CONTEXTS_KNOWN: Final = "contextsKnown"
+Grid = list[list[int]]
 
-# Per situation — per action, in this host — how well the mind now predicts what
-# the Others do after it (INV-7, up-channel). One key per action: `resolved:action:3`.
+HEX: Final = "0123456789abcdef"
+
+# The cue the mind asks with when its expectation of the frame fails.
+SCARRED_FRAMES: Final = {"kind": FRAME_KIND, "provenance": "scar"}
+
+# The program's own tags (§9 open layer, tag F): what it is, never how good.
+PROGRAM_TAGS: Final = {
+    "domain": "world-model", "kind": "program", "object": FRAME_KIND, "source": "mind",
+}
+
+# DECLARED limits on what one act of thinking can hold, set by the model's
+# context, not by the loop: how many transitions the prompt shows, how many of
+# the program's misses it lists, and how long a program may take on one grid.
+# The field keys the mind reports under, per action (INV-7, up-channel).
 RESOLVED_PREFIX: Final = "resolved:"
-# Per situation, how the REGION has answered it (INV-7, up-channel):
-# `valence:action:3`. This is where want lives. See `region_valence`.
-VALENCE_PREFIX: Final = "valence:"
-# Per situation, how fast the mind is LEARNING it (INV-7, up-channel):
-# `progress:action:3`. This is what curiosity reads. See `Mind.progress`.
 PROGRESS_PREFIX: Final = "progress:"
+VALENCE_PREFIX: Final = "valence:"
 
 # How many uses of an action make one window of learning progress (DECLARED,
-# tunable). Progress compares the last window's accuracy with the one before it,
-# so an action needs twice this many uses before it has a progress at all; until
-# then it counts as still being learned.
+# tunable, carried from the mind this replaced). Progress compares the last
+# window's accuracy with the one before it, so an action needs twice this many
+# uses before it has a progress at all; until then it counts as still being
+# learned, which is also what makes an untried action come first.
 PROGRESS_WINDOW: Final = 4
+
+MAX_SHOWN: Final = 24
+# The evidence rendered must fit the model's context with room to answer: each
+# chain opens with a full 64x64 grid (~4.2k characters), and recalled scars are
+# rarely consecutive. The oldest evidence goes first when it does not fit.
+MAX_EVIDENCE_CHARS: Final = 60_000
+MAX_MISSES_SHOWN: Final = 3
+PROGRAM_SECONDS: Final = 2
+
+PROMPT: Final = """You are looking at a turn-based game on a 64x64 grid. Each cell holds a colour 0-15, shown as one hex digit.
+Actions are ACTION1..ACTION7; ACTION6 also carries a cell (x = column, y = row). Nobody has told you the rules; infer them from the evidence.
+
+{evidence}
+
+Write a Python function
+
+    def predict(grid: list[list[int]], action: int, x: int | None = None, y: int | None = None) -> list[list[int]]:
+
+that returns the next grid for ANY grid of this game and any action. Aim for the general
+mechanism (what moves, how far, what blocks it, anything that changes on every step), not a
+lookup of these particular transitions. Use only the Python standard library. Return only one
+```python code block."""
+
+FEEDBACK: Final = """Your function was run on those transitions. It got {ok}/{n} exactly right.
+Some it got wrong (expected vs yours, as changed cells relative to the grid before):
+{misses}
+
+Revise `predict` so it explains all the evidence. Return only one ```python code block."""
+
+
+@dataclass(frozen=True, slots=True)
+class Transition:
+    """One observed step: the grid before, the move, the grid after (the last of each stack)."""
+
+    before: Grid
+    action: int
+    x: int | None
+    y: int | None
+    after: Grid
+
+    def key(self) -> str:
+        return json.dumps([self.before, self.action, self.x, self.y, self.after])
+
+
+def transition_of(payload: dict[str, Any]) -> Transition | None:
+    """The transition a frame payload records, or None if it is not one.
+
+    The mind reads the last grid of each stack. Which grid of a stack is "the"
+    view is not settled by the host; this is the mind's reading, declared: of the
+    159 recorded `ls20` transitions 157 are single grids.
+    """
+    try:
+        move = payload["move"]
+        return Transition(
+            before=[list(r) for r in payload["before"][-1]],
+            action=int(move["actionId"]),
+            x=move.get("x"),
+            y=move.get("y"),
+            after=[list(r) for r in payload["grids"][-1]],
+        )
+    except (KeyError, IndexError, TypeError, ValueError):
+        return None
 
 
 def region_valence(status: object, directive: dict[str, Any] | None) -> float:
     """How the region answered, read against the directive the mind recalled.
 
-    The signs are not in this code. They were, until 2026-09-23: +1 for a level
-    or a win and -1 for game over, written here and admitted by nobody. That was
-    a directive smuggled in as code — no `prior` tag, no tagging-gate, invisible
-    to anyone reading the store. It now arrives the way the protocol has for it:
-    the host's published rules, admitted as `prior`, recalled by T3 on a cue, run
-    up the layers, and read here.
-
-    What stays in the code is the interpretation — what an objective and a run
-    ended without it MEAN to something that has been told to reach one. What
-    comes from the directive is which of the region's states those are, and what
-    the region counts on the way. With no directive recalled there is nothing to
-    read against, and every answer reads 0: a character with no problem to solve
+    The signs are not in this code: which of the region's states is the
+    objective, which ends the run without it, and what counts on the way come
+    from the directive, admitted as `prior` and recalled on a cue. With no
+    directive recalled every answer reads 0: a character with no problem to solve
     has nothing to prefer.
     """
     if not isinstance(status, dict) or not directive:
@@ -93,311 +169,441 @@ def region_valence(status: object, directive: dict[str, Any] | None) -> float:
         return -1.0
     if objective is not None and status.get("stateTo") == objective:
         return 1.0
-    # The count the directive names as the way there. The region reports its
-    # change as `levelsDelta` (interpret.region_status).
     toward = (directive.get("toward") or {}).get("count")
     if toward == "levels_completed" and (status.get("levelsDelta") or 0) > 0:
         return 1.0
     return 0.0
 
 
-def _key(value: object) -> str:
-    """A hashable form of an observation, for counting.
+# ── rendering what the model is shown ──────────────────────────────────────
 
-    `json.dumps(sort_keys=True)` is the same comparison T5 uses to decide whether
-    an expectation matched, so what this counts as "the same outcome" and what T5
-    counts as "predicted correctly" cannot drift apart.
+
+def show(grid: Grid) -> str:
+    return "\n".join("".join(HEX[v] for v in row) for row in grid)
+
+
+def diff(a: Grid, b: Grid) -> list[tuple[int, int, int, int]]:
+    return [
+        (r, c, a[r][c], b[r][c])
+        for r in range(min(len(a), len(b)))
+        for c in range(min(len(a[r]), len(b[r])))
+        if a[r][c] != b[r][c]
+    ]
+
+
+def _name(t: Transition) -> str:
+    return f"ACTION{t.action}" + (f"(x={t.x},y={t.y})" if t.x is not None else "")
+
+
+def describe_change(before: Grid, after: Grid) -> str:
+    d = diff(before, after)
+    if not d:
+        return "no change"
+    cells = " ".join(f"({r},{c}):{HEX[x]}>{HEX[y]}" for r, c, x, y in d[:120])
+    more = f" ...(+{len(d) - 120} more)" if len(d) > 120 else ""
+    return f"{len(d)} cells changed (row,col):old>new {cells}{more}"
+
+
+def render_evidence(transitions: list[Transition]) -> str:
+    """The transitions as the model reads them: chains, each from a full grid.
+
+    A chain is a run in which each step starts from the grid the one before it
+    produced; each chain opens with its first grid in full, then one line per
+    step as the cells it changed.
     """
-    return json.dumps(value, sort_keys=True, default=str)
+    chains: list[list[Transition]] = []
+    for t in transitions:
+        if chains and chains[-1][-1].after == t.before:
+            chains[-1].append(t)
+        else:
+            chains.append([t])
+    out: list[str] = []
+    n = 0
+    for chain in chains:
+        out.append("Starting from this grid (row 0 first):\n" + show(chain[0].before))
+        for t in chain:
+            out.append(f"#{n} {_name(t)}: {describe_change(t.before, t.after)}")
+            n += 1
+    return "\n".join(out)
+
+
+def extract_code(text: str) -> str | None:
+    m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
+    return m[-1] if m else None
+
+
+# ── running a program ──────────────────────────────────────────────────────
+
+
+class ProgramError(Exception):
+    """The program would not load, raised, ran too long, or returned no grid."""
+
+
+def compile_program(code: str) -> Callable[..., Any]:
+    env: dict[str, Any] = {}
+    try:
+        exec(compile(code, "<world-model>", "exec"), env)  # noqa: S102 — the model's own program
+    except Exception as exc:  # noqa: BLE001
+        raise ProgramError(f"does not load: {exc!r}") from exc
+    fn = env.get("predict")
+    if not callable(fn):
+        raise ProgramError("defines no predict()")
+    return fn
+
+
+def _alarm(_signum: int, _frame: Any) -> None:
+    raise ProgramError(f"ran longer than {PROGRAM_SECONDS}s")
+
+
+def run_program(fn: Callable[..., Any], t: Transition) -> Grid:
+    """The program's grid for a transition's situation; raises ProgramError."""
+    guarded = threading.current_thread() is threading.main_thread()
+    if guarded:
+        old = signal.signal(signal.SIGALRM, _alarm)
+        signal.alarm(PROGRAM_SECONDS)
+    try:
+        grid = [row[:] for row in t.before]
+        try:
+            out = fn(grid, t.action, t.x, t.y)
+        except TypeError:
+            out = fn([row[:] for row in t.before], t.action)
+        if not isinstance(out, list) or not all(isinstance(r, list) for r in out):
+            raise ProgramError("did not return a grid")
+        return [list(r) for r in out]
+    except ProgramError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ProgramError(f"raised {exc!r}") from exc
+    finally:
+        if guarded:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old)
+
+
+def score(fn: Callable[..., Any] | None, evidence: list[Transition]) -> tuple[int, list[tuple[Transition, Grid | str]]]:
+    """Exact matches over the evidence, and each miss with what the program gave."""
+    if fn is None:
+        return 0, [(t, "no program") for t in evidence]
+    ok, misses = 0, []
+    for t in evidence:
+        try:
+            got = run_program(fn, t)
+        except ProgramError as exc:
+            misses.append((t, str(exc)))
+            continue
+        if got == t.after:
+            ok += 1
+        else:
+            misses.append((t, got))
+    return ok, misses
+
+
+# ── the model ──────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class ModelEndpoint:
+    """Where the thinking model is served, and how it is asked."""
+
+    url: str = "http://127.0.0.1:8080/v1"
+    model: str = "local"
+    max_tokens: int = 12288
+    # Measured: 0.2 with thinking off wrote the 95% program on Kaggle (CLAUDE.md,
+    # run 2). Qwen's card recommends 0.7/0.8/20 for non-thinking; declared.
+    temperature: float = 0.2
+    think: bool = False
+    timeout: int = 3600
+
+
+def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, dict[str, Any]]:
+    payload: dict[str, Any] = {
+        "model": endpoint.model, "messages": messages,
+        "temperature": endpoint.temperature, "max_tokens": endpoint.max_tokens,
+    }
+    if not endpoint.think:
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
+    req = urllib.request.Request(
+        endpoint.url.rstrip("/") + "/chat/completions",
+        data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"},
+    )
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=endpoint.timeout) as r:  # noqa: S310 — the operator's endpoint
+        resp = json.loads(r.read())
+    usage = dict(resp.get("usage", {}))
+    usage["seconds"] = round(time.time() - t0, 1)
+    usage["finish_reason"] = resp["choices"][0].get("finish_reason")
+    return resp["choices"][0]["message"].get("content") or "", usage
+
+
+# ── the mind ───────────────────────────────────────────────────────────────
+
+
+@dataclass
+class Thought:
+    """One act of thinking, for the run's report (not the trace: the trace is `[event]`)."""
+
+    frame_call: int
+    evidence: int
+    held_score: int
+    candidate_score: int | None
+    adopted: bool
+    usage: dict[str, Any] = field(default_factory=dict)
+    note: str = ""
 
 
 class Mind:
-    """Associates (Other, situation) with what the Other then did."""
+    """The one mind: a program the model writes, tested, rewritten on mismatch."""
 
-    __slots__ = (
-        "_table", "_last", "_seen_values", "_hits", "_trials", "_valence", "_uses",
-        "_directive",
-    )
-
-    def __init__(self) -> None:
-        # The accrued evidence: per (entity, context), how often each outcome.
-        # Counted by key, with one exemplar kept, so the outcome can be returned.
-        self._table: dict[tuple[str, str], Counter[str]] = {}
-        self._seen_values: dict[str, object] = {}
-        # Persistence fallback, per entity: the last thing it did.
-        self._last: dict[str, object] = {}
-        # Per situation: how often a prediction about an Other came true. Accrued
-        # (INV-5); the field only ever carries the current reading of it.
-        self._hits: Counter[str] = Counter()
-        self._trials: Counter[str] = Counter()
-        # Per situation: every reading of how the region answered it.
-        self._valence: dict[str, list[float]] = {}
-        # Per situation, per use (one cycle in which the action was taken): how
-        # many predictions about Others came true, out of how many. Keyed by the
-        # cycle's time, so one use is every Other seen after one action.
-        self._uses: dict[str, dict[int, list[int]]] = {}
-        # The directive, once recalled from the store and run up the layers.
-        # None until then: nothing has told this character what it is for.
+    def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> None:
+        self.endpoint = endpoint
+        self._chat = chat_fn
+        self.code: str | None = None
+        self._fn: Callable[..., Any] | None = None
+        self.version = 0
+        # The program's datum in `[data]`, learned when it arrives back at T1.
+        self.datum_id: str | None = None
+        # A revision made before the datum's id was known, written on arrival,
+        # with what it was built from.
+        self._unwritten: tuple[dict[str, Any], tuple[object, ...]] | None = None
+        # What the store answered last: the scarred frames it returned. An answer
+        # arrives in one cycle, after that cycle's frame; a new one replaces it.
+        self._recalled: dict[str, Transition] = {}
+        self._recalled_at: int | None = None
+        self.frame_calls = 0
+        self.thoughts: list[Thought] = []
+        # The directive, once recalled and run up the layers; None until then.
         self._directive: dict[str, Any] | None = None
+        # Per action: whether the program predicted each frame after it (1/0),
+        # in order, and every reading of how the region answered it. Accrued
+        # (INV-5); the field only ever carries the current reading.
+        self._uses: dict[str, list[int]] = {}
+        self._valence: dict[str, list[float]] = {}
 
-    # ── what it knows so far (read-only, for reporting) ──
+    # ── what arrives ──
 
-    def contexts_known(self) -> int:
-        return len(self._table)
-
-    def entities_known(self) -> int:
-        return len({entity for entity, _ in self._table})
-
-    def has_seen(self, entity: str, context: str) -> bool:
-        return (entity, context) in self._table
-
-    def resolution(self, context: str) -> float | None:
-        """How well the mind predicts what happens in this situation, so far."""
-        trials = self._trials.get(context, 0)
-        return self._hits[context] / trials if trials else None
-
-    def valence(self, context: str) -> float | None:
-        """How the region has answered this situation, so far, on average."""
-        readings = self._valence.get(context)
-        return sum(readings) / len(readings) if readings else None
-
-    def progress(self, context: str) -> float:
-        """How fast the mind is learning this situation — the size of the change
-        in its accuracy between the last window of uses and the one before.
-
-        WHY CURIOSITY READS THIS AND NOT HOW RESOLVED A SITUATION IS. Going for
-        whatever is least resolved sticks to irreducible noise: measured on a
-        live ls20 run, the agent took one action 103 times out of 120 because its
-        outcome turned on something the mind could not see, so it never became
-        resolved and curiosity never left it — the "noisy TV" failure. Noise that
-        cannot be learned shows no progress, so curiosity that follows progress
-        leaves it on its own. The absolute size is used, so an action whose
-        accuracy starts FALLING — the world changed under it — is worth attention
-        again too.
-
-        A situation with fewer than two windows of uses counts as still being
-        learned (1.0), which is also what makes an untried action come first.
-        """
-        uses = self._uses.get(context, {})
-        accuracies = [h / t for _, (h, t) in sorted(uses.items()) if t]
-        if len(accuracies) < 2 * PROGRESS_WINDOW:
-            return 1.0
-        recent = accuracies[-PROGRESS_WINDOW:]
-        before = accuracies[-2 * PROGRESS_WINDOW : -PROGRESS_WINDOW]
-        return abs(sum(recent) / PROGRESS_WINDOW - sum(before) / PROGRESS_WINDOW)
-
-    def score(self, context: str, predicted: object, outcome: object, t: int = 0) -> None:
-        """Record whether a prediction made in this situation came true.
-
-        Called AFTER the prediction was formed, never before — comparing an
-        expectation with what happened is what T5 does anyway, and it is not
-        INV-8's concern, which is forming the expectation FROM the answer.
-        """
-        self._trials[context] += 1
-        hit = _key(predicted) == _key(outcome)
-        if hit:
-            self._hits[context] += 1
-        use = self._uses.setdefault(context, {}).setdefault(t, [0, 0])
-        use[0] += int(hit)
-        use[1] += 1
-
-    def answered(self, context: str, status: object) -> None:
-        """Record how the region answered this situation."""
-        self._valence.setdefault(context, []).append(
-            region_valence(status, self._directive)
-        )
-
-    def recall(self, returned: dict[str, Any]) -> None:
-        """Take up what the store returned, if it is something the mind can read.
-
-        Only a directive is read, today: a payload naming an objective. The rest
-        of what may come back is left as it arrived. The return still carries
-        the provenance the store held it at — `prior`, not the character's own
-        and not yet tested — and nothing here changes that; only a collision
-        does (§9).
-        """
-        payload = returned.get("payload")
+    def take_return(self, ret: dict[str, Any], write: Callable[[WriteRequest], None] | None) -> None:
+        """A store return: the directive, a scarred frame it asked for, or its own program back."""
+        open_tags = ret.get("open", {})
+        payload = ret.get("payload")
         if isinstance(payload, dict) and isinstance(payload.get("objective"), dict):
             self._directive = payload
+        if open_tags.get("kind") == FRAME_KIND:
+            t = transition_of(ret.get("payload") or {})
+            if t is not None:
+                if self._recalled_at != self.frame_calls:
+                    self._recalled = {}
+                    self._recalled_at = self.frame_calls
+                self._recalled[str(ret.get("entity"))] = t
+        elif open_tags.get("kind") == PROGRAM_TAGS["kind"] and self.datum_id is None:
+            payload = ret.get("payload") or {}
+            if isinstance(payload, dict) and payload.get("code") is not None:
+                self.datum_id = str(ret.get("entity"))
+                if self._unwritten is not None and write is not None:
+                    payload, built_from = self._unwritten
+                    write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
+                    self._unwritten = None
+
+    # ── what it knows so far ──
 
     def directive(self) -> dict[str, Any] | None:
         return self._directive
 
-    # ── accrual and prediction ──
+    def resolution(self, context: str) -> float | None:
+        """How often the program has predicted the frame after this action, so far."""
+        uses = self._uses.get(context)
+        return sum(uses) / len(uses) if uses else None
 
-    def observe(self, entity: str, context: str, outcome: object) -> None:
-        """Accrue one observation. Sequential, never reloaded (INV-5)."""
-        key = _key(outcome)
-        self._seen_values.setdefault(key, outcome)
-        self._table.setdefault((entity, context), Counter())[key] += 1
-        self._last[entity] = outcome
+    def progress(self, context: str) -> float:
+        """How fast the program's hold on this action is changing.
 
-    def predict(self, entity: str, context: str) -> object | None:
-        """What this Other is expected to do here, or None with nothing to say.
-
-        A situation met before answers from that situation's evidence, by
-        majority — which is the whole of the thinking, and is what beat reciting
-        the most recent outcome by 5 points on one measured game and 1 on the
-        other. A situation not met before falls back to what this Other last did.
+        The size of the change in accuracy between the last window of uses and
+        the one before. Curiosity follows it rather than ignorance: what cannot be
+        learned shows no progress, and is left alone (the "noisy TV" failure the
+        mind this replaced measured). A revision that suddenly explains an action
+        — or a world that changed under it — shows as progress again. Fewer than
+        two windows of uses counts as still being learned.
         """
-        seen = self._table.get((entity, context))
-        if seen:
-            return self._seen_values[seen.most_common(1)[0][0]]
-        return self._last.get(entity)
+        uses = self._uses.get(context, [])
+        if len(uses) < 2 * PROGRESS_WINDOW:
+            return 1.0
+        recent = uses[-PROGRESS_WINDOW:]
+        before = uses[-2 * PROGRESS_WINDOW:-PROGRESS_WINDOW]
+        return abs(sum(recent) / PROGRESS_WINDOW - sum(before) / PROGRESS_WINDOW)
+
+    def valence(self, context: str) -> float | None:
+        """How the region has answered this action, so far, on average."""
+        readings = self._valence.get(context)
+        return sum(readings) / len(readings) if readings else None
+
+    def report(self, context: str, contribute: Callable[[dict[str, float]], None] | None) -> None:
+        """Report this action's reading upward into the field (INV-7)."""
+        if contribute is None or not context:
+            return
+        reading: dict[str, float] = {PROGRESS_PREFIX + context: self.progress(context)}
+        resolution = self.resolution(context)
+        if resolution is not None:
+            reading[RESOLVED_PREFIX + context] = resolution
+        valence = self.valence(context)
+        if valence is not None:
+            reading[VALENCE_PREFIX + context] = valence
+        contribute(reading)
+
+    # ── the expectation ──
+
+    def expect(self, t: Transition) -> Grid:
+        """The grid the mind expects, from the situation alone (INV-8)."""
+        if self._fn is not None:
+            try:
+                return run_program(self._fn, t)
+            except ProgramError:
+                pass
+        return [row[:] for row in t.before]  # the standing expectation: nothing changes
+
+    # ── thinking ──
+
+    def think(self, seen: Transition, source: InfoUnit,
+              window: tuple[InfoUnit, ...] | list[InfoUnit],
+              ask: Callable[[dict[str, str]], None] | None,
+              write: Callable[[WriteRequest], None] | None) -> None:
+        """The expectation failed: go to memory, and have the model write a better program.
+
+        The evidence is what the store answered last (oldest), what T5's window
+        holds of the frame, and the transition in front of it — each with the
+        datum it came from, so a write records exactly what it was built from.
+        """
+        if ask is not None:
+            ask(dict(SCARRED_FRAMES))
+        sourced: list[tuple[Transition, object]] = [
+            *((t, datum_id) for datum_id, t in self._recalled.items()),
+            *((t, unit) for unit in window
+              if (t := transition_of(_content_value(unit) or {})) is not None),
+            (seen, source),
+        ]
+        by_key: dict[str, tuple[Transition, object]] = {}
+        for t, src in sourced:
+            by_key.pop(t.key(), None)
+            by_key[t.key()] = (t, src)
+        chosen = list(by_key.values())[-MAX_SHOWN:]
+        while len(chosen) > 1 and len(render_evidence([t for t, _ in chosen])) > MAX_EVIDENCE_CHARS:
+            chosen = chosen[1:]
+        evidence = [t for t, _ in chosen]
+        built_from = tuple(src for _, src in chosen)
+        held_ok, held_misses = score(self._fn, evidence)
+        messages = [{"role": "user", "content": PROMPT.format(evidence=render_evidence(evidence))}]
+        if self.code is not None:
+            messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
+            messages.append({"role": "user", "content": FEEDBACK.format(
+                ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses))})
+        try:
+            text, usage = self._chat(self.endpoint, messages)
+        except Exception as exc:  # noqa: BLE001 — a model that fails leaves the program as it is
+            self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, note=f"model failed: {exc!r}"))
+            return
+        code = extract_code(text)
+        if code is None:
+            self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, "no code block"))
+            return
+        try:
+            fn = compile_program(code)
+        except ProgramError as exc:
+            self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, str(exc)))
+            return
+        cand_ok, _ = score(fn, evidence)
+        adopted = self._fn is None or cand_ok > held_ok
+        self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage))
+        if not adopted:
+            return
+        self.code, self._fn = code, fn
+        self.version += 1
+        payload = {"code": code, "version": self.version}
+        if write is None:
+            return
+        if self.version == 1:
+            write(WriteRequest(payload=payload, open=dict(PROGRAM_TAGS), built_from=built_from))
+        elif self.datum_id is not None:
+            write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
+        else:
+            # Written as a revision once the datum's id is known.
+            self._unwritten = (payload, built_from)
+
+    def _misses_text(self, misses: list[tuple[Transition, Grid | str]]) -> str:
+        out = []
+        for t, got in misses[:MAX_MISSES_SHOWN]:
+            mine = got if isinstance(got, str) else describe_change(t.before, got)
+            out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
+        return "\n".join(out)
 
 
-def create_mind() -> Mind:
-    return Mind()
-
-
-def _payload_of(unit: InfoUnit) -> dict[str, Any] | None:
+def _content_value(unit: InfoUnit) -> Any:
     content = unit.content
-    if isinstance(content, dict):
-        value = content.get("value")
-        if isinstance(value, dict):
-            return value
-    return None
+    return content.get("value") if isinstance(content, dict) else None
 
 
-def observed_outcome(unit: InfoUnit) -> object | None:
-    """What the region did, as this observation reports it.
+def mind_rule(mind: Mind) -> Callable[..., InfoUnit]:
+    """The mind at T5's seam (`PredictRule`): one rule, one mind, every arrival."""
 
-    A thing reports a `change`; the region reports its `status`. Both are the
-    outcome for their own entity, and the model does not need to know which kind
-    of Other it is looking at to count them.
-    """
-    payload = _payload_of(unit)
-    if payload is None:
-        return None
-    for field in ("change", "status"):
-        if field in payload:
-            return payload[field]
-    return None
+    def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None) -> InfoUnit:
+        content = observed.content if isinstance(observed.content, dict) else {}
+        channel = content.get("channel")
+        payload = _content_value(observed)
 
-
-def situation_of(unit: InfoUnit) -> str:
-    """What the agent just did, as this observation reports it."""
-    payload = _payload_of(unit)
-    if payload is None:
-        return NO_CONTEXT
-    context = payload.get("context")
-    return context if isinstance(context, str) else NO_CONTEXT
-
-
-def surroundings_of(unit: InfoUnit) -> str:
-    """What the Other faced when the agent acted — what lay ahead of it."""
-    payload = _payload_of(unit)
-    if payload is None:
-        return ""
-    situation = payload.get("situation")
-    return situation if isinstance(situation, str) else ""
-
-
-def predict_rule(mind: Mind, recollection: Any = None):
-    """Adapt a `Mind` to T5's `PredictRule`.
-
-    Order is load-bearing and is INV-8 in code: **predict first, from the
-    situation alone, and accrue the outcome only afterwards**. Reading the
-    observation's outcome before predicting would let the expectation be built
-    from the answer, and the prediction error would be scoring itself.
-
-    Where a `recollection` is given, §6.4 settles what to do when two internal
-    sources disagree — "the opposition is not resolved by an internal rule but
-    collided against the region" — so where the record speaks it is what gets
-    tested. Measured, the record is a worse predictor than the model, for a
-    structural reason: §9 admits only mismatches to the store, so what it holds
-    is the region's surprises, and asked what will happen an exception loses to a
-    distribution. It is off by default for that reason.
-
-    The predicted unit is the observed one with only its outcome replaced, so
-    T5's content comparison reduces to the outcome. A recalled unit is spliced
-    the same way: its own context and channel are from another cycle and would
-    make an identical outcome read as a mismatch.
-    """
-
-    def rule(entity_id: str, window, observed, contribute=None, ask=None, write=None):
-        payload = _payload_of(observed)
-        if payload is None:
+        if channel == STORE_CHANNEL:
+            # Something the character asked its store for, arriving like any
+            # other return. The mind reads it; it is not an Other to predict.
+            if isinstance(payload, dict):
+                mind.take_return(payload, write)
             return observed
-        # Something the character recalled from its own store, arriving like any
-        # other return. The mind reads it; it is not an Other to predict.
-        if isinstance(observed.content, dict) and observed.content.get("channel") == STORE_CHANNEL:
-            mind.recall(payload)
-            return observed
-        # Two readings of where the agent is, kept apart. `context` is the action
-        # — what the mind reports on, per action, to the self. `where` is the
-        # action together with what this Other faced — what the mind predicts
-        # from. Measured, reading what lay ahead of each tracked thing took
-        # prediction from 93% to 99% on ls20 and from 85% to 93% on vc33, and
-        # resolved the moving object's blocked-or-not outcome completely.
-        context = situation_of(observed)
-        surroundings = surroundings_of(observed)
-        where = f"{context}#{surroundings}" if surroundings else context
 
-        # 1. Both sources answer, from the situation alone.
-        from_mind = mind.predict(entity_id, where)
-        from_record = (
-            recollection.recall(entity_id, observed)
-            if recollection is not None
-            else None
-        )
-
-        # The model's reading of its own situation, reported upward into the
-        # field (INV-7) BEFORE it accrues — otherwise every situation would look
-        # familiar the instant it was met. This is the interpretation the field
-        # had no way of getting: T4's `strangeness` measures whether an arrival
-        # could be attributed at all, which is a different question.
-        if contribute is not None:
-            contribute(
-                {
-                    CONTEXT_NOVELTY: 0.0 if mind.has_seen(entity_id, where) else 1.0,
-                    CONTEXTS_KNOWN: float(mind.contexts_known()),
-                }
+        if channel == FRAME_CHANNEL:
+            t = transition_of(payload) if isinstance(payload, dict) else None
+            if t is None:
+                return persistence(entity_id, window, observed, contribute, ask, write)
+            mind.frame_calls += 1
+            # 1. Predict, from the situation alone.
+            expected = mind.expect(t)
+            predicted = InfoUnit(
+                content={**content, "value": {**payload, "grids": [expected]}},
+                ref_frame=observed.ref_frame, t=observed.t,
             )
+            # 2. Then look, and accrue how the program did under this action.
+            hit = expected == t.after
+            context = str(payload.get("context") or "")
+            if context:
+                mind._uses.setdefault(context, []).append(int(hit))
+            # 3. The expectation failed: think. A mismatch is the loop's to
+            #    register; thinking is the mind's.
+            if not hit:
+                mind.think(t, observed, tuple(window or ()), ask, write)
+            mind.report(context, contribute)
+            return predicted
 
-        # 2. Then accrue what actually happened.
-        outcome = observed_outcome(observed)
-        if outcome is not None:
-            if from_mind is not None:
-                mind.score(context, from_mind, outcome, observed.t)
-            if "status" in payload:
-                mind.answered(context, outcome)
-            mind.observe(entity_id, where, outcome)
+        if channel == STATUS_CHANNEL and isinstance(payload, dict):
+            # The program does not predict the region's status: the standing
+            # expectation holds. What the region said is read against the
+            # directive — how it answered the action just taken.
+            predicted = persistence(entity_id, window, observed, contribute, ask, write)
+            context = str(payload.get("context") or "")
+            if context and "status" in payload:
+                mind._valence.setdefault(context, []).append(
+                    region_valence(payload["status"], mind._directive)
+                )
+                mind.report(context, contribute)
+            return predicted
 
-        # The mind's reading of this situation, reported upward (INV-7). Accrued
-        # in the mind, carried by the field: the field's blend averages only the
-        # contributions made THIS cycle and keeps no memory of its own, so the
-        # memory has to be the contributor's. Each key names one situation, so
-        # the field comes to hold a picture of every action the agent has taken,
-        # updated as each is taken again.
-        if contribute is not None and context:
-            reading: dict[str, float] = {}
-            resolution = mind.resolution(context)
-            if resolution is not None:
-                reading[RESOLVED_PREFIX + context] = resolution
-            reading[PROGRESS_PREFIX + context] = mind.progress(context)
-            valence = mind.valence(context)
-            if valence is not None:
-                reading[VALENCE_PREFIX + context] = valence
-            if reading:
-                contribute(reading)
-
-        # 3. No arbiter (§6.4). The record, where it speaks, is what is tested.
-        chosen = _outcome_of(from_record)
-        if chosen is None:
-            chosen = from_mind
-        if chosen is None:
-            # First sighting of this Other, and the record is silent: predict the
-            # observation itself, as the reference rule does.
-            return observed
-
-        field = "status" if "status" in payload else "change"
-        content = {**observed.content, "value": {**payload, field: chosen}}
-        return InfoUnit(content=content, ref_frame=observed.ref_frame, t=observed.t)
+        return persistence(entity_id, window, observed, contribute, ask, write)
 
     return rule
 
 
-def _outcome_of(unit: InfoUnit | None) -> object | None:
-    """The outcome inside a recalled unit, if it carries one."""
-    return None if unit is None else observed_outcome(unit)
+def create_mind(endpoint: ModelEndpoint | None = None,
+                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> Mind:
+    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn)
+
+
+__all__ = [
+    "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS", "PROGRAM_TAGS",
+    "PROGRESS_PREFIX", "PROGRESS_WINDOW", "RESOLVED_PREFIX", "SCARRED_FRAMES", "VALENCE_PREFIX",
+    "Mind", "ModelEndpoint", "ProgramError", "Thought", "Transition",
+    "chat", "compile_program", "create_mind", "mind_rule", "region_valence", "render_evidence",
+    "run_program", "score", "transition_of",
+]

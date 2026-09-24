@@ -9,61 +9,89 @@ the agent leaves the loop to think.
 
 ## Status, plainly
 
-It runs. It learns what the things in a game do. **It completes no levels.**
+It runs, and it is being rebuilt around one mind. **It completes no levels.**
 
-It explores: over 120 cycles of `ls20` it spreads its moves across all four
-directions and reaches 19 distinct positions, walking in lines toward whatever it
-is still learning about. What it lacks is a reason to go anywhere in particular.
+**The mind is a language model** — Qwen3.6-35B-A3B, served offline — and the
+program it writes: `predict(grid, action) -> grid`, kept as data in the store and
+tested against the region every cycle. When the program's expectation of the
+frame fails, the mind asks its store for the frames that collided, has the model
+write a better program from what it has, keeps it only if it explains that
+evidence better, and writes it as a revision. Every step of that — the query,
+the program entering at `nascent`, each revision, what each version was built
+from, the frames it failed on — is in `[event]`, and a checker reads it back.
 
-**Want can only avoid.** How the region answers each action is read, accrued, and
-carried to where behaviour is decided. But the only good answer the region gives
-is a completed level, and none has ever happened, so the want that exists has
-only ever learned what to steer away from. That is measured, not guessed, and it
-is the open problem.
+**Until 2026-09-24 there were two minds**: a counting mind over "things" a
+computation of the grid had found, which chose the moves, and the model's
+program beside it for the frame. Nothing said which of the two the self
+crystallized from. Settled with Plone: one mind, and it is the model. The
+counting mind, and what it measured, are kept below as history.
 
-**What it is told.** It arrives with no history — nothing like what a creature
-carries in its genes or learned from others — so the least it is given is a
+**What is measured of the one mind so far**: nothing on a scored run yet. Of the
+model alone, outside the loop: it wrote an `ls20` program exact on 95% of held-out
+transitions in two runs of four (CLAUDE.md, "Direction C"). Of the model inside
+the loop, before the rebuild: ten cycles on this machine, too little evidence
+reached it to write a program that held (CLAUDE.md).
+
+**What it is told.** It arrives with no history, so the least it is given is a
 directive: the one sentence the competition gives every model on its official
 leaderboard, "You are playing a game. Your goal is to win.", with the published
-rules of the place. Nothing about any particular game, and nothing about how to
-win one. It enters as host data stamped `prior` — not the character's own, not
-yet tested — and stays in the store until the character recalls it: the first
-report of the region's status brings the directive to mind, and the first thing
-seen brings what it was told about things and about seeing. The good-or-bad reading of the
-region's answers used to be written into the code; it is now read from that
-recalled directive, and with no directive every answer is neutral.
-
-An earlier version also stuck: it acted on whatever it understood least, and took
-one action 103 times in 120 because that action's outcome depended on something
-the mind could not see. That is fixed — see below — and the fix is recorded
-rather than hidden.
-
-Everything below is measured on live games, not asserted. Where a claim has no
-measurement behind it, it says so.
+rules of the place. It enters as host data stamped `prior` and stays in the
+store until the character recalls it on a cue; how the region answers each action
+is read against it.
 
 ## The four roles
 
 Settled deliberately, because getting them the wrong way round was the first
-real mistake this project made.
+real mistake this project made — and running two minds at once was the second.
 
 | role | what it is | in this repo |
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
-| **host** | the body: receives signals, carries them, executes what was committed. **Concludes nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
-| **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) | `src/dil/store/`, `src/arc3/prior.py` |
-| **mind** | the thinking organ: finds the things in a signal, follows them across frames, reads what became of them, says what they will do. **Chooses nothing.** | `src/arc3/perceive.py`, `seeing.py`, `interpret.py`, `mind.py` |
-| **self** | what occurs while the loop runs through them. **It is what acts.** | not a file |
+| **host** | the body: takes in what the region returns and carries it inward, executes what was committed. **Computes nothing from what it takes in.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
+| **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) and the programs its mind wrote (`nascent`, then `running`) | `src/dil/store/`, `src/arc3/prior.py` |
+| **mind** | the thinking organ — **one**: the model and the program it writes. Predicts, thinks when a prediction fails, reports how its understanding stands. **Chooses nothing.** | `src/arc3/mind.py` |
+| **self** | what occurs while the loop runs through them. **It is what acts.** | not a file (`respond.py` is the policy the committed action is formed by) |
 
 The line that matters: **the mind does not act.** It supplies an expectation —
 it never sees which actions are available and never reaches the committed action.
-The one thing it may send out is a question to its own memory: a store query,
-by cue, that it chooses itself (§6.4 — emission is "a lateral capability any
-layer MAY invoke … to obtain what it lacks"). The query is traced like any
-emission, so what the mind read is in `[event]`. An earlier build had these inverted, with the body handing the loop a
-finished interpretation while the mind reached past the loop into the raw grid to
-pick what to look at. Both are the other way round now.
+The one thing it sends out is a question to its own memory: a store query, by cue,
+that it chooses itself (§6.4). The query is traced like any emission, so what the
+mind read is in `[event]`. What it writes, it writes as data (§9 `nascent`), with
+what it was built from.
 
-## What the mind is, and is not
+**Seeing is the body's; computing is the mind's.** The host takes the grid in as
+the engine returns it; working out what is in it is the mind's program. An earlier
+build computed "things" from the grid inside the host's path and named that
+seeing — the name was wrong, and the computation was a second mind.
+
+## What the mind is
+
+**A pretrained language model, used as it is, and the program it writes.** The
+model is not trained here and does not hold the game: what it knows of a game is
+what the mind shows it — evidence the mind chose from its store and its window —
+and what it produces is a program, which the loop then tests against the region
+like any expectation. That answers the three reasons an earlier version of this
+README gave against "a downloaded network":
+
+- the scored games are unseen, so foreign weights would predict the wrong world
+  — the model does not predict the world; it writes a program from this game's
+  own evidence, and the program is what is tested;
+- Kaggle's evaluation session has no network — the model is served offline, from
+  a Kaggle Models mirror checked file by file against Hugging Face's hashes;
+- INV-5: "refeeding the whole game history into a context window each step is a
+  load, not an accrual" — the model is shown what the mind asked the store for
+  and what T5's window holds, bounded, never the whole history, and only when an
+  expectation failed.
+
+`dependencies = []` still holds: the model is reached over HTTP with the
+standard library.
+
+## History: the counting mind (until 2026-09-24)
+
+What follows describes the mind this repository ran before, kept because the
+findings below came from it and because the record keeps its mistakes. Its code is
+at commit `b7b64d3`; the scripts that measured it run there (`scripts/README.md`).
+
 
 It is **not a downloaded network**, for three reasons each sufficient alone:
 
@@ -95,7 +123,7 @@ It works in four steps, all of them cheap:
    did, and answer by majority. Report upward, per action, how fast that is being
    learned and how the region has answered it.
 
-### Identity was chosen by measurement
+#### Identity was chosen by measurement
 
 A thing has to stay the same thing while it persists, or expectation can never
 match. Four readings were scored against 60 real frames per game by *churn* —
@@ -119,7 +147,7 @@ object's front part was predicted 100% and its back part only 67%: the object is
 drawn in two colours, segmentation splits it, and a ray cast from the back part
 stopped at its own front part and never saw the wall.
 
-## Measurements
+### Its measurements
 
 Prediction accuracy, over the same 316 real transitions from two games.
 
@@ -152,7 +180,7 @@ least and took one action 103 times in 120. Their perception figures were sound;
 their behaviour figures described an agent stuck, and they were replaced rather
 than footnoted.
 
-### How curiosity chooses
+#### How curiosity chose
 
 It follows **learning progress**, not ignorance. Going for whatever is least
 understood sticks to irreducible noise — the "noisy TV" failure of
@@ -225,21 +253,26 @@ Requires Python 3.12+. No dependencies.
 ```sh
 # tests
 uv run --with pytest python -m pytest tests/ -q
+
+# a live game, with the model served at an OpenAI-compatible endpoint
+PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
+$PY scripts/run_world_model.py ls20 10 --endpoint http://127.0.0.1:8080/v1
 ```
 
-Playing a game needs the ARC-AGI-3 environment, which is not vendored here:
-point the host at an environment exposing `reset()` and `step(action, data)` and
-hand it the engine's action class.
+Playing a game needs the ARC-AGI-3 environment, which is not vendored here: point
+the host at an environment exposing `reset()` and `step(action, data)` and hand
+it the engine's action class. `scripts/kaggle/build_dil_run.py` builds the Kaggle
+notebook that runs it with the model on a GPU.
 
 ```python
-from arc3 import transducers
+from arc3 import admit, transducers
 from arc3.host import create_source, declaration
-from arc3.mind import create_mind, predict_rule
+from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.respond import least_resolved
 ```
 
-`src/arc3/host.py` shows the whole wiring; `src/arc3/decisions.py` records what
-this host declares for the protocol's deferred constants.
+`scripts/run_world_model.py` shows the whole wiring; `src/arc3/decisions.py`
+records what this host declares for the protocol's deferred constants.
 
 ## Layout
 

@@ -41,9 +41,8 @@ from dil.loop.layers.t2 import Emission
 
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
-from .observe import FRAME_CHANNEL, STATUS_CHANNEL, VISION_CHANNEL, move_from_value, observe
+from .observe import FRAME_CHANNEL, STATUS_CHANNEL, move_from_value, observe
 from .prior import ArcRules
-from .seeing import Seeing, create_seeing
 
 # How many state-changing actions a run may spend. RHAE scores
 # (human_baseline / ai_actions)^2, so every action is paid for; deliberation is
@@ -63,7 +62,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "_seeing", "delivered", "_frames",
+        "delivered",
     )
 
     def __init__(
@@ -71,20 +70,10 @@ class Arc3Source:
         env: Any,
         game_action_cls: Any,
         action_budget: int = DEFAULT_ACTION_BUDGET,
-        seeing: Seeing | None = None,
-        frames: bool = False,
     ) -> None:
-        # Whether the whole frame is carried as a signal of its own — for a mind
-        # that predicts it (a world model). Off, the body reports what it always
-        # has, and every run without a world model is unchanged.
-        self._frames = frames
-        # The host holds NO model and does no interpreting. It carries the mind's
-        # perceptual stage, `seeing`, and calls it once per cycle the way a nerve
-        # carries what the eye has processed: the reading — which piece is which
-        # across frames, which pieces move as one, what lies ahead of each — is
-        # the mind's, and its memory has to live somewhere that persists for the
-        # run. The host is that somewhere, and nothing more.
-        self._seeing = seeing if seeing is not None else create_seeing()
+        # The host holds no model and computes nothing from what it takes in: it
+        # reads the engine's frame, carries it inward, and executes what the self
+        # committed. Working out what the grid means is the mind's.
         self._env = env
         self._ga = game_action_cls
         self._frame: Frame | None = None
@@ -121,8 +110,7 @@ class Arc3Source:
             return None
 
         host_input = observe(
-            self._prev, self._pending, self._frame, t=self._t, seeing=self._seeing,
-            frames=self._frames,
+            self._prev, self._pending, self._frame, t=self._t
         )
         self._t += 1
         self._pending = None
@@ -181,7 +169,6 @@ def declaration(
     game_id: str,
     store_root: str | None = None,
     prior: PreexistingMemory | None = None,
-    frames: bool = False,
 ) -> HostDeclaration:
     """What this host declares about itself, read once by the precondition gate.
 
@@ -199,7 +186,7 @@ def declaration(
         boundary=BoundaryDeclaration(present=True),
         channels=(
             ChannelDeclaration(
-                id=VISION_CHANNEL,
+                id=FRAME_CHANNEL,
                 # The game returns, and it resists: it is the Mode-B source of
                 # tag D. An agent cannot write a frame.
                 can_return=True,
@@ -210,8 +197,6 @@ def declaration(
                 id=STATUS_CHANNEL,
                 can_return=True,
             ),
-            # The whole frame, when the host carries it for a world model.
-            *((ChannelDeclaration(id=FRAME_CHANNEL, can_return=True),) if frames else ()),
         ),
         store=StoreDeclaration(
             persists_across_cycles=True,
@@ -233,10 +218,8 @@ def create_source(
     env: Any,
     game_action_cls: Any,
     action_budget: int = DEFAULT_ACTION_BUDGET,
-    seeing: Seeing | None = None,
-    frames: bool = False,
 ) -> Arc3Source:
-    return Arc3Source(env, game_action_cls, action_budget, seeing, frames)
+    return Arc3Source(env, game_action_cls, action_budget)
 
 
 __all__ = [

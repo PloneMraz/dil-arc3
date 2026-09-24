@@ -12,7 +12,16 @@ from arc3.observe import move_value, observe
 from arc3.respond import DEFAULT_SWEEP, UNMET_PROGRESS, compose, least_resolved
 from dil.loop.cycle import RespondContext
 from dil.loop.types import Appraisal, ModField
-from tests.test_arc3_perceive import framed
+from arc3.frame import read_frame
+from tests.test_arc3_frame import FakeFrameData
+
+
+def framed(cells: dict[tuple[int, int], int], fill: int = 0, **kw):
+    """A frame of one 64x64 grid with the given cells set."""
+    g = [[fill] * 64 for _ in range(64)]
+    for (r, c), v in cells.items():
+        g[r][c] = v
+    return read_frame(FakeFrameData([g], **kw))
 
 
 def ctx_for(affords, params=None, state_to="NOT_FINISHED", cycle=1):

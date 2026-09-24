@@ -11,7 +11,7 @@ import pytest
 
 from arc3.action import IllegalMove, Move
 from arc3.host import Arc3Source, StepFailed, declaration
-from arc3.observe import VISION_CHANNEL, move_value
+from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, move_value
 from dil.loop.layers.t2 import Emission
 from dil.runtime.host_source import HostSource
 from tests.test_arc3_frame import FakeFrameData, grid
@@ -76,16 +76,13 @@ def test_cycle_zero_reports_the_reset_with_a_null_effect():
     the agent has done nothing observable yet is accurate."""
     src = a_source([f()], opening=f())
     host_input = src.next()
-    # Cycle 0 differences the opening frame against itself, so nothing moved.
-    payload = host_input.signals[-1].raw_payload
-    assert payload["entity"] == "region"
-    assert payload["status"]["levelsDelta"] == 0
-    things = [
-        sig.raw_payload for sig in host_input.signals
-        if sig.raw_payload["entity"].startswith("thing:")
-    ]
-    assert things and all(t["change"]["null"] for t in things), things
-    assert host_input.signals[0].source_id == VISION_CHANNEL
+    # Cycle 0 pairs the opening frame with itself, so nothing changed.
+    frame, status = host_input.signals
+    assert frame.source_id == FRAME_CHANNEL and status.source_id == STATUS_CHANNEL
+    assert frame.raw_payload["before"] == frame.raw_payload["grids"], "the frame as taken in, unchanged"
+    assert frame.raw_payload["move"]["actionId"] == 0, "the RESET that opened it"
+    assert status.raw_payload["entity"] == "region"
+    assert status.raw_payload["status"]["levelsDelta"] == 0
 
 
 def test_an_empty_opening_frame_is_reset_until_the_game_starts():
@@ -129,11 +126,13 @@ def test_the_following_next_reports_what_the_act_did():
     src.next()
     src.deliver(Emission(action=move_value(Move(1))))
     host_input = src.next()
-    # The region's status signal is always last; a thing that changed reports
-    # before it.
-    entities = {sig.raw_payload["entity"] for sig in host_input.signals}
-    assert "region" in entities
-    assert any(e.startswith("thing:") for e in entities), entities
+    # The frame the region returned after the act, carried as it is, and the
+    # region's report on itself. Nothing computed from the grid travels.
+    frame, status = host_input.signals
+    assert frame.raw_payload["before"] != frame.raw_payload["grids"], "the move changed the grid"
+    assert frame.raw_payload["move"] == move_value(Move(1))
+    assert status.raw_payload["entity"] == "region"
+    assert set(frame.raw_payload) == {"entity", "before", "grids", "move", "context"}
 
 
 def test_next_returns_none_when_nothing_has_happened_since_the_last_report():
@@ -187,7 +186,7 @@ def test_the_action_budget_stops_the_run():
 def test_the_declaration_states_what_this_host_actually_does():
     d = declaration("ls20")
     assert d.boundary.present
-    assert d.channels[0].id == VISION_CHANNEL
+    assert [c.id for c in d.channels] == [FRAME_CHANNEL, STATUS_CHANNEL]
     assert d.channels[0].can_return
     assert d.emitter.can_emit_first_action
     assert d.trace.externally_readable

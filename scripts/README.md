@@ -38,14 +38,9 @@ Each was run on 2026-09-24 and completed.
 | `kaggle/build_probe_run.py` | builds the Kaggle dataset and notebook that run the probe on an RTX Pro 6000 with vLLM, after checking every model file against Hugging Face's published hashes (`kaggle/qwen3_6_27b_fp8.manifest.json`) | `[--model 27b\|35b-a3b] [--rounds N] [--runs-per-mode N] [--max-tokens N] [--max-model-len N]` |
 | `run_world_model.py` | a live game with the world-model mind in the loop: the host carries the frame, the model writes the program as data, the mind asks the store and revises on mismatch; prints what the run's own `[event]`, `[data]` and commits say | `GAME CYCLES --endpoint URL [--model NAME] [--offline-dir DIR] [--out DIR]` |
 | `kaggle/build_dil_run.py` | builds the Kaggle dataset (dil-arc3's source) and notebook that run `run_world_model.py` on an RTX Pro 6000 with vLLM, the game offline from the competition's `environment_files` | `[--model 35b-a3b\|27b] [--game ls20] [--cycles 60] [--max-tokens N] [--max-model-len N]` |
-| `run_prior.py` | a live game with the prior admitted: recall, provenance, T2 agency; with `admit`, every region return kept as a datum | `GAME CYCLES [admit]` |
-| `run_things.py` | a live game: what reaches T8, moves, scars | `GAME CYCLES` |
 | `dump_frames.py` | records transitions from both games | `OUT.pkl` |
 | `verify_gate.py` | the host's boundary gate against live frames | — |
 | `probe_frame.py` | the real shape and value range of frames | — |
-| `identity.py` | which reading of identity keeps a thing the same thing | `frames.pkl` |
-| `seeing_measure.py` | `Seeing` on the saved transitions | `frames.pkl` |
-| `track.py`, `track_mover.py` | tracking individual pieces, and whether it pays | `frames.pkl` |
 | `try_reprs.py` | candidate effect representations | `frames.pkl` |
 | `readlog.py` | reads a downloaded Kaggle kernel log | `LOG.json [N]` — not re-run, needs a log |
 | `rules_text.js` | the rendered text of a JavaScript page (Kaggle rules, leaderboard) | `node scripts/rules_text.js URL OUT` |
@@ -63,6 +58,7 @@ git worktree remove ../dil-arc3-at-321d9e0
 
 | commit | what it still had | scripts |
 |---|---|---|
+| `b7b64d3` | the counting mind (`arc3.mind` before 2026-09-24) and the computation of the grid it read (`perceive.py`, `seeing.py`, `interpret.py`) — the two-mind era | run and completed at that commit: `run_prior.py` (also `admit`), `run_things.py`, `identity.py`, `seeing_measure.py`, `track.py`, `track_mover.py` |
 | `321d9e0` | `arc3.model`, `arc3.effect`, `affordance_key` — the affordance era | run and completed: `diagnose.py`, `model_vs_persistence.py`, `three_arms.py`, `verify_shipped.py`, `run_loop.py`, `debug_vc33.py` · imports verified, not re-run (live games, minutes each): `field_trace.py`, `measure_recollection.py`, `run_agent.py`, `store_demo.py`, `measure_effect.py` |
 | `147aab3` | the stuff-level readers `changes_of`, `contacts`, `interactions_of`, and `Region.kind` | run and completed: `see.py`, `contacts.py`, `surround.py`, `surround2.py`, `thing_repeat.py` |
 
