@@ -64,6 +64,10 @@ PROGRAM_TAGS: Final = {
 # context, not by the loop: how many transitions the prompt shows, how many of
 # the program's misses it lists, and how long a program may take on one grid.
 MAX_SHOWN: Final = 24
+# The evidence rendered must fit the model's context with room to answer: each
+# chain opens with a full 64x64 grid (~4.2k characters), and recalled scars are
+# rarely consecutive. The oldest evidence goes first when it does not fit.
+MAX_EVIDENCE_CHARS: Final = 60_000
 MAX_MISSES_SHOWN: Final = 3
 PROGRAM_SECONDS: Final = 2
 
@@ -376,6 +380,8 @@ class WorldModel:
             by_key.pop(t.key(), None)
             by_key[t.key()] = (t, src)
         chosen = list(by_key.values())[-MAX_SHOWN:]
+        while len(chosen) > 1 and len(render_evidence([t for t, _ in chosen])) > MAX_EVIDENCE_CHARS:
+            chosen = chosen[1:]
         evidence = [t for t, _ in chosen]
         built_from = tuple(src for _, src in chosen)
         held_ok, held_misses = score(self._fn, evidence)
@@ -463,7 +469,7 @@ def world_model_rule(base_rule: Callable[..., InfoUnit], wm: WorldModel) -> Call
 
 
 __all__ = [
-    "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS", "PROGRAM_TAGS", "SCARRED_FRAMES",
+    "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS", "PROGRAM_TAGS", "SCARRED_FRAMES",
     "ModelEndpoint", "ProgramError", "Thought", "Transition", "WorldModel",
     "chat", "compile_program", "render_evidence", "run_program", "score",
     "transition_of", "world_model_rule",

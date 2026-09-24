@@ -165,3 +165,14 @@ def test_a_worse_program_is_not_kept():
     assert wm.code == RIGHT and wm.version == 1
     assert of_kind(events, "revision") == []
     assert wm.thoughts[-1].adopted is False
+
+
+def test_evidence_that_would_not_fit_the_context_is_dropped_oldest_first(monkeypatch):
+    import arc3.world_model as wmod
+
+    monkeypatch.setattr(wmod, "MAX_EVIDENCE_CHARS", 200)  # room for one small chain only
+    model = Script(STILL, STILL)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))
+    run(cycle, frame(lit(2), lit(0), action=2))  # not a chain with the first: two full grids
+    assert wm.thoughts[-1].evidence == 1, "the older transition was dropped to fit"
