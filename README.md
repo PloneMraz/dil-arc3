@@ -245,6 +245,9 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/arc3/         the body and the mind, kept apart.
+spec/             the DIL protocol and the specification it derives from,
+                  copied from dil-core with their provenance.
+scripts/          the measurement and run scripts behind every figure here.
 CLAUDE.md         the decision record: every declared choice, every measurement,
                   every limit, and the corrections made along the way.
 ```
