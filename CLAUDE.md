@@ -1542,6 +1542,46 @@ once), and generated about 33 tokens/s per stream with four streams. The run use
 0.48 h of the 30 h weekly GPU quota; the RTX machine was not charged at more than
 wall-clock time. Locally the same probe costs 25–45 minutes a run.
 
+### Run 2 on Kaggle: the 35B-A3B MoE, FP8, 2026-09-24
+
+Same probe, same data, `Qwen3.6-35B-A3B-FP8` (the official release, mirrored,
+all 56 files checked against Hugging Face before serving — the check asserts, and
+the server that runs after it did start). Eight runs at once, four without
+thinking and four with, three rounds each, up to 45,000 output tokens a round.
+
+| run | best program, train / held out | note |
+|---|---|---|
+| no thinking 0 | 7/80 / 3/79 | |
+| no thinking 1 | **78/80 / 75/79 (95%)** | round 0 already 63/80 / 58/79 |
+| no thinking 2 | **78/80 / 75/79 (95%)** | round 0 63/80 / 58/79; round 1 fell to 0, round 2 recovered |
+| no thinking 3 | 0/80 after round 0 | then refused: 20,537 prompt + 45,000 output = 65,537 tokens, one over the 65,536 context |
+| thinking 0 | 12/80 / 0/79 | 33–40k chars of reasoning a round |
+| thinking 1 | 2/80 / 0/79 | |
+| thinking 2 | 0/80 / 0/79 | one round hit the 45,000 cap |
+| thinking 3 | 0/80 / 0/79 | one round hit the cap after 100,141 chars of reasoning |
+
+What this adds to run 1:
+
+- **Two independent runs reached the same 95% held out with different code.**
+  Both programs are rules, not lookup tables, and state the same two: the 5×5
+  object (two rows of 12 over three of 9) moves five cells in the action's
+  direction only if every target cell is 3, and the bar on rows 61–62 advances one
+  column per action. Why the last 4 held-out transitions miss has not been looked
+  at.
+- **Still not reliable**: of the three no-thinking runs that finished, two reached
+  95% and one 4%. Across both machines, 3 of 6 no-thinking runs of this model
+  wrote a program above 75% held out. That is a count, not a rate.
+- **Thinking made it worse, not slower-but-better**, with the budget nearly
+  three times run 1's: 0–2 of 79 held out in every thinking run. The reasoning
+  produced code, and the code was wrong.
+- The refused run was the builder's fault: the context was fixed at 65,536 while
+  the output cap was raised. It now sizes the context as
+  `max(65536, max tokens + 24,576)` unless told otherwise.
+
+Cost: 0.33 h of GPU quota (0.49 h used before, 0.82 h after, of 30 h a week).
+Downloading the outputs was cut off by the local 600 s timeout; every probe's log
+is present, but the notebook's own log was not downloaded.
+
 ## Settled from the Paper Track's Overview page, 2026-09-24
 
 Read in full from the competition's own Overview page (rendered through a

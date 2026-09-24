@@ -1,7 +1,7 @@
 """Build the Kaggle dataset and notebook that run the world-model probe on a GPU.
 
     python scripts/kaggle/build_probe_run.py [--model 27b|35b-a3b] [--rounds 3]
-        [--runs-per-mode 2] [--max-tokens 16384]
+        [--runs-per-mode 2] [--max-tokens 16384] [--max-model-len N]
 
 Writes two folders under scripts/data/kaggle/ (git-ignored), ready for the CLI:
 
@@ -37,6 +37,7 @@ OUT = SCRIPTS / "data" / "kaggle"
 OWNER = "plonemraz"
 DATASET_SLUG = "dil-arc3-probe"
 KERNEL_SLUG = "dil-arc3-world-model-probe"
+PROMPT_ALLOWANCE = 24576
 WHEELHOUSE = "driessmit1/arc3-vllm-h100-wheelhouse-v3"
 # Official Qwen FP8 releases, mirrored on Kaggle Models by a third party; each is
 # checked file by file against Hugging Face before it is used.
@@ -122,7 +123,7 @@ server = subprocess.Popen(
     [sys.executable, "-m", "vllm.entrypoints.openai.api_server", "--model", str(MODEL_DIR),
      "--served-model-name", "SERVED", "--host", "127.0.0.1", "--port", "8000",
      "--enable-prefix-caching", "--reasoning-parser", "qwen3", "--generation-config", "vllm",
-     "--max-model-len", "65536"],
+     "--max-model-len", "MAX_MODEL_LEN"],
     env=ENV, stdout=open(LOG, "w"), stderr=subprocess.STDOUT)
 BASE = "http://127.0.0.1:8000/v1"
 t = time.time()
@@ -171,7 +172,12 @@ def main() -> None:
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--runs-per-mode", type=int, default=2)
     ap.add_argument("--max-tokens", type=int, default=16384)
+    # A request is refused unless prompt + max_tokens fits the context. The probe's
+    # prompts have reached 20,537 tokens; run 2 lost a run by one token at 65,536.
+    ap.add_argument("--max-model-len", type=int, default=None,
+                    help=f"default: max(65536, max tokens + {PROMPT_ALLOWANCE})")
     a = ap.parse_args()
+    max_model_len = a.max_model_len or max(65536, a.max_tokens + PROMPT_ALLOWANCE)
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
     for d in (dataset, kernel):
@@ -192,7 +198,7 @@ def main() -> None:
     params = (f"ROUNDS = {a.rounds}\nRUNS_PER_MODE = {a.runs_per_mode}\n"
               f"MAX_TOKENS = {a.max_tokens}\n")
     cells = [c.replace('"MANIFEST"', f'"{manifest}"').replace('"SERVED"', f'"{served}"')
-             for c in CELLS]
+             .replace('"MAX_MODEL_LEN"', f'"{max_model_len}"') for c in CELLS]
     cells[4] = params + cells[4]
     nb = {
         "nbformat": 4, "nbformat_minor": 5,
@@ -221,7 +227,7 @@ def main() -> None:
     }, indent=1))
     print(f"dataset -> {dataset}\nkernel  -> {kernel}\n"
           f"model {a.model} ({handle}), rounds {a.rounds}, runs per mode {a.runs_per_mode}, "
-          f"max tokens {a.max_tokens}")
+          f"max tokens {a.max_tokens}, context {max_model_len}")
 
 
 if __name__ == "__main__":
