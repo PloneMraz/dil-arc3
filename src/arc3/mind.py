@@ -308,8 +308,8 @@ class ModelEndpoint:
     url: str = "http://127.0.0.1:8080/v1"
     model: str = "local"
     max_tokens: int = 12288
-    # Measured: 0.2 with thinking off wrote the 95% program on Kaggle (CLAUDE.md,
-    # run 2). Qwen's card recommends 0.7/0.8/20 for non-thinking; declared.
+    # Measured: 0.2 with thinking off wrote the 95% program on Kaggle (LOG.md,
+    # 2026-09-24, run 2). Qwen's card recommends 0.7/0.8/20 for non-thinking; declared.
     temperature: float = 0.2
     think: bool = False
     timeout: int = 3600

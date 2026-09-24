@@ -10,7 +10,7 @@ look for them elsewhere.
 
 Read the protocol to check the code; read the specification to understand why
 the protocol is shaped as it is. Section numbers cited in the code, in
-`README.md` and in `CLAUDE.md` (§6.4, §9, INV-5 …) are the protocol's.
+`README.md`, `CLAUDE.md` and `LOG.md` (§6.4, §9, INV-5 …) are the protocol's.
 
 ## Where they come from
 

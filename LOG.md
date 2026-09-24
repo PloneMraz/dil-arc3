@@ -1,0 +1,1625 @@
+# dil-arc3 — log
+
+The history of this repository: what was built, measured, found wrong and
+replaced, in the order it happened. What holds now is in `README.md` (what the
+agent is) and `CLAUDE.md` (the rules and declarations in force); this file keeps
+how it got there, the mistakes included.
+
+Entries are kept as they were written at the time, moved here from `CLAUDE.md`
+and `README.md` on 2026-09-24 and ordered by the commit that first wrote them.
+So they speak of code that has since changed — `effect.py`, `model.py`,
+`perceive.py`, `seeing.py`, `interpret.py`, the counting `Mind`,
+`run_world_model.py` — and a later entry may correct an earlier one. The code an
+entry measured is at the commit it names, and `scripts/README.md` says how to run
+a script against it.
+
+## 2026-09-22
+
+### The diversity problem, and a peer reader measured
+
+**The diversity problem, and how the same move solves it.** Conformance criterion
+7 (§11) fires a diversity-loss signal when the resistance-source set holds fewer
+than MIN_DIVERSITY_SOURCES distinct sources over a window. An agent playing one
+game has one resistance source, so §13.5 and §13.7 would render `partial`, as
+they do in dil-core for the same reason.
+
+Peer reflection fixes this as a side effect, because a peer's reading arrives
+tagged ENV_PUSHED and can itself resist. Measured on a run of two agents on
+different games:
+
+| | resistance sources | §13.5 | §13.7 |
+|---|---|---|---|
+| agent alone | `e1` | partial | partial |
+| agent with a peer reader | `agent-A`, `e2`, `region` | **pass** | **pass** |
+
+The diversity is earned rather than arranged: the peer is a real source that
+returns something this agent did not author.
+
+### The environment, first read
+
+The environment section carried this note:
+
+*An earlier draft of this file said "a 2D grid". That was read off the docs,
+not off a frame, and it was wrong.*
+
+### The Paper Track forum, before the Overview page was read
+
+- **A 1,500-word limit is referred to as a known constraint** by two competitors
+  ("does the bibliography fit within the 1500-word limit?", "does the 1,500-word
+  limit also apply if you upload a PDF through the Public Project Link instead of
+  writing it in the Kaggle Writeup"). No host ever replied to either. If it holds,
+  it reshapes the paper completely: 1,500 words against a 55 KB specification.
+  **Confirm this on the competition's own Overview page before writing anything.**
+
+And of the rubric's aggregation, in "Which prize this aims at":
+
+If the 4.5 is a mean of the six criteria — the natural reading, and the one a
+search summary asserts, though the page itself leaves the aggregation unstated
+and one cited source was a third-party blog — then the pool needs better than
+27 of 30 points. An Accuracy of 0 costs 5 and makes it unreachable; an Accuracy
+of 2 requires a perfect 5 on all five remaining criteria.
+
+### Two bugs in the starter kit on Windows
+
+Both are upstream's, both block a Windows user at the first step, and both are
+worth a pull request to `arcprize/ARC-AGI-3-Kaggle-Starter`:
+
+1. `scripts/slim_framework.py` calls `INIT.write_text(SLIM)` with no encoding, so
+   on Windows it writes cp1252. The text contains an em dash, which lands as byte
+   0x97, and Python then refuses to read the generated `.py` as UTF-8. Fixed
+   locally with `encoding="utf-8"`.
+2. `scripts/play_local.py` prints `→` to a cp1252 stdout and raises
+   `UnicodeEncodeError`. Worked around with `PYTHONIOENCODING=utf-8` rather than
+   by editing their file.
+
+### The host ring — what exists, 2026-09-22
+
+`src/arc3/` is the body. Three files, 132 tests green.
+
+- `decisions.py` — tag A, declared from 42 measured frames. Tag B recorded as
+  **inherited from dil-core, not chosen**; tag H left open.
+- `frame.py` — the boundary gate. It **refuses** a frame outside the
+  declaration rather than coercing it, the same stance §5's tagging gate takes
+  toward a datum without provenance. Verified against 52 live frames from
+  `ls20` and `vc33`: 52 accepted, 0 refused.
+- `action.py` — what a legal move looks like and how to hand one to the engine.
+  It forms no move. Who forms one is unsettled.
+
+#### A third trap, this one in the engine's enum
+
+`GameAction(1)` raises `ValueError: 1 is not a valid GameAction`. The members
+are declared `ACTION1 = (1, SimpleAction)`, so `_value2member_map_` is keyed by
+the **tuple**; `__init__` then rewrites `_value_` to the bare id, too late for
+the lookup map. `GameAction.from_id(1)` works, which is why the classmethod
+exists. Found by running it — reading `_value_ = action_id` suggests the
+opposite.
+
+### The entity is the affordance — settled with Plone, 2026-09-22
+
+The loop holds an expectation about **what an action does**, not about what the
+next frame looks like. A collision is the action doing something other than
+expected.
+
+Three reasons it was chosen over "the whole frame" and "the cell/region":
+
+1. It matches what ARC-AGI-3 actually is — discovering the control scheme.
+2. It matches RHAE: winning a level in few actions means learning the mechanics
+   fast, which is exactly accruing confidence per affordance.
+3. **It settles emission without breaking the four roles.** The model predicts
+   an action's *effect* — it supplies the **expectation**, not the **choice**.
+   The self picks which expectation is worth testing. The model still emits
+   nothing. Exploration stops being an epsilon-greedy bolt-on and becomes a
+   consequence of the mechanism.
+
+It required **no change to the loop ring**: `T4`'s context resolver is already
+DECIDE@IMPL and pluggable, so the entity id becomes the affordance, and `T5`'s
+persistence rule then accrues a window of observed effects per affordance with
+confidence ramping over recurrence.
+
+#### Tag H, declared and measured
+
+Fit is equality of the **effect signature** in `src/arc3/effect.py`: a
+translation-invariant description of what changed, so the same control used in
+two places reads as the same event. A literal cell diff would have made every
+use of a control look unrelated and the agent could never have learned its own
+controls.
+
+Measured on **316 real transitions**, not asserted:
+
+- In `ls20` the signature **recovers the control scheme unaided** — values 9 and
+  12 displace `(-5,0)` under ACTION1, `(+5,0)` under ACTION2, `(0,-5)` under
+  ACTION3, `(0,+5)` under ACTION4, with 29–33 consistent observations each.
+- One filter carries this. A displacement is claimed only when a value vanishes
+  from as many cells as it appears in — a **rigid translation conserves cell
+  count**, a spreading trail does not. Without it, one noisy value shattered the
+  signature: 33 distinct signatures instead of 10, 8–11 per action instead of
+  2–4, at the same 79% discrimination.
+- A blocked move gives the same signature whichever direction was tried. Not a
+  defect — walking into a wall is genuinely direction-blind.
+- **Negative result, declared:** in `vc33` the signature carried no information.
+  Across 157 transitions the click position never changed it. Whether the
+  representation is failing there or those clicks genuinely do nothing is **not
+  established**, and is not being guessed at.
+
+Variants that scored worse are recorded rather than discarded: dropping the
+transition counts and keeping only displacements gave a tidier 5 signatures for
+`ls20` but went blind on any game whose effect is a colour change rather than a
+movement, which is the `vc33` case.
+
+## 2026-09-23
+
+### The bridge, and what running the real loop found
+
+`src/arc3/observe.py` turns "I made move M and the region returned frame F" into
+the `HostCycleInput` the cycle driver takes. It needed **no custom resolver**:
+T4's declared default reads `content["value"]["entity"]`, so the transducer just
+has to put the affordance there.
+
+Two declarations it makes:
+
+- **One affordance per action id.** ACTION6 carries `(x, y)`; treating each
+  coordinate as its own affordance would create 4096 entities that each recur
+  once, and nothing would accrue. Coordinates are context, not identity.
+  Bucketing them would be tidier, but no measurement backs any particular
+  bucketing, and §12 exists to stop that. Declared cost: `action:6`'s
+  expectation cannot stabilise.
+- **The agent authors moves, never frames.** T2 sees one self-written change —
+  the move, observed back — and every frame change is environment-pushed. This
+  is the architectural line stated in code, and it makes each affordance an
+  Other under T6.
+
+#### Run on 159 real ls20 cycles
+
+The loop runs end to end. All four affordances reached confidence 1.00 with
+36–42 observations each. But **resistance never fell**: 93, 132, 129, 127 scars
+per 40-cycle block.
+
+The cause is measured, not guessed. **444 of the 481 scars were absences.** T7
+registers an expected entity that did not return as a negative PredErr — but an
+affordance is not a source that returns on its own. It returns only when the
+agent uses it, and the agent uses one per cycle. So once N affordances are known,
+N−1 absences are recorded every cycle, for ever.
+
+`vc33` is the control that proves it: one affordance, **0 absences**, and the
+scar rate was 0.58/cycle against a measured persistence ceiling of 42% — a
+58% miss rate, matching exactly. **The mechanism is sound; the mapping is what
+floods it.**
+
+This is not patched around. Disabling T7 for affordance entities would be a
+change to the skeleton, and it is Plone's call. Pinned by
+`tests/test_arc3_observe.py::test_unexercised_affordances_register_as_absences`
+so it cannot quietly stop being true.
+
+#### The other declared limit
+
+Under the affordance reading the loop is handed **no coordinates**. It learns
+what its controls do; it does not learn where anything is. Knowing the control
+scheme is not the same as knowing how to win a level. In `ls20` the persistence
+ceiling per affordance is 66–86%, so the residual error is largely the cases
+where the effect depends on position — exactly the information withheld.
+
+### The host, and the loop closing against a live game
+
+#### Correction to the earlier entry
+
+What the previous section called "running the real loop" was `cycle.run()`
+driven by a scratchpad script over pickled frames. **No daemon, no HostSource,
+no live game — and no emission.** The actions in that replay were chosen by the
+dump script's round-robin; the loop's `response` was computed and thrown away.
+The loop was a passive observer of a scripted sequence. The absence measurement
+stands, because it is about T7's bookkeeping and independent of who chose the
+actions. The description did not.
+
+#### What plays the thinking role
+
+**Nothing does. There is no model.** The prediction is T5's declared update law,
+persistence, and it is one line:
+
+```python
+predicted = window[-1] if window else observed
+```
+
+"Predict that this control does what it did last time." That is the whole
+thinking organ at present. **This is where a model goes** — it would supply the
+expectation, predicting an action's effect from context, which is exactly the
+role settled with Plone: the model supplies the expectation, never the choice.
+
+#### Two declared deviations from dil-core
+
+Both are additive and defaulted, so dil-core's behaviour is unchanged when a
+host declares neither.
+
+1. **`HostCycleInput.afforded` → `T7Input.present`.** T7 registers an absence
+   only against entities the region says are there. Silence presupposes the
+   chance to speak.
+2. **`Cycle(respond=...)`, a host-declared `RespondPolicy`.** dil-core hard-codes
+   the terminal emission as `{kind: "respond", cycle, valence}` because its
+   minimal host has no region to push into. A host with a real region must
+   commit a real action or INV-1 never closes. The seam is at the close of the
+   meaning-channel after appraisal, issuing layer T8 — **not in a layer**. A
+   layer emitting the move would make the thinking organ the actor.
+
+`src/arc3/respond.py` declares the policy: commit the afforded action whose
+expectation is **least resolved**, ties on fewest observations then lowest id.
+An affordance never met ranks at confidence 0, so the loop reaches for what it
+does not know first. Exploration is not bolted on; it is what the loop's own
+state recommends.
+
+#### `src/arc3/host.py` — the body
+
+`Arc3Source` is a `HostSource` over a live game. `deliver` executes what the
+self committed — *the agent acts through deliver* — and the following `next`
+reports what the region did. Nothing here chooses; a move the frame does not
+afford is refused, never substituted, because swapping in a legal action would
+put the choice in the body.
+
+Cycle 0 reports the opening RESET with a **null effect**: `reset()` makes the
+first frame out of nothing and there is no earlier frame to difference it
+against. It binds an `action:0` entity the game never affords, which is also the
+live check that the presence filter works.
+
+#### Measured on live runs, 80 cycles each
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| precondition gate | Qualify | Qualify |
+| cycles / actions | 80 / 80 | 80 / 80 |
+| scars from the region (absences) | 225 | 1 |
+| scars from an affordance | 4 | 45 |
+| levels completed | 0 | 0 |
+
+**The absence flood persists in `ls20` and the presence filter does not touch
+it**, exactly as forecast when option (ii) was chosen: `ls20` affords all four
+actions every cycle, so all four are genuinely present and three are genuinely
+unused. The filter is live — it is what keeps `action:0` from being registered
+absent, and `vc33` shows 1 absence rather than a flood — but it does not solve
+`ls20`. The remaining question is whether an affordance that is present but
+*unasked* should count as silent. Not decided here.
+
+**Two engine behaviours found by running it**, neither documented:
+
+- `reset()` returns a populated frame for `ls20` and an **empty** one for
+  `vc33`, which needs RESET sent as an action before the game starts. The
+  boundary gate refusing the empty frame is how this surfaced.
+- `vc33` reaches `GAME_OVER` and **keeps reporting `available_actions == (6,)`**.
+  Stepping that action in a terminal state returns an empty frame. So the
+  policy reads the state, not the afforded list, and commits RESET from a
+  terminal frame.
+
+**Neither game completed a level.** The move distribution is 20/20/20/20 — with
+all four affordances at confidence 1.0, ties break on fewest observations and
+the policy round-robins. That is a systematic sweep, not learning-driven
+behaviour, and it is the declared limit showing up in the numbers: the loop
+knows what its controls do and does not know where anything is.
+
+### The model — the thinking organ
+
+`src/arc3/model.py`, plugged into T5's `PredictRule` seam (declared deviation
+**#3**, same additive-and-defaulted shape as the other two; dil-core's
+persistence stays the default). The model supplies the **expectation** and
+nothing else: it never sees the afforded set and never reaches the emission, so
+it cannot choose. The model thinks, the self acts.
+
+#### Why it is not a downloaded network
+
+Three constraints, each on its own sufficient:
+
+- The scored games are **unseen**, and their mechanics are the thing to be
+  discovered. Weights trained on other games predict the wrong world.
+- Kaggle's evaluation session has **no network**.
+- **INV-5 forbids the alternative outright**: "refeeding the whole game history
+  into a context window each step is a load, not an accrual". A large model
+  re-reading its own history every step is exactly what the invariant names.
+
+What is left, and what the protocol actually asks for, is a predictor that
+**accrues within the episode**. It starts knowing nothing about the game it is
+in.
+
+#### What it conditions on
+
+Persistence predicts that a control does what it did last time; measured, that
+is right 76% of the time in `ls20`. The residual is position — whether a move is
+blocked depends on what is in the way. So the context is **what lies where the
+move would land**: the values of the cells the mover would arrive on, as a
+multiset, so the same obstruction met at two places reads as one situation.
+
+The mover and each action's displacement are **learned from the agent's own
+effects**, not configured. On real `ls20` frames the model recovered
+`action:1 → (-5,0)`, `action:2 → (+5,0)`, `action:3 → (0,-5)`, `action:4 →
+(0,+5)` and a mover of value 9 — the control scheme, from nothing.
+
+#### Measured, with the two gains separated
+
+The model changed **two** things at once — majority vote over accrued evidence
+instead of most-recent, and context conditioning. Reporting one number would
+credit context with wins that majority alone produces.
+
+| on 316 real transitions | `ls20` | `vc33` |
+|---|---|---|
+| most-recent (dil-core persistence) | 76% | 41% |
+| majority, no context | 76% (**+0**) | **69%** (+28) |
+| majority + context (the model) | **94%** (+18) | 69% (**+0**) |
+
+**Two different mechanisms, each carrying one game.** In `ls20` the whole gain
+is context; in `vc33` the whole gain is majority, because no mover is learnable
+there — `vc33` produced no rigid displacement at all, so its context was empty
+in every one of 157 cycles.
+
+Live, 80 cycles each, scars sourced to an affordance fell from **4 → 2**
+(`ls20`) and **45 → 23** (`vc33`).
+
+#### A defect the tests found, which the real frames had hidden
+
+The background collected displacement votes it had not earned: when a thing
+steps into empty space, the hole it leaves steps the other way, so the
+background mirrors every move and can tie with — or beat — the thing that
+actually moved. On real frames the rigidity filter already excluded it, so the
+live numbers never showed it; a clean two-value frame exposed it immediately.
+The model now votes for a background separately and excludes it, and keeps
+displacement votes keyed by value so the mirrored vote cannot outrank the real
+one. **The measured numbers are unchanged by the fix** — it buys robustness, not
+score.
+
+#### What it does not do
+
+Neither game completed a level. The model improves **prediction**, not
+**winning**. Knowing what a control does, and knowing it 94% of the time, is
+still not knowing where to go.
+
+### Attention, and the absence flood dying
+
+Ported from dil-core, where the gap actually was. T7 now carries two gates, both
+additive and defaulted: `present` (the region's word — an entity it says is not
+there is not silent) and `attentionSpan` scaled by the field's `attentionGain`
+(the field's word — an entity the loop is no longer oriented toward is not being
+waited on).
+
+**Measured live on `ls20`, 80 cycles per run:**
+
+| `attentionSpan` | scars | absences | real resistance |
+|---|---|---|---|
+| ∞ (the old behaviour) | 227 | **225** | 2 |
+| 3 | 221 | 219 | 2 |
+| 2 | 149 | 147 | 2 |
+| 1 | 76 | 74 | 2 |
+| 0.5 | 2 | **0** | 2 |
+
+**The right-hand column never moves.** Attention removed 225 false absences and
+not one real collision. That is §8.2's line holding in live data rather than in
+a promise: attention lowers what is demanded back, never what is registered.
+
+`span = 0.5` reaches zero, and is not the answer: §8.1 **C3** requires a
+missing-InfoUnit when an expected event fails to occur, and a loop that expects
+nothing fails C3 by construction. `span = 1` keeps C3 alive while cutting
+225 → 74.
+
+#### The loop sets its own attention width
+
+The span no longer has to be hand-tuned per game. T6 — the layer that *accrues*
+Others — contributes `attentionGain = 1/N` upward into the field through the new
+INV-7 up-channel, and T7 reads it at N+1. The host declares a span meaning "how
+long I would wait if I had one thing to watch"; the loop divides by how many
+things it is actually holding.
+
+Measured live on `ls20`, where T6 accrues five entities (`action:0` plus the
+four affordances), so the gain settles at 0.2:
+
+| declared span | effective | absences | real resistance |
+|---|---|---|---|
+| ∞ | ∞ | 225 | 2 |
+| 8 | 1.6 | 76 | 2 |
+| **4** | **0.8** | **3** | **2** |
+| 2 | 0.4 | 1 | 2 |
+
+**225 → 3 at a declared span of 4**, with C3 still alive, and the real-resistance
+column still untouched.
+
+#### The resistance-retrieval channel, and a negative result
+
+§10 requires a private store to carry the resistance-retrieval channel. It now
+exists here: `dil/loop/recollection.py` reads `[event]` and answers with an
+expectation — what the region gave, last time, in this same situation — and
+nothing else. `scar → running` fires for every scar it returns, so the store is
+genuinely being read for the first time.
+
+Two sources of expectation then exist: the model, which says what it has
+learned, and the record, which says what the region actually did. §6.4 already
+settles what to do when two internal sources disagree — "the opposition is not
+resolved by an internal rule but collided against the region" — so nothing
+arbitrates on the merits: where the record speaks, it is what gets TESTED.
+
+**Measured, 200 cycles per game. It does not work.**
+
+| | `ls20` OFF | `ls20` ON | `vc33` OFF | `vc33` ON |
+|---|---|---|---|---|
+| prediction errors | 9 | **16** | 58 | **113** |
+
+And the contests themselves, across both games — **66 disagreements**:
+
+| the region sided with | count |
+|---|---|
+| the model | 62 |
+| the record | **1** |
+| neither | 3 |
+
+The record lost 62 of 66 and roughly doubled the error rate in both games.
+
+#### Why — a sampling bias, and no verdict anywhere
+
+An earlier draft of this section said the store holds "the occasions on which the
+agent was wrong". That was wrong, and it imported a verdict the protocol
+explicitly refuses. §9: the tag "carries no claim of correctness", and "judging
+correctness is the work of Mode-B and of an external third party reading the
+scar, **never of the store**"; a datum that has met no resistance "is not wrong,
+only not yet tested". §3 defines the unit exactly: a ResistEvent is **a
+registered mismatch between the agent's expectation and what the region
+returned** — divergence, not error.
+
+The real mechanism is a **sampling bias**, and it is sharper than the
+correctness story. A scar's `received` field is a genuine return from the
+region; nothing about it is mistaken. But a scar exists *only where the return
+diverged from what was expected*. So conditional on a predictor that mostly
+works, the recalled set is exactly the subset of returns that **surprised** the
+loop — which are the rare ones. The record recites the region's exceptions, and
+recites them faithfully. The model answers with the distribution. Asked "what
+will happen", the exception loses; that is arithmetic, not a defect in either.
+
+`vc33` shows it plainly: the record disagreed with the outcome 54 times while
+*agreeing with the model*. Both named the same thing and the region did something
+else — the record was not contradicting the model, it was reporting an old
+surprise.
+
+This is the quantitative form of a worry raised before the design was chosen,
+now stated correctly: if only mismatches enter the store, **the better the
+predictor gets, the rarer and more exceptional the store's contents become**. In
+`ls20` the model is right 94% of the time, so what the store holds is the 6%
+that surprised it.
+
+#### What the record is actually for
+
+Which is not nothing. §9's chain is mismatch → memory → learning → change: a
+ResistEvent is where the region pushed back, and that is what the loop is
+supposed to change *from*. A faithful record of every point where the region
+resisted is exactly right for driving change, and exactly wrong for answering
+"what happens next". The measurement here says only the second thing.
+
+#### What is kept, and what is declared
+
+The channel stays, wired and tested, and **off by default** (`recollection=None`
+keeps the reference behaviour exactly). It is not recommended as a *predictor*
+on this evidence. What it might still be good for — a signal that a situation is
+unstable, rather than a claim about what will happen — is not settled, and is
+not being guessed at here.
+
+### The fit floor, and what bounds its reach
+
+Ported from dil-core: the field can raise the floor a situation's fit must clear
+before the loop builds forward from it — attention over *situations*, under the
+`H_COUNT` ceiling. Measured live on `ls20`, 60 cycles:
+
+| `fitFloor` | forward-builds | scars | real resistance |
+|---|---|---|---|
+| 0 (the old behaviour) | 55 | 5 | 2 |
+| 0.5 | 51 | 5 | 2 |
+| 0.99 | 47 | 5 | 2 |
+
+The scar column does not move at any setting: the floor selects what is **built
+forward from**, never what is **registered**. That is the §8.2 line again, held
+in live data.
+
+**Its reach is bounded, and by tag B.** `SUFFICIENT_RECURRENCE` is 3, so
+confidence saturates after three observations of an entity and clears any floor
+below 1 from then on. The floor bites only while confidence is still ramping,
+which in a 60-cycle run is a short window. That is not a flaw in the floor — it
+is the untuned tag B showing through, the one still declared here as inherited
+from dil-core rather than measured.
+
+#### A design error the measurement caught
+
+The contribution was put on T8 first, and it did nothing: the gain sat at 1.0
+for all 80 cycles. T8 ranks the Others *present this cycle*, and in this host one
+affordance returns per cycle, so T8 saw N = 1 every time. How many Others the
+loop holds is **accrued** knowledge, and T6 is the layer that accrues it. Fixed
+upstream in dil-core first, with a test pinning it there.
+
+#### What this corrects in the earlier entry
+
+The absence flood was reported here as a consequence of the affordance mapping,
+and the open question was whether an affordance that is present but unasked
+counts as silent. That framing was too narrow. The flood is the signature of a
+loop with **no attention at all**: every entity ever seen expected back every
+cycle, for ever. With one entity it is invisible; with N entities of which one
+returns per cycle it is N−1 false absences per cycle, in any host, for any
+domain. The affordance mapping only made it visible.
+
+### Nothing reads the goal
+
+Traced through the code, the chain §9 describes — mismatch → memory → learning →
+change — is complete, and its last link is one rule wide:
+
+| what | which component |
+|---|---|
+| interacts with the region | `Arc3Source.deliver` → `env.step` |
+| perceives | `read_frame` → `diff` → the effect signature |
+| **knows where anything is** | **nothing** — only "what is on the square I would land on" |
+| collects mismatch | T5 (value-mismatch), T7 (absence) → driver → `[event]` |
+| learns | the model's table, T5's windows, T6's counters, T7's expectations |
+| changes behaviour | `LeastResolved`: take the least-resolved afforded action |
+| **pursues a goal** | **nothing** |
+
+`levels_delta` is the score channel — the only thing RHAE counts, the only
+definition of winning. Grepped: it appears exactly twice, both in
+`observe.py`, writing it into the payload and reading it back out when
+rebuilding an `Effect`. **No component uses it to decide anything.** The
+`stateTo` channel has one reader, `respond.py`, and only to RESET after a
+terminal frame — never to seek a WIN.
+
+So the agent cannot pursue the goal, because nothing reads the goal. It carries
+the goal inward and drops it.
+
+That accounts fully for zero levels completed. It is not a tuning problem. Two
+limits declared earlier — "the loop is handed no coordinates" and "`vc33`
+learns nothing from context" — were written up as limits of the *context*
+representation. They are the same single hole, and the hole is that **nothing in
+this repository represents a want**.
+
+Where such a thing could live is not obvious and is not being guessed at:
+§6 link 4 assigns direction and value, but INV-8 forbids the appraisal step from
+drawing its criteria from the state the agent is editing, and `levels_completed`
+is part of that state. Naming a goal is therefore a skeleton decision, not an
+implementation detail.
+
+### How far this travels beyond ARC-AGI-3
+
+Layered, and the layers were checked rather than assumed. `grep` over `src/dil/`
+finds no ARC-AGI-3 knowledge in code at all — only the word "frame" inside
+"reference frame", and two comments.
+
+| ring | what it assumes | portability |
+|---|---|---|
+| `dil/` | nothing about any world | travels intact |
+| `frame.py` | 64×64, values 0–15 | shape is general, constants are not |
+| `effect.py` | a grid of discrete values | any grid world; `transitions` survive off-grid |
+| `model.py` | something moves rigidly on a grid | **the most specific piece** |
+| `respond.py`, `host.py` | action ids plus coordinates | general in shape |
+
+**`vc33` is the empirical test of this**, not a hypothetical: there the model
+found no rigid mover, context was empty in all 157 cycles, and it degraded
+gracefully to majority-over-effects — 41% → 69%. It keeps working and loses its
+best feature.
+
+Porting to another world means re-declaring exactly the seams §12 already
+enumerates: T3's transducer, T4's resolver, T5's predict rule, the boundary gate
+and the effect signature. The DECIDE@IMPL list *is* the portability surface.
+
+### What GLOB-MOD actually holds, read off a live run
+
+Attention is a composition now, not one layer's formula. Each layer contributes
+the fact it can see and no other layer can, at weight 1, and decides nothing
+about what follows: T3 `channelActivity`, T4 `strangeness`, T5 `surprise`, T6
+`otherCount`, T7 `silence`. T7 reads the width off the composition —
+`(1 + strangeness) / max(1, otherCount)` — and `RespondContext` now carries the
+field, so it can reach behaviour.
+
+Traced on `ls20`, 40 live cycles:
+
+```
+cyc channelAc strangene  surprise otherCoun   silence  ->width  ->span
+  1     1.000     0.000     0.000     1.000     0.000    1.000   4.000
+  2     1.000     0.000     0.000     2.000     0.000    0.500   2.000
+  4     1.000     0.000     0.000     3.000     1.000    0.333   1.333
+  6     1.000     0.000     0.000     4.000     1.000    0.250   1.000
+  8     1.000     0.000     0.000     5.000     1.000    0.200   0.800
+ 20     1.000     0.000     0.000     5.000     0.000    0.200   0.800
+ 40     1.000     0.000     0.000     5.000     0.000    0.200   0.800
+```
+
+**Two of the five facts are constants in this host, and the rest go flat after
+cycle 8.**
+
+- `channelActivity` is 1.000 for ever: the host sends exactly one signal per
+  cycle, so the number carries nothing.
+- `strangeness` is 0.000 for ever: T4's resolver always finds the entity,
+  because the host always knows which affordance it just used. There is no
+  entity novelty in this host to measure.
+- `otherCount` climbs 1 → 5 and then freezes: five affordances, all met by
+  cycle 8.
+- `surprise` and `silence` do move, and they are the only two that do.
+
+So the composition machinery is right and **the host is not feeding it anything
+that varies**. The field is legible now, and what it legibly says is that it has
+almost no context to compose from.
+
+#### The model's interpretation now reaches the field — and the field goes static anyway
+
+`PredictRule` gained `contribute`, so the model reports what only it can read:
+`contextNovelty` (is this situation one I have met?) and `contextsKnown`. Both
+land in the field, bound to T5, and `attentionWidth` composes novelty as a third
+fact. Traced live on `ls20`, 48 cycles:
+
+```
+cyc contextNo contextsK  surprise otherCoun   silence strangene  ->span
+  1     1.000     0.000     0.000     1.000     0.000     0.000   4.000
+  3     0.000     2.000     0.000     2.000     0.000     0.000   2.000
+  6     1.000     4.000     0.000     4.000     1.000     0.000   1.000
+ 10     1.000     8.000     0.000     5.000     0.000     0.000   0.800
+ 16     0.000     9.000     0.000     5.000     0.000     0.000   0.800
+ 48     0.000     9.000     0.000     5.000     0.000     0.000   0.800
+```
+
+`contextNovelty` **does** vary, for about fifteen cycles. Then it is 0 for ever,
+and `contextsKnown` freezes at **9**.
+
+**That is the finding, and it is about the model rather than the field.** The
+landing-patch context collapses a 64×64 world into **nine** distinct situations.
+Five affordances across nine situations is a space the agent exhausts in fifteen
+cycles — after which nothing in the field moves again, there is nothing left to
+be curious about, and no want exists to take over. The environment stops being
+open because the model stopped being able to tell it apart.
+
+So the field being static was never only the field's problem. `strangeness` is
+structurally 0 here because the host always knows which affordance it used, and
+`contextNovelty` saturates because the model's situation space is nine states
+wide. A richer reading of the situation would give the loop an environment it
+does not finish mapping in fifteen moves.
+
+#### Where the missing context is
+
+`strangeness` measures **entity** novelty, and this host has none. The novelty
+that exists here is **context** novelty — is this landing-situation one the agent
+has met before? The model knows exactly that: it is whether `(entity, context)`
+is already a key in its table. That is an interpretation of context, which is
+what the field is missing, and it is one the model is already computing and
+throwing away.
+
+It cannot get in yet. The model lives behind T5's `PredictRule`, and a rule is
+not a layer: it receives `(entity, window, observed)` and has no `contribute`.
+Letting the model's reading of its own situation reach the field means widening
+that seam, which is a skeleton decision and is not taken here.
+
+### Entity was the wrong thing, and T8 said so
+
+`entity = affordance` was settled early and it was wrong. §8.4 defines an entity
+as "an other-entity the agent does not control", and §6.3 puts the layers that
+live off it above T4: T6 builds an `OtherModel` of it, T8 builds `RelValue` and
+`SocialEdge` — the latter being "an Other↔Other interaction with **no self
+present**". An entity is an *Other*. It is not the self, which T2 already
+separated, and it is not an action the agent can take.
+
+An affordance passes T4 and T5 and starves everything above. Measured over a
+real run:
+
+```
+T8 over the run:  RelValue = 0   SocialEdge = 0   others/cycle = [1]
+```
+
+**The top layer of the meaning-channel produced nothing, ever.** `RelValue`
+needs N ≥ 2 and there was never more than one Other present; `SocialEdge` needs
+two Others interacting without the agent, and two buttons cannot do that. The
+absence flood was the first symptom of the same error: an affordance does not
+return on its own, so asking whether it fell silent was the wrong question from
+the start. Attention patched the symptom.
+
+#### Roles were inverted, both of them
+
+The host handed the loop a finished interpretation — "the thing of value 9 moved
+up five" — while the model reached past the loop into the raw grid to decide what
+was worth looking at. The body was concluding and the mind was sensing. Under the
+biological reading Plone set out — host is the body that receives signals, model
+is the thinking and interpreting part, DIL is how information moves, `store/` is
+memory — both belong the other way round.
+
+#### `perceive.py`: the model reads the signal
+
+Things are connected runs of one value, four-connected, excluding whatever the
+grid is mostly made of. The background is *read* rather than assumed, so a world
+on a non-zero background still parses.
+
+**Identity was chosen by measurement, over 60 real frames per game.** The score is
+churn: how many identities exist overall against how many are present in any one
+frame. An identity that changes when the thing changes is not an identity.
+
+| identity | overall | per frame | churn | ever moves |
+|---|---|---|---|---|
+| value + bbox | 101 | 16.3 | 6.2× | 5 |
+| value + size | 101 | 16.3 | 6.2× | 4 |
+| **value** | **8** | **8.0** | **1.0×** | **4** |
+| value + channel | 16 | 8.0 | 2.0× | 3 |
+
+Value alone holds at **1.0× in both games** — every identity present in every
+frame. Extent and cell count fail hard: a thing that changes shape becomes a
+different thing six to ten times over. Channel was rejected on the same
+evidence, because `ls20`'s stack depth varies.
+
+**Declared limit:** this is a kind of *stuff*, not an individual. Every cell of
+value 9 is one Other however many separate pieces they form. Telling individuals
+apart needs matching across frames, which is a further interpretation and is not
+done. What it does buy is what affordances never could — **six to eight Others
+present at once**, so T8 has the N ≥ 2 it has never had.
+
+Segmentation costs ~5.7 ms per frame pair, measured; ~0.6 s over a hundred-cycle
+run.
+
+### The rebuild, measured end to end
+
+`entity = thing`, `context = action`, and the two rings swapped back:
+
+| ring | files | job |
+|---|---|---|
+| **body** | `frame.py`, `action.py`, `host.py`, `observe.py` | receives, gates, carries, executes. **Concludes nothing.** |
+| **mind** | `perceive.py`, `interpret.py`, `mind.py` | finds things, reads what became of them, says what they will do. **Chooses nothing.** |
+
+`effect.py` and the old `model.py` are gone. Nothing in production referenced
+them once `perceive.py` and `interpret.py` existed — segmenting first makes the
+frame-level signature unnecessary, because a thing's displacement is just where
+it was against where it is, with no rigidity filter and no translation
+invariance to engineer.
+
+#### Prediction, on the same 316 transitions the old mapping was measured on
+
+| | old (affordance + hand-coded landing patch) | new (things) |
+|---|---|---|
+| `ls20` | 94% | **93%** |
+| `vc33` | 69% | **85%** |
+
+One point given up where the hand-coded feature was doing the work, **sixteen
+gained** where it was blind — and the feature is gone.
+
+#### Live runs, 60 cycles each
+
+| | `ls20` before | `ls20` after | `vc33` after |
+|---|---|---|---|
+| Others per cycle | 1 | **9** | **7** |
+| T8 `RelValue` | **0** | **540** | **420** |
+| T8 `SocialEdge` | 0 | 0 | 0 |
+| total scars | 227 | 44 | 61 |
+| of which absences | **225** | **1** | **2** |
+| distinct resistance sources | 2 | **8** | 3 |
+| `channelActivity` in the field | 1.0 constant | **9.0** | **7.0** |
+
+**T8 produced nothing at all before and produces hundreds of `RelValue`s now** —
+the top of the meaning-channel has work for the first time.
+
+**The absence flood is gone structurally, not patched.** 225 → 1. Attention was
+holding it down; the real cause was that an affordance cannot be absent, and a
+thing can: it either is in the frame or it is not. §13.7's source diversity also
+stops being nominal — resistance now arrives from eight distinct Others instead
+of one.
+
+#### Still zero, and declared
+
+`SocialEdge` is **0**. It needs Other↔Other interactions, which the host never
+supplies — `HostCycleInput.interactions` is left empty. Under the old mapping the
+idea was meaningless (two buttons cannot interact without the agent); under this
+one it is perfectly meaningful — `thing:9` touching `thing:5` is exactly that —
+and it is simply not implemented.
+
+`levels_completed` is **0** on both games. Nothing reads the goal; that is
+unchanged and is not a consequence of this rebuild.
+
+### A regression in the rebuild, and the technical items closed
+
+#### The regression
+
+The respond policy ranked actions by T5's confidence in an entity named
+`action:N`. The rebuild made entities things, so no entity carried that name,
+every action ranked `(0, 0, id)`, and the lowest id won every cycle. Measured on
+a live `ls20` run: **ACTION1, 40 times out of 40.** The rebuild's first
+behaviour figures — 44 scars, 1 absence, 8 resistance sources — came from an
+agent pressing up into a wall. Its perception figures (9 Others per cycle,
+`RelValue` in the hundreds) were sound; its behaviour figures were not, and they
+were reported without the move distribution that would have shown it. `vc33` was
+unaffected, affording only ACTION6.
+
+#### What the policy reads now
+
+Only the field. The mind accrues, per situation (per action, here), how well it
+predicts what follows and how the region has answered — and reports both upward
+as `resolved:action:N` and `valence:action:N`. The field's blend keeps no memory
+of its own (a key contributed this cycle takes this cycle's average), so the
+memory is the mind's and the field carries the current reading. The policy
+composes the two as `resolved − valence`, lower first: curiosity is the base and
+want shifts it. Ties break on the self's own record of what it has committed.
+
+`region_valence` is the one place a sign is put on an outcome: +1 for a
+completed level or a win, −1 for game over, 0 otherwise. Declared, named, and
+not a goal — it reads how the region answered; want is what the composition does
+with that.
+
+#### Other-to-Other interactions
+
+The mind reads contacts *made or broken* between two kinds of stuff, and the host
+carries them in as T8's `interactions`. Standing contacts were measured at ~10
+per frame and nearly constant, so they would have said nothing; made-or-broken
+came to about five per eighty transitions — sparse and real. `SocialEdge` went
+from 0 to 5 (`ls20`) and 14 (`vc33`) over 120 cycles.
+
+#### T8 was a sink
+
+Nothing read T8's output. INV-1 forbids dead branches and §6.2 says "T8 closes
+back into the loop, not into a sink". T8 now contributes `interactions` and
+`resistanceConcentration` to the field. Fixed in dil-core first (`a1914f3`).
+
+#### Live, 120 cycles
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| moves committed | `1:103 2:9 3:4 4:4` | ACTION6 only, swept |
+| `SocialEdge` | 5 | 14 |
+| scars / absences | 90 / 1 | 119 / 4 |
+| `resolved:action:*` | 0.91–0.94 | `6`: 0.86 |
+| `valence:action:*` | all 0 | `6`: −0.02 |
+| levels completed | 0 | 0 |
+
+#### What is still wrong, diagnosed
+
+**Curiosity sticks.** ACTION1 took 103 of 120 moves in `ls20` because it is the
+least resolved action (0.91), and it is least resolved because its outcome
+depends on position — blocked or not — while the context is the action alone.
+The mind can never resolve it, so curiosity never leaves it. This is the "noisy
+TV" failure of curiosity-driven exploration, and its cause here is specific: the
+situation the mind reads against is too coarse. The hand-coded landing patch had
+supplied exactly the missing piece; removing it was right, but nothing has yet
+replaced what it carried.
+
+**Want can only avoid.** `valence` is 0 for every action in `ls20` because the
+region never answered anything with a level or a win. In `vc33` a single game
+over registered as −0.02 on ACTION6, and with one afforded action it can change
+nothing. Want exists and is wired; it has never had anything to want.
+
+### Individuals, and curiosity that follows progress
+
+Two changes, both approved by Plone, both measured before they were wired.
+
+#### (a) Tracked individuals, grouped by common fate
+
+The contact reading proposed to fix curiosity's stickiness helped overall
+prediction (93 → 97%) and did nothing for the moving object (70 → 66%). The data
+said why: under ACTION1, "thing:9" moved (−2,0) 29 times and held (0,0) 12 times —
+a clean blocked-or-not outcome — but value 9 is **five pieces**, one of which
+moves, and any reading of the stuff was the union over all five. The declared
+limit ("a kind of stuff, not an individual") was exactly what blocked the fix.
+
+`seeing.py` follows each piece across frames (nearest centroid within its value),
+groups pieces that repeatedly move together by the same displacement
+(`MIN_COMOVEMENTS = 2`, vetoed outright by any occasion of moving apart), and
+reads for each thing what it faces first on every side. Measured on the 316 saved
+transitions:
+
+| identity | churn | ls20 | vc33 |
+|---|---|---|---|
+| value (stuff) | 1.0× | 93% | 85% |
+| tracked piece + what lies ahead | 1.5× | 98% | 94% |
+| **tracked, grouped by common fate** | **1.7×** | **99%** | **93%** |
+
+Without grouping the moving object's front part was predicted 100% and its back
+part 67%: it is drawn in two colours, segmentation splits it, and a ray from the
+back stopped at its own front and never saw the wall. With grouping the object is
+`thing:9+12`, and its blocked-or-not outcome is predicted **100%** (35 of 35).
+
+**Order is INV-8.** Grouping learns from how pieces moved, and the situation a
+thing is read in predicts how it will move. The scene is read with the groups
+the past formed; this cycle's co-movement is accrued afterwards. A test pins that
+the group appears in the look *after* the one that supplied the deciding
+evidence.
+
+The stuff-level readers in `interpret.py` (`changes_of`, `contacts`,
+`interactions_of`) and `Region.kind` were removed once nothing in production
+called them. Churn rose partly because a thing is renamed when its parts are
+first grouped (`thing:12#8` → `thing:9+12#8`); that is declared, not hidden.
+
+#### (b) Curiosity follows learning progress
+
+Least-resolved-first is greedy toward irreducible noise: whatever the mind can
+never predict stays least resolved for ever, and curiosity never leaves it. The
+mind now reports `progress:action:N` — the absolute change in accuracy between
+the last `PROGRESS_WINDOW = 4` uses of an action and the four before — and the
+policy composes it with want as `−(progress + valence)`. Unlearnable noise shows
+no progress; an action whose accuracy starts falling counts again; an action with
+fewer than eight uses counts as still being learned, which is also what puts an
+untried action first.
+
+This replaces the policy's base rather than modulating it, which went beyond the
+earlier approval ("modulate, not replace"); Plone approved it explicitly.
+
+#### Live, 120 cycles
+
+| | `ls20` before | `ls20` after | `vc33` after |
+|---|---|---|---|
+| moves committed | `1:103 2:9 3:4 4:4` | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| `resolved:action:*` | 0.91–0.94 | 0.97–0.99 | `6`: 0.93 |
+| things per cycle | 9 | 19 | 12 |
+| situations the mind has met | 45 | 176 | 56 |
+| `SocialEdge` | 5 | 28 | 20 |
+| moving object's distinct positions | not measured | **19** | — |
+| levels completed | 0 | **0** | **0** |
+
+It does not oscillate in place: the last twelve positions of the run walk a
+straight line leftward across the grid, following the one action still showing
+progress (`progress:action:3` = 0.12, all others 0). It did spend five cycles
+pressing into the right-hand wall before that.
+
+**Still 0 levels, and the reason is unchanged: want can only avoid.** Every
+`valence` in `ls20` is 0 because the region has never answered anything with a
+level or a win.
+
+### The prior — what the character may know before it lives, 2026-09-23
+
+Settled with Plone. The zero levels are not a defect: the character was put in
+the maze with no problem to solve. A creature put in a box arrives with a very
+long history (genes, and what Others taught it); this one arrives with none, at
+the level of a zygote with a wide range of action. So the least it must be given
+is **a directive**, tagged `prior`, and everything after that is its own thinking
+and interpretation. Plone: "Đừng tự làm khó mình và làm khó nhân vật" — give it
+what the rules allow it to know.
+
+#### What the rules allow it to know, verified
+
+Read in full on 2026-09-23: the ARC-AGI-3 Technical Report, the docs pages
+game-schema, actions, methodology and competition_mode, and the Kaggle rules
+(rendered through a headless browser, since the page needs JavaScript).
+
+- The directive: the official leaderboard gives every model the same system
+  prompt, "You are playing a game. Your goal is to win." (report, §4.3.1).
+- `WIN` = "The objective was completed successfully", `GAME_OVER` = "The run
+  ended without a win" (game-schema).
+- Structure, cost, body and the world's core-knowledge priors (objectness,
+  geometry and topology, basic physics, agentness; no language or cultural
+  symbols).
+- The Kaggle rules permit external data that is "publicly available and equally
+  accessible to use by all Participants" (§6.a) and forbid "information from hand
+  labeling or human prediction of the validation dataset or test data records".
+  Public documentation is the first and none of the second.
+
+What the report warns against is a different thing: a harness carrying
+"ARC-AGI-3 specific strategies". The rules of the place are not a strategy;
+nothing here says how to win any game.
+
+#### `src/arc3/prior.py`
+
+Five items (`directive`, `levels`, `cost`, `body`, `world`), 31 sentences, each
+quoted verbatim with the document it was read in. All 31 were checked
+programmatically against the downloaded sources. The host declares them as
+`StoreDeclaration.preexisting`; the runtime's requisition admits each through
+the tagging-gate as `prior`, cycle-mark null. A test pins that an item carrying
+a verdict tag is refused and reported, not admitted.
+
+Declared: admission happens only with a real substrate (`store_root`). The
+in-memory fixture the live measurement scripts ran on has no requisition step.
+
+#### How the prior is recalled — settled with Plone, same day
+
+First found: **nothing read the prior once it was admitted.** It sat in `[data]`
+stamped `prior` and never made the `prior → running` move §9 defines — a sixth
+instance of a channel present in the topology that nothing drew on.
+
+Plone settled how it enters, correcting both options put to him. Data does not
+flow in by itself — the store is the character's memory, and memory pouring in
+unasked is overload, a disease in a living thing. So the character asks. But
+what it retrieves then enters the loop and runs every layer, and that is when
+its tag changes from `prior` to `running`. `prior` is only a state tag: it tells
+the character that the datum is not its own, has not been through its own
+experience, and needs to be tested. (§9 agrees: "Running many cycles does not
+wash a prior to tested status; only collision-and-hold does.")
+
+The protocol already had every piece; the first proposal here invented an
+`about` tag the open layer already covers, and Plone sent it back to be re-read.
+What is used:
+
+- **§6.4, T3 query** — "opens or calls a channel to ingest actively". The
+  channel called is the store.
+- **§6, link 1** — query returns are an input channel, so the return arrives at
+  T1 the next cycle and runs T1→T8.
+- **§9 open layer, tag F** — a key denotes the same dimension wherever it
+  appears. That is the index: an arrival's description and a datum's open tags
+  are matched on the same keys. This host declares its keys in
+  `decisions.OPEN_TAG_KEYS`; the one doing the recalling is `object`.
+
+Fixed in dil-core first (`5bb031a`), then ported. T3 asks once per description
+it has not asked about. T7 no longer registers a recalled datum absent on cycles
+it was not asked for — measured before that fix, with no presence reported, it
+was registered absent every cycle from the second on.
+
+The status transducer describes its reports as `object: region-status`; the
+directive carries the same tag. The other four items are about other things
+(`level-structure`, `action-cost`, `body`, `things`) and nothing arriving
+describes those yet, so they wait.
+
+**The signs left the code.** `region_valence` now reads the region's answer
+against the recalled directive; with none recalled every answer reads 0. What
+stays in the mind is the interpretation — what an objective and a run ended
+without it mean. Which states those are, and what the region counts on the way,
+comes from the directive.
+
+#### Live, 120 cycles, with a real substrate
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| admitted through the gate / rejected | 5 / 0 | 5 / 0 |
+| store queries from T3 | 1 (`object: region-status`) | 1 |
+| `prior:directive` → `running` | cycle 1 | cycle 1 |
+| directive in the mind from | cycle 1 | cycle 1 |
+| other priors | still `prior`, no cycle-mark | same |
+| moves committed | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| levels | 0 | 0 |
+
+Behaviour is identical to the run before, and that is what should happen: the
+directive carries exactly the content the hard-coded signs had. What changed is
+where it comes from and that an auditor can see it arrive. It does not, by
+itself, get the character through a level; nothing about how to win was ever in
+it.
+
+#### The three limits that run left, worked through
+
+**1. Four items were never recalled.** Because no arrival described what they
+were about. The descriptions were made honest rather than the items forced:
+a status report carries the region's state, the change in its level count and
+the actions it affords, so it is about all three (`object`: `region-status`,
+`levels`, `actions`); a thing's change is about a thing and came by sight
+(`object: things`, `sense: vision`). dil-core now lets one arrival carry several
+descriptions. The old `body` item mixed what the body sees with what it can do;
+it is split into `seeing` (`object: frames`, `sense: vision`) and `actions`
+(`object: actions`). `sense` is declared in `OPEN_TAG_KEYS`. All 31 quotes
+re-verified against the sources after the split.
+
+**2. The query's return was never read back by T2.** §6.4 rule 3 wants every
+emission readable by T2 next cycle; T2 only saw the committed response. Fixed in
+dil-core (`9b0bbdf`), ported: T2 also reads last cycle's lateral emissions, and
+each return arrives as an observed change whose value is the query that asked,
+so T2 tags it SELF_WRITTEN. The content stays not-its-own; agency and
+provenance are different questions.
+
+**3. T3 asks each description once — kept, and why.** Re-asking returns the
+same data, already `running` and in use. Nothing added to `[data]` later carries
+these tags, so there is nothing new a second ask could find. Asking every cycle
+would put three to five queries a cycle into T2's matching window of 8, crowding
+out the moves it has to recognise. It would bite if a datum carrying a cue's
+tags entered `[data]` after that cue was asked; none does here. Declared, and
+put to Plone.
+
+Live, 120 cycles, 6 items admitted, 0 rejected:
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| queries | 5 (things, vision, region-status, levels, actions) | same 5 |
+| items `prior → running` | all 6, cycle 1 | all 6, cycle 1 |
+| `self:move` SELF_WRITTEN | 118 / 120 (2 before T2 is stable) | 118 / 120 |
+| store returns | 6, all UNDECIDED | 6, all UNDECIDED |
+| moves | `4:38 1:28 3:28 2:26` | ACTION6 swept |
+| levels | 0 | 0 |
+
+**Read the UNDECIDED row correctly.** Every return arrives at cycle 1, and T2
+classifies nothing before `STABILITY_THRESHOLD = 3` cycles have run — its own
+move is UNDECIDED then too. The path is closed and tested (with a threshold of
+1 the return is SELF_WRITTEN); in a live run it simply never has a return to
+close on after cycle 2. The threshold is tag B, inherited, untuned.
+
+**What is still true:** the mind reads one of the six — the directive, whose
+payload is structured. The other five are sentences. They run the layers and are
+in use as data, but nothing in this mind can read English, so they change no
+expectation.
+
+### What a third party can read of the prior, 2026-09-23
+
+Measured by reading a live run's `[event]` log directly, not through this code:
+the five T3 queries were there and `prior:directive` moved `prior → running` at
+cycle 1 — but **960 of 960 layer-exit lines were the cycle datum's**. The
+recalled datums ran T1→T8 and left no path; their floor-tags stayed at 1; their
+tags lived only in mutable `[data]`. So a reader could see that *something named
+`prior:directive` began to run*, and not what class of data it was, nor that it
+came through the gate — which §13.6 asks a third party to confirm from traces.
+
+Re-reading §9 settled the fix and ruled out the first proposal. Writing each
+prior's CONTENT into `[event]` at admission would put uncontested information
+into the agent's memory — the log is also what recollection reads — and §9 keeps
+the trail complete "without letting uncontested information into the agent's
+memory". Admission is not an edge of the provenance graph, so the protocol does
+not ask for it to be logged. What it does ask: "every layer a datum exits MUST
+be recorded", no pass-through layers, and an open layer that makes the log
+"auditable by data class". Plone chose (b): the path, and the tag set, never the
+content.
+
+Fixed in dil-core (`d358902`), ported: a recalled datum's exits are recorded
+under its own id, its floor-tag is stamped as it passes, and the cycle's activity
+record carries its full tag set (fixed and open). A cycle that recalls nothing
+writes exactly what it wrote before. The checker gained two trace claims — a
+recalled datum's path covers T1→T8 (C3), and every datum leaving `prior` shows a
+gate-admissible tag set in that cycle's record (C6, §13.6) — and a test pins that
+a datum appearing from `prior` with no tags in the trace fails.
+
+Live, 120 cycles each, read from the JSONL:
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| layer-exit lines | 960 cycle + 8 × 6 recalled | same |
+| recalled tag sets in the cycle-1 record | 6, floor-tag 8 | 6 |
+| directive text anywhere in the log | 0 | 0 |
+| hash chain | ok, 4 082 records | ok, 3 284 |
+| conformance | 5 pass, 1 partial (C4, by design), 1 unverifiable (C2) | same |
+
+C2 is unverifiable only because the gate result was not handed to the checker;
+the run itself qualified. C4's partial is §7: continuity is attributable only by
+a third party.
+
+## 2026-09-24
+
+### Direction C: can an open model write the world model? First measurements, 2026-09-24
+
+Settled with Plone: the mind's thinking can be done by an open model that writes
+an **executable world model** — a program `predict(grid, action) -> grid` — which
+DIL then tests against the region, as data in the store, expectation → mismatch →
+scar → rewrite. The model thinks; it does not choose. Before any architecture,
+the question measured is whether a model that can run offline writes such a
+program at all. Probe: `scripts/wm_probe.py`, on the 159 recorded `ls20`
+transitions (80 train, 79 held out), scored by **exact** match of the whole 64×64
+grid. Baseline "nothing changes": 0/159 — every step changes at least two cells.
+
+| where | model | mode | runs | best program, train / held out |
+|---|---|---|---|---|
+| this machine, CPU + GTX 1050 Ti | Qwen3.6-35B-A3B, IQ4_XS | no thinking | 1st | **64/80 / 60/79 (76%)** |
+| this machine | same | no thinking | 2nd | 1/80 / 0/79 |
+| Kaggle RTX Pro 6000, vLLM | Qwen3.6-27B-FP8 | no thinking | 2 | 0/80 / 0/79 both |
+| Kaggle RTX Pro 6000, vLLM | Qwen3.6-27B-FP8 | thinking | 2 | no program: every round hit the 16,384-token cap inside its reasoning |
+
+What the numbers say, and do not:
+
+- **The capability exists and is not reliable.** One run wrote a program exact on
+  76% of transitions it had never seen; its 35 misses were almost all movement,
+  the step counter being right. The next run with the same model and data wrote
+  one right once in 80. Two runs cannot give a rate.
+- **The 27B dense model did worse here than the 35B-A3B MoE**: six programs, all
+  loading and running, none exact once. Four runs are not enough to rank models
+  either.
+- **Thinking needs a far larger budget.** 26–44k characters of reasoning per round
+  never reached code within 16,384 tokens.
+- The first local run's two failed rounds were the probe's fault — a 4,096-token
+  cap, and each revision seeing the whole transcript. Fixed before the next runs:
+  the probe keeps the best program and shows only it and its failures.
+
+The pipeline itself is proven: the notebook checked all 80 model files (30.9 GB)
+against Hugging Face's published hashes, installed vLLM 0.19 offline, served
+65k-token contexts with a 199k-token KV cache (≈11 full-length requests at
+once), and generated about 33 tokens/s per stream with four streams. The run used
+0.48 h of the 30 h weekly GPU quota; the RTX machine was not charged at more than
+wall-clock time. Locally the same probe costs 25–45 minutes a run.
+
+#### Run 2 on Kaggle: the 35B-A3B MoE, FP8, 2026-09-24
+
+Same probe, same data, `Qwen3.6-35B-A3B-FP8` (the official release, mirrored,
+all 56 files checked against Hugging Face before serving — the check asserts, and
+the server that runs after it did start). Eight runs at once, four without
+thinking and four with, three rounds each, up to 45,000 output tokens a round.
+
+| run | best program, train / held out | note |
+|---|---|---|
+| no thinking 0 | 7/80 / 3/79 | |
+| no thinking 1 | **78/80 / 75/79 (95%)** | round 0 already 63/80 / 58/79 |
+| no thinking 2 | **78/80 / 75/79 (95%)** | round 0 63/80 / 58/79; round 1 fell to 0, round 2 recovered |
+| no thinking 3 | 0/80 after round 0 | then refused: 20,537 prompt + 45,000 output = 65,537 tokens, one over the 65,536 context |
+| thinking 0 | 12/80 / 0/79 | 33–40k chars of reasoning a round |
+| thinking 1 | 2/80 / 0/79 | |
+| thinking 2 | 0/80 / 0/79 | one round hit the 45,000 cap |
+| thinking 3 | 0/80 / 0/79 | one round hit the cap after 100,141 chars of reasoning |
+
+What this adds to run 1:
+
+- **Two independent runs reached the same 95% held out with different code.**
+  Both programs are rules, not lookup tables, and state the same two: the 5×5
+  object (two rows of 12 over three of 9) moves five cells in the action's
+  direction only if every target cell is 3, and the bar on rows 61–62 advances one
+  column per action. Why the last 4 held-out transitions miss has not been looked
+  at.
+- **Still not reliable**: of the three no-thinking runs that finished, two reached
+  95% and one 4%. Across both machines, 3 of 6 no-thinking runs of this model
+  wrote a program above 75% held out. That is a count, not a rate.
+- **Thinking made it worse, not slower-but-better**, with the budget nearly
+  three times run 1's: 0–2 of 79 held out in every thinking run. The reasoning
+  produced code, and the code was wrong.
+- The refused run was the builder's fault: the context was fixed at 65,536 while
+  the output cap was raised. It now sizes the context as
+  `max(65536, max tokens + 24,576)` unless told otherwise.
+
+Cost: 0.33 h of GPU quota (0.49 h used before, 0.82 h after, of 30 h a week).
+Downloading the outputs was cut off by the local 600 s timeout; every probe's log
+is present, but the notebook's own log was not downloaded.
+
+#### What the thinking runs got wrong, read off their programs
+
+The reasoning itself cannot be read: the probe kept only its length, not its
+text, so whether the model tried to run the grid by hand in its reasoning is
+unknown. Fixed for later runs — the log now keeps the reasoning whole, and the
+temperature used. What can be read is every program, and
+`scripts/compare_programs.py` re-scores each one and says where its wrong cells
+are:
+
+| log | round | train | held | wrong cells per miss | misses only in the bar |
+|---|---|---|---|---|---|
+| thinking 0 | 1 | 12 | 0 | 49.2 | 7 |
+| thinking 3 | 1 | 0 | 0 | **17.1** | **64 of 80** |
+| no thinking 1 | 0 | 63 | 58 | 52.4 | 1 |
+| no thinking 1 | 2 | 78 | 75 | 70.0 | 1 |
+
+- **Most thinking programs fitted the examples literally.** Coordinates copied from
+  them — a start at (40, 34), the bar at column `13 + step`, fixed tracks at
+  columns 34–38 and rows 45–49, clamps at rows 20–40; one kept its own position in
+  state across calls instead of reading it from the grid; three described the
+  10×5 region that changes (old place plus new) as a "wave" to paint, not as an
+  object that moves. None checked whether the target cells were free — the rule
+  the 95% programs have.
+- **One came within a line of the no-thinking result.** Thinking 3, round 1, found
+  the 5×5 object by its pattern and moved it five cells; 64 of its 80 train misses
+  are only in the bar, because it took the first column where rows 61 and 62 are
+  equal and not 3 to be the marker — column 0, value 4, not the 11s. Its other 16
+  misses are as many as the no-thinking round-0 programs have without the
+  blocked-move check. The round that should have fixed it hit the 45,000 cap
+  after 100,141 characters of reasoning and wrote no code.
+- **The comparison was not run as Qwen recommends, for either mode.** Every run
+  sent temperature 0.2 and nothing else, and the server was started with
+  `--generation-config vllm`, which by vLLM's engine-argument documentation loads
+  no generation config and uses vLLM's defaults instead of the model's. The
+  Qwen3.6-35B-A3B-FP8 model card recommends, for thinking on precise coding tasks,
+  `temperature=0.6, top_p=0.95, top_k=20, presence_penalty=0.0`; for non-thinking,
+  `temperature=0.7, top_p=0.80, top_k=20, presence_penalty=1.5`; and an output
+  length of 32,768 tokens for most queries, 81,920 for competition-level
+  problems. "Thinking made it worse" holds for these settings only.
+
+### Direction C, placed in the loop (Plone, same day)
+
+The world-model probe (`scripts/wm_probe.py`) ran **entirely outside dil-arc3**:
+it imports nothing from `src/`, its transitions came from a scripted agent in
+`dump_frames.py`, and its score-and-rewrite loop was the probe's own. It recorded
+no mismatch, no ResistEvent, no scar and no `[event]` line, so it is evidence
+only that an open model *can* write such a program — not evidence about this
+agent, and nothing the paper's claim can rest on. It also poured 80 transitions
+into one prompt, the load INV-5 names. Its measurements stay as a feasibility
+result; the next ones run inside the loop.
+
+- **A program the model writes is `running` data** — the character's own, from
+  running — not `prior`.
+- **There is no trigger for rewriting it, and no constant to declare.** The model
+  sits at the **mind**: it is the thinking. When its expectation meets the region
+  and does not hold, the loop registers the mismatch, the ResistEvent and, where
+  it holds, the scar; adjusting is what thinking does with that. If it does not
+  adjust, the mismatch recurs. Rewriting is the consequence of mismatch, not a
+  step scheduled by the host.
+- **The mind reads by asking; nothing is poured into it.** It has the right to
+  read anything in the store, and it chooses what: meeting a problem, it goes to
+  memory for what bears on that problem. Only T3 could query the store, and only
+  about what had just arrived, so this was a gap — fixed in dil-core first
+  (`1e2d826`) and ported: T5 hands its rule `ask(cue)`, which emits a store query
+  and nothing else, traced to T5 with register ↔, answered at T1 next cycle. The
+  settled line narrows from "the mind does not emit" to **"the mind does not
+  act"**: the one thing it sends out is a question to its own memory, and that
+  question is in `[event]`.
+- **What the region returns is data, and the scar is on it** (Plone, same day;
+  cost accepted). dil-core kept no return as data: its one datum per cycle was
+  the driver's cycle datum (payload a signal count, `domain: cycle`), which went
+  to `scar` on any collision, so the tag sat on a counter and the mismatch did
+  not say what it was a mismatch with (§3: "A `scar` has collided with resistance
+  and held"). First built here as a host option, then, at Plone's direction,
+  fixed in dil-core as a gap of the mechanism (`276f30a`) and ported back: each
+  return enters `[data]` through the tagging-gate as `signal-<cycle>-<i>`, runs
+  as `running`, leaves a line at every layer it exits, its tags (never its
+  content) go into the cycle's activity record under `admitted`, and when the
+  expectation about it fails **that datum** moves `running → scar`, the scar
+  record embedding and naming it (`datumId`). The cycle datum still stands for
+  the cycle, and for an absence, where nothing returned. The host declares the
+  tags (`AdmitPolicy`; the reference `admit_return` tags `domain: region`,
+  `source`, `format`); `arc3.observe.admit` uses this host's vocabulary —
+  `domain: observation`, `kind`, `source`, and the channel's own `object` and
+  `sense` values. The checker covers the returns' paths (C3) and gate entry
+  (C6), and reads the flow mode from the cycle seal, since it is the cycle's.
+- **Memory is what the store held before the cycle that asks** (Plone, option
+  (a)). T3 asks after the cycle's returns are admitted, so at first 19 of cycle
+  0's own arrivals came back as "recalled" — the character recalling what it is
+  seeing. A query is now answered without the data admitted in the cycle that
+  raised it. In dil-core too (`276f30a`), with a mutation check.
+
+  Live, `ls20`, 60 cycles (`scripts/run_prior.py ls20 60 [admit]`): moves,
+  positions and scars identical to a run before any of this; 1,142 returns kept
+  (1,122 `running`, 20 `scar`); 20 of 20 scar records name their datum; 0
+  returns recalled as their own memory; the 6 priors still recalled at cycle 1;
+  12,364 `[event]` records; conformance unchanged (C1, C3, C5, C6, C7 pass, C4
+  partial, C2 unverifiable). `run_prior.py` had counted absences as scars
+  sourced `region`, which is the status entity's name too; it now counts them by
+  `mismatch_kind` (0 here) — earlier absence counts from that script need
+  re-checking.
+
+### Protocol v0.3.3: `nascent`, entries by origin, `write`, revision (Plone, same day)
+
+Discussed and settled with Plone, then written into the law in dil-core
+(`f8230de`, protocol v0.3.3 and specification v7, copied into `spec/`), migrated
+there (`44309b7`) and ported here:
+
+- **`prior` is what its definition says**: host data existing before the loop
+  ran. Region returns and the cycle datum are not that; they pass the
+  tagging-gate at `running`, told apart by `domain`, their entry being their
+  tag set in the cycle's record. The first port had admitted them as `prior`
+  and moved them at once — a mislabel of this session's own making.
+- **`nascent`** — the name chosen to keep clear of "self" and of T2's
+  SELF_WRITTEN — is the second one-way entry: a datum the agent writes anew,
+  bearing the cycle-mark of the cycle that wrote it. It arrives at T1 the next
+  cycle, is SELF_WRITTEN at T2, runs every layer, and moves `nascent → running`.
+- **A revision is not an entry**: the content of a held datum changes, its
+  provenance does not, T2 reads it SELF_WRITTEN the next cycle, and `[event]`
+  gets a bare `revision` line with no content. The content is read from the
+  commit snapshot. This is what a rewritten world-model program is.
+- The predict rule has **`write`** (anew, or with `datum_id` to revise), and a
+  **cue may carry `provenance`**, so the mind can ask what collided.
+- DEVIATION from dil-core, declared (Plone: too costly for a full agent, right
+  for this one): **dil-arc3 also commits at the close of every cycle in which
+  the agent wrote a datum**, so every version of the program is in a snapshot
+  tied by its marker to its place in `[event]` (`COMMIT_CADENCE`; tested).
+  `CycleResult.written` carries the count for the daemon.
+- A bug the commit test caught on the way: a written datum's arrival carried its
+  fixed tags as a dataclass, which the snapshot could not store; it now takes
+  the store-return form.
+- **A pre-existing gap, fixed the same day (`f1b4491`)**: the Python daemon's
+  snapshot payload kept only the driver's `cycle` and `lastEmission`, not
+  pending returns, `recalled`, `last_lateral` or `pending_writes`, so a recovery
+  from a commit dropped whatever was on its way to T1. It now keeps the whole
+  driver state, as dil-core does; snapshots in the old form still restore. A
+  recovery test failed before the change and passes after.
+
+Live, `ls20`, 60 cycles after the port: moves, positions, scars and recall
+identical to before; `[event]` 11,162 records, 1,202 fewer than before — exactly
+the 1,142 region returns' and 60 cycle datums' `prior → running` lines v0.3.3
+drops; conformance unchanged. 267 tests.
+
+### When the cycle datum scars, and which datum a recalled scar is (Plone, same day)
+
+The deferred item from dil-core's README, settled with Plone and fixed there
+first (`6c74f0c`, `dc7a9a7`), then ported:
+
+- **The cycle datum goes to `scar` only when what it carries collides**: an
+  outcome it cast (`projected → scar`), or a collision with no return of its own
+  to hold the scar — an absence, a return the host kept out, a store arrival —
+  for which it stands. A cast that did not collide returns to use
+  (`projected → running`) even when another return collided; with no cast it
+  stays `running`. ResistEvents and scar records are unchanged.
+- **A recalled scar is the datum its record names**: since the return holds the
+  scar, recollection now reports that datum (`cycle-N` only for an absence), and
+  the driver moves it `scar → running` once, while it is a scar, with `[data]`
+  following the line. Before, it recorded the move for `cycle-N` on every
+  recall and never touched `[data]` — a gap opened when the scar moved onto the
+  return.
+- Left open, in both repositories: a store arrival that mismatches (a revised
+  datum arriving against persistence's "nothing changed") is not tied to its
+  own datum; the cycle datum stands for it. This mind returns store arrivals as
+  they are, so it does not arise here.
+
+Live, `ls20`, 60 cycles: behaviour identical; 12 cycles had a collision and in
+none did the cycle datum go to `scar` — every one of its 59 casts ended
+`projected → running`. The three situations it casts (`H_COUNT = 3`, the most
+confident) never collided; every collision was on another thing's return, which
+holds the scar (20 of 20 records name it). 275 tests.
+
+### Every record takes the clock when it happens (Plone, same day)
+
+Found by reading back the first live run with the model in the loop: dil-core
+read the clock once per cycle and stamped every record and datum in it with
+that reading. Seventeen minutes of thinking inside T5 showed nowhere in
+`[event]` — every line of the cycle bore its start — and the program the model
+wrote bore that time too, though written at the end. §9 asks for "each
+transition as it occurs" and a timestamp "when the datum is first stamped".
+Fixed in dil-core (`9073ddf`) and ported: every record takes the clock when it
+is appended, region returns and written data when they enter, the cycle datum
+keeps its cycle's start, and the seal adds `closedAt`. Tests with a ticking
+clock, two mutations caught in dil-core. 283 tests.
+
+Still not in the log, by the law as it stands: a thought the mind does not keep
+changes no datum, so it leaves no line beyond the query it asked with; the time
+it took shows only as the gap between T4 and T5.
+
+### First live run with the model in the loop, this machine (2026-09-24)
+
+`scripts/run_world_model.py ls20 10` (renamed `run_game.py` since), Qwen3.6-35B-A3B IQ4_XS on llama.cpp
+(CPU + GTX 1050 Ti), no thinking, temperature 0.2. Store:
+`scripts/data/wm-ls20-cobmhzp2/` (git-ignored). Code as of `949883e` — the run
+started before the per-record clock, so its `[event]` still stamps each cycle
+with one time.
+
+- **The loop worked end to end, and the log shows it.** The frame's expectation
+  failed in 9 of 10 cycles (cycle 0 is the RESET, which changes nothing); each
+  failed frame is the datum that went to `scar`, named by its record. The mind
+  asked the store 9 times, `{"kind": "frame", "provenance": "scar"}`, from T5.
+  The first program entered at `nascent` (`written-1-0`) and moved to `running`
+  the next cycle; 2 commits; 2,319 `[event]` records; conformance as before
+  (C1, C3, C5, C6, C7 pass, C4 partial, C2 unverifiable).
+- **The thinking did not find the game.** 9 thoughts; the first program was kept
+  because there was none, though it explained 0 of the 1 transition it had; the
+  8 after it explained 0 of 1–7 and were not kept, so no revision. 5,971 s for
+  10 cycles, almost all of it the model (262–1,057 s a thought).
+- **The scoring is not the cause**: the program that reached 95% on Kaggle
+  scores 153/159 on the recorded `ls20` transitions through the mind's own
+  `score()`.
+- **Why so little evidence**: memory answers what the store held before the
+  cycle that asks, the answer arrives the next cycle, and it reaches T5 after the
+  frame has been predicted; so a transition seen at cycle k is evidence from
+  about k+3. After 10 cycles the model had seen at most 7, against the 24 the
+  probe showed at once. The local model is also the weaker one: the same model
+  and quantisation wrote 1/80 in the probe's second local run.
+- Open, for Plone: shortening that lag touches the driver's signal order or has
+  the mind hold what it has just seen until memory can answer — both near the
+  line "memory is the store".
+
+### What a written datum was built from, and the mind's short-term perception (Plone, same day)
+
+Plone rejected reordering the driver so memory answers before the region
+returns ("why would the mind read memory before anything has come back?") and
+chose (b) with the trace closed:
+
+- **Short-term perception is T5's window**, already in the law (§6.1
+  `Expectation.built_from: history_window`; the baseline window is
+  `BASELINE_WINDOW = 16`). The world-model mind had ignored the `window` its rule
+  receives; it now thinks from what the store answered, what the window holds of
+  the frame, and the transition in front of it. No new mechanism, no new constant.
+- **A written datum records what it was built from** — protocol v0.3.4, written
+  with Plone and fixed in dil-core first (`c2c0cd2`), ported here. Every write
+  carries `built_from` (units or ids; `()` for nothing held), the driver maps
+  units to their data across cycles (a weakref-keyed map; `InfoUnit` now has a
+  weakref slot) and records ids only in the cycle's `written` entries; an
+  unknown id, a unit from no datum, or a write that says nothing is refused; the
+  checker fails a written datum naming data with no recorded entry. The mind's
+  `built_from` is exactly the evidence the model was shown. With it a reader
+  follows data → program version → expectations → scars → revision.
+
+287 tests.
+
+### One mind, and it is the model (Plone, 2026-09-24)
+
+The run that put the model in the loop had wrapped it around the older mind
+instead of replacing it: the frame went to the model's program, everything else
+— "things" a computation of the grid had found, and the region's status — to the
+counting mind, and only the counting mind's readings reached the field the self
+chooses from. Plone: two brains in one body is off the design — which of them
+would the self crystallize from? One mind; use the model and nothing muddled.
+
+- **Removed**: `perceive.py`, `seeing.py`, `interpret.py` (the computation of the
+  grid into things) and the counting `Mind` with `predict_rule`, with their tests.
+  Their code is at `b7b64d3`; the scripts that measured them run there.
+- **The host takes in and computes nothing**: two signals a cycle — the frame
+  (both grid stacks and the move, as returned) and the region's status. Frame
+  datums are tagged `sense: vision`; a status is about the region's status, its
+  levels and its actions.
+- **The one mind** (`src/arc3/mind.py`, formerly `world_model.py`): the model and
+  its program predict the frame; the status keeps the standing expectation (it
+  stays as it was — the absence of an understanding, not a second one); what the
+  region says is read against the recalled directive. Per action it reports to
+  the field `resolved`, `progress` and `valence`, all from the program's hold on
+  the frame and the region's answers — what `respond.py` reads, unchanged.
+- **Terminology, settled with Plone**: seeing is the eye's, computing is the
+  brain's. The host is the eye — it takes the signal in; the mind computes and
+  interprets. Never name a computation of the mind with a verb of the senses: the
+  old `seeing.py` did that, and the misname hid a second mind inside the host.
+- Consequence to watch: nothing that arrives is about "things" now, so the prior
+  item about the world's things is never recalled; the one about seeing is, on the
+  first frame.
+
+Offline check before any GPU: three cycles, the mind asked the store on each
+mismatch, the field carried its readings per action, conformance unchanged, 156
+`[event]` records for three cycles (468 for two before, most of them the thing
+data). 234 tests.
+
+### The counting mind, as `README.md` described it until 2026-09-24
+
+Moved from `README.md` when the history left it. The README's status said:
+"**Until 2026-09-24 there were two minds**: a counting mind over "things" a
+computation of the grid had found, which chose the moves, and the model's
+program beside it for the frame. Nothing said which of the two the self
+crystallized from." Of the roles it said they were settled deliberately,
+"because getting them the wrong way round was the first real mistake this
+project made — and running two minds at once was the second"; and of seeing:
+"An earlier build computed "things" from the grid inside the host's path and
+named that seeing — the name was wrong, and the computation was a second mind."
+
+Its section on the counting mind, whose code is at `b7b64d3` (the scripts that
+measured it run there, `scripts/README.md`):
+
+It is **not a downloaded network**, for three reasons each sufficient alone:
+
+- the scored games are unseen, and their mechanics are the thing to be
+  discovered, so weights trained on other games predict the wrong world;
+- Kaggle's evaluation session has no network;
+- INV-5 rules out the alternative in so many words — "refeeding the whole game
+  history into a context window each step is a load, not an accrual".
+
+What is left, and what the protocol actually asks for, is a predictor that
+**accrues within the episode**. It starts each game knowing nothing about it.
+There are no weights, no gradients, and no third-party dependencies at all —
+`dependencies = []` is a requirement, not a boast, because an accelerated Kaggle
+session has no network to install from.
+
+It works in four steps, all of them cheap:
+
+1. **Perceive** — pieces are connected runs of one value, four-connected,
+   excluding whatever the grid is mostly made of. The background is *read*, not
+   assumed, so a world on a non-zero background still parses.
+2. **See individuals** — each piece is followed from frame to frame, and pieces
+   that keep moving together, by the same displacement, are learned to be one
+   thing. Nothing is configured: a two-colour object is recognised as one object
+   because its parts always move as one.
+3. **Read the situation** — for each thing, what it faces first on every side, at
+   any distance: another thing, or the edge of the grid. No distance constant, and
+   nothing about what any action does.
+4. **Predict** — associate (thing, action, situation) with what the thing then
+   did, and answer by majority. Report upward, per action, how fast that is being
+   learned and how the region has answered it.
+
+#### Identity was chosen by measurement
+
+A thing has to stay the same thing while it persists, or expectation can never
+match. Four readings were scored against 60 real frames per game by *churn* —
+how many identities exist overall against how many are present in one frame:
+
+| identity | churn | prediction `ls20` / `vc33` |
+|---|---|---|
+| value + bounding box | 6.2× | — |
+| value + cell count | 6.2× | — |
+| value — a kind of stuff | 1.0× | 93% / 85% |
+| **tracked piece, grouped by common fate, read with what lies ahead** | **1.7×** | **99% / 93%** |
+
+Stuff held identity perfectly and hid the thing that mattered. In `ls20`, value 9
+is five separate pieces, one of which moves; every reading of "the 9s" was
+swamped by the four that never move. Tracking individuals costs some churn —
+partly because a thing is renamed when its parts are first grouped — and buys
+this: the moving object's blocked-or-not outcome, predicted **100%**.
+
+The grouping step is there because of a second measurement. Before it, the
+object's front part was predicted 100% and its back part only 67%: the object is
+drawn in two colours, segmentation splits it, and a ray cast from the back part
+stopped at its own front part and never saw the wall.
+
+#### Its measurements
+
+Prediction accuracy, over the same 316 real transitions from two games.
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| actions as entities, one hand-written feature | 94% | 69% |
+| kinds of stuff as entities, context = action | 93% | 85% |
+| **tracked things, context = action + what lies ahead** | **99%** | **93%** |
+
+The first row is the architecture this replaced, which made an *action* the unit
+of experience. Its one strong number came from a feature written by hand for
+this game; the feature is gone, and nothing is given up for it.
+
+Live runs, 120 cycles each:
+
+| | `ls20` | `vc33` |
+|---|---|---|
+| things perceived per cycle | 19 | 12 |
+| Other-to-Other interactions (`SocialEdge`) | 28 | 20 |
+| scars recorded | 54 | 101 |
+| of which absences | 4 | 4 |
+| moves committed | `4:38 1:28 3:28 2:26` | ACTION6 only, swept |
+| distinct positions the moving object reached | 19 | — |
+| **levels completed** | **0** | **0** |
+
+Two earlier versions of this table are gone, and why is worth keeping. One came
+from runs where the agent pressed a single key every cycle — a regression in how
+it chose moves. The next came from an agent that acted on whatever it understood
+least and took one action 103 times in 120. Their perception figures were sound;
+their behaviour figures described an agent stuck, and they were replaced rather
+than footnoted.
+
+#### How curiosity chose
+
+It follows **learning progress**, not ignorance. Going for whatever is least
+understood sticks to irreducible noise — the "noisy TV" failure of
+curiosity-driven exploration — because noise never becomes understood.
+Following how fast understanding is *changing* instead, noise that cannot be
+learned shows no progress, and curiosity leaves it on its own. Measured, one
+action's share of moves fell from 103/120 to 38/120.
+
+### The run script and the Kaggle notebook renamed away from "world model"
+
+With one mind there is no separate world model to name. `scripts/run_world_model.py`
+became `scripts/run_game.py` (its stores `run-<game>-*`), and the Kaggle notebook
+the builder makes became `dil-arc3-run` (`48eaa27`). The notebook already running
+under the old slug, `dil-arc3-world-model-run`, keeps it.
+
+### History moved out of `README.md` and `CLAUDE.md`
+
+At Plone's request: the README says what the agent is, `CLAUDE.md` holds the rules
+and declarations in force, and every entry above moved here unchanged.

@@ -1,7 +1,7 @@
 # scripts/
 
 The measurement and run scripts behind the numbers in `README.md` and
-`CLAUDE.md`. They were written in a session scratchpad on Windows and moved here
+`LOG.md`. They were written in a session scratchpad on Windows and moved here
 on 2026-09-24, so that the work is kept with the code it measured.
 
 Run them from the repository root with the starter kit's interpreter, which has
@@ -47,7 +47,7 @@ Each was run on 2026-09-24 and completed.
 
 ## Scripts written against code that has since been removed
 
-They are kept because the numbers recorded in `CLAUDE.md` came from them. Run
+They are kept because the numbers recorded in `LOG.md` came from them. Run
 them against the commit they were written for, from a worktree:
 
 ```sh
