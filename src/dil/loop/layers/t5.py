@@ -59,7 +59,21 @@ from .t4 import BoundInfo
 # observation — which carries the context the move was made under. It must NOT
 # read the observation's effect: that is the answer it is being asked to
 # predict, and using it would make the prediction error self-scoring (INV-8).
-PredictRule = Callable[..., InfoUnit]
+#
+# It returns the expected unit, or an `Expecting`: the unit with the held data it
+# is (v0.3.5). A rule that returns a unit it took from its window — persistence
+# does — says nothing more, since the driver knows which datum that unit came
+# from. A rule that makes its expectation anew, by running a program it wrote,
+# is the only thing that knows which datum it ran, so it names it.
+PredictRule = Callable[..., "InfoUnit | Expecting"]
+
+
+@dataclass(frozen=True, slots=True)
+class Expecting:
+    """An expectation, with the held data it is (v0.3.5 §6.1): units or datum ids."""
+
+    predicted: InfoUnit
+    held_by: tuple[object, ...] = ()
 
 # A store query from the rule, by cue (§6.4, §9). It emits nothing else.
 AskFn = Callable[[Description], None]
@@ -197,9 +211,11 @@ class T5(BaseLayer):
             # The rule may report upward into the field; the contribution is
             # bound to T5, since it is T5's declared rule that made it. It may
             # also ask the store; the query is traced to T5 for the same reason.
-            predicted = self._predict(
+            out = self._predict(
                 entity_id, tuple(window), observed, contribute, ask, write
             )
+            declared = isinstance(out, Expecting)
+            predicted = out.predicted if declared else out
             confidence = min(1.0, count / self._recurrence)
 
             matched = _content_equal(observed, predicted)
@@ -217,6 +233,10 @@ class T5(BaseLayer):
                 # Observations accrued so far, before this one; drives confidence.
                 recurrence=count,
                 built_from=tuple(window),
+                # Named by the rule, or — for a unit it took from its window —
+                # that unit, which the driver resolves to its datum.
+                held_by=tuple(out.held_by) if declared else (out,),
+                held_by_declared=declared,
             )
 
             # Accrue this observation into the bounded window.

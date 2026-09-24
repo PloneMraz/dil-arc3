@@ -85,6 +85,7 @@ while daemon.step():
     last = wm.thoughts[-1] if wm.thoughts else None
     print(f"cycle {n - 1:3d}  frame calls {wm.frame_calls}  program v{wm.version}  "
           f"thoughts {len(wm.thoughts)}"
+          + (f" on {last.on}" if last else "")
           + (f"  last: held {last.held_score}/{last.evidence} cand {last.candidate_score} "
              f"adopted {last.adopted} {last.usage.get('completion_tokens')} tok "
              f"{last.usage.get('seconds')}s {last.note}" if last else ""), flush=True)
@@ -114,7 +115,10 @@ print(f"  programs in [data]    : {[(k, d.fixed.provenance, d.payload.get('versi
 print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id.startswith('written-')]}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
-print(f"  thoughts              : {[(t.frame_call, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")
+print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")
+print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in wm.thoughts if t.asked]}")
+held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
+print(f"  scars by datum kind   : {dict(held_scars)}")
 print(f"  [event] records       : {len(recs)}")
 print(f"  conformance           : {[(r.id, r.verdict) for r in report.results]}")
 for r in report.results:

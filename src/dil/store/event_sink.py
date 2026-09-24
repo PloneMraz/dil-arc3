@@ -262,6 +262,7 @@ def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
             "recurrence": rec.recurrence,
             "delta": rec.delta,
             "t": rec.t,
+            **({"heldBy": list(rec.held_by)} if rec.held_by else {}),
         }
 
     if isinstance(rec, ResistanceReadingActivity):
@@ -336,6 +337,7 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             recurrence=rec["recurrence"],
             delta=rec["delta"],
             t=rec["t"],
+            held_by=tuple(rec.get("heldBy", ())),
         )
 
     if form == "resistance-reading":

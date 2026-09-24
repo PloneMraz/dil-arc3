@@ -271,6 +271,8 @@ class ExpectationActivity:
     t: int
     kind: Literal["activity"] = "activity"
     activity_kind: Literal["expectation"] = "expectation"
+    # The held data the expectation was, by id (v0.3.5 §9); () when none.
+    held_by: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -420,6 +422,7 @@ def record_expectation(
     recurrence: float,
     delta: float,
     t: int,
+    held_by: tuple[str, ...] = (),
 ) -> ExpectationActivity:
     """Note an expectation reading — the accumulation signature of INV-5 (T5)."""
     return ExpectationActivity(
@@ -431,6 +434,7 @@ def record_expectation(
         recurrence=recurrence,
         delta=delta,
         t=t,
+        held_by=tuple(held_by),
     )
 
 

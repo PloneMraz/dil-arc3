@@ -842,6 +842,29 @@ def check_conformance(
             ),
             None,
         )
+        # v0.3.5 §9: every datum an expectation named as what it is shows its
+        # entry by then, and — when that expectation mismatched against what the
+        # region returned — met the mismatch: a scar naming it at that cycle.
+        # Ported from dil-core 4f5da8f.
+        region_returns = {t.datum_id for r in cycle_seals for t in r.activity.admitted}
+        scarred_at = {(s.datum_id, s.anchor.cycle) for s in scars}
+
+        def _unheld(x: ExpectationActivity) -> bool:
+            if any(i not in entered or entered[i] > x.cycle_mark for i in x.held_by):
+                return True
+            if x.delta <= 0:
+                return False
+            against_region = any(
+                s.anchor.cycle == x.cycle_mark and s.event.source_id == x.source
+                and s.datum_id in region_returns
+                for s in scars
+            )
+            return against_region and any((i, x.cycle_mark) not in scarred_at for i in x.held_by)
+
+        unheld = next(
+            (x for x in records if isinstance(x, ExpectationActivity) and _unheld(x)),
+            None,
+        )
 
         claims = [
             _claim(
@@ -882,6 +905,12 @@ def check_conformance(
                 "trace",
                 "fail" if unbuilt else "pass",
             ),
+            _claim(
+                "every datum an expectation was (held_by) shows its entry, and met "
+                "its mismatch against the region as a scar (§9, v0.3.5)",
+                "trace",
+                "fail" if unheld else "pass",
+            ),
         ]
 
         if first_problem:
@@ -917,6 +946,12 @@ def check_conformance(
                 f"datum {unbuilt[0].datum_id}, written at cycle {unbuilt[1]}, does "
                 "not say what it was built from, or names data with no recorded "
                 "entry (§9)"
+            )
+        elif unheld:
+            detail = (
+                f"the expectation for {unheld.entity} at cycle {unheld.cycle_mark} "
+                "names as what it is data with no recorded entry, or data that did "
+                "not scar when it mismatched against the region (§9)"
             )
         else:
             detail = (

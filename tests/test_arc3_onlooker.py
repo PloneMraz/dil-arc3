@@ -118,7 +118,8 @@ def test_the_mismatch_is_the_onlookers_change_of_stance_held_on_its_remark():
     # ACTION1 committed at cycles 0-3 is seen by cycle 4: "repeating" — one mismatch.
     # Kept while the agent keeps at it; the change of move ends it — a second.
     # 1 2 1 2, from the last ACTION1 at cycle 6, is seen by cycle 10 — a third.
-    assert scars_at == [4, 8, 10]
+    # Each scars both sides (v0.3.5): the remark that came, and the one expected.
+    assert scars_at == [4, 4, 8, 8, 10, 10]
     remarks = [d for _, d in data.entries() if d.open == {"domain": "reflection", "kind": "remark",
                                                           "source": ONLOOKER_CHANNEL}]
     assert len(remarks) == 12, "every remark is kept as data"
@@ -127,4 +128,8 @@ def test_the_mismatch_is_the_onlookers_change_of_stance_held_on_its_remark():
     assert set(data.get(held[0].datum_id).payload) == {"entity", "remark", "move", "since"}, \
         "a view of the behaviour, not a retold collision"
     said = [data.get(r.datum_id).payload for r in held]
-    assert [(p["remark"], p.get("since")) for p in said] == [("repeating", 0), (None, None), ("back-and-forth", 6)]
+    assert [(p["remark"], p.get("since")) for p in said] == [
+        ("repeating", 0), (None, None),        # it objected; the agent expected silence
+        (None, None), ("repeating", 0),        # it took it back; the agent expected the objection
+        ("back-and-forth", 6), (None, None),   # it objected again
+    ]

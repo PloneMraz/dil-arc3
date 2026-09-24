@@ -94,13 +94,22 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   query and nothing else, traced to T5 with register ↔ and answered at T1 the
   next cycle.
 - **The mind reads by asking; nothing is poured into it.** It may read anything
-  in the store and chooses what: meeting a mismatch, it asks for the frames that
-  collided (`{"kind": "frame", "provenance": "scar"}`).
+  in the store, and the model chooses what: `ASK {...}` lines in its answer, a
+  cue by any tag key and `provenance` — frames, statuses, the onlooker's remarks,
+  the rules it was told, scars or not. No cue is written into the code; until
+  the model asks, it thinks from what it has seen.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
-- **Short-term perception is T5's window** (`BASELINE_WINDOW = 16`). The mind
-  thinks from what the store answered, what the window holds of the frame, and
-  the transition in front of it — bounded, never the whole history.
+- **Short-term perception is as long as T5's window** (`BASELINE_WINDOW = 16`):
+  the steps just seen, each with what the region reported of itself that cycle.
+  The mind thinks from what the store answered, those steps, and what the
+  onlooker says now — bounded, never the whole history.
+- **The program predicts what the region returns**: the next grid and, when it
+  says so, the region's status (`{"grid": ..., "status": {...}}`); status fields
+  it leaves out stay as they were. Where it says nothing, the standing
+  expectation holds: the region reports what it reported last.
+- **A mismatch on any channel sets the mind thinking** — the frame, the status,
+  or the onlooker's change of stance — at most once a cycle.
 - **A program the model writes is `running` data**, not `prior`. It enters at
   `nascent` bearing the cycle that wrote it, arrives at T1 the next cycle, is
   SELF_WRITTEN at T2, runs every layer and moves `nascent → running`. A rewrite
@@ -119,6 +128,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   about it fails, that datum moves `running → scar` and the scar record names it.
   `arc3.observe.admit` tags returns `domain: observation`, `kind`, `source`, and
   the channel's `object` or `sense`.
+- **Every datum that meets a mismatch is scarred** (protocol v0.3.5, Plone): the
+  return, and each datum the expectation is (`held_by`) — the program, for an
+  expectation it made; the observation repeated, for a standing one — each with
+  its own scar record of the same ResistEvent. A scar used again returns to
+  `running`, so the program circulates between the two as its expectations meet
+  the region. This is how the mind turns the self: what enters appraisal
+  changes (§6.4). A mismatch with the agent's own revision coming back from the
+  store scars no expecting side.
 - **The cycle datum goes to `scar` only when what it carries collides**: an
   outcome it cast (`projected → scar`), or a collision with no return of its own
   — an absence, a return the host kept out, a store arrival. Otherwise a cast
@@ -142,12 +159,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   meets one resistance source, the frame, and C7 establishes diversity-loss.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
-- **Nothing reads the onlooker's remarks.** They are registered — kept as data,
-  a scar when its stance changes — but neither the mind nor the respond policy
-  reads them, so a remark changes no behaviour: on Kaggle the run with the
-  onlooker committed exactly the moves of the run without it. §8.4's
-  "accumulated" and "long-run" conditions are not met; the embedding is present
-  in the topology and inert in fact.
+- **The onlooker's remark reaches the mind, and reaches the self only through
+  it.** A change of the onlooker's stance sets the mind thinking, and the model
+  is shown what it says; what the self reads is still the field the mind
+  reports, per action, from how the program holds. Whether that is enough to
+  turn behaviour is not yet measured.
+- **One expectation a run is not attributed**: the cycle the program first
+  comes back, T5 meets the frame before the store arrival that tells the mind
+  its datum's id. Every later one is the program's.
 - Want has nothing to seek: the directive says what counts as reaching the goal,
   not how to get there, and no level has been completed to learn from.
 
@@ -329,7 +348,7 @@ change is not whether it raises a score but whether what the loop did can be
 read back, by a third party, from `[event]` alone. A game-specific strategy that
 scored better would work against the paper, not for it.
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.4.md` is 60 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.5.md` is 60 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their

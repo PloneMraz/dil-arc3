@@ -12,13 +12,16 @@ the agent leaves the loop to think.
 It runs, and it is being rebuilt around one mind. **It completes no levels.**
 
 **The mind is a language model** — Qwen3.6-35B-A3B, served offline — and the
-program it writes: `predict(grid, action) -> grid`, kept as data in the store and
-tested against the region every cycle. When the program's expectation of the
-frame fails, the mind asks its store for the frames that collided, has the model
-write a better program from what it has, keeps it only if it explains that
-evidence better, and writes it as a revision. Every step of that — the query,
-the program entering at `nascent`, each revision, what each version was built
-from, the frames it failed on — is in `[event]`, and a checker reads it back.
+program it writes: `predict(grid, action)`, the next grid and what the region
+will report of itself, kept as data in the store and tested against the region
+every cycle. When an expectation meets a mismatch — the frame, the region's
+status, or an onlooker's objection to how the agent behaves — the program is
+scarred with it, and the mind has the model write a better one from what it
+has, keeps it only if it explains that evidence better, and writes it as a
+revision; the model also chooses what to ask its memory for next. Every step of
+that — each question, the program entering at `nascent`, each revision, what
+each version was built from, each scar it met and each return to use — is in
+`[event]`, and a checker reads it back.
 
 **What is measured of the one mind so far**: nothing on a scored run yet. Of the
 model alone, outside the loop: it wrote an `ls20` program exact on 95% of held-out

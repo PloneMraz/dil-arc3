@@ -911,6 +911,45 @@ class Cycle:
         # recurrence that drove it. A third party reads these grouped by entity
         # and measures the ramp (§13.4) — an accruing self makes confidence and
         # recurrence climb together; a reloading impostor cannot.
+        # ── What each expectation is (v0.3.5 §9, `held_by`) ──
+        # The held data an expectation is, by id: named by the rule, or the datum
+        # a unit it took from its window came from. A name the rule gave that is
+        # no datum is refused, as a `built_from` would be; a unit the rule
+        # returned that came from no datum is simply nothing held. Ported from
+        # dil-core 4f5da8f.
+        held_of: dict[int, tuple[str, ...]] = {}
+        for r in pass_.t5.results:
+            ids: list[str] = []
+            for h in r.expectation.held_by:
+                if isinstance(h, str):
+                    hid = h if self._data.has(h) else None
+                else:
+                    hid = self._unit_datum.get(id(h))
+                if hid is None:
+                    if r.expectation.held_by_declared:
+                        raise ValueError(
+                            "expectation: held_by names "
+                            + (f'"{h}", which is no datum' if isinstance(h, str) else "a unit that came from no datum")
+                        )
+                    continue
+                if hid not in ids:
+                    ids.append(hid)
+            held_of[id(r)] = tuple(ids)
+        # An expectation built that a datum is, is that datum in use: a scar used
+        # again returns to `running` (§9 `scar → running`), once, before it is
+        # compared — so a program that keeps failing circulates between the two.
+        in_use: set[str] = set()
+        for ids in held_of.values():
+            for hid in ids:
+                if hid in in_use:
+                    continue
+                in_use.add(hid)
+                held = self._data.get(hid)
+                if held is not None and held.fixed.provenance in ("scar", "prior"):
+                    self._data.put(hid, to_running(held, self._cycle))
+                    self._events.append(
+                        record_provenance(hid, self._cycle, held.fixed.provenance, "running", self._now())
+                    )
         for r in pass_.t5.results:
             # source == entity_id: for a value-mismatch the entity IS the
             # resistance source, recorded explicitly rather than assumed.
@@ -924,6 +963,7 @@ class Cycle:
                     r.expectation.recurrence,
                     r.pred_err.delta,
                     self._now(),
+                    held_of.get(id(r), ()),
                 )
             )
 
@@ -1056,9 +1096,20 @@ class Cycle:
         # ── Collisions that hold → scars in [event] ──
         # Each collision is sourced: a value-mismatch by the entity that resisted,
         # an absence by the region. The source set drives diversity monitoring.
-        collisions: list[tuple[str, Any]] = [
-            *((r.entity_id, r.pred_err) for r in pass_.t5.results if r.pred_err.delta > 0),
-            *(("region", a) for a in pass_.t7.absences),
+        # The expecting side is scarred only against what the region returned:
+        # an arrival from the store — the agent's own revision coming back — is
+        # not the region resisting (INV-6).
+        collisions: list[tuple[str, Any, tuple[str, ...]]] = [
+            *(
+                (
+                    r.entity_id,
+                    r.pred_err,
+                    held_of.get(id(r), ()) if id(r.pred_err.observed) in datum_of else (),
+                )
+                for r in pass_.t5.results
+                if r.pred_err.delta > 0
+            ),
+            *(("region", a, ()) for a in pass_.t7.absences),
         ]
         anchor = ContextAnchor(
             cycle=self._cycle,
@@ -1082,7 +1133,7 @@ class Cycle:
 
         cycle_collides = any(
             return_of(e) is None or (forward_built and source_id in cast)
-            for source_id, e in collisions
+            for source_id, e, _ in collisions
         )
         scar_datum = to_scar(datum, True) if cycle_collides else None
         if cycle_collides:
@@ -1098,7 +1149,7 @@ class Cycle:
                 )
             )
         if collisions:
-            for source_id, e in collisions:
+            for source_id, e, held_ids in collisions:
                 # What collided is the return the expectation was compared
                 # against: that datum moves to `scar` (§9 `running → scar`), and
                 # the record embeds and names it. Where there is no such return,
@@ -1137,6 +1188,35 @@ class Cycle:
                 if source_id not in collision_sources:
                     collision_sources.append(source_id)
                 scars += 1
+                # The expecting side met the mismatch too (v0.3.5 §9): each datum
+                # the expectation is moves to `scar` with its own record, carrying
+                # the same ResistEvent. The rest of the window met nothing.
+                for hid in held_ids:
+                    if hid == collided_id:
+                        continue
+                    held = self._data.get(hid)
+                    if held is None or held.fixed.provenance not in ("running", "simulated", "projected"):
+                        continue
+                    scarred = to_scar(held, True)
+                    self._data.put(hid, scarred)
+                    self._events.append(
+                        record_provenance(hid, self._cycle, held.fixed.provenance, "scar", self._now())
+                    )
+                    self._events.append(
+                        record_scar(
+                            scarred,
+                            ResistEvent(
+                                source_id=source_id,
+                                expected=e.predicted.content,
+                                received=e.observed.content if e.observed is not None else None,
+                                mismatch_kind="value-mismatch",
+                                t=self._now(),
+                            ),
+                            anchor,
+                            datum_id=hid,
+                        )
+                    )
+                    scars += 1
         if scar_datum is not None:
             datum = scar_datum
         elif forward_built:

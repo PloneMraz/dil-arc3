@@ -1850,3 +1850,41 @@ page. The notebook's log now showed each cycle as it ran.
   deliberate (met — it is registered), accumulated and long-run (not met — no
   reader). Put to Plone with the gap between what the mind learns and what the
   self does.
+
+### Every datum that meets a mismatch is scarred; the mind reads what it chooses (Plone, same day)
+
+Plone, on where behaviour changes: not in choosing but in reading, learning and
+changing. The run showed the mind reading one thing only — 31 queries, all the
+same fixed cue for scarred frames — thinking only when the frame failed, and
+its program never scarred: `written-1-0` sat at `running` for 60 cycles through
+five revisions. Settled with Plone, and done as one package:
+
+- **Protocol v0.3.5** (dil-core `4f5da8f`, changelog `fdbe46e`, 370 tests):
+  `scar` is a tag on every datum that meets a mismatch. A mismatch has two
+  sides; an `Expectation` now names the held data it is, `held_by` — the
+  observation persistence repeats, or a datum the rule names, such as a
+  program — and each moves to `scar` with its own record of the same
+  ResistEvent. Evidence in the window the expectation is not, met nothing (Plone:
+  "Khung hình cũ có gặp mismatch không? Nếu không thì tại sao lại dính tag?"). A
+  scar used again returns to `running`. A mismatch with the agent's own revision
+  coming back from the store scars no expecting side — found by dil-core's
+  revision test, which would otherwise have scarred a datum for being revised.
+  The checker's C6 checks it. Ported here with five tests; spec copied.
+- **The mind reads what the model chooses.** The fixed cue is gone: the model
+  puts `ASK {...}` lines in its answer, by any tag key and `provenance`, and each
+  is a store query from T5; answers are the evidence of its next thought.
+- **Any mismatch sets it thinking**: the frame, the region's status, or the
+  onlooker's change of stance — at most once a cycle; the model is shown what
+  the onlooker says.
+- **The program predicts what the region returns**: the next grid and, when it
+  says so, the status fields; an expectation the program made is the program's
+  (`held_by`), so the program scars when it fails and returns to `running` when
+  used again. A standing expectation is the observation it repeats.
+- **Declared gap**: the cycle the program first comes back, T5 meets the frame
+  before the store arrival that tells the mind its datum's id, so that one
+  expectation is not attributed.
+
+Tests pinned one scar per mismatch in five places here and five in dil-core;
+each now pins both sides. 252 tests. On 12 live `ls20` cycles with no model
+reachable the run holds together: 11 frame scars, the mind thinking on each,
+C5 `partial` and C7 `fail` as before.

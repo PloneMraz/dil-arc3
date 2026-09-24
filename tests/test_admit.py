@@ -95,13 +95,16 @@ def test_the_datum_the_expectation_failed_on_is_the_one_that_becomes_a_scar():
     cycle.run(HostCycleInput(signals=(status("won", 2),)))  # persistence expected "playing"
 
     assert data.get(SECOND).fixed.provenance == "scar"
-    assert data.get(FIRST).fixed.provenance == "running", "the earlier return did not collide"
+    # The earlier return is what persistence expected: it met the mismatch too
+    # (v0.3.5 §9), with its own record of the same ResistEvent.
+    assert data.get(FIRST).fixed.provenance == "scar", "the expectation met the mismatch"
     moves = [(r.from_, r.to) for r in of_kind(events, "provenance") if r.datum_id == SECOND]
     assert moves == [("running", "scar")]
 
     scars = [r for r in events.all() if isinstance(r, EventRecord)]
-    assert len(scars) == 1
-    assert scars[0].datum_id == SECOND
+    assert [s.datum_id for s in scars] == [SECOND, FIRST]
+    assert scars[1].event.expected == scars[0].event.expected
+    assert scars[1].event.received == scars[0].event.received
     assert scars[0].scar.payload == {"entity": "region", "state": "won"}
     assert scars[0].event.expected["value"]["state"] == "playing"
 

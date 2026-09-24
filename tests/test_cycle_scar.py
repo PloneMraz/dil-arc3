@@ -78,7 +78,8 @@ def test_a_cast_that_did_not_collide_returns_to_use_though_another_return_collid
     assert cycle_moves(events, 4) == ["running→simulated", "simulated→projected", "projected→running"]
     assert data.get("cycle-4").fixed.provenance == "running"
     assert data.get("signal-4-1").fixed.provenance == "scar", "`b`'s return holds the scar"
-    assert len(scars_at(events, 4)) == 1
+    assert data.get("signal-3-1").fixed.provenance == "scar", "and so does the return persistence expected (v0.3.5)"
+    assert len(scars_at(events, 4)) == 2
 
 
 def test_with_no_cast_a_return_that_collides_leaves_the_cycle_datum_running():

@@ -113,6 +113,14 @@ class Expectation:
     # recurrence (INV-5). A reloading impostor has no memory to make either climb.
     recurrence: float
     built_from: HistoryWindow = ()
+    # The held data this expectation is (v0.3.5 §6.1, §9): the datum whose
+    # content is the expectation — a program the agent wrote and thinks with, or
+    # the observation a persistence rule repeats — as units or datum ids. When
+    # the expectation mismatches against what the region returned, each of them
+    # met the mismatch and is scarred, as the return is.
+    held_by: tuple[object, ...] = ()
+    # Whether the rule named `held_by` itself (then every entry must resolve).
+    held_by_declared: bool = False
 
 
 # The sign a PredErr carries; absence registers as negative (T7).
