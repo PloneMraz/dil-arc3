@@ -43,7 +43,7 @@ def loop():
     def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
         if not wrote[0]:
             clock[0] += THINKING  # the thinking takes a while
-            write(WriteRequest(payload={"thought": 1},
+            write(WriteRequest(built_from=(), payload={"thought": 1},
                                open={"domain": "world-model", "kind": "program", "source": "mind"}))
             wrote[0] = True
         return persistence(entity_id, window, observed, contribute, ask, write)

@@ -12,16 +12,19 @@ loop tests it against the region like any expectation:
 - **Meeting a mismatch, it thinks.** No trigger, no constant: the expectation
   failed, so the mind goes to memory for what bears on it — it asks the store for
   the frames that collided, `{"kind": "frame", "provenance": "scar"}` — and has the
-  model write a program that explains what it has: what the store returned, and
-  the transition in front of it. It keeps a new program only if it explains that
-  evidence better than the one it holds.
+  model write a program that explains what it has: what the store returned, what
+  it has just seen (T5's window of the frame, §6.1 `Expectation.built_from:
+  history_window`), and the transition in front of it. It keeps a new program
+  only if it explains that evidence better than the one it holds.
 - **The program is data** (v0.3.3). The first one is written anew and enters at
   `nascent`; each later one revises that datum, a bare `revision` line in the log
-  and its content in the commit snapshot. The mind learns the datum's id when it
-  arrives back at T1.
+  and its content in the commit snapshot. Every write records what it was built
+  from (v0.3.4): the data behind exactly the evidence the model was shown. The
+  mind learns the datum's id when it arrives back at T1.
 
-What the mind keeps in hand is only what it is looking at and what the store
-answered last: memory is the store, asked by cue, never poured in. Every other
+What the mind keeps in hand is only what the store answered last; what it has
+just seen is T5's window, which the loop keeps: memory is the store, asked by
+cue, never poured in. Every other
 entity is thought about by the mind it wraps (`arc3.mind`).
 
 The model is reached over an OpenAI-compatible HTTP endpoint (llama.cpp locally,
@@ -306,8 +309,9 @@ class WorldModel:
         self.version = 0
         # The program's datum in `[data]`, learned when it arrives back at T1.
         self.datum_id: str | None = None
-        # A revision made before the datum's id was known, written on arrival.
-        self._unwritten: dict[str, Any] | None = None
+        # A revision made before the datum's id was known, written on arrival,
+        # with what it was built from.
+        self._unwritten: tuple[dict[str, Any], tuple[object, ...]] | None = None
         # What the store answered last: the scarred frames it returned. An answer
         # arrives in one cycle, after that cycle's frame; a new one replaces it.
         self._recalled: dict[str, Transition] = {}
@@ -332,7 +336,8 @@ class WorldModel:
             if isinstance(payload, dict) and payload.get("code") is not None:
                 self.datum_id = str(ret.get("entity"))
                 if self._unwritten is not None and write is not None:
-                    write(WriteRequest(payload=self._unwritten, datum_id=self.datum_id))
+                    payload, built_from = self._unwritten
+                    write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
                     self._unwritten = None
 
     # ── the expectation ──
@@ -348,12 +353,31 @@ class WorldModel:
 
     # ── thinking ──
 
-    def think(self, seen: Transition, ask: Callable[[dict[str, str]], None] | None,
+    def think(self, seen: Transition, source: InfoUnit,
+              window: tuple[InfoUnit, ...] | list[InfoUnit],
+              ask: Callable[[dict[str, str]], None] | None,
               write: Callable[[WriteRequest], None] | None) -> None:
-        """The expectation failed: go to memory, and have the model write a better program."""
+        """The expectation failed: go to memory, and have the model write a better program.
+
+        The evidence is what the store answered last (oldest), what T5's window
+        holds of the frame, and the transition in front of it — each with the
+        datum it came from, so a write records exactly what it was built from.
+        """
         if ask is not None:
             ask(dict(SCARRED_FRAMES))
-        evidence = list({t.key(): t for t in [*self._recalled.values(), seen]}.values())[-MAX_SHOWN:]
+        sourced: list[tuple[Transition, object]] = [
+            *((t, datum_id) for datum_id, t in self._recalled.items()),
+            *((t, unit) for unit in window
+              if (t := transition_of(_content_value(unit) or {})) is not None),
+            (seen, source),
+        ]
+        by_key: dict[str, tuple[Transition, object]] = {}
+        for t, src in sourced:
+            by_key.pop(t.key(), None)
+            by_key[t.key()] = (t, src)
+        chosen = list(by_key.values())[-MAX_SHOWN:]
+        evidence = [t for t, _ in chosen]
+        built_from = tuple(src for _, src in chosen)
         held_ok, held_misses = score(self._fn, evidence)
         messages = [{"role": "user", "content": PROMPT.format(evidence=render_evidence(evidence))}]
         if self.code is not None:
@@ -385,11 +409,12 @@ class WorldModel:
         if write is None:
             return
         if self.version == 1:
-            write(WriteRequest(payload=payload, open=dict(PROGRAM_TAGS)))
+            write(WriteRequest(payload=payload, open=dict(PROGRAM_TAGS), built_from=built_from))
         elif self.datum_id is not None:
-            write(WriteRequest(payload=payload, datum_id=self.datum_id))
+            write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
         else:
-            self._unwritten = payload  # written as a revision once the datum's id is known
+            # Written as a revision once the datum's id is known.
+            self._unwritten = (payload, built_from)
 
     def _misses_text(self, misses: list[tuple[Transition, Grid | str]]) -> str:
         out = []
@@ -431,7 +456,7 @@ def world_model_rule(base_rule: Callable[..., InfoUnit], wm: WorldModel) -> Call
         )
         # 2. Then look. A mismatch is the loop's to register; thinking is the mind's.
         if expected != t.after:
-            wm.think(t, ask, write)
+            wm.think(t, observed, tuple(window or ()), ask, write)
         return predicted
 
     return rule

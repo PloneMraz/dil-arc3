@@ -102,7 +102,7 @@ def seal(events, cycle: int):
 
 def test_a_datum_written_anew_enters_at_nascent_with_the_cycle_that_wrote_it():
     data, events = create_data_store(), create_event_log()
-    step(make_cycle(data, events, writing_rule({0: WriteRequest(payload={"code": "v1"}, open=MODEL_TAGS)}, [])), 0)
+    step(make_cycle(data, events, writing_rule({0: WriteRequest(built_from=(), payload={"code": "v1"}, open=MODEL_TAGS)}, [])), 0)
 
     d = data.get("written-0-0")
     assert d.payload == {"code": "v1"}
@@ -118,7 +118,7 @@ def test_a_datum_written_anew_enters_at_nascent_with_the_cycle_that_wrote_it():
 def test_next_cycle_it_arrives_is_self_written_runs_every_layer_and_moves_to_running():
     data, events = create_data_store(), create_event_log()
     met, agency = [], []
-    cycle = make_cycle(data, events, writing_rule({0: WriteRequest(payload={"code": "v1"}, open=MODEL_TAGS)}, met), agency)
+    cycle = make_cycle(data, events, writing_rule({0: WriteRequest(built_from=(), payload={"code": "v1"}, open=MODEL_TAGS)}, met), agency)
     step(cycle, 0)
     step(cycle, 1)
 
@@ -137,8 +137,8 @@ def test_a_revision_changes_content_not_provenance_and_leaves_a_bare_line():
     data, events = create_data_store(), create_event_log()
     agency = []
     plan = {
-        0: WriteRequest(payload={"code": "v1"}, open=MODEL_TAGS),
-        2: WriteRequest(payload={"code": "v2"}, datum_id="written-0-0"),
+        0: WriteRequest(built_from=(), payload={"code": "v1"}, open=MODEL_TAGS),
+        2: WriteRequest(built_from=(), payload={"code": "v2"}, datum_id="written-0-0"),
     }
     cycle = make_cycle(data, events, writing_rule(plan, []), agency)
     for t in range(4):
@@ -158,13 +158,13 @@ def test_a_revision_changes_content_not_provenance_and_leaves_a_bare_line():
 
 def test_writing_anew_needs_tags_and_only_a_held_datum_can_be_revised():
     with pytest.raises(TaggingGateError):
-        step(make_cycle(create_data_store(), create_event_log(), writing_rule({0: WriteRequest(payload=1)}, [])), 0)
-    verdict = WriteRequest(payload=1, open={"domain": "x", "kind": "y", "quality": "good"})
+        step(make_cycle(create_data_store(), create_event_log(), writing_rule({0: WriteRequest(built_from=(), payload=1)}, [])), 0)
+    verdict = WriteRequest(built_from=(), payload=1, open={"domain": "x", "kind": "y", "quality": "good"})
     with pytest.raises(TaggingGateError):
         step(make_cycle(create_data_store(), create_event_log(), writing_rule({0: verdict}, [])), 0)
     with pytest.raises(ValueError, match='no datum "nope" to revise'):
         step(make_cycle(create_data_store(), create_event_log(),
-                        writing_rule({0: WriteRequest(payload=1, datum_id="nope")}, [])), 0)
+                        writing_rule({0: WriteRequest(built_from=(), payload=1, datum_id="nope")}, [])), 0)
 
 
 def test_a_cue_may_ask_by_provenance():
@@ -185,8 +185,8 @@ def test_a_cue_may_ask_by_provenance():
 def test_a_run_that_writes_and_revises_is_accepted_and_survives_the_sink():
     events = create_event_log()
     plan = {
-        0: WriteRequest(payload={"code": "v1"}, open=MODEL_TAGS),
-        2: WriteRequest(payload={"code": "v2"}, datum_id="written-0-0"),
+        0: WriteRequest(built_from=(), payload={"code": "v1"}, open=MODEL_TAGS),
+        2: WriteRequest(built_from=(), payload={"code": "v2"}, datum_id="written-0-0"),
     }
     cycle = make_cycle(create_data_store(), events, writing_rule(plan, []))
     for t in range(4):
@@ -219,7 +219,7 @@ def test_a_datum_with_no_recorded_entry_is_caught_whether_it_runs_or_is_revised(
 
 def test_what_was_written_survives_a_snapshot():
     data, events = create_data_store(), create_event_log()
-    first = make_cycle(data, events, writing_rule({0: WriteRequest(payload={"code": "v1"}, open=MODEL_TAGS)}, []))
+    first = make_cycle(data, events, writing_rule({0: WriteRequest(built_from=(), payload={"code": "v1"}, open=MODEL_TAGS)}, []))
     step(first, 0)
     resumed = make_cycle(data, events, writing_rule({}, []), resume=first.snapshot())
     step(resumed, 1)

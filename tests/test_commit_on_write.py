@@ -49,8 +49,8 @@ class Script:
 def test_every_cycle_that_writes_is_committed_and_each_version_is_in_its_snapshot(tmp_path):
     cycle_no = [0]
     plan = {
-        1: WriteRequest(payload={"code": "v1"}, open=TAGS),
-        3: WriteRequest(payload={"code": "v2"}, datum_id="written-1-0"),
+        1: WriteRequest(built_from=(), payload={"code": "v1"}, open=TAGS),
+        3: WriteRequest(built_from=(), payload={"code": "v2"}, datum_id="written-1-0"),
     }
     last = [-1]
 
@@ -120,7 +120,7 @@ def test_a_recovery_keeps_what_was_on_its_way_to_t1(tmp_path):
 
     first = Daemon(
         host=declaration("ls20", store_root=str(tmp_path)), source=Script(2),
-        layers=make_layers({1: WriteRequest(payload={"code": "v1"}, open=TAGS)}),
+        layers=make_layers({1: WriteRequest(built_from=(), payload={"code": "v1"}, open=TAGS)}),
         glob=create_glob_mod(), initial_emission=Emission(action=None), now=now,
         commit_every=10_000,
     )

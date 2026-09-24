@@ -38,7 +38,7 @@ from .decisions import SCHEMA_VERSION, SCHEMA_VERSIONED_SINCE
 # different law). Bump a version only on a real, intended change to that facet.
 DIL_CLAIM: Final[dict[str, Any]] = {
     # The protocol version whose law governs this store.
-    "protocol": "0.3.3",
+    "protocol": "0.3.4",
     # The fixed-tag + open-tag schema version.
     "tagSchema": SCHEMA_VERSION,
     # The on-substrate layout version (the three store kinds below).

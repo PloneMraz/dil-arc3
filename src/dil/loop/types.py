@@ -73,7 +73,10 @@ class Signal:
     t: int
 
 
-@dataclass(frozen=True, slots=True)
+# weakref_slot: the cycle driver maps each observation unit to the datum it came
+# from for as long as anything holds the unit (T5's window), and no longer — so a
+# written datum can record by id what it was built from (v0.3.4 §9).
+@dataclass(frozen=True, slots=True, weakref_slot=True)
 class InfoUnit:
     """Information = content referred to a frame.
 

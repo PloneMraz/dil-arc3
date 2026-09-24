@@ -120,7 +120,7 @@ class ActivityEvent:
     # from the commit snapshot. Each arrives at T1 the next cycle and runs every
     # layer. Empty, and then not written, when nothing was written. Ported from
     # dil-core 44309b7 (v0.3.3).
-    written: tuple["RecalledTags", ...] = ()
+    written: tuple["WrittenTags", ...] = ()
     # When the cycle closed, as its seal was written. With `t`, how long the
     # cycle took; with every other record's own time, where inside it the time
     # went. None on records written before it was kept. Ported from dil-core 9073ddf.
@@ -134,6 +134,22 @@ class RecalledTags:
     datum_id: str
     fixed: FixedTags
     open: dict[str, str]
+
+
+@dataclass(frozen=True, slots=True)
+class WrittenTags:
+    """A datum the agent wrote, as the activity record carries it (v0.3.4 §9).
+
+    Its tag set, and the ids of the data it was built from — never their content,
+    as an Expectation carries `built_from` and a Directive its Appraisals (§6.1).
+    An empty tuple says it was built from nothing held in the store. Ported from
+    dil-core c2c0cd2.
+    """
+
+    datum_id: str
+    fixed: FixedTags
+    open: dict[str, str]
+    built_from: tuple[str, ...]
 
 
 # Activity records — the log's TRACE lines (§9: "an activity record is trace, not

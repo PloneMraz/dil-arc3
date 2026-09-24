@@ -199,7 +199,7 @@ change is not whether it raises a score but whether what the loop did can be
 read back, by a third party, from `[event]` alone. A game-specific strategy that
 scored better would work against the paper, not for it.
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.3.md` is 58 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.4.md` is 60 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their
@@ -1838,6 +1838,29 @@ with one time.
 - Open, for Plone: shortening that lag touches the driver's signal order or has
   the mind hold what it has just seen until memory can answer — both near the
   line "memory is the store".
+
+### What a written datum was built from, and the mind's short-term perception (Plone, same day)
+
+Plone rejected reordering the driver so memory answers before the region
+returns ("why would the mind read memory before anything has come back?") and
+chose (b) with the trace closed:
+
+- **Short-term perception is T5's window**, already in the law (§6.1
+  `Expectation.built_from: history_window`; the baseline window is
+  `BASELINE_WINDOW = 16`). The world-model mind had ignored the `window` its rule
+  receives; it now thinks from what the store answered, what the window holds of
+  the frame, and the transition in front of it. No new mechanism, no new constant.
+- **A written datum records what it was built from** — protocol v0.3.4, written
+  with Plone and fixed in dil-core first (`c2c0cd2`), ported here. Every write
+  carries `built_from` (units or ids; `()` for nothing held), the driver maps
+  units to their data across cycles (a weakref-keyed map; `InfoUnit` now has a
+  weakref slot) and records ids only in the cycle's `written` entries; an
+  unknown id, a unit from no datum, or a write that says nothing is refused; the
+  checker fails a written datum naming data with no recorded entry. The mind's
+  `built_from` is exactly the evidence the model was shown. With it a reader
+  follows data → program version → expectations → scars → revision.
+
+287 tests.
 
 ## Still unverified
 

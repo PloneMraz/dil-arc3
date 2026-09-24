@@ -830,6 +830,18 @@ def check_conformance(
             ),
             None,
         )
+        # v0.3.4 §9: a datum the agent writes records what it was built from —
+        # the ids of data whose entry the trace shows, by the cycle it was
+        # written in. Ported from dil-core c2c0cd2.
+        unbuilt = next(
+            (
+                (w, r.activity.cycle)
+                for r in cycle_seals
+                for w in r.activity.written
+                if any(i not in entered or entered[i] > r.activity.cycle for i in w.built_from)
+            ),
+            None,
+        )
 
         claims = [
             _claim(
@@ -864,6 +876,12 @@ def check_conformance(
                 "trace",
                 "fail" if no_entry else "pass",
             ),
+            _claim(
+                "every datum the agent wrote says what it was built from, each a "
+                "datum whose entry the trace shows (§9)",
+                "trace",
+                "fail" if unbuilt else "pass",
+            ),
         ]
 
         if first_problem:
@@ -893,6 +911,12 @@ def check_conformance(
             detail = (
                 f"datum {no_entry.datum_id} appears at cycle {no_entry.cycle_mark} "
                 "with no recorded entry before it (§9)"
+            )
+        elif unbuilt:
+            detail = (
+                f"datum {unbuilt[0].datum_id}, written at cycle {unbuilt[1]}, does "
+                "not say what it was built from, or names data with no recorded "
+                "entry (§9)"
             )
         else:
             detail = (

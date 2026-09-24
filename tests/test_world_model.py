@@ -122,6 +122,10 @@ def test_a_mismatch_makes_it_ask_and_think_and_the_program_is_written_as_data():
     assert written.open == PROGRAM_TAGS
     assert data.get("signal-0-0").fixed.provenance == "scar", "the frame the expectation failed on"
 
+    written = [t for r in of_kind(events, "cycle-seal") for t in r.activity.written]
+    assert [(w.datum_id, w.built_from) for w in written] == [("written-0-0", ("signal-0-0",))], \
+        "the program says it was built from the frame in front of it"
+
     run(cycle, frame(lit(1), lit(2)))  # the program now predicts it
     assert wm.datum_id == "written-0-0", "the mind learned its datum when it arrived"
     assert data.get("written-0-0").fixed.provenance == "running"
@@ -141,8 +145,12 @@ def test_a_better_program_revises_the_datum_and_the_log_says_so():
     assert revisions == [("written-0-0", 1)]
     assert data.get("written-0-0").payload == {"code": RIGHT, "version": 2}
     assert data.get("written-0-0").fixed.provenance == "running", "a revision moves nothing"
-    # The second prompt shows the held program and where it failed.
+    # The second prompt shows the held program and where it failed, and its
+    # evidence already holds the first frame: T5's window, not a store answer.
     assert "Your function was run" in model.prompts[1][-1]["content"]
+    assert wm.thoughts[1].evidence == 2
+    written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
+    assert written["written-0-0"] == ("signal-0-0", "signal-1-0"), "the revision names both frames it drew on"
     assert [t.adopted for t in wm.thoughts] == [True, True]
 
     report = check_conformance(events)

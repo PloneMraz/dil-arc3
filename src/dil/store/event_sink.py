@@ -63,6 +63,7 @@ from .resist_event import (
     ResistanceReadingActivity,
     ResistEvent,
     RevisionActivity,
+    WrittenTags,
 )
 from .tags import FixedTags, TaggedDatum
 
@@ -104,7 +105,7 @@ def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
     if activity.admitted:
         out["admitted"] = [_tags_dict(r) for r in activity.admitted]
     if activity.written:
-        out["written"] = [_tags_dict(r) for r in activity.written]
+        out["written"] = [{**_tags_dict(r), "builtFrom": list(r.built_from)} for r in activity.written]
     return out
 
 
@@ -119,6 +120,14 @@ def _tags_dict(r: RecalledTags) -> dict[str, Any]:
         },
         "open": dict(r.open),
     }
+
+
+def _written_of(r: dict[str, Any]) -> WrittenTags:
+    t = _tags_of(r)
+    return WrittenTags(
+        datum_id=t.datum_id, fixed=t.fixed, open=t.open,
+        built_from=tuple(r.get("builtFrom", ())),
+    )
 
 
 def _tags_of(r: dict[str, Any]) -> RecalledTags:
@@ -390,7 +399,7 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             t=act["t"],
             recalled=tuple(_tags_of(r) for r in act.get("recalled", ())),
             admitted=tuple(_tags_of(r) for r in act.get("admitted", ())),
-            written=tuple(_tags_of(r) for r in act.get("written", ())),
+            written=tuple(_written_of(r) for r in act.get("written", ())),
             closed_at=act.get("closedAt"),
         ),
         datum=datum,

@@ -29,6 +29,7 @@ Ported from dil-core against DIL protocol v0.3.3.
 from __future__ import annotations
 
 import time
+import weakref
 from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field, replace
 from typing import Any, Literal, TypeAlias
@@ -53,6 +54,7 @@ from ..store.resist_event import (
     ActivityEvent,
     ContextAnchor,
     RecalledTags,
+    WrittenTags,
     ResistEvent,
     record_activity,
     record_crystallization,
@@ -290,6 +292,7 @@ class Cycle:
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
         "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
         "_admit", "_running_admitted", "_pending_writes", "_running_written",
+        "_unit_datum",
     )
 
     def __init__(
@@ -318,6 +321,11 @@ class Cycle:
         )
         # Data the rule wrote last cycle, running now: their exits are theirs too.
         self._running_written: tuple[str, ...] = ()
+        # The datum each observation unit came from, for as long as anything
+        # holds the unit — T5 keeps a window of them per entity — so what a
+        # written datum was built from can be recorded by id (v0.3.4 §9). Keyed
+        # by the unit's identity; each entry leaves with its unit.
+        self._unit_datum: dict[int, str] = {}
         # The host's resistance-retrieval channel (§10), if one is declared. The
         # driver does not call it — T5 does, through its declared PredictRule.
         # The driver only asks which scars it returned, so their return can be
@@ -372,6 +380,14 @@ class Cycle:
         )
 
     # ── identifiers and the two [event] sinks ──────────────────────────────
+
+    def _remember_unit(self, unit: InfoUnit, datum_id: str) -> None:
+        """Map an observation unit to its datum until the unit is gone."""
+        key = id(unit)
+        if key in self._unit_datum:
+            return
+        self._unit_datum[key] = datum_id
+        weakref.finalize(unit, self._unit_datum.pop, key, None)
 
     def _datum_id(self) -> str:
         """The id the cycle datum takes in `[data]`; also its key in the path."""
@@ -751,6 +767,15 @@ class Cycle:
             for i, datum_id in admitted_ids.items()
             if i < len(pass_.units)
         }
+        for i, datum_id in admitted_ids.items():
+            if i < len(pass_.units):
+                self._remember_unit(pass_.units[i], datum_id)
+        # What came back from the store, recalled or written, is a datum too.
+        for i in range(len(region_input.signals), min(len(host.signals), len(pass_.units))):
+            payload = host.signals[i].raw_payload
+            entity = payload.get("entity") if isinstance(payload, dict) else None
+            if isinstance(entity, str):
+                self._remember_unit(pass_.units[i], entity)
 
         # ── §7 crystallization: T2 drew the self/environment distinction ──
         # The one-time act where the from-within standpoint begins. Recorded as a
@@ -792,10 +817,28 @@ class Cycle:
         # it arrives at T1 next cycle, where T2 reads the write as the agent's
         # own. Taken after the store has answered: what is written now is not
         # memory yet.
-        written_tags: dict[str, RecalledTags] = {}
+        written_tags: dict[str, WrittenTags] = {}
         write_actions: dict[str, dict[str, str]] = {}
         anew = 0
         for w in pass_.t5.writes:
+            # What it was built from, by id: every unit must be one that came
+            # from a datum, every id a datum the store holds.
+            if w.built_from is None:
+                raise ValueError(
+                    "write: a datum written must say what it was built from "
+                    "(built_from; () for nothing held)"
+                )
+            built_from: list[str] = []
+            for source in w.built_from:
+                source_id = source if isinstance(source, str) else self._unit_datum.get(id(source))
+                if source_id is None or not self._data.has(source_id):
+                    raise ValueError(
+                        f'write: built_from names "{source}", which is no datum'
+                        if isinstance(source, str)
+                        else "write: built_from names a unit that came from no datum"
+                    )
+                if source_id not in built_from:
+                    built_from.append(source_id)
             if w.datum_id is not None:
                 held = self._data.get(w.datum_id)
                 if held is None:
@@ -832,8 +875,9 @@ class Cycle:
             d = self._data.get(written_id)
             action = {"kind": "write", "datum": written_id}
             written_tags.pop(written_id, None)
-            written_tags[written_id] = RecalledTags(
-                datum_id=written_id, fixed=d.fixed, open=dict(d.open)
+            written_tags[written_id] = WrittenTags(
+                datum_id=written_id, fixed=d.fixed, open=dict(d.open),
+                built_from=tuple(built_from),
             )
             write_actions.setdefault(written_id, action)
             self._pending_writes = [

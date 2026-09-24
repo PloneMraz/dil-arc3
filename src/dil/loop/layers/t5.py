@@ -74,6 +74,11 @@ class WriteRequest:
     open: dict[str, str] | None = None
     # The datum to revise; None to write one anew.
     datum_id: str | None = None
+    # What it was built from (v0.3.4 §9): observation units — from the rule's
+    # window or the one in front of it — and ids of data it recalled. The driver
+    # records the ids, never the content. () says nothing held went into it;
+    # None, saying nothing, is refused. Ported from dil-core c2c0cd2.
+    built_from: tuple[object, ...] | None = None
 
 
 # Writing from the rule into `[data]`, through the driver (v0.3.3).
