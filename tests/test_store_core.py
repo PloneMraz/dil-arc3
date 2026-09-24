@@ -196,13 +196,19 @@ class ProvenanceLifecycle(unittest.TestCase):
         store.clear()
         self.assertEqual(store.size(), 0)
 
-    def test_every_one_of_the_eleven_edges_is_accepted(self) -> None:
-        self.assertEqual(len(PROVENANCE_EDGES), 11)
+    def test_every_one_of_the_twelve_edges_is_accepted(self) -> None:
+        self.assertEqual(len(PROVENANCE_EDGES), 12)
         for frm, to in PROVENANCE_EDGES:
             self.assertTrue(is_provenance_edge(frm, to), f"{frm}→{to} should be legal")
-        # prior is a one-way entry: nothing returns to it
-        for prov in ("running", "simulated", "projected", "scar"):
+        # prior and nascent are one-way entries: nothing returns to either
+        states = ("prior", "nascent", "running", "simulated", "projected", "scar")
+        for prov in states:
             self.assertFalse(is_provenance_edge(prov, "prior"))
+            self.assertFalse(is_provenance_edge(prov, "nascent"))
+        # and each exits only to running
+        for to in states:
+            self.assertEqual(is_provenance_edge("prior", to), to == "running")
+            self.assertEqual(is_provenance_edge("nascent", to), to == "running")
 
     def test_assert_provenance_edge_raises_on_a_non_edge(self) -> None:
         with self.assertRaises(LifecycleError):

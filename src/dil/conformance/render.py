@@ -6,7 +6,7 @@ faithful to §13's "from traces alone" stance — surfaces the EVIDENCE BASIS of
 each claim, so a reader sees which verdicts the `[event]` log confirms and which
 rest on structural, declared or third-party guarantees it cannot read.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from typing import Final

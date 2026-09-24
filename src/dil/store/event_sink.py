@@ -26,7 +26,7 @@ implementation is readable and verifiable by the other. Key ORDER is equally
 load-bearing, because the hash covers the serialized text; each builder below
 emits its keys in the reference's order.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -62,6 +62,7 @@ from .resist_event import (
     ProvenanceActivity,
     ResistanceReadingActivity,
     ResistEvent,
+    RevisionActivity,
 )
 from .tags import FixedTags, TaggedDatum
 
@@ -100,6 +101,8 @@ def _activity_event_dict(activity: ActivityEvent) -> dict[str, Any]:
         out["recalled"] = [_tags_dict(r) for r in activity.recalled]
     if activity.admitted:
         out["admitted"] = [_tags_dict(r) for r in activity.admitted]
+    if activity.written:
+        out["written"] = [_tags_dict(r) for r in activity.written]
     return out
 
 
@@ -220,6 +223,15 @@ def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
             "t": rec.t,
         }
 
+    if isinstance(rec, RevisionActivity):
+        return {
+            "form": "revision",
+            "datumId": rec.datum_id,
+            "cycleMark": rec.cycle_mark,
+            "issuingLayer": rec.issuing_layer,
+            "t": rec.t,
+        }
+
     if isinstance(rec, CrystallizationActivity):
         return {
             "form": "crystallization",
@@ -290,6 +302,12 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             action=rec["action"],
             t=rec["t"],
             register=rec["register"],
+        )
+
+    if form == "revision":
+        return RevisionActivity(
+            datum_id=rec["datumId"], cycle_mark=rec["cycleMark"],
+            issuing_layer=rec["issuingLayer"], t=rec["t"],
         )
 
     if form == "crystallization":
@@ -370,6 +388,7 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             t=act["t"],
             recalled=tuple(_tags_of(r) for r in act.get("recalled", ())),
             admitted=tuple(_tags_of(r) for r in act.get("admitted", ())),
+            written=tuple(_tags_of(r) for r in act.get("written", ())),
         ),
         datum=datum,
         anchor=anchor,

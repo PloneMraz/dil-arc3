@@ -14,7 +14,7 @@ The four fixed tags are never overwritten as a schema: advancing provenance
 produces a new datum value carrying the same four tags in order, with the
 cycle-mark/provenance advanced — never stripped, reordered, or dropped.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from dataclasses import replace
@@ -48,6 +48,7 @@ def stamp_layer(datum: TaggedDatum, layer: LayerIndex) -> TaggedDatum:
 # provenance move — at runtime and in the `[event]` trace — is checked against it.
 PROVENANCE_EDGES: Final[tuple[tuple[Provenance, Provenance], ...]] = (
     ("prior", "running"),       # host data admitted and run
+    ("nascent", "running"),     # a datum the agent wrote anew, once it has run (v0.3.3)
     ("running", "simulated"),   # taken up into building a situation
     ("simulated", "projected"), # a situation yields the outcome cast from it
     ("simulated", "running"),   # built, but no emission followed; back to use

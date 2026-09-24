@@ -21,7 +21,7 @@ the open question**: a Kaggle evaluation session has no third party and no
 network, so nothing can perform the read mid-run. The mechanism is ported intact;
 whether it can be used here is unresolved and recorded in CLAUDE.md.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

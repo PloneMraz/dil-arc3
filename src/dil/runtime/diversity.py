@@ -13,7 +13,7 @@ Thresholds are DECIDE@IMPL (decisions.py), declared as tunable.
 ARC-AGI-3 game at a time has one resistance source, so this signal will fire and
 criterion 7 will render `partial` — as it does in dil-core for the same reason.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from collections.abc import Sequence

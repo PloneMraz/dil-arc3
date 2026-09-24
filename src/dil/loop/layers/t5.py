@@ -12,7 +12,7 @@ entity the prediction matches and the error falls to zero with repetition. State
 accrues per entity across cycles (INV-5); the window is bounded by
 BASELINE_WINDOW and confidence ramps over SUFFICIENT_RECURRENCE.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -46,6 +46,15 @@ from .t4 import BoundInfo
 # cycle and running every layer, so what the rule read is in the trace. Nothing
 # counts or limits how often it asks.
 #
+# It can WRITE (v0.3.3). Where the thinking is a model, what it makes — a
+# program predicting the region — is data, and data not in `[data]` cannot be
+# recalled, snapshotted, or read back by a third party. `write` without a
+# `datum_id` writes a datum anew: it enters at `nascent`, bearing this cycle's
+# mark. With a `datum_id` it revises a datum already held: the content changes,
+# the provenance does not, and a `revision` line is recorded. Either way the
+# datum arrives at T1 next cycle, is classified SELF_WRITTEN at T2, and runs
+# every layer. The driver admits and records; the rule only says what to write.
+#
 # It receives the entity, the accrued window for that entity, and this cycle's
 # observation — which carries the context the move was made under. It must NOT
 # read the observation's effect: that is the answer it is being asked to
@@ -56,12 +65,28 @@ PredictRule = Callable[..., InfoUnit]
 AskFn = Callable[[Description], None]
 
 
+@dataclass(frozen=True, slots=True)
+class WriteRequest:
+    """What the rule asks to be written: a datum anew, or a revision of one held."""
+
+    payload: object
+    # Required for a datum written anew; for a revision, replaces its tags if given.
+    open: dict[str, str] | None = None
+    # The datum to revise; None to write one anew.
+    datum_id: str | None = None
+
+
+# Writing from the rule into `[data]`, through the driver (v0.3.3).
+WriteFn = Callable[[WriteRequest], None]
+
+
 def persistence(
     entity_id: str,
     window: HistoryWindow,
     observed: InfoUnit,
     contribute: Any = None,
     ask: Any = None,
+    write: Any = None,
 ) -> InfoUnit:
     """dil-core's declared update law: predict the most recent observation.
 
@@ -91,6 +116,8 @@ class T5Input:
 @dataclass(frozen=True, slots=True)
 class T5Output:
     results: tuple[T5Result, ...] = dc_field(default_factory=tuple)
+    # What the rule wrote this cycle, in order; the driver takes each into `[data]`.
+    writes: tuple[WriteRequest, ...] = dc_field(default_factory=tuple)
 
 
 def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
@@ -143,9 +170,15 @@ class T5(BaseLayer):
     ) -> T5Output:
         results: list[T5Result] = []
 
-        # The rule's one road outward: a query to the store, issued from T5.
+        # The rule's road outward: a query to the store, issued from T5.
         def ask(cue: Description) -> None:
             emit(store_query(cue))
+
+        # And its road into the store: what it writes, handed to the driver.
+        writes: list[WriteRequest] = []
+
+        def write(request: WriteRequest) -> None:
+            writes.append(request)
 
         for b in input.bound:
             entity_id = b.entity_id
@@ -159,7 +192,9 @@ class T5(BaseLayer):
             # The rule may report upward into the field; the contribution is
             # bound to T5, since it is T5's declared rule that made it. It may
             # also ask the store; the query is traced to T5 for the same reason.
-            predicted = self._predict(entity_id, tuple(window), observed, contribute, ask)
+            predicted = self._predict(
+                entity_id, tuple(window), observed, contribute, ask, write
+            )
             confidence = min(1.0, count / self._recurrence)
 
             matched = _content_equal(observed, predicted)
@@ -201,7 +236,7 @@ class T5(BaseLayer):
                 )
             }
         )
-        return T5Output(results=tuple(results))
+        return T5Output(results=tuple(results), writes=tuple(writes))
 
     def info_units(self, output: T5Output) -> Sequence[InfoUnit]:
         # INV-4: predicted and observed are InfoUnits leaving the layer.

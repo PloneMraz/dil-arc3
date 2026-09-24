@@ -11,7 +11,7 @@ changing the protocol. Where this implementation's declaration differs from
 dil-core's, the difference is marked — it is a different host, so it is entitled
 to differ, but not to differ silently.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from typing import Final
@@ -28,7 +28,9 @@ from typing import Final
 #       chain — see SCHEMA_VERSIONED_SINCE.
 #   2 → v0.3.2's 5-state provenance graph. First versioned schema: stamped per
 #       line, hashed with the version-inclusive formula.
-SCHEMA_VERSION: Final = 2
+#   3 → v0.3.3's 6-state graph (adds `nascent`), entries by origin (region
+#       returns and the cycle datum enter at `running`), and the `revision` line.
+SCHEMA_VERSION: Final = 3
 
 # The first schema version under the self-describing, version-stamped chain — the
 # boundary of the versioned `[event]` chain. A pre-versioning line is NOT
@@ -207,9 +209,15 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 # reader's detection lag. A pruned payload's marker remains — auditable, just not
 # restorable. No pruning machinery is implemented here (keep-all).
 
+# DEVIATION from dil-core, declared (Plone, 2026-09-24): dil-arc3 also commits at
+# the close of every cycle in which the agent wrote a datum, so every version of
+# what it wrote — the world-model program above all — is in a snapshot, tied by
+# its marker to its place in `[event]`. dil-core keeps the scar rhythm alone:
+# for an agent that writes often, a snapshot per write is too heavy a cost.
 COMMIT_CADENCE: Final = (
-    "every COMMIT_EVERY scars, at a cycle boundary; manual commit() and a fork "
-    "marker at recovery"
+    "every COMMIT_EVERY scars, at a cycle boundary; and at the close of every "
+    "cycle in which the agent wrote a datum (dil-arc3); manual commit() and a "
+    "fork marker at recovery"
 )
 
 # DECIDE@IMPL tag H — the building of situations in `simulated` (§6.2, §9).

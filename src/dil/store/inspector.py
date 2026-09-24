@@ -8,7 +8,7 @@ alter the store or an `[event]` record.
 This renders to a string; the caller decides where to send it. It is a standalone
 read-only view; the loop itself never depends on it.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from .data_store import DataStore
 from .display_name import display_name, event_display_name
 from .event_log import ReadableEventLog
 from .resist_event import (
+    RevisionActivity,
     CrystallizationActivity,
     CycleSealActivity,
     EmissionActivity,
@@ -101,6 +102,11 @@ def inspect_event_log(log: ReadableEventLog) -> str:
             lines.append(
                 f"  #{i}  [emission] {r.datum_id} @T{r.issuing_layer} {r.register} "
                 f"{_preview(r.action)} (c{r.cycle_mark}) {_clock(r.t)}"
+            )
+        elif isinstance(r, RevisionActivity):
+            lines.append(
+                f"  #{i}  [revision] {r.datum_id} @T{r.issuing_layer} "
+                f"(c{r.cycle_mark}) {_clock(r.t)}"
             )
         elif isinstance(r, CrystallizationActivity):
             lines.append(

@@ -11,7 +11,7 @@ tag E's own wording already admits: "WHO reads (a user, another agent, a critic
 service) stays deliberately deployment-open". See `peer.py` for the mechanism and
 for what it does not reach.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from typing import Final

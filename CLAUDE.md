@@ -1721,6 +1721,46 @@ result; the next ones run inside the loop.
   `mismatch_kind` (0 here) — earlier absence counts from that script need
   re-checking.
 
+### Protocol v0.3.3: `nascent`, entries by origin, `write`, revision (Plone, same day)
+
+Discussed and settled with Plone, then written into the law in dil-core
+(`f8230de`, protocol v0.3.3 and specification v7, copied into `spec/`), migrated
+there (`44309b7`) and ported here:
+
+- **`prior` is what its definition says**: host data existing before the loop
+  ran. Region returns and the cycle datum are not that; they pass the
+  tagging-gate at `running`, told apart by `domain`, their entry being their
+  tag set in the cycle's record. The first port had admitted them as `prior`
+  and moved them at once — a mislabel of this session's own making.
+- **`nascent`** — the name chosen to keep clear of "self" and of T2's
+  SELF_WRITTEN — is the second one-way entry: a datum the agent writes anew,
+  bearing the cycle-mark of the cycle that wrote it. It arrives at T1 the next
+  cycle, is SELF_WRITTEN at T2, runs every layer, and moves `nascent → running`.
+- **A revision is not an entry**: the content of a held datum changes, its
+  provenance does not, T2 reads it SELF_WRITTEN the next cycle, and `[event]`
+  gets a bare `revision` line with no content. The content is read from the
+  commit snapshot. This is what a rewritten world-model program is.
+- The predict rule has **`write`** (anew, or with `datum_id` to revise), and a
+  **cue may carry `provenance`**, so the mind can ask what collided.
+- DEVIATION from dil-core, declared (Plone: too costly for a full agent, right
+  for this one): **dil-arc3 also commits at the close of every cycle in which
+  the agent wrote a datum**, so every version of the program is in a snapshot
+  tied by its marker to its place in `[event]` (`COMMIT_CADENCE`; tested).
+  `CycleResult.written` carries the count for the daemon.
+- A bug the commit test caught on the way: a written datum's arrival carried its
+  fixed tags as a dataclass, which the snapshot could not store; it now takes
+  the store-return form.
+- **Known limit, pre-existing and not fixed here**: the Python daemon's snapshot
+  payload keeps only the driver's `cycle` and `lastEmission`, not pending
+  returns, `recalled`, `last_lateral` or `pending_writes`, so a recovery from a
+  commit drops whatever was on its way to T1. dil-core snapshots the whole
+  driver state.
+
+Live, `ls20`, 60 cycles after the port: moves, positions, scars and recall
+identical to before; `[event]` 11,162 records, 1,202 fewer than before — exactly
+the 1,142 region returns' and 60 cycle datums' `prior → running` lines v0.3.3
+drops; conformance unchanged. 267 tests.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public

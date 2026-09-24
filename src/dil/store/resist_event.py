@@ -8,7 +8,7 @@ Each [event] record additionally anchors the FULL field-state of its cycle
 (DECIDE@IMPL tag G = full-field-state), so a third party can re-appraise the
 event later under its original context (protocol §8.5, §9).
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from dataclasses import dataclass, field
@@ -113,6 +113,13 @@ class ActivityEvent:
     # `recalled`. Empty, and then not written, when nothing was admitted.
     # Ported from dil-core 276f30a.
     admitted: tuple["RecalledTags", ...] = ()
+    # The full tag set of every datum the agent wrote this cycle — written anew
+    # (entering at `nascent`) or revised (its provenance unchanged) — as it stands
+    # once written. Tags only, never content: what a revised datum held is read
+    # from the commit snapshot. Each arrives at T1 the next cycle and runs every
+    # layer. Empty, and then not written, when nothing was written. Ported from
+    # dil-core 44309b7 (v0.3.3).
+    written: tuple["RecalledTags", ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,6 +278,25 @@ class ResistanceReadingActivity:
     activity_kind: Literal["resistance-reading"] = "resistance-reading"
 
 
+@dataclass(frozen=True, slots=True)
+class RevisionActivity:
+    """A revision (v0.3.3, §9 "Revision is not entry").
+
+    The agent rewrote the content of a datum it already holds. The datum stays
+    the same datum — no provenance move, no entry. A bare record that the
+    revision occurred: which datum, in which cycle, by which layer. It carries no
+    content, as no `[event]` does; what the datum held is read from the commit
+    snapshot.
+    """
+
+    datum_id: str
+    cycle_mark: int
+    issuing_layer: LayerIndex
+    t: int
+    kind: Literal["activity"] = "activity"
+    activity_kind: Literal["revision"] = "revision"
+
+
 ActivityRecord: TypeAlias = (
     CycleSealActivity
     | LayerExitActivity
@@ -279,6 +305,7 @@ ActivityRecord: TypeAlias = (
     | CrystallizationActivity
     | ExpectationActivity
     | ResistanceReadingActivity
+    | RevisionActivity
 )
 
 
@@ -326,6 +353,15 @@ def record_activity(
             "an activity record requires a datum that has run (no cycle-mark present)"
         )
     return CycleSealActivity(datum_id=datum_id, activity=activity, datum=datum, anchor=anchor)
+
+
+def record_revision(
+    datum_id: str, cycle_mark: int, issuing_layer: LayerIndex, t: int
+) -> RevisionActivity:
+    """A `revision` line: datum D was revised at cycle N by layer L (no content)."""
+    return RevisionActivity(
+        datum_id=datum_id, cycle_mark=cycle_mark, issuing_layer=issuing_layer, t=t
+    )
 
 
 def record_layer_exit(

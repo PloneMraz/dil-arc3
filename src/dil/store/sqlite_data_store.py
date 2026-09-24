@@ -12,7 +12,7 @@ This is one concrete `DataStore` behind the interface; the dict-backed store in
 data_store.py stays a test fixture. RAM is never the store of record — the
 store-of-record lives on the requisitioned substrate.
 
-Ported from dil-core against DIL protocol v0.3.2, where the engine is the same
+Ported from dil-core against DIL protocol v0.3.3, where the engine is the same
 SQLite reached through `node:sqlite`.
 """
 

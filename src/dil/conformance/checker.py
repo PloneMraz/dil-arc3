@@ -19,7 +19,7 @@ So each criterion decomposes into claims, each carrying its basis — `trace`,
 from them. This keeps the report from overstating what the traces alone prove: an
 auditor can recompute a trace-only conformance by reading only the `trace` claims.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -42,6 +42,7 @@ from ..store.resist_event import (
     LogRecord,
     ManifestRecord,
     ProvenanceActivity,
+    RevisionActivity,
 )
 from ..store.tags import TaggedDatum, invalid_open_tag_reason
 from .decisions import CONFORMANCE_DIVERSITY_WINDOW, CONFORMANCE_MIN_DISTINCT_SOURCES
@@ -269,6 +270,7 @@ def check_conformance(
     layer_exits = [r for r in records if isinstance(r, LayerExitActivity)]
     cycle_seals = [r for r in records if isinstance(r, CycleSealActivity)]
     provenance_lines = [r for r in records if isinstance(r, ProvenanceActivity)]
+    revisions = [r for r in records if isinstance(r, RevisionActivity)]
     emissions = [r for r in records if isinstance(r, EmissionActivity)]
     crystallizations = [r for r in records if isinstance(r, CrystallizationActivity)]
     expectations = [r for r in records if isinstance(r, ExpectationActivity)]
@@ -449,6 +451,29 @@ def check_conformance(
             ),
             None,
         )
+        # And a datum the rule wrote runs at the cycle after it was written
+        # (v0.3.3 §9), where that cycle is in the trace.
+        sealed_cycles = {r.activity.cycle for r in cycle_seals}
+        written_runs = [
+            (t.datum_id, r.activity.cycle + 1)
+            for r in cycle_seals
+            for t in r.activity.written
+            if r.activity.cycle + 1 in sealed_cycles
+        ]
+        written_gap = next(
+            (
+                (d, c)
+                for d, c in written_runs
+                if not _covers_all_layers(
+                    {
+                        le.layer
+                        for le in layer_exits
+                        if le.datum_id == d and le.cycle_mark == c
+                    }
+                )
+            ),
+            None,
+        )
         admitted_gap = next(
             (
                 (d, c)
@@ -490,6 +515,17 @@ def check_conformance(
                     )
                 ]
                 if admitted_runs
+                else []
+            ),
+            *(
+                [
+                    _claim(
+                        "every datum the agent wrote runs T1→T8 at the next cycle",
+                        "trace",
+                        "fail" if written_gap else "pass",
+                    )
+                ]
+                if written_runs
                 else []
             ),
             _claim(
@@ -747,7 +783,7 @@ def check_conformance(
         )
         prior_entries: dict[str, int] = {}
         for r in provenance_lines:
-            if r.from_ == "prior":
+            if r.from_ in ("prior", "nascent"):
                 prior_entries[r.datum_id] = prior_entries.get(r.datum_id, 0) + 1
         double_entry = next(((k, n) for k, n in prior_entries.items() if n > 1), None)
         # §13.6: "host data entered only via the tagging-gate". Every datum that
@@ -756,20 +792,41 @@ def check_conformance(
         # datum by its tags. One that ran from `prior` with no tag set in the
         # trace came in by a door the log cannot see.
         tags_seen: dict[tuple[str, int], dict[str, str]] = {}
+        # Every datum whose entry shows in the trace, with the first cycle it shows.
+        entered: dict[str, int] = {}
         for r in cycle_seals:
             tags_seen[(r.datum_id, r.activity.cycle)] = dict(r.datum.open)
-            for t in (*r.activity.recalled, *r.activity.admitted):
+            entered.setdefault(r.datum_id, r.activity.cycle)
+            for t in (*r.activity.recalled, *r.activity.admitted, *r.activity.written):
                 tags_seen[(t.datum_id, r.activity.cycle)] = dict(t.open)
+                entered[t.datum_id] = min(entered.get(t.datum_id, r.activity.cycle), r.activity.cycle)
+
+        # A datum leaving `prior` shows its tags in that cycle's record; one
+        # leaving `nascent` showed them in the record of the cycle that wrote it.
+        def _entry_key(r: ProvenanceActivity) -> tuple[str, int]:
+            return (r.datum_id, r.cycle_mark if r.from_ == "prior" else r.cycle_mark - 1)
+
         unseen_entry = next(
             (
                 r
                 for r in provenance_lines
-                if r.from_ == "prior"
+                if r.from_ in ("prior", "nascent")
                 and (
-                    (r.datum_id, r.cycle_mark) not in tags_seen
-                    or invalid_open_tag_reason(tags_seen[(r.datum_id, r.cycle_mark)])
-                    is not None
+                    _entry_key(r) not in tags_seen
+                    or invalid_open_tag_reason(tags_seen[_entry_key(r)]) is not None
                 )
+            ),
+            None,
+        )
+        # v0.3.3 §9: every datum entered through the gate, "its entry recorded
+        # with the tag set it entered with". A datum that leaves a line in the
+        # trace with no entry anywhere before it came in by a door the log
+        # cannot see.
+        no_entry = next(
+            (
+                r
+                for r in (*layer_exits, *revisions)
+                if r.datum_id not in entered or entered[r.datum_id] > r.cycle_mark
             ),
             None,
         )
@@ -791,15 +848,21 @@ def check_conformance(
                 "fail" if bad_edge else "pass",
             ),
             _claim(
-                "`prior` entered once, never re-entered (§9)",
+                "`prior` and `nascent` each entered once, never re-entered (§9)",
                 "trace",
                 "fail" if double_entry else "pass",
             ),
             _claim(
                 "host data entered only via the tagging-gate — every datum leaving "
-                "`prior` shows its gate-admissible tag set in the trace (§13.6)",
+                "`prior` or `nascent` shows its gate-admissible tag set in the trace (§13.6)",
                 "trace",
                 "fail" if unseen_entry else "pass",
+            ),
+            _claim(
+                "every datum that ran or was revised shows its entry, with its tag "
+                "set, in the trace (§9)",
+                "trace",
+                "fail" if no_entry else "pass",
             ),
         ]
 
@@ -822,15 +885,21 @@ def check_conformance(
             )
         elif unseen_entry:
             detail = (
-                f"datum {unseen_entry.datum_id} left `prior` at cycle "
+                f"datum {unseen_entry.datum_id} left `{unseen_entry.from_}` at cycle "
                 f"{unseen_entry.cycle_mark} with no gate-admissible tag set in the "
                 "trace (§13.6)"
+            )
+        elif no_entry:
+            detail = (
+                f"datum {no_entry.datum_id} appears at cycle {no_entry.cycle_mark} "
+                "with no recorded entry before it (§9)"
             )
         else:
             detail = (
                 "scars carry the ResistEvent and every cycle left an activity "
                 "record; provenance moves only along the §9 graph edges (prior "
-                "entered once); all records carry four fixed tags, ≥3 open tags "
+                "and nascent each entered once); every datum that ran shows its "
+                "entry; all records carry four fixed tags, ≥3 open tags "
                 "incl domain, and a context anchor; the log is append-only with "
                 "read-only records"
             )

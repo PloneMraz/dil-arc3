@@ -1,15 +1,22 @@
 """The tagging-gate — no side door (protocol §9).
 
-Host data (a pre-existing memory file, say) is admitted to the loop ONLY after
-passing the tagging rule: stamped provenance `prior`, with NO cycle-mark until it
-has run, plus the open-tag layer — which MUST include the mandatory `domain` tag
+Every datum enters the store ONLY after passing the tagging rule: the four fixed
+tags plus the open-tag layer — which MUST include the mandatory `domain` tag
 (protocol §9) and MUST NOT name a verdict. Untagged data MUST NOT enter the loop.
-There is no other way in.
+There is no other way in. What a datum is stamped depends on where it comes from
+(v0.3.3):
+  - host data existing before the loop ran → `prior`, no cycle-mark until it has
+    run (`admit_host_data`);
+  - a datum the agent writes anew → `nascent`, bearing the cycle-mark of the
+    cycle that wrote it (`admit_nascent`);
+  - what the region returns while the loop runs, and the loop's own per-cycle
+    datum → `running`, in use the moment they arrive, told apart by `domain`
+    (`admit_arrival`).
 
 Admission failure is a halt (a raised exception), not a silent drop: data that
 cannot be admitted cleanly must not slip into the store half-stamped.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from dataclasses import dataclass, field
@@ -56,4 +63,40 @@ def admit_host_data(datum: HostDatum, now: int) -> TaggedDatum:
             floor_tag=datum.admitting_layer,
         ),
         open=dict(datum.open),
+    )
+
+
+def _checked_open(open_tags: OpenTags) -> dict:
+    bad = invalid_open_tag_reason(open_tags)
+    if bad is not None:
+        raise TaggingGateError(bad)
+    return dict(open_tags)
+
+
+def admit_nascent(datum: HostDatum, now: int, cycle: int) -> TaggedDatum:
+    """Admit a datum the agent has written anew (v0.3.3 `nascent`).
+
+    It bears the cycle-mark of the cycle that wrote it from the start, and moves
+    `nascent → running` once it has run.
+    """
+    return TaggedDatum(
+        payload=datum.payload,
+        fixed=FixedTags(timestamp=now, cycle_mark=cycle, provenance="nascent",
+                        floor_tag=datum.admitting_layer),
+        open=_checked_open(datum.open),
+    )
+
+
+def admit_arrival(datum: HostDatum, now: int, cycle: int) -> TaggedDatum:
+    """Admit what arrives while the loop runs (v0.3.3).
+
+    A return from the region, or the loop's own per-cycle datum: in use the
+    moment it arrives, so it enters at `running`, bearing the cycle it arrived
+    in. Which class of data it is, is read from its `domain`, not its provenance.
+    """
+    return TaggedDatum(
+        payload=datum.payload,
+        fixed=FixedTags(timestamp=now, cycle_mark=cycle, provenance="running",
+                        floor_tag=datum.admitting_layer),
+        open=_checked_open(datum.open),
     )

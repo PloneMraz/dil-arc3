@@ -12,7 +12,7 @@ name. `HEAD` is the one movable pointer (a git ref): rollback moves it by writin
 a NEW fork marker — no marker is ever deleted. Payload retention governs `state/`
 files only and is a deployment concern; no pruning exists here.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

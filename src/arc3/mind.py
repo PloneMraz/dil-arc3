@@ -315,7 +315,7 @@ def predict_rule(mind: Mind, recollection: Any = None):
     make an identical outcome read as a mismatch.
     """
 
-    def rule(entity_id: str, window, observed, contribute=None, ask=None):
+    def rule(entity_id: str, window, observed, contribute=None, ask=None, write=None):
         payload = _payload_of(observed)
         if payload is None:
             return observed

@@ -6,7 +6,7 @@ changes — accrues only when there is real external resistance. Under Mode-A,
 where nothing pushes back, the evidence stays zero and the model degenerates.
 State accrues per entity (INV-5).
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

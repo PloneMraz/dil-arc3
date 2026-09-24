@@ -123,8 +123,8 @@ class ChainVerification(unittest.TestCase):
         s.write(a_scar())
         s.close()
         obj = json.loads(self._lines()[0])
-        self.assertEqual(obj["schemaVersion"], 2)
-        obj["schemaVersion"] = 3
+        self.assertEqual(obj["schemaVersion"], 3)
+        obj["schemaVersion"] = 4
         self._rewrite([json.dumps(obj, separators=(",", ":"), ensure_ascii=False)])
         result = verify_jsonl_sink(self.dir)
         self.assertIsInstance(result, ChainBroken)

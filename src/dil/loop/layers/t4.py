@@ -5,7 +5,7 @@ attributed to a known entity is bound to it; one that cannot is bound to
 STRANGER — a positional unknown, not an error. The resolver is pluggable with a
 declared default.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from collections.abc import Callable, Sequence

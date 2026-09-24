@@ -7,7 +7,7 @@ In: the host's signals for the cycle. Out: an `ActivityEnvironment`, an InfoUnit
 whose frame is the root. Precondition: none. Postcondition: presence confirmed
 for T2.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from collections.abc import Sequence

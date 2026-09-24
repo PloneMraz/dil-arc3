@@ -10,7 +10,7 @@ Tag A (Signal / InfoUnit / RefFrame representation) is a TYPE-level choice, not 
 runtime value; it is described, not snapshotted. Every other declared choice that
 governs behaviour is captured verbatim from its declaration.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from ..conformance.decisions import (

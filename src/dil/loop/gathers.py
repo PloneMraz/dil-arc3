@@ -14,7 +14,7 @@ T1 and T3 ingest the HOST's input — external ingest, not a channel read. T2
 additionally takes the previous cycle's emission, the feedback of INV-1, and the
 observed changes.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

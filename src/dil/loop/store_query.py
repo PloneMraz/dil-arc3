@@ -6,12 +6,18 @@ the same value. That is the whole index: §9 already requires a key to denote th
 same dimension wherever it appears, "so the `[event]` log is filterable", and a
 filter is what this is.
 
+One key reads the fixed layer instead: `provenance`, the position a datum
+occupies now. "What collided" is a question about position, not about what a
+datum is, so a cue may carry it — `{"kind": "frame", "provenance": "scar"}` —
+and no open tag may use that key, since open tags never overwrite the fixed
+layer. Ported from dil-core 44309b7 (v0.3.3).
+
 The answer is a set of Signals on the store channel, ingested at T1 the next
 cycle like any query-return (§6: "input channels: query returns"). Nothing is
 read into any layer here, and nothing is changed in `[data]`: the provenance move
 happens when the datum actually runs, and the driver records it then.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -24,9 +30,17 @@ from .layers.t3 import STORE_CHANNEL, Description
 from .types import Signal
 
 
+# The one cue key read from the fixed layer rather than the open layer.
+PROVENANCE_CUE = "provenance"
+
+
+def _value_for(datum: TaggedDatum, key: str) -> str | None:
+    return datum.fixed.provenance if key == PROVENANCE_CUE else datum.open.get(key)
+
+
 def matches_cue(datum: TaggedDatum, cue: Description) -> bool:
-    """Whether a datum's open tags carry every pair of the cue."""
-    return len(cue) > 0 and all(datum.open.get(k) == v for k, v in cue.items())
+    """Whether a datum carries every pair of the cue: open tags, and provenance for that key."""
+    return len(cue) > 0 and all(_value_for(datum, k) == v for k, v in cue.items())
 
 
 def returned_entity(signal: Signal) -> str:

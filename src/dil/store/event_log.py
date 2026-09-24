@@ -23,7 +23,7 @@ every appended record is mirrored to it at append time. The stronger,
 tamper-EVIDENT guarantee against a compromised host is the hash chain plus the
 commit markers, not the sink alone.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

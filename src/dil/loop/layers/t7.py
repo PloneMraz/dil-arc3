@@ -32,7 +32,7 @@ still registered. Attention lowers expectation; never registration.
 T7 accrues which entities are expected to recur (INV-5): an entity seen at least
 `min_observations_to_expect` times is expected next cycle.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

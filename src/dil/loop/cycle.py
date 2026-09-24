@@ -23,7 +23,7 @@ append-only `[event]` log, and GLOB-MOD advanced to N+1.
 
 This module runs one cycle correctly; it makes no self-continuity claim.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -61,9 +61,16 @@ from ..store.resist_event import (
     record_layer_exit,
     record_provenance,
     record_resistance_reading,
+    record_revision,
     record_scar,
 )
-from ..store.tagging_gate import HostDatum, admit_host_data
+from ..store.tagging_gate import (
+    HostDatum,
+    TaggingGateError,
+    admit_arrival,
+    admit_nascent,
+)
+from ..store.tags import invalid_open_tag_reason
 from ..store.tags import TaggedDatum
 from .appraisal import AppraisalInput, appraise
 from .gathers import (
@@ -78,7 +85,7 @@ from .gathers import (
 from .glob_mod import GlobMod
 from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
-from .layers.t3 import is_store_query, store_query
+from .layers.t3 import STORE_CHANNEL, is_store_query, store_query
 from .layers.t4 import T4Input
 from .layers.t5 import T5Input, T5Output
 from .layers.t6 import T6Input
@@ -122,6 +129,20 @@ class DriverState:
     recalled: tuple[str, ...] = ()
     # Actions layers emitted laterally last cycle, for T2 to read (§6.4).
     last_lateral: tuple[object, ...] = ()
+    # What the rule wrote last cycle, arriving at T1 now (v0.3.3).
+    pending_writes: tuple["PendingWrite", ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class PendingWrite:
+    """A datum the rule wrote, on its way to T1 at the next cycle (v0.3.3).
+
+    `action` is what T2 reads as the agent's own act when the datum arrives:
+    `{"kind": "write", "datum": id}`.
+    """
+
+    signal: Signal
+    action: dict[str, str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +257,9 @@ class CycleResult:
     absences: int
     # Distinct sources whose return resisted this cycle (for diversity monitoring).
     collision_sources: tuple[str, ...]
+    # DEVIATION from dil-core, declared: how many data the agent wrote this
+    # cycle, so the daemon can commit on it (dil-arc3's commit cadence).
+    written: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,7 +289,7 @@ class Cycle:
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
         "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
-        "_admit", "_running_admitted",
+        "_admit", "_running_admitted", "_pending_writes", "_running_written",
     )
 
     def __init__(
@@ -288,6 +312,12 @@ class Cycle:
         # `admit_return`, which keeps every one. Ported from dil-core 276f30a.
         self._admit = admit if admit is not None else admit_return
         self._running_admitted: tuple[str, ...] = ()
+        # What the rule wrote last cycle, arriving at T1 this cycle (v0.3.3).
+        self._pending_writes: list[PendingWrite] = (
+            list(resume.pending_writes) if resume is not None else []
+        )
+        # Data the rule wrote last cycle, running now: their exits are theirs too.
+        self._running_written: tuple[str, ...] = ()
         # The host's resistance-retrieval channel (§10), if one is declared. The
         # driver does not call it — T5 does, through its declared PredictRule.
         # The driver only asks which scars it returned, so their return can be
@@ -349,7 +379,7 @@ class Cycle:
         self._events.append(
             record_layer_exit(self._datum_id(), self._cycle, layer, self._cycle_t)
         )
-        for datum_id in (*self._running_recalled, *self._running_admitted):
+        for datum_id in (*self._running_recalled, *self._running_admitted, *self._running_written):
             self._events.append(
                 record_layer_exit(datum_id, self._cycle, layer, self._cycle_t)
             )
@@ -549,6 +579,7 @@ class Cycle:
             pending_returns=tuple(self._pending),
             recalled=tuple(sorted(self._recalled)),
             last_lateral=self._last_lateral,
+            pending_writes=tuple(self._pending_writes),
         )
 
     def run(self, region_input: HostCycleInput) -> CycleResult:
@@ -562,7 +593,16 @@ class Cycle:
         # memory that was not recalled is not silent, it was not asked.
         returned = self._pending
         self._pending = []
-        arriving = {returned_entity(s) for s in returned}
+        # What the rule wrote last cycle arrives now too, and runs every layer;
+        # its change is the agent's own write, which T2 matches to the write it
+        # made (v0.3.3 §9: SELF_WRITTEN at the next cycle).
+        written_back = [w for w in self._pending_writes if self._data.has(w.action["datum"])]
+        self._pending_writes = []
+        arriving = {returned_entity(s) for s in returned} | {
+            w.action["datum"] for w in written_back
+        }
+        # Like a recalled datum, a written one returns only when it is written:
+        # not arriving later is no absence.
         self._recalled |= arriving
         self._unasked = frozenset(self._recalled - arriving)
         # Each return is also a change the agent's own query produced: its value
@@ -571,10 +611,10 @@ class Cycle:
         # agent's own; agency and provenance are two different questions.
         host = (
             region_input
-            if not returned
+            if not returned and not written_back
             else replace(
                 region_input,
-                signals=(*region_input.signals, *returned),
+                signals=(*region_input.signals, *returned, *(w.signal for w in written_back)),
                 changes=(
                     *region_input.changes,
                     *(
@@ -583,6 +623,10 @@ class Cycle:
                             value=store_query(s.raw_payload["cue"]),
                         )
                         for s in returned
+                    ),
+                    *(
+                        ObservedChange(id=w.action["datum"], value=w.action)
+                        for w in written_back
                     ),
                 ),
             )
@@ -593,28 +637,23 @@ class Cycle:
 
         # The cycle datum, threaded T1→T8 so it accrues a floor-tag at each
         # layer; the flow mode rides along as an open tag (trace-visible, §13.3).
-        admitted = to_running(
-            admit_host_data(
-                HostDatum(
-                    payload={"signals": len(host.signals), "cycle": self._cycle},
-                    admitting_layer=1,
-                    open={
-                        "domain": "cycle",
-                        "phase": "loop",
-                        "source": "driver",
-                        "flow": flow,
-                    },
-                ),
-                # Timestamp is wall-clock; the cycle number is the cycle-mark.
-                self._cycle_t,
+        # It is the loop's own, in use the moment it exists, so it passes the
+        # tagging-gate at `running` (v0.3.3 §9); its entry is the cycle seal that
+        # embeds it with its tags.
+        admitted = admit_arrival(
+            HostDatum(
+                payload={"signals": len(host.signals), "cycle": self._cycle},
+                admitting_layer=1,
+                open={
+                    "domain": "cycle",
+                    "phase": "loop",
+                    "source": "driver",
+                    "flow": flow,
+                },
             ),
+            # Timestamp is wall-clock; the cycle number is the cycle-mark.
+            self._cycle_t,
             self._cycle,
-        )
-        # prior → running: the admitted host datum has run this cycle.
-        self._events.append(
-            record_provenance(
-                self._datum_id(), self._cycle, "prior", "running", self._cycle_t
-            )
         )
 
         # prior → running, for each recalled datum that had not run before (§9):
@@ -636,23 +675,33 @@ class Cycle:
             returned_entity(s) for s in returned if self._data.has(returned_entity(s))
         )
 
-        # prior → running, for each region return the host admits as a datum of
-        # its own (see `admit`). It enters through the tagging-gate like any host
-        # data, and runs now, so it takes this cycle's mark. The region's signals
-        # come first in `host.signals`, so index i is the i-th T3 unit too.
+        # nascent → running, for each datum the rule wrote anew last cycle: it
+        # runs now, keeping the mark of the cycle that wrote it (v0.3.3 §9). A
+        # revised datum arrives too, its provenance untouched.
+        for w in written_back:
+            written_id = w.action["datum"]
+            held = self._data.get(written_id)
+            if held.fixed.provenance == "nascent":
+                self._data.put(written_id, to_running(held, self._cycle))
+                self._events.append(
+                    record_provenance(
+                        written_id, self._cycle, "nascent", "running", self._cycle_t
+                    )
+                )
+        self._running_written = tuple(dict.fromkeys(w.action["datum"] for w in written_back))
+
+        # Each return from the region enters through the tagging-gate at
+        # `running` (see `AdmitPolicy`, v0.3.3 §9): in use the moment it arrives,
+        # it takes this cycle's mark, and its entry is its tag set in this
+        # cycle's record. The region's signals come first in `host.signals`, so
+        # index i is the i-th T3 unit too.
         admitted_ids: dict[int, str] = {}
         for i, signal in enumerate(region_input.signals):
             declared = self._admit(signal)
             if declared is None:
                 continue
             datum_id = f"signal-{self._cycle}-{i}"
-            entered = admit_host_data(declared, self._cycle_t)
-            self._data.put(datum_id, to_running(entered, self._cycle))
-            self._events.append(
-                record_provenance(
-                    datum_id, self._cycle, "prior", "running", self._cycle_t
-                )
-            )
+            self._data.put(datum_id, admit_arrival(declared, self._cycle_t, self._cycle))
             admitted_ids[i] = datum_id
         self._running_admitted = tuple(admitted_ids.values())
         admitted_now = frozenset(self._running_admitted)
@@ -687,6 +736,10 @@ class Cycle:
                 RecalledTags(datum_id=datum_id, fixed=ran.fixed, open=dict(ran.open))
             )
         self._running_admitted = ()
+        # And each datum the rule wrote, running now.
+        for written_id in self._running_written:
+            self._data.put(written_id, stamp_layer(self._data.get(written_id), 8))
+        self._running_written = ()
         # Which admitted datum each observation came from, by the unit itself:
         # T4 and T5 carry T3's units through unchanged.
         datum_of = {
@@ -726,6 +779,84 @@ class Cycle:
                     continue
                 if all(returned_entity(p) != returned_entity(s) for p in self._pending):
                     self._pending.append(s)
+
+        # ── What the rule wrote (v0.3.3 §9) ──
+        # A datum written anew enters through the tagging-gate at `nascent`,
+        # bearing this cycle's mark. A revision rewrites a datum already held: its
+        # content changes, its provenance does not, and a bare `revision` line is
+        # recorded. Either way the datum's tags go into this cycle's record, and
+        # it arrives at T1 next cycle, where T2 reads the write as the agent's
+        # own. Taken after the store has answered: what is written now is not
+        # memory yet.
+        written_tags: dict[str, RecalledTags] = {}
+        write_actions: dict[str, dict[str, str]] = {}
+        anew = 0
+        for w in pass_.t5.writes:
+            if w.datum_id is not None:
+                held = self._data.get(w.datum_id)
+                if held is None:
+                    raise ValueError(
+                        f'write: there is no datum "{w.datum_id}" to revise; '
+                        "a datum written anew carries no datum_id"
+                    )
+                if w.open is not None:
+                    bad = invalid_open_tag_reason(w.open)
+                    if bad is not None:
+                        raise TaggingGateError(bad)
+                written_id = w.datum_id
+                self._data.put(
+                    written_id,
+                    replace(held, payload=w.payload,
+                            open=dict(w.open) if w.open is not None else held.open),
+                )
+                self._events.append(
+                    record_revision(written_id, self._cycle, 5, self._cycle_t)
+                )
+            else:
+                if w.open is None:
+                    raise TaggingGateError("a datum written anew must carry its open tags")
+                written_id = f"written-{self._cycle}-{anew}"
+                anew += 1
+                self._data.put(
+                    written_id,
+                    admit_nascent(
+                        HostDatum(payload=w.payload, admitting_layer=5, open=dict(w.open)),
+                        self._cycle_t,
+                        self._cycle,
+                    ),
+                )
+            d = self._data.get(written_id)
+            action = {"kind": "write", "datum": written_id}
+            written_tags.pop(written_id, None)
+            written_tags[written_id] = RecalledTags(
+                datum_id=written_id, fixed=d.fixed, open=dict(d.open)
+            )
+            write_actions.setdefault(written_id, action)
+            self._pending_writes = [
+                p for p in self._pending_writes if p.action["datum"] != written_id
+            ]
+            self._pending_writes.append(
+                PendingWrite(
+                    signal=Signal(
+                        source_id=STORE_CHANNEL,
+                        # The same form a store return takes (store_query.py),
+                        # so it snapshots as data like any other arrival.
+                        raw_payload={
+                            "entity": written_id,
+                            "payload": d.payload,
+                            "fixed": {
+                                "timestamp": d.fixed.timestamp,
+                                "cycleMark": d.fixed.cycle_mark,
+                                "provenance": d.fixed.provenance,
+                                "floorTag": d.fixed.floor_tag,
+                            },
+                            "open": dict(d.open),
+                        },
+                        t=self._cycle_t,
+                    ),
+                    action=action,
+                )
+            )
 
         # ── Expectation readings: the observable signature of accumulation ──
         # One lean line per observed entity: its prediction confidence and the
@@ -965,6 +1096,7 @@ class Cycle:
                     t=self._cycle_t,
                     recalled=tuple(recalled_tags),
                     admitted=tuple(admitted_tags),
+                    written=tuple(written_tags.values()),
                 ),
                 anchor,
             )
@@ -989,7 +1121,10 @@ class Cycle:
         # Feedback and accrual: the response becomes the next cycle's emission,
         # and every lateral emission of this cycle is readable by T2 next cycle.
         self._last_emission = response
-        self._last_lateral = tuple(e.action for e in pass_.emissions)
+        self._last_lateral = (
+            *(e.action for e in pass_.emissions),
+            *write_actions.values(),
+        )
         self._cycle += 1
 
         return CycleResult(
@@ -1000,6 +1135,7 @@ class Cycle:
             scars=scars,
             absences=len(pass_.t7.absences),
             collision_sources=tuple(collision_sources),
+            written=len(written_tags),
         )
 
 

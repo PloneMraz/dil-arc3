@@ -17,7 +17,7 @@ OBSERVABILITY signal, not a §13 conformance criterion — §13 mandates source
 diversity (§13.7), not absorption — and a third party can recompute it from the
 log.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

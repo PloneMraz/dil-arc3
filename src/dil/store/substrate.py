@@ -19,7 +19,7 @@ The physical operations sit behind a small injectable `Substrate` seam so a
 non-filesystem host (a partition, an object store) can back it differently; the
 default is the local filesystem.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from .decisions import SCHEMA_VERSION, SCHEMA_VERSIONED_SINCE
 # different law). Bump a version only on a real, intended change to that facet.
 DIL_CLAIM: Final[dict[str, Any]] = {
     # The protocol version whose law governs this store.
-    "protocol": "0.3.2",
+    "protocol": "0.3.3",
     # The fixed-tag + open-tag schema version.
     "tagSchema": SCHEMA_VERSION,
     # The on-substrate layout version (the three store kinds below).

@@ -12,7 +12,7 @@ MAY mint further OPEN tags denoting *what* the datum is (format, platform,
 object) — but never its quality, correctness, or value. Open tags never
 overwrite the fixed layer.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from dataclasses import dataclass, field
@@ -21,16 +21,20 @@ from typing import Final, Literal, TypeAlias
 from ..invariants.types import LayerIndex
 
 # Provenance state (protocol §3, §9). NOT a chain but a directed graph: `prior`
-# is a one-way entry, and `running`, `simulated`, `projected`, `scar` form a
-# circulation with no terminal state — a datum is never a conclusion at rest but
-# data waiting to be used. The legal moves are the edge set in data_store.py.
+# and `nascent` are one-way entries, and `running`, `simulated`, `projected`,
+# `scar` form a circulation with no terminal state — a datum is never a
+# conclusion at rest but data waiting to be used. The legal moves are the edge
+# set in data_store.py.
 #
-#   - prior      — host data admitted through the tagging-gate, not yet run
+#   - prior      — host data existing before the loop ran, admitted through the
+#                  tagging-gate, not yet run
+#   - nascent    — a datum the agent has written anew, not yet run; it bears the
+#                  cycle-mark of the cycle that wrote it (v0.3.3)
 #   - running    — data in use, in motion through the loop
 #   - simulated  — taken up into the building of a situation (§6.2)
 #   - projected  — an outcome cast from a situation, not yet collided (§6.2)
 #   - scar       — collided with resistance and held
-Provenance: TypeAlias = Literal["prior", "running", "simulated", "projected", "scar"]
+Provenance: TypeAlias = Literal["prior", "nascent", "running", "simulated", "projected", "scar"]
 
 # Open tags: descriptive only (protocol §9, "Open-tag discipline").
 #

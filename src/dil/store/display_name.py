@@ -14,7 +14,7 @@ not by the name.
 Example:
     [20260630]_[10:00:00]_[c2]_[running]_[T6]_[domain:financial]_[currency:VND]_[object:revenue]
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

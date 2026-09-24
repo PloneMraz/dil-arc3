@@ -17,7 +17,7 @@ Order at startup, and none of it is optional:
   4. **Recovery**, when asked: restore the full accrued state before the cycle
      runs, then stamp the fork immediately.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations
@@ -261,8 +261,14 @@ class Daemon:
         self._scars_since_commit += result.scars
 
         # §9: the counter fires a commit after COMMIT_EVERY scars, at a cycle
-        # boundary.
-        if self._commits is not None and self._scars_since_commit >= self._commit_every:
+        # boundary. DEVIATION from dil-core, declared (COMMIT_CADENCE): it also
+        # fires at the close of every cycle in which the agent wrote a datum, so
+        # each version of what it wrote is in a snapshot the marker ties to its
+        # place in `[event]` (v0.3.3 §9: a revision's content is read from the
+        # snapshot; how finely is the cadence, DECIDE@IMPL).
+        if self._commits is not None and (
+            self._scars_since_commit >= self._commit_every or result.written > 0
+        ):
             self._write_marker()
         return True
 

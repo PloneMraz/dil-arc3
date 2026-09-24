@@ -12,7 +12,7 @@ complete, and then decides: pass all → qualify; fail any → non-start.
 This module is intentionally independent of the loop, the store, and the
 invariants.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

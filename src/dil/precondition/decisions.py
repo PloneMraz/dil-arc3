@@ -10,7 +10,7 @@ result stays `declared` — with the reason stated here rather than left implici
 A false declaration is not silent either way: it surfaces in the [event] traces
 afterwards and fails the evidence-based conformance criteria (§13.3–§13.7).
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from typing import Final

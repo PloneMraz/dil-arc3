@@ -9,7 +9,7 @@ Restoring re-instates state this very loop accrued — resuming the causal line,
 never pre-loading fabricated history (INV-5) — and rewrites ONLY memory-side
 state: the `[event]` log and the markers are never touched by a restore.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

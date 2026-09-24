@@ -19,7 +19,7 @@ T3 asks about a description it has not asked about before. Memory is recalled
 by the character on a cue, never poured in: the store does not flood the loop,
 and a cue already asked about has already been answered.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 import json

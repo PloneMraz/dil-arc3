@@ -329,12 +329,12 @@ def asking_rule(met: list):
     """Asks about the world once, the first time it meets anything; records what it met."""
     asked = []
 
-    def rule(entity_id, window, observed, contribute=None, ask=None):
+    def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
         met.append(observed.content)
         if not asked:
             asked.append(True)
             ask({"kind": "world"})
-        return persistence(entity_id, window, observed, contribute, ask)
+        return persistence(entity_id, window, observed, contribute, ask, write)
 
     return rule
 

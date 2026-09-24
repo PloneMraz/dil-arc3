@@ -72,8 +72,9 @@ def test_an_admitted_return_is_a_running_datum_with_the_tags_the_host_declared()
     assert d.fixed.cycle_mark == 0
     assert d.fixed.floor_tag == 8, "it left T8 with the cycle datum"
     assert d.open == {"domain": "observation", "kind": "status", "source": "status"}
+    # It enters at `running` (v0.3.3): no provenance move, its entry is its tags in the record.
     moves = [r for r in of_kind(events, "provenance") if r.datum_id == FIRST]
-    assert [(m.from_, m.to) for m in moves] == [("prior", "running")]
+    assert moves == []
 
 
 def test_every_layer_an_admitted_datum_exits_is_in_the_log():
@@ -96,7 +97,7 @@ def test_the_datum_the_expectation_failed_on_is_the_one_that_becomes_a_scar():
     assert data.get(SECOND).fixed.provenance == "scar"
     assert data.get(FIRST).fixed.provenance == "running", "the earlier return did not collide"
     moves = [(r.from_, r.to) for r in of_kind(events, "provenance") if r.datum_id == SECOND]
-    assert moves == [("prior", "running"), ("running", "scar")]
+    assert moves == [("running", "scar")]
 
     scars = [r for r in events.all() if isinstance(r, EventRecord)]
     assert len(scars) == 1
@@ -174,9 +175,9 @@ def test_a_rule_still_predicts_what_it_did_with_admission_on():
     """Admission changes what is stored, not what the loop expects."""
     seen = []
 
-    def rule(entity_id, window, observed, contribute=None, ask=None):
+    def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
         seen.append(entity_id)
-        return persistence(entity_id, window, observed, contribute, ask)
+        return persistence(entity_id, window, observed, contribute, ask, write)
 
     data, events = create_data_store(), create_event_log()
     make_cycle(data, events, predict=rule).run(HostCycleInput(signals=(status("playing", 1),)))

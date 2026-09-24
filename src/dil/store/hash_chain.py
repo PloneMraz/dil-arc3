@@ -28,7 +28,7 @@ this store writes does — timestamps, cycle marks, sequence numbers and layer
 indices are all integers — but a payload supplied by a host could, and then
 cross-implementation verification no longer holds for that line.
 
-Ported from dil-core against DIL protocol v0.3.2.
+Ported from dil-core against DIL protocol v0.3.3.
 """
 
 from __future__ import annotations

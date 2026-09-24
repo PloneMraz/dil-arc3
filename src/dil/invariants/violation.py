@@ -8,7 +8,7 @@ Halting is therefore modelled as a raised exception, never a returned boolean a
 caller could ignore. The loop, once built, MUST let this propagate as a halt and
 MUST NOT catch-and-continue.
 
-Ported from dil-core (TypeScript) against DIL protocol v0.3.2. Where this file
+Ported from dil-core (TypeScript) against DIL protocol v0.3.3. Where this file
 and the protocol disagree, the protocol wins.
 """
 
