@@ -1525,6 +1525,20 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
 - **A PDF may replace the Writeup text** through the Public Project Link: "It
   should be publicly accessible and not require a login or paywall."
 
+## Settled with Plone, 2026-09-24
+
+- **The paper is a report on this submission, not a rewrite of the protocol and
+  not a paper about DIL in the abstract.** The rules ask for "a detailed analysis
+  of your submission", and Accuracy and Completeness are judged against the one
+  submission it names. Shape: one claim (every thing the loop knows and every
+  change in what it does can be read back by a third party from `[event]`), the
+  evidence for it, and the limits, stated plainly. The protocol stays as it is
+  and is linked, not condensed.
+- **This repository stays private until ARC-AGI-3 ends, then goes public.** The
+  paper's required public Notebook carries the code in the meantime.
+- **Follow the rules as written**: keep the Writeup within 1,500 words rather
+  than relying on the PDF route to go past it.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
