@@ -103,8 +103,8 @@ class Daemon:
         admit: AdmitPolicy | None = None,
     ) -> None:
         self._recollection = recollection
-        # Which region returns become data of their own — see `admit` in
-        # cycle.py. None keeps dil-core's behaviour.
+        # How each return from the region enters `[data]` — see `AdmitPolicy`
+        # in cycle.py. None keeps the reference admission, `admit_return`.
         self._admit = admit
         # The host's declared terminal-response policy; None keeps dil-core's
         # marker. See cycle.py's RespondContext for why the seam exists.

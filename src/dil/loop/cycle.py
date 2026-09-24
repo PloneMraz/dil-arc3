@@ -178,11 +178,39 @@ class RespondContext:
 # Builds the cycle's committed action (DECIDE@IMPL, host-declared).
 RespondPolicy: TypeAlias = Callable[[RespondContext], Any]
 
-# Which region returns become data of their own (§10 store representation,
-# DECIDE@IMPL): the host's declaration for a signal — payload and open tags —
-# or None to leave it as dil-core leaves every signal, information that runs the
-# layers without a datum of its own. See `Cycle.__init__`.
+# What the region returns is data. An expectation is compared against it, and a
+# `scar` is the datum that "collided with resistance and held" (§3, §9): if the
+# return is not a datum, there is nothing for the tag to be on, and the mismatch
+# does not say what it was a mismatch with. The policy is the host's declaration
+# for a signal — payload and open tags (§12 tag F) — or None to keep that one out
+# (§10: selective-write is DECIDE@IMPL). See `Cycle.__init__`.
 AdmitPolicy: TypeAlias = Callable[[Signal], HostDatum | None]
+
+
+def _format_of(value: object) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, (list, tuple)):
+        return "array"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    return "object"
+
+
+def admit_return(signal: Signal) -> HostDatum | None:
+    """The reference admission: every return, described by what the driver can
+    see of it without interpreting it — that it came from the region, by which
+    channel, in what form. A host with a vocabulary of its own declares its own.
+    """
+    return HostDatum(
+        payload=signal.raw_payload,
+        admitting_layer=1,
+        open={"domain": "region", "source": signal.source_id, "format": _format_of(signal.raw_payload)},
+    )
 
 
 def default_respond(ctx: RespondContext) -> Any:
@@ -253,16 +281,12 @@ class Cycle:
         recollection: Any = None,
         admit: AdmitPolicy | None = None,
     ) -> None:
-        # DEVIATION from dil-core, declared. Which region returns become data
-        # of their own, and with which open tags, is the host's to declare:
-        # §10 leaves "store representation" and "selective-write … versus
-        # store-all" to the implementation, and dil-core, having no host, keeps
-        # none — its one datum per cycle is the driver's own cycle datum. A host
-        # that declares `admit` has each signal it accepts enter `[data]` through
-        # the tagging-gate, run as `running`, leave its own line at every layer
-        # it exits, and — when the expectation about it fails — move to `scar`
-        # itself, the ResistEvent naming it. Without `admit`, nothing changes.
-        self._admit = admit
+        # How each return from the region enters `[data]` (see `AdmitPolicy`):
+        # through the tagging-gate, running as `running`, leaving its own line at
+        # every layer it exits, and — when the expectation about it fails —
+        # moving to `scar` itself, the scar record naming it. Defaults to
+        # `admit_return`, which keeps every one. Ported from dil-core 276f30a.
+        self._admit = admit if admit is not None else admit_return
         self._running_admitted: tuple[str, ...] = ()
         # The host's resistance-retrieval channel (§10), if one is declared. The
         # driver does not call it — T5 does, through its declared PredictRule.
@@ -617,21 +641,21 @@ class Cycle:
         # data, and runs now, so it takes this cycle's mark. The region's signals
         # come first in `host.signals`, so index i is the i-th T3 unit too.
         admitted_ids: dict[int, str] = {}
-        if self._admit is not None:
-            for i, signal in enumerate(region_input.signals):
-                declared = self._admit(signal)
-                if declared is None:
-                    continue
-                datum_id = f"signal-{self._cycle}-{i}"
-                entered = admit_host_data(declared, self._cycle_t)
-                self._data.put(datum_id, to_running(entered, self._cycle))
-                self._events.append(
-                    record_provenance(
-                        datum_id, self._cycle, "prior", "running", self._cycle_t
-                    )
+        for i, signal in enumerate(region_input.signals):
+            declared = self._admit(signal)
+            if declared is None:
+                continue
+            datum_id = f"signal-{self._cycle}-{i}"
+            entered = admit_host_data(declared, self._cycle_t)
+            self._data.put(datum_id, to_running(entered, self._cycle))
+            self._events.append(
+                record_provenance(
+                    datum_id, self._cycle, "prior", "running", self._cycle_t
                 )
-                admitted_ids[i] = datum_id
+            )
+            admitted_ids[i] = datum_id
         self._running_admitted = tuple(admitted_ids.values())
+        admitted_now = frozenset(self._running_admitted)
 
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
@@ -689,13 +713,17 @@ class Cycle:
         for e in pass_.emissions:
             self._emit(e.issuing_layer, e.action)
 
-        # ── The store answers T3's queries (§6.4, §9 open layer) ──
+        # ── The store answers the queries raised this cycle (§6.4, §9 open layer) ──
         # Answered now, ingested at T1 next cycle. Answering changes nothing in
-        # `[data]`; the datum moves only when it runs.
+        # `[data]`; the datum moves only when it runs. Memory is what the store
+        # held before the cycle that asks: what arrived this cycle is already
+        # running in it, and answering with it would recall what is being seen.
         for e in pass_.emissions:
             if not is_store_query(e.action):
                 continue
             for s in answer_query(self._data, e.action["cue"], self._cycle_t):
+                if returned_entity(s) in admitted_now:
+                    continue
                 if all(returned_entity(p) != returned_entity(s) for p in self._pending):
                     self._pending.append(s)
 

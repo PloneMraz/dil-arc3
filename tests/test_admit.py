@@ -1,16 +1,16 @@
-"""Region returns as data of their own (DEVIATION from dil-core, declared).
+"""What the region returns is data (§3, §9). Ported from dil-core 276f30a.
 
-§10 leaves store representation to the implementation, and dil-core, having no
-host, keeps no region data: its one datum per cycle is the driver's own. A host
-that declares `admit` has each signal it accepts become a datum — through the
-tagging-gate, `running` once it runs, a line at every layer it exits — and when
-the expectation about it fails, that datum is the one that collides and holds.
+An expectation is compared against the region's return, and a `scar` is the
+datum that "collided with resistance and held". Each return enters `[data]`
+through the tagging-gate, runs, leaves a line at every layer it exits, and is
+itself the datum that moves to `scar` when the expectation about it fails.
+Memory recalled on a cue is what the store held before the cycle that asks.
 """
 
 from __future__ import annotations
 
 from dil.conformance.checker import check_conformance
-from dil.loop.cycle import HostCycleInput, Layers, create_cycle
+from dil.loop.cycle import HostCycleInput, Layers, admit_return, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
 from dil.loop.layers.t2 import Emission, create_t2
@@ -46,9 +46,9 @@ def admit_status(signal: Signal) -> HostDatum | None:
     )
 
 
-def make_cycle(data, events, admit=admit_status, predict=None):
+def make_cycle(data, events, admit=admit_status, predict=None, transducers=None):
     layers = Layers(
-        t1=create_t1(), t2=create_t2(), t3=create_t3({}), t4=create_t4(),
+        t1=create_t1(), t2=create_t2(), t3=create_t3(transducers or {}), t4=create_t4(),
         t5=create_t5(predict=predict), t6=create_t6(), t7=create_t7(), t8=create_t8(),
     )
     return create_cycle(
@@ -113,15 +113,40 @@ def test_the_new_fields_survive_the_sink_and_old_forms_are_unchanged():
     for rec in events.all():
         assert deserialize_event_record(serialize_event_record(rec)) == rec
 
-    plain_data, plain_events = create_data_store(), create_event_log()
-    plain = make_cycle(plain_data, plain_events, admit=None)
-    plain.run(HostCycleInput(signals=(status("playing", 1),)))
-    plain.run(HostCycleInput(signals=(status("won", 2),)))
-    for rec in plain_events.all():
-        form = serialize_event_record(rec)
-        assert "admitted" not in form.get("activity", {})
-        assert "datumId" not in form or form["form"] != "scar"
-    assert plain_data.get(FIRST) is None, "without `admit`, no region datum exists"
+    quiet = create_event_log()
+    make_cycle(create_data_store(), quiet).run(HostCycleInput(signals=()))
+    for rec in quiet.all():
+        assert "admitted" not in serialize_event_record(rec).get("activity", {})
+
+
+def test_by_default_every_return_is_kept_tagged_by_what_can_be_seen_of_it():
+    data, events = create_data_store(), create_event_log()
+    make_cycle(data, events, admit=None).run(HostCycleInput(signals=(status("playing", 1),)))
+    assert data.get(FIRST).open == {"domain": "region", "source": "status", "format": "object"}
+    assert admit_return(Signal(source_id="x", raw_payload=[1], t=0)).open["format"] == "array"
+
+
+def test_a_host_can_keep_a_return_out():
+    data, events = create_data_store(), create_event_log()
+    make_cycle(data, events).run(HostCycleInput(signals=(
+        status("playing", 1), Signal(source_id="noise", raw_payload=1, t=1),
+    )))
+    assert data.get(FIRST) is not None
+    assert data.get("signal-0-1") is None
+    assert not [r for r in of_kind(events, "layer-exit") if r.datum_id == "signal-0-1"]
+
+
+def test_memory_is_what_the_store_held_before_the_cycle_that_asks():
+    def described(signal):
+        return ("status", signal.raw_payload, {"kind": "status"})
+
+    data, events = create_data_store(), create_event_log()
+    cycle = make_cycle(data, events, transducers={"status": described})
+    cycle.run(HostCycleInput(signals=(status("playing", 1),)))  # asks {kind: status} now
+    cycle.run(HostCycleInput(signals=(status("playing", 2),)))
+
+    recalled = [t for r in of_kind(events, "cycle-seal") for t in r.activity.recalled]
+    assert recalled == [], "the arrival that raised the cue is not its own memory"
 
 
 def test_an_admitted_return_can_be_asked_for_by_its_tags():
@@ -141,7 +166,7 @@ def test_a_run_that_admits_leaves_a_trace_the_checker_accepts():
     report = check_conformance(events)
     assert [f"{r.id}: {r.detail}" for r in report.results if r.verdict == "fail"] == []
     c3 = next(r for r in report.results if r.id == "3")
-    assert any(c.claim.startswith("every admitted region datum's path") and c.verdict == "pass"
+    assert any(c.claim.startswith("every region return's path") and c.verdict == "pass"
                for c in c3.claims)
 
 

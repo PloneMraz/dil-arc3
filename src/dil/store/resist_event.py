@@ -73,11 +73,10 @@ class EventRecord:
     scar: TaggedDatum
     anchor: ContextAnchor
     kind: Literal["scar"] = "scar"
-    # DEVIATION from dil-core, declared. The `[data]` id of the datum that
-    # collided, where it is a datum of its own — a region return the host
-    # admitted (see `admit` in the cycle driver). dil-core's only collided datum
-    # is the cycle datum, whose id the provenance line already carries. None,
-    # and not written, otherwise.
+    # The `[data]` id of the datum that collided: the region's return the
+    # expectation was compared against. None, and not written, when the cycle
+    # datum stands for the collision instead — an absence, where the region
+    # returned nothing. Ported from dil-core 276f30a.
     datum_id: str | None = None
 
 
@@ -107,11 +106,12 @@ class ActivityEvent:
     # into the agent's memory"). Empty when nothing was recalled, and then not
     # written at all, so every other record is byte-identical.
     recalled: tuple["RecalledTags", ...] = ()
-    # DEVIATION from dil-core, declared. The full tag set of every region
-    # return the host admitted as a datum this cycle (`admit` in the cycle
-    # driver), as it stands after running. Tags only, no content, for the same
-    # reason as `recalled`. Empty, and then not written, when the host admits
-    # nothing — so a host that does not declare `admit` writes dil-core's form.
+    # The full tag set of every region return that entered `[data]` this
+    # cycle, as it stands after running. What the region returns is data: it is
+    # what an expectation is compared against, so without it a `scar` would name
+    # nothing that collided. Tags only, never content, for the same reason as
+    # `recalled`. Empty, and then not written, when nothing was admitted.
+    # Ported from dil-core 276f30a.
     admitted: tuple["RecalledTags", ...] = ()
 
 

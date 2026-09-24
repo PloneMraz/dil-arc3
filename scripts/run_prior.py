@@ -31,7 +31,8 @@ from dil.store.event_log import create_event_log
 
 game = sys.argv[1] if len(sys.argv) > 1 else "ls20"
 budget = int(sys.argv[2]) if len(sys.argv) > 2 else 60
-# "admit": keep every region return as a datum of its own (see arc3.observe.admit).
+# Every region return is a datum; "admit" tags them with this host's vocabulary
+# (arc3.observe.admit) instead of the reference admission (domain/source/format).
 admitting = len(sys.argv) > 3 and sys.argv[3] == "admit"
 
 arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
@@ -122,7 +123,7 @@ print(f"  [data] priors now     : {[(k, d.fixed.provenance, d.fixed.cycle_mark) 
 print(f"  T2 agency             : {dict(sorted(agency.items()))}")
 print(f"  final state           : {source.frame.state}  levels={source.frame.levels_completed}")
 
-if admitting:
+if True:  # every region return is a datum now, whichever tags it carries
     from dil.conformance.checker import check_conformance
     kept = [(k, d) for k, d in daemon._data.entries() if k.startswith("signal-")]
     print(f"  region data kept      : {len(kept)}; by provenance "

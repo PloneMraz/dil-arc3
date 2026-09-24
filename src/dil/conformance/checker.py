@@ -396,8 +396,12 @@ def check_conformance(
             ),
             None,
         )
+        # The flow mode is the cycle's, so it is on the cycle datum each seal
+        # embeds. A scar embeds the datum that collided — a return from the
+        # region, which ran in a flow mode but does not carry one as a dimension
+        # of its own. Ported from dil-core 276f30a.
         flow_recorded = all(
-            isinstance(_datum_of(r).open.get("flow"), str) for r in datum_bearing
+            isinstance(r.datum.open.get("flow"), str) for r in cycle_seals
         )
 
         def _flow_inconsistent(r: object) -> bool:
@@ -425,8 +429,7 @@ def check_conformance(
             for r in cycle_seals
             for t in r.activity.recalled
         ]
-        # So does a region return the host admitted as a datum of its own
-        # (DEVIATION from dil-core, declared: see `admit` in the cycle driver).
+        # So does every return the region gave that entered `[data]`.
         admitted_runs = [
             (t.datum_id, r.activity.cycle)
             for r in cycle_seals
@@ -481,7 +484,7 @@ def check_conformance(
             *(
                 [
                     _claim(
-                        "every admitted region datum's path covers T1→T8 in the cycle it arrived",
+                        "every region return's path covers T1→T8 in the cycle it arrived",
                         "trace",
                         "fail" if admitted_gap else "pass",
                     )
