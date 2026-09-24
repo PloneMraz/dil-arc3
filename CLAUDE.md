@@ -1807,6 +1807,38 @@ Still not in the log, by the law as it stands: a thought the mind does not keep
 changes no datum, so it leaves no line beyond the query it asked with; the time
 it took shows only as the gap between T4 and T5.
 
+### First live run with the model in the loop, this machine (2026-09-24)
+
+`scripts/run_world_model.py ls20 10`, Qwen3.6-35B-A3B IQ4_XS on llama.cpp
+(CPU + GTX 1050 Ti), no thinking, temperature 0.2. Store:
+`scripts/data/wm-ls20-cobmhzp2/` (git-ignored). Code as of `949883e` — the run
+started before the per-record clock, so its `[event]` still stamps each cycle
+with one time.
+
+- **The loop worked end to end, and the log shows it.** The frame's expectation
+  failed in 9 of 10 cycles (cycle 0 is the RESET, which changes nothing); each
+  failed frame is the datum that went to `scar`, named by its record. The mind
+  asked the store 9 times, `{"kind": "frame", "provenance": "scar"}`, from T5.
+  The first program entered at `nascent` (`written-1-0`) and moved to `running`
+  the next cycle; 2 commits; 2,319 `[event]` records; conformance as before
+  (C1, C3, C5, C6, C7 pass, C4 partial, C2 unverifiable).
+- **The thinking did not find the game.** 9 thoughts; the first program was kept
+  because there was none, though it explained 0 of the 1 transition it had; the
+  8 after it explained 0 of 1–7 and were not kept, so no revision. 5,971 s for
+  10 cycles, almost all of it the model (262–1,057 s a thought).
+- **The scoring is not the cause**: the program that reached 95% on Kaggle
+  scores 153/159 on the recorded `ls20` transitions through the mind's own
+  `score()`.
+- **Why so little evidence**: memory answers what the store held before the
+  cycle that asks, the answer arrives the next cycle, and it reaches T5 after the
+  frame has been predicted; so a transition seen at cycle k is evidence from
+  about k+3. After 10 cycles the model had seen at most 7, against the 24 the
+  probe showed at once. The local model is also the weaker one: the same model
+  and quantisation wrote 1/80 in the probe's second local run.
+- Open, for Plone: shortening that lag touches the driver's signal order or has
+  the mind hold what it has just seen until memory can answer — both near the
+  line "memory is the store".
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
