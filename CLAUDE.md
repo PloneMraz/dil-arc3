@@ -199,7 +199,7 @@ change is not whether it raises a score but whether what the loop did can be
 read back, by a third party, from `[event]` alone. A game-specific strategy that
 scored better would work against the paper, not for it.
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.2.md` is 55 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.3.md` is 58 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their
