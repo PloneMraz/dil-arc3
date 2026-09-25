@@ -96,7 +96,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   `propose(grid, steps)`, run on where the game stands and the steps it has
   just seen (short-term perception, each with the state and levels the region
   reported) once the region has said all it says in a cycle, the mind pushes
-  the next action as T5's `test` — if the region affords it (RESET always).
+  the next action as T5's `test` — if the body can carry it out: RESET always,
+  any other action the region offers unless the game has ended.
   `src/arc3/command.py` carries it out and weighs nothing. With no such
   command the mind thinks again while the body waits (`MAX_WAIT_THOUGHTS = 2`,
   declared, not measured); then the body stands
@@ -129,7 +130,18 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   it leaves out stay as they were. Where it says nothing, the standing
   expectation holds: the region reports what it reported last.
 - **A mismatch on any channel sets the mind thinking** — the frame, the status,
-  or the onlooker's change of stance — at most once a cycle.
+  or the onlooker's change of stance — at most once a cycle; a change of the
+  onlooker's stance is thought on even in a cycle already thought in.
+- **What a command is for is an expectation too** (Plone, 2026-09-25). `propose`
+  may return `(action, x, y, want)`, `want` being cells of the next grid and
+  fields of the region's next report. It joins the program's expectation of the
+  step the command makes, and meets the region there: when only it fails, the
+  mind thinks on `want`. The aim stays in the prior; what the program wants of
+  each move is its own, and the region can refute it.
+- **Every answer the model gives is kept whole** as the mind's datum
+  (`domain: mind`, `kind: thought`: the text, and the reasoning when the model
+  gives one), built from what it was shown. It is evidence for a later thought
+  only when the model asks for it.
 - **A program the model writes is `running` data**, not `prior`. It enters at
   `nascent` bearing the cycle that wrote it, arrives at T1 the next cycle, is
   SELF_WRITTEN at T2, runs every layer and moves `nascent → running`. A rewrite
@@ -138,8 +150,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   commit snapshot. The mind keeps a new program only if it explains the evidence
   better; the first is kept because there was none. It also keeps one that
   explains as much and can command, when the body is waiting for a command, or
-  when what set it thinking was the onlooker's objection — that objection is to
-  how the agent acts, and is met by acting otherwise (Plone, 2026-09-25).
+  when what set it thinking was how it acts — the onlooker's objection, or a
+  command that did not bring about what it was for — which is met by acting
+  otherwise (Plone, 2026-09-25).
 - **There is no trigger for rewriting, and no constant to declare.** Rewriting is
   the consequence of mismatch: if the mind does not adjust, the mismatch recurs.
 - **Every written datum records what it was built from** (protocol v0.3.4): ids

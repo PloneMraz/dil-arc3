@@ -9,7 +9,7 @@ trace a third party reads says so.
 from __future__ import annotations
 
 from arc3.mind import (
-    PROGRAM_TAGS, ModelEndpoint, Transition,
+    PROGRAM_TAGS, THOUGHT_TAGS, ModelEndpoint, Transition,
     compile_program, create_mind, mind_rule, render_evidence, run_program,
 )
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
@@ -132,8 +132,12 @@ def test_a_mismatch_makes_it_think_and_the_program_is_written_as_data():
     assert data.get("signal-0-0").fixed.provenance == "scar", "the frame the expectation failed on"
 
     written = [t for r in of_kind(events, "cycle-seal") for t in r.activity.written]
-    assert [(w.datum_id, w.built_from) for w in written] == [("written-0-0", ("signal-0-0",))], \
-        "the program says it was built from the frame in front of it"
+    assert [(w.datum_id, w.built_from) for w in written] == [("written-0-0", ("signal-0-0",)),
+                                                              ("written-0-1", ("signal-0-0",))], \
+        "the program, and the answer it came in, each say they were built from the frame in front of them"
+    answer = data.get("written-0-1")
+    assert answer.open == THOUGHT_TAGS and answer.payload["on"] == "frame" and answer.payload["kept"] is True
+    assert answer.payload["text"].startswith("```python"), "the answer whole, as the model gave it"
 
     run(cycle, frame(lit(1), lit(2)))  # the program now predicts it
     assert wm.datum_id == "written-0-0", "the mind learned its datum when it arrived"
@@ -360,7 +364,7 @@ def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
     wm, cycle, data, events = loop(model, respond=carry_out)
     result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status())))
     assert [t.on for t in wm.thoughts] == ["frame", "no command"]
-    assert "Your propose gave no action the game offers now." in model.prompts[1][0]["content"]
+    assert "Your propose gave no action the game can take now." in model.prompts[1][0]["content"]
     assert result.response.action["actionId"] == 1, "the second thought gave a command, and it was carried out"
 
 
@@ -429,3 +433,60 @@ def test_on_a_frame_mismatch_a_program_that_predicts_only_as_well_is_not_kept():
     run(cycle, frame(lit(1), lit(2)))
     wm.think("frame", None, None)
     assert not wm.thoughts[-1].adopted and wm.code == PROPOSING
+
+
+# ── what the command is for, the game's end, the onlooker's own thought, the answer's fences ──
+
+
+WANTS_THE_CORNER = PROPOSING.replace("return (1, None, None)", 'return (1, None, None, {"cells": {"0,0": 1}})')
+WANTS_NOTHING_ELSE = PROPOSING.replace("return (1, None, None)", "return (2, None, None)")
+
+
+def test_a_command_that_does_not_bring_about_what_it_was_for_sets_the_mind_thinking():
+    model = Script(WANTS_THE_CORNER, WANTS_NOTHING_ELSE)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())      # written; it commands ACTION1, wanting (0,0) lit
+    assert wm.commands[-1] == (1, (1, None, None))
+    run(cycle, frame(lit(1), lit(2)), status())      # the grid comes as predicted; the want does not
+    assert [t.on for t in wm.thoughts] == ["frame", "want"]
+    assert "did not bring about what your propose said it would" in model.prompts[1][0]["content"]
+    assert data.get("signal-1-0").fixed.provenance == "scar", "the program's expectation of the step failed"
+    assert wm.thoughts[-1].adopted and wm.code == WANTS_NOTHING_ELSE, \
+        "met by acting otherwise: a program that predicts as well and commands otherwise is kept"
+
+
+RESETTING = PROPOSING.replace("return (1, None, None)", "return (0, None, None)")
+
+
+def test_after_the_game_ends_only_reset_is_a_command_and_the_mind_thinks_for_one():
+    from arc3.command import carry_out
+
+    model = Script(PROPOSING, PROPOSING, RESETTING)
+    wm, cycle, data, events = loop(model, respond=carry_out)
+    result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status(state="GAME_OVER"))))
+    assert [t.on for t in wm.thoughts] == ["frame", "no command", "no command"], \
+        "ACTION1 is offered, but the game has ended: the body would not carry it out, so it is no command"
+    assert result.response.action["actionId"] == 0
+
+
+def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_in():
+    from arc3.observe import ONLOOKER_CHANNEL
+
+    def remark(said):
+        return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+    model = Script(PROPOSING, PROPOSING, SAME_PREDICT_OTHER_MOVE)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), remark({"remark": None}))
+    run(cycle, frame(lit(1), lit(1)), remark({"remark": "repeating", "move": [1, None, None], "since": 0}))
+    assert [t.on for t in wm.thoughts] == ["frame", "frame", "onlooker"]
+    assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE
+
+
+def test_a_fence_inside_a_docstring_does_not_close_the_block():
+    from arc3.mind import extract_code
+
+    code = 'def predict(grid, action, x=None, y=None):\n    """Like this:\n    ```\n    x\n    ```\n    """\n    return grid\n'
+    text = f"Here it is.\n```python\n{code}```\nASK {{\"kind\": \"frame\"}}\n"
+    assert extract_code(text) == code
+    assert extract_code("    ```python\n    x = 1\n    ```") == "    x = 1\n    ", "all fences indented: read as before"

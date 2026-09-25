@@ -40,11 +40,13 @@ Write two Python functions, using only the standard library:
     def predict(grid, action, x=None, y=None):
         # the grid the game will return for this state and this action
     def propose(grid, steps):
-        # the action to take next, from this state, to get through the level: (action, x, y)
+        # the action to take next, from this state, to get through the level: (action, x, y),
+        # or (action, x, y, want): want says what the action is for, as what the game will
+        # return if it does it — {{"cells": {{"row,col": colour}}, "status": {{"levelsDelta": 1}}}}
         # steps: the steps you have just seen, oldest first, each a dict with
         # before, action, x, y, after, and the game's state and levels gained when it said them
 
-State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program; provenance: scar or running)."""
+State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program, thought; provenance: scar or running)."""
 
 FEEDBACK: Final = """Your predict was run on those steps. It got {ok}/{n} exactly right.
 Some it got wrong (expected vs yours, as changed cells relative to the grid before):

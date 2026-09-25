@@ -19,8 +19,10 @@ prediction tested against the region every cycle. When an expectation meets a mi
 status, or an onlooker's objection to how the agent behaves — the program is
 scarred with it, and the mind has the model write a better one from what it
 has, keeps it only if it explains that evidence better (or as well, when the
-body waits for a command or the onlooker objected), and writes it as a
-revision; the model also chooses what to ask its memory for next. Every step of
+body waits for a command, the onlooker objected, or a command did not bring
+about what the program said it was for), and writes it as a revision; the model
+also chooses what to ask its memory for next, and each answer it gives is kept
+whole in the store. Every step of
 that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in
 `[event]`, and a checker reads it back.

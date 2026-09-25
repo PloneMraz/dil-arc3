@@ -17,8 +17,9 @@ nothing about the status, the standing expectation holds: the region reports
 what it reported last.
 
 WHEN IT THINKS. When an expectation it holds meets a mismatch — the frame, the
-region's status, or the onlooker's remark on its behaviour (tag E) — and only
-then; at most once a cycle. No trigger, no constant: rewriting is the
+region's status, what its last command was for, or the onlooker's remark on its
+behaviour (tag E) — and only then; at most once a cycle, except that a change of
+the onlooker's stance is thought on in its own right. No trigger, no constant: rewriting is the
 consequence of mismatch. It thinks from what it has: what the store answered to
 what it asked, the steps it has just seen (short-term perception, as long as
 T5's window, `BASELINE_WINDOW`), and what the onlooker says now. It keeps a new
@@ -48,8 +49,13 @@ repeats.
 WHAT IT COMMANDS. When the region has said all it says in a cycle, the mind
 runs `propose` on where the game stands and the steps it has just seen (its
 short-term perception, each with what the region said of itself) and, if the
-region affords the action (RESET always is), pushes it as T5's test: recorded from T5 in `[event]`, and
-carried out by the body in the same cycle. With no such command it thinks
+body can carry the action out (RESET always; any other the region offers,
+unless the game has ended), pushes it as T5's test: recorded from T5 in `[event]`, and
+carried out by the body in the same cycle. What the program says the command is
+for — cells of the next grid, fields of the region's next report — joins the
+program's expectation of the next step, and meets the region there. Each
+answer the model gives is kept whole as the mind's own datum (`kind: thought`),
+built from what it was shown. With no such command it thinks
 again while the body waits, at most MAX_WAIT_THOUGHTS times; then the body
 stands still. Until 2026-09-25 the mind reported `resolved`, `progress` and
 `valence` per action to the field and a policy weighed them: curiosity and want
@@ -80,6 +86,7 @@ from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
 from .action import COMPLEX_ACTION
+from .frame import TERMINAL_STATES
 from .observe import FRAME_CHANNEL, FRAME_KIND, ONLOOKER_CHANNEL, REMARK_KIND, STATUS_CHANNEL, STATUS_KIND
 from .task import TASK_CUE, TASK_DOMAIN
 
@@ -92,6 +99,10 @@ HEX: Final = "0123456789abcdef"
 PROGRAM_TAGS: Final = {
     "domain": "world-model", "kind": "program", "object": FRAME_KIND, "source": "mind",
 }
+
+# What each act of thinking answered, whole, kept as the mind's own data: what it
+# read and weighed shows in `[data]`, not only what it kept (Plone, 2026-09-25).
+THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
 # The status fields the region reports of itself, which the program may predict.
 STATUS_FIELDS: Final = ("stateTo", "levelsDelta", "depthDelta")
@@ -229,7 +240,15 @@ def render_evidence(transitions: list[Transition], report: bool = False) -> str:
 
 
 def extract_code(text: str) -> str | None:
-    m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
+    """The last code block of an answer.
+
+    A block opens and closes with a fence at the start of a line. A fence
+    anywhere else — inside a docstring, say — does not close it: four thoughts
+    in one run were cut at line 2, inside an opening docstring (LOG.md,
+    2026-09-25). An answer whose fences are all indented is read the old way."""
+    m = re.findall(r"^```(?:python|py)?[ \t]*\n(.*?)^```[ \t]*$", text, re.S | re.M)
+    if not m:
+        m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
     return m[-1] if m else None
 
 
@@ -351,8 +370,51 @@ def steps_of(seen: list[Transition]) -> list[dict[str, Any]]:
     ]
 
 
+Want = dict[str, Any]
+
+
+def _want_of(raw: Any, grid: Grid) -> Want | None:
+    """What a proposal says its action will bring about, in terms the region's
+    return can refute: cells of the next grid, and fields of the region's next
+    report. Anything else in it is not a claim the region can meet, and is left
+    out; nothing left is no claim."""
+    if not isinstance(raw, dict):
+        return None
+    want: Want = {}
+    cells = raw.get("cells")
+    if isinstance(cells, dict):
+        got: dict[tuple[int, int], int] = {}
+        for key, value in cells.items():
+            try:
+                r, c = (int(v) for v in (key.split(",") if isinstance(key, str) else key))
+                v = int(value)
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if 0 <= r < len(grid) and 0 <= c < len(grid[0]) and 0 <= v <= 15:
+                got[(r, c)] = v
+        if got:
+            want["cells"] = got
+    status = raw.get("status")
+    if isinstance(status, dict):
+        said = {k: status[k] for k in STATUS_FIELDS if k in status}
+        if said:
+            want["status"] = said
+    return want or None
+
+
 def run_propose(fn: Callable[..., Any], grid: Grid, steps: list[dict[str, Any]] | None = None) -> Proposal:
-    """What the program proposes to do next from this state: (action, x, y).
+    """What the program proposes to do next from this state: (action, x, y)."""
+    return run_propose_full(fn, grid, steps)[0]
+
+
+def run_propose_full(fn: Callable[..., Any], grid: Grid,
+                     steps: list[dict[str, Any]] | None = None) -> tuple[Proposal, Want | None]:
+    """What the program proposes to do next from this state: (action, x, y),
+    and what it says that action will bring about, when it says so.
+
+    A proposal is `(action, x, y)`, or `(action, x, y, want)` where `want` is
+    `{"cells": {"row,col": colour}, "status": {...}}` — what the next grid and
+    the region's next report will show if the action does what it is for.
 
     `propose(grid, steps)` reads where the game stands and the steps just seen;
     a `propose(grid)` reads the grid alone. An action is RESET (0) or
@@ -366,8 +428,14 @@ def run_propose(fn: Callable[..., Any], grid: Grid, steps: list[dict[str, Any]] 
     try:
         board = [row[:] for row in grid]
         out = fn(board, list(steps or ())) if _takes_steps(fn) else fn(board)
+        want_raw = None
+        if isinstance(out, dict):
+            want_raw = out.get("expect")
+            out = out.get("action")
         if isinstance(out, (int, str)):
             out = (out,)
+        if isinstance(out, (tuple, list)) and len(out) > 3 and isinstance(out[3], dict):
+            want_raw = out[3]
         if not isinstance(out, (tuple, list)) or not out:
             raise ProgramError("proposed no action")
         action = out[0]
@@ -380,13 +448,14 @@ def run_propose(fn: Callable[..., Any], grid: Grid, steps: list[dict[str, Any]] 
         action = int(action)
         if not 0 <= action <= 7:
             raise ProgramError(f"proposed ACTION{action}, which is no action")
+        want = _want_of(want_raw, grid)
         if action != COMPLEX_ACTION:
-            return action, None, None
+            return (action, None, None), want
         if x is not None or y is not None:
             x, y = int(x), int(y)
             if not (0 <= y < len(grid) and 0 <= x < len(grid[0])):
                 raise ProgramError(f"proposed a cell off the grid: ({x}, {y})")
-        return action, x, y
+        return (action, x, y), want
     except ProgramError:
         raise
     except Exception as exc:  # noqa: BLE001
@@ -473,7 +542,11 @@ def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, 
     usage = dict(resp.get("usage", {}))
     usage["seconds"] = round(time.time() - t0, 1)
     usage["finish_reason"] = resp["choices"][0].get("finish_reason")
-    return resp["choices"][0]["message"].get("content") or "", usage
+    message = resp["choices"][0]["message"]
+    reasoning = message.get("reasoning_content") or message.get("reasoning")
+    if reasoning:
+        usage["reasoning"] = reasoning  # kept with the answer, in the store
+    return message.get("content") or "", usage
 
 
 # ── the mind ───────────────────────────────────────────────────────────────
@@ -535,6 +608,13 @@ class Mind:
         self._affords: tuple[int, ...] = ()
         # A command still owed this cycle, once what it is for comes back.
         self._command_due = False
+        # The last command, and what the program said it would bring about: met
+        # by the region's return next cycle, as the program's expectation.
+        self._wanted: tuple[Proposal, Want] | None = None
+        self._want_status: Status | None = None
+        self._want_missed: str | None = None
+        # Whether its last questions could be answered with its own answers.
+        self._asked_thoughts = False
         # The onlooker's current remark on its behaviour, as it last arrived.
         self._remark: dict[str, Any] | None = None
         self._thought_at: int | None = None
@@ -562,6 +642,8 @@ class Mind:
                 self.command(ask, write, test)
             return
         kind = open_tags.get("kind")
+        if kind == THOUGHT_TAGS["kind"] and open_tags.get("source") == THOUGHT_TAGS["source"] and not self._asked_thoughts:
+            return  # its own answer, written back: evidence only when it asked for it
         if kind == PROGRAM_TAGS["kind"]:
             if self.datum_id is None and isinstance(payload, dict) and payload.get("code") is not None:
                 self.datum_id = entity
@@ -615,8 +697,19 @@ class Mind:
         if self._task is None and not self._task_asked and ask is not None:
             ask(dict(TASK_CUE))
             self._task_asked = True
-        # 1. Expect, from the situation alone.
+        # 1. Expect, from the situation alone — and, where the command that made
+        #    this step said what it would bring about, that too: both are the
+        #    program's expectation of this step.
         expected, said, by_program = self._expect_full(t)
+        foreseen = [row[:] for row in expected]
+        wanted = self._wanted if self._wanted and self._wanted[0] == (t.action, t.x, t.y) else None
+        self._wanted = None
+        want = wanted[1] if wanted else {}
+        for (r, c), v in (want.get("cells") or {}).items():
+            if r < len(expected) and c < len(expected[r]):
+                expected[r][c] = v
+        self._want_status = dict(want["status"]) if want.get("status") else None
+        by_program = by_program or bool(want)
         self._said, self._said_by_program = said, said is not None
         predicted = InfoUnit(
             content={**content, "value": {**payload, "grids": [expected]}},
@@ -627,9 +720,17 @@ class Mind:
         hit = expected == t.after
         self.holds.append(int(hit))
         # 3. The expectation failed: think. A mismatch is the loop's to register;
-        #    thinking is the mind's.
+        #    thinking is the mind's. When only what the command was for failed —
+        #    the grid came as predicted, the wanted cells did not — it is the
+        #    want that met the region.
         if not hit:
-            self.think("frame", ask, write)
+            if foreseen == t.after:
+                missed = {f"{r},{c}": (v, t.after[r][c]) for (r, c), v in want["cells"].items()
+                          if r < len(t.after) and c < len(t.after[r]) and t.after[r][c] != v}
+                self._want_missed = f"cells (row,col): (wanted, came) {json.dumps(missed)}"
+                self.think("want", ask, write)
+            else:
+                self.think("frame", ask, write)
         held = self.held_by() if by_program else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
@@ -650,8 +751,10 @@ class Mind:
         # left out staying as they were.
         value = standing if isinstance(standing, dict) else dict(payload)
         value = {**value, "context": payload.get("context")} if "context" in payload else value
-        if self._said_by_program and status_now is not None:
-            value = {**value, "status": expected_status(self._said, _no_change(status_now))}
+        by_program = self._said_by_program or self._want_status is not None
+        if by_program and status_now is not None:
+            said = {**(self._said or {}), **(self._want_status or {})}
+            value = {**value, "status": expected_status(said, _no_change(status_now))}
         if value == _content_value(standing_unit):
             predicted = standing_unit
         else:
@@ -659,11 +762,20 @@ class Mind:
             predicted = InfoUnit(content={**base, "value": value}, ref_frame=standing_unit.ref_frame,
                                  t=standing_unit.t)
         if value != payload:
-            self.think("status", ask, write)
+            without_want = (expected_status(self._said, _no_change(status_now))
+                            if self._said_by_program and status_now is not None else None)
+            if self._want_status and status_now is not None and (
+                    without_want or _no_change(status_now)) == status_now:
+                self._want_missed = (f"the game's report: wanted {json.dumps(self._want_status)}, "
+                                     f"came {json.dumps({k: status_now.get(k) for k in self._want_status})}")
+                self.think("want", ask, write)
+            else:
+                self.think("status", ask, write)
+        self._want_status = None
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()
-        if self._said_by_program:
+        if by_program:
             held = (*held, *self.held_by())
         return Expecting(predicted=predicted, held_by=held)
 
@@ -674,7 +786,9 @@ class Mind:
         predicted = persistence("onlooker", window, observed, contribute, ask, write)
         self._remark = {k: v for k, v in payload.items() if k != "entity"}
         if _content_value(predicted) != payload:
-            self.think("onlooker", ask, write)
+            # Its own thought, even in a cycle the mind has thought in already:
+            # the objection is to how the agent acts, and is met on its own terms.
+            self.think("onlooker", ask, write, again=True)
         return predicted
 
     # ── commanding ──
@@ -697,10 +811,16 @@ class Mind:
         self._command_due = False
         grid = self._seen[-1][0].after
         steps = steps_of([t for t, _ in self._seen])
+        state = (self._seen[-1][0].status or {}).get("stateTo")
         for attempt in range(MAX_WAIT_THOUGHTS + 1):
-            proposal = self._proposal(grid, steps)
-            if proposal is not None and (proposal[0] == 0 or proposal[0] in self._affords):
+            proposal, want = self._proposal(grid, steps)
+            # What the body can carry out: RESET always; any other action the
+            # region offers, unless the game has ended — the body's own rule
+            # (`command.py`), so a command the body would not carry out is none.
+            if proposal is not None and (proposal[0] == 0 or (
+                    proposal[0] in self._affords and state not in TERMINAL_STATES)):
                 self.commands.append((self.frame_calls, proposal))
+                self._wanted = (proposal, want) if want else None
                 if test is not None:
                     action, x, y = proposal
                     test({"kind": "move", "actionId": action, "x": x, "y": y})
@@ -709,13 +829,13 @@ class Mind:
                 self.think("no command", ask, write, again=True)
         self.commands.append((self.frame_calls, None))
 
-    def _proposal(self, grid: Grid, steps: list[dict[str, Any]]) -> Proposal | None:
+    def _proposal(self, grid: Grid, steps: list[dict[str, Any]]) -> tuple[Proposal | None, Want | None]:
         if self._propose is None:
-            return None
+            return None, None
         try:
-            return run_propose(self._propose, grid, steps)
+            return run_propose_full(self._propose, grid, steps)
         except ProgramError:
-            return None
+            return None, None
 
     # ── thinking ──
 
@@ -765,7 +885,9 @@ class Mind:
         if self._remark and self._remark.get("remark"):
             also += f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
         if on == "no command":
-            also += "\nYour propose gave no action the game offers now.\n"
+            also += "\nYour propose gave no action the game can take now.\n"
+        if on == "want" and self._want_missed:
+            also += f"\nYour last action did not bring about what your propose said it would: {self._want_missed}\n"
         grid = shown[-1].after if shown else [[]]
         first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
                                           evidence=render_evidence(shown, report=True), also=also)
@@ -780,32 +902,46 @@ class Mind:
             self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False,
                                          note=f"model failed: {exc!r}", on=on))
             return
+        reasoning = usage.pop("reasoning", None)
         # What it chose to read next: each question a store query from T5.
         asks = extract_asks(text)
+        self._asked_thoughts = any(_may_answer_with_thoughts(cue) for cue in asks)
         if ask is not None:
             for cue in asks:
                 ask(dict(cue))
         code = extract_code(text)
+        note, cand_ok, adopted, fn, propose = "", None, False, None, None
         if code is None:
-            self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage,
-                                         "no code block", on, asks))
-            return
-        try:
-            fn, propose = compile_functions(code)
-        except ProgramError as exc:
-            self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, str(exc), on, asks))
-            return
-        cand_ok, _ = score(fn, evidence)
-        # Kept when it explains the evidence better. Also when it explains as much
-        # and can give a command, if the body is waiting for one — or if what set
-        # it thinking was the onlooker: an Other's objection is to how it acts,
-        # not to what it expects, and is answered by acting otherwise, not by
-        # predicting better (Plone, 2026-09-25).
-        adopted = (self._fn is None or cand_ok > held_ok
-                   or (on in ("no command", "onlooker") and cand_ok >= held_ok and propose is not None))
-        self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, "", on, asks))
-        if not adopted:
-            return
+            note = "no code block"
+        else:
+            try:
+                fn, propose = compile_functions(code)
+            except ProgramError as exc:
+                note = str(exc)
+        if fn is not None:
+            cand_ok, _ = score(fn, evidence)
+            # Kept when it explains the evidence better. Also when it explains as
+            # much and can give a command, if the body is waiting for one — or if
+            # what set it thinking was about how it acts, not what it expects: the
+            # onlooker's objection, or a command that did not bring about what it
+            # was for. Those are met by acting otherwise, not by predicting better
+            # (Plone, 2026-09-25).
+            adopted = (self._fn is None or cand_ok > held_ok
+                       or (on in ("no command", "onlooker", "want") and cand_ok >= held_ok
+                           and propose is not None))
+        self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, note, on, asks))
+        # The answer, whole, as the mind's own datum, built from what it was shown;
+        # written after the program it kept, if it kept one.
+        answer: dict[str, Any] = {"on": on, "text": text, "kept": adopted, "note": note}
+        if reasoning:
+            answer["reasoning"] = reasoning
+        if adopted:
+            self._keep(code, fn, propose, write, built_from)
+        if write is not None:
+            write(WriteRequest(payload=answer, open=dict(THOUGHT_TAGS), built_from=built_from))
+
+    def _keep(self, code, fn, propose, write, built_from) -> None:
+        """The program kept: written anew the first time, a revision after."""
         self.code, self._fn, self._propose = code, fn, propose
         self.version += 1
         payload = {"code": code, "version": self.version}
@@ -825,6 +961,11 @@ class Mind:
             mine = got if isinstance(got, str) else describe_change(t.before, got[0])
             out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
         return "\n".join(out)
+
+
+def _may_answer_with_thoughts(cue: dict[str, str]) -> bool:
+    """Whether the store could answer this cue with the mind's own answers."""
+    return all(k == "provenance" or THOUGHT_TAGS.get(k) == v for k, v in cue.items())
 
 
 def _content_value(unit: InfoUnit) -> Any:
@@ -905,9 +1046,10 @@ def create_mind(endpoint: ModelEndpoint | None = None,
 
 __all__ = [
     "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "MAX_WAIT_THOUGHTS",
-    "PROGRAM_SECONDS", "PROGRAM_TAGS", "STATUS_FIELDS",
+    "PROGRAM_SECONDS", "PROGRAM_TAGS", "STATUS_FIELDS", "THOUGHT_TAGS",
     "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
     "chat", "compile_functions", "compile_program", "create_mind", "expected_status", "extract_asks",
-    "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "score", "standing_status",
+    "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "run_propose_full", "score",
+    "standing_status",
     "steps_of", "transition_of",
 ]

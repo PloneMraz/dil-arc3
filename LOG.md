@@ -2163,3 +2163,33 @@ be put on either one alone.
   frames).
 - C7 fails on ar25 and sk48 (one resistance source over the last 8), and passes on
   ls20 and vc33. C4 is partial on all four, not examined.
+
+### What a command is for meets the region; the answer is kept; mind and body agree on the game's end (Plone, same day)
+
+Four changes Plone approved after the Flash-Next run:
+
+- **`want`.** `propose` may return `(action, x, y, want)`: cells of the next grid
+  and fields of the region's next report that the action is for. `want` joins
+  the program's expectation of the step the command makes. When the grid comes
+  as `predict` said but the wanted cells do not, or the report differs only in
+  what was wanted, the mind thinks on `want`. A candidate that predicts as well
+  and can command is then kept. The prior describes the form and names no
+  strategy.
+- **The onlooker's change of stance is thought on in its own right**, even in a
+  cycle already thought in. In ar25 it came in a cycle whose thought was
+  counted as "frame", and the rule for the onlooker never applied.
+- **Every answer is kept whole** as the mind's datum (`domain: mind`,
+  `kind: thought`), built from what the model was shown: the text, what was kept,
+  the note, and the reasoning when the model gives one. It is evidence for a
+  later thought only when the model asks for it.
+- **A command the body would not carry out is no command.** The mind now
+  refuses, as the body does, any action but RESET once the game has ended. vc33
+  still offers ACTION6 after `GAME_OVER`; the mind took that as a command, and
+  the body waited.
+
+And one fix on a suspicion. A code fence now closes a block only at the start of
+a line, so a fence inside a docstring no longer cuts the program. Four thoughts
+had been lost to "unterminated triple-quoted string" at line 2. That this was
+the cause is not confirmed; the answers were not kept then, and they are now.
+
+249 tests.
