@@ -2096,3 +2096,70 @@ making them:
   refused; before, the body refused the whole move and waited.
 
 245 tests.
+
+### Qwen3.8-Flash-Next NVFP4 on Kaggle, with the onlooker's adoption and `propose(grid, steps)` (2026-09-25)
+
+**Serving.** The model is `RadixArk/Qwen3.8-Flash-Next-NVFP4` at `7b71922`, as
+copied to Kaggle (`keithtyser/qwen3-8-flash-next-nvfp4`). All 419 files
+(135,253,622,894 bytes) were checked against Hugging Face's hashes, in 159 s. The
+vLLM is the image built for this model (`vllm/vllm-openai:qwen38-flash-next`,
+`0.1.dev20073+g8e685d198`), from its layers on Kaggle, each checked against the
+runtime manifest; extraction took 118 s. The PLE n-gram embedding is kept in host
+memory (`VLLM_PLE_CPU_OFFLOAD`). The gate that selects its FP8 loader under an
+NVFP4 config is this project's own, written against the stock file's hash. How to
+run it came from a public notebook (Tufa Labs' Duck harness as served by
+keithtyser), not from the model card, whose command uses eight GPUs.
+
+- The machine: one RTX PRO 6000 (97,887 MiB) and 176 GB of RAM, 174 GB of it
+  available.
+- **I first concluded that it could not fit, and that was wrong.** I had assumed
+  every weight on the GPU.
+- **Two kernels failed before it served.** v7: the lookup for `libcuda.so.1`
+  read `ldconfig` only, and found nothing. v8: the weights took 81.8 GiB, loaded
+  in 603 s; at a 0.92 share that left 2.29 GiB of KV cache, short of the 2.37 GiB
+  one 64K request needs. Fixed by setting the KV cache outright, at 5 GiB.
+- v9 ran. Four games, 60 cycles each, no thinking, temperature 0.2. The kernel ran
+  from about 12:12 to 13:05. The GPU time of all three kernels was not read from
+  Kaggle's quota page.
+
+**This run changed the model and the mind at once**, so what changed below cannot
+be put on either one alone.
+
+| game | commands | frames held | thoughts | levels | end | wall |
+|---|---|---|---|---|---|---|
+| ls20 | ACTION1 ×13, then ACTION2/ACTION1 alternating (38 + 21) | 46/60 | 21 | 0 | NOT_FINISHED | 480 s |
+| vc33 | ACTION6 ×50, sweeping x 60–63, y 24–28 (18 cells), then a wait | 25/52 | 29 | 0 | GAME_OVER, the body stood still | 413 s |
+| ar25 | ACTION4 ×59 | 48/60 | 13 | 0 | NOT_FINISHED | 201 s |
+| sk48 | ACTION4 ×58, ACTION1 once | 24/60 | many | 0 | NOT_FINISHED | 750 s |
+
+- **The program predicted its own loop.** In ls20, from cycle 20 to 50 every frame
+  held while the piece moved up and down. There was no mismatch, and so no
+  thinking, and the loop went on. `predict` meets the region; `propose` states no
+  expectation of what the move will reach, so the aim, which lives only in the
+  prior, never meets a mismatch.
+- **The onlooker's adoption worked where it applied.** ls20 at cycle 6: the
+  candidate predicted 5/5, the same as the held program, and was kept. At cycle
+  56 it was 15/15 against 15/15, and was kept. At cycle 59 it was 8 against 15,
+  and was not.
+- **Where it did not apply: at most one thought a cycle.** In ar25 the
+  onlooker's stance changed at cycle 5, a cycle whose thought was already
+  counted as "frame", so the "predicts as well" rule did not apply. The stance
+  then held for 55 cycles, and held stances do not collide. From cycle 13 the
+  moves changed nothing, the program expected nothing, and there were no more
+  thoughts.
+- **vc33: the program now explores, and still did not reset.** It clicked a 4×5
+  block of cells in order, three times over, until `GAME_OVER`. It then commanded
+  ACTION6, which vc33 still offers in a terminal state. The mind checks a command
+  against what the region offers; the body also refuses a non-RESET move in a
+  terminal state. So the mind thought it had commanded, and the body waited. The
+  steps `propose` read said `GAME_OVER`; the program did not act on it.
+- ls20's four status mismatches (cycles 8, 15, 51, 52) are `depthDelta ±5`, the
+  frame's stack changing depth, not levels.
+- **Five thoughts did not load.** Four were "unterminated triple-quoted string"
+  at line 2 of `<world-model>`, and one was prose inside the block. The model's
+  raw answer is not kept, so why is not known. The suspect is `extract_code`
+  pairing fences wrongly when the answer holds more than one.
+- The model asked the store once in four games (ar25: scarred remarks, running
+  frames).
+- C7 fails on ar25 and sk48 (one resistance source over the last 8), and passes on
+  ls20 and vc33. C4 is partial on all four, not examined.
