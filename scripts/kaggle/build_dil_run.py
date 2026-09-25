@@ -297,13 +297,16 @@ print(probe.stdout, probe.stderr[-3000:])
 assert probe.stdout.split()[-1] == "Qwen3_8FlashNextPLEFp8EmbeddingMethod", "the PLE gate did not select FP8"''',
     4: '''# The model's server, in its own session. Its PID is kept, and only its group is stopped.
 # The PLE embedding stays in host memory (VLLM_PLE_CPU_OFFLOAD); the rest fits the GPU.
+# The weights take 81.8 GiB of it, which left 2.29 GiB of KV cache at a 0.92 share, short
+# of the 2.37 GiB one 64K request needs (kernel v8). The KV cache is set outright instead,
+# at the 5 GiB the public notebook served this model with on this machine.
 LOG = W / "vllm-server.log"
 server = subprocess.Popen(
     [sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", str(MODEL_DIR),
      "--served-model-name", "SERVED", "--host", "127.0.0.1", "--port", "8000",
      "--load-format", "safetensors", "--dtype", "bfloat16", "--quantization", "modelopt_fp4",
      "--tensor-parallel-size", "1", "--distributed-executor-backend", "mp",
-     "--gpu-memory-utilization", "0.92", "--max-model-len", "MAX_MODEL_LEN", "--max-num-seqs", "4",
+     "--kv-cache-memory-bytes", str(5 * 1024**3), "--max-model-len", "MAX_MODEL_LEN", "--max-num-seqs", "4",
      "--max-num-batched-tokens", "8192", "--enable-chunked-prefill", "--async-scheduling",
      "--max-cudagraph-capture-size", "32", "--no-enable-prefix-caching",
      "--reasoning-parser", "qwen3", "--chat-template", str(MODEL_DIR / "chat_template.jinja"),
