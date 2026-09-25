@@ -1981,6 +1981,6 @@ Two corrections from Plone, done as one package with the neutral prompt:
   never scores its own proposal.
 - A code block indented as a whole now loads (two thoughts were lost to it).
 
-258 tests. Twelve live cycles with no model: the mind asked `{"domain":
+258 tests. Six live cycles with no model: the mind asked `{"domain":
 "mind-task"}` at cycle 0 and its waiting thought ran at cycle 1, when the task
 arrived.
