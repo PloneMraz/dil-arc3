@@ -98,7 +98,7 @@ HEX: Final = "0123456789abcdef"
 
 # The program's own tags (§9 open layer, tag F): what it is, never how good.
 PROGRAM_TAGS: Final = {
-    "domain": "world-model", "kind": "program", "object": FRAME_KIND, "source": "mind",
+    "domain": "mind", "kind": "program", "object": FRAME_KIND, "source": "mind",
 }
 
 # What each act of thinking answered, whole, kept as the mind's own data: what it
@@ -292,7 +292,7 @@ def compile_all(code: str) -> tuple[Callable[..., Any], Callable[..., Any] | Non
     """
     env: dict[str, Any] = {}
     try:
-        exec(compile(textwrap.dedent(code), "<world-model>", "exec"), env)  # noqa: S102 — the model's own program
+        exec(compile(textwrap.dedent(code), "<program>", "exec"), env)  # noqa: S102 — the model's own program
     except Exception as exc:  # noqa: BLE001
         raise ProgramError(f"does not load: {exc!r}") from exc
     fn = env.get("predict")

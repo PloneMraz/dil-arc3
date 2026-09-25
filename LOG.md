@@ -2253,3 +2253,22 @@ scored rerun plays through the gateway.
   in 9 h at 4 at once.
 
 256 tests.
+
+### "world-model" out of the live code (Plone, same day)
+
+Plone asked why "world-model" was still in the code. It had stayed from
+2026-09-24 (`13d5f9c`, "One mind, and it is the model"), when the program was
+still called a world model. I had said I would rename the compile label and had
+not done it.
+
+- The program's datum is now tagged `domain: mind` (was `world-model`), beside the
+  mind's answers (`domain: mind, kind: thought`). Stores from earlier runs keep the
+  old tag.
+- The label the program is compiled under, which shows in its errors, is
+  `<program>` (was `<world-model>`).
+- Kept: the fixtures in the tests ported from dil-core, which use dil-core's own
+  words (`built-from`, `held-by`, `time`, `write`); and the probe scripts of
+  2026-09-24 (`wm_probe.py`, `compare_programs.py`, `build_probe_run.py`), which
+  name what that experiment was.
+
+256 tests.

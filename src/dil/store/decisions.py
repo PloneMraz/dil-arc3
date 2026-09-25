@@ -211,7 +211,7 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 
 # DEVIATION from dil-core, declared (Plone, 2026-09-24): dil-arc3 also commits at
 # the close of every cycle in which the agent wrote a datum, so every version of
-# what it wrote — the world-model program above all — is in a snapshot, tied by
+# what it wrote — the mind's program above all — is in a snapshot, tied by
 # its marker to its place in `[event]`. dil-core keeps the scar rhythm alone:
 # for an agent that writes often, a snapshot per write is too heavy a cost.
 COMMIT_CADENCE: Final = (
