@@ -254,16 +254,21 @@ PLE.write_text(src.replace(anchor, anchor + (
     "        return Qwen3_8FlashNextPLEFp8EmbeddingMethod()\\n")))
 
 def driver_dir():
+    """Where the real (non-stub) libcuda.so.1 is: ldconfig's cache, then the usual places."""
     out = subprocess.run(["ldconfig", "-p"], capture_output=True, text=True).stdout
     libs = [Path(l.split("=>", 1)[1].strip()) for l in out.splitlines() if "libcuda.so.1" in l and "=>" in l]
-    libs = [p.resolve() for p in libs if p.is_file() and "stubs" not in str(p).lower()]
-    return max(libs, key=lambda p: p.stat().st_size).parent
+    dirs = [d for d in os.environ.get("LD_LIBRARY_PATH", "").split(":") if d]
+    libs += [Path(d) / "libcuda.so.1" for d in [*dirs, "/usr/local/nvidia/lib64", "/usr/lib/x86_64-linux-gnu"]]
+    libs = [p.resolve() for p in libs if p.is_file() and "stubs" not in str(p.resolve()).lower()]
+    print("libcuda.so.1:", sorted(set(map(str, libs))))
+    return max(libs, key=lambda p: p.stat().st_size).parent if libs else None
 
 cuda = ROOT / "usr/local/cuda-13.0"
 cache = Path("/tmp/dil-vllm-cache")
 libs = [cuda / "targets/x86_64-linux/lib", cuda / "lib64", SITE / "torch/lib",
         *sorted(p for p in (SITE / "nvidia").glob("*/lib") if p.is_dir()),
-        driver_dir(), Path("/usr/local/nvidia/lib64"), Path("/usr/lib/x86_64-linux-gnu")]
+        driver_dir() or Path("/usr/local/nvidia/lib64"), Path("/usr/local/nvidia/lib64"),
+        Path("/usr/lib/x86_64-linux-gnu")]
 ENV = {k: v for k, v in os.environ.items() if k != "PYTORCH_ALLOC_CONF"}
 ENV.update({
     "PYTHONPATH": f"{SITE / 'nvidia_cutlass_dsl/dsl_packages'}:{SITE}",
