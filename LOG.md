@@ -1925,7 +1925,7 @@ not read from Kaggle's page.
 Kernel `dil-arc3-run` v3, code `d41e1dd`, `--prompt plain`: the prompt of the
 runs before, word for word (checked against `48eaa27`), programs scored on the
 grid alone; every v0.3.5 mechanism in place. Outputs in
-`scripts/data/kaggle/dil-run/output-plain/`. Notebook 1,677 s, game 1,352 s.
+`scripts/data/kaggle/dil-run/output-plain/`. Notebook 1,718 s, game 1,352 s.
 
 | | v2 (old mind, old prompt) | full prompt, v0.3.5 | plain prompt, v0.3.5 |
 |---|---|---|---|
