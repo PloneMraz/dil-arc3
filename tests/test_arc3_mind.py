@@ -295,3 +295,23 @@ def test_a_program_that_says_the_status_is_what_meets_the_status_when_it_fails()
     assert ("written-0-0", 3) in scarred and ("signal-3-1", 3) in scarred, \
         "both sides of the status mismatch: the report that came, and the program that said otherwise"
 
+
+
+def test_the_plain_prompt_is_the_grid_alone_as_before():
+    from arc3.mind import PROMPT_PLAIN
+
+    model = Script(RIGHT)
+    wm = create_mind(ModelEndpoint(), chat_fn=model, prompt="plain")
+    rule = mind_rule(wm)
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+                      t5=create_t5(predict=rule), t6=create_t6(), t7=create_t7(), t8=create_t8()),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    run(cycle, frame(lit(0), lit(1)), status())
+    shown = model.prompts[0][0]["content"]
+    t = Transition(before=lit(0), action=1, x=None, y=None, after=lit(1))
+    assert shown == PROMPT_PLAIN.format(evidence=render_evidence([t])), "word for word, no report, no asking"
+    assert "ASK" not in shown and "game:" not in shown

@@ -1,7 +1,7 @@
 """Build the Kaggle dataset and notebook that run dil-arc3, with the model at the mind.
 
     python scripts/kaggle/build_dil_run.py [--model 35b-a3b|27b] [--game ls20]
-        [--cycles 60] [--max-tokens 12288] [--max-model-len 65536]
+        [--cycles 60] [--max-tokens 12288] [--max-model-len 65536] [--prompt full|plain]
 
 Not the probe: the probe ran a model on its own. This runs the agent — DIL's
 loop over a live ARC-AGI-3 game, the host carrying the frame, the one mind —
@@ -164,7 +164,7 @@ t = time.time()
 with open(RUN, "w") as out:
     proc = subprocess.Popen(
         [sys.executable, "-u", str(REPO / "scripts" / "run_game.py"), GAME, str(CYCLES),
-         "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
+         "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS), "--prompt", PROMPT,
          "--offline-dir", str(ENVS), "--out", str(W / "store")],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(REPO))
     for line in proc.stdout:
@@ -204,6 +204,8 @@ def main() -> None:
     ap.add_argument("--cycles", type=int, default=60)
     ap.add_argument("--max-tokens", type=int, default=12288)
     ap.add_argument("--max-model-len", type=int, default=65536)
+    ap.add_argument("--prompt", choices=("full", "plain"), default="full",
+                    help="the mind's prompt; plain is the one before 2026-09-25, word for word")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -220,7 +222,7 @@ def main() -> None:
         "licenses": [{"name": "CC0-1.0"}],
     }, indent=1))
 
-    params = (f"GAME = {a.game!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\n")
+    params = (f"GAME = {a.game!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\nPROMPT = {a.prompt!r}\n")
     cells = [c.replace('"MANIFEST"', f'"{manifest}"').replace('"SERVED"', f'"{served}"')
              .replace('"MAX_MODEL_LEN"', f'"{a.max_model_len}"') for c in CELLS]
     cells[6] = params + cells[6]
@@ -243,7 +245,7 @@ def main() -> None:
         "competition_sources": [COMPETITION], "kernel_sources": [], "model_sources": [handle],
     }, indent=1))
     print(f"dataset -> {dataset}\nkernel  -> {kernel}\n"
-          f"model {a.model}, game {a.game}, cycles {a.cycles}, max tokens {a.max_tokens}, "
+          f"model {a.model}, game {a.game}, cycles {a.cycles}, prompt {a.prompt}, max tokens {a.max_tokens}, "
           f"context {a.max_model_len}")
 
 

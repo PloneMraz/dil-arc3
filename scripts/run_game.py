@@ -1,7 +1,7 @@
 """A live game with the one mind in the loop: the model thinks, DIL runs.
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
-        [--max-tokens N] [--think] [--alone] [--out DIR]
+        [--max-tokens N] [--think] [--prompt full|plain] [--alone] [--out DIR]
 
 The host carries the whole frame; the mind predicts it with the program the
 model wrote, thinks when the expectation fails (asking the store for the frames
@@ -53,6 +53,8 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
+ap.add_argument("--prompt", choices=("full", "plain"), default="full",
+                help="plain: the grid alone, word for word the prompt before 2026-09-25")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
 a = ap.parse_args()
@@ -63,7 +65,8 @@ else:
     arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
 source = create_source(arc.make(a.game), GameAction, action_budget=a.cycles)
 host_source = source if a.alone else onlooked(source)
-wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, think=a.think))
+wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, think=a.think),
+                 prompt=a.prompt)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
     t5=create_t5(predict=mind_rule(wm)), t6=create_t6(),

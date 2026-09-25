@@ -146,6 +146,33 @@ Some it got wrong (expected vs yours, as changed cells relative to the grid befo
 Revise `predict` so it explains all the evidence. Return one ```python code block, and any ASK lines."""
 
 
+# The prompt the mind thought with until 2026-09-25, word for word: the grid
+# alone, no report from the game, no word of asking memory. Kept to measure
+# what the fuller prompt changed (`--prompt plain`): with it, the runs before
+# repeated exactly, so a first thought that repeats them too isolates the prompt.
+PROMPT_PLAIN: Final = """You are looking at a turn-based game on a 64x64 grid. Each cell holds a colour 0-15, shown as one hex digit.
+Actions are ACTION1..ACTION7; ACTION6 also carries a cell (x = column, y = row). Nobody has told you the rules; infer them from the evidence.
+
+{evidence}
+
+Write a Python function
+
+    def predict(grid: list[list[int]], action: int, x: int | None = None, y: int | None = None) -> list[list[int]]:
+
+that returns the next grid for ANY grid of this game and any action. Aim for the general
+mechanism (what moves, how far, what blocks it, anything that changes on every step), not a
+lookup of these particular transitions. Use only the Python standard library. Return only one
+```python code block."""
+
+FEEDBACK_PLAIN: Final = """Your function was run on those transitions. It got {ok}/{n} exactly right.
+Some it got wrong (expected vs yours, as changed cells relative to the grid before):
+{misses}
+
+Revise `predict` so it explains all the evidence. Return only one ```python code block."""
+
+PROMPTS: Final = ("full", "plain")
+
+
 @dataclass(frozen=True, slots=True)
 class Transition:
     """One observed step: the grid before, the move, the grid after (the last of
@@ -447,9 +474,15 @@ class Thought:
 class Mind:
     """The one mind: a program the model writes, tested, rewritten on mismatch."""
 
-    def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> None:
+    def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
+                 prompt: str = "full") -> None:
+        if prompt not in PROMPTS:
+            raise ValueError(f"prompt must be one of {PROMPTS}")
         self.endpoint = endpoint
         self._chat = chat_fn
+        # Which prompt it thinks with: "full" (the grid, the game's report, and
+        # asking memory) or "plain" (the grid alone, word for word as before).
+        self.prompt = prompt
         self.code: str | None = None
         self._fn: Callable[..., Any] | None = None
         self.version = 0
@@ -690,18 +723,26 @@ class Mind:
         while len(chosen) > 1 and len(render_evidence([t for t, _ in chosen])) > MAX_EVIDENCE_CHARS:
             chosen = chosen[1:]
         evidence = [t for t, _ in chosen]
-        lines = list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
+        plain = self.prompt == "plain"
+        if plain:
+            # The grid alone, as before: no report from the game shown or scored.
+            evidence = [dataclasses.replace(t, status=None) for t in evidence]
+        lines = [] if plain else list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
         built_from = tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
         held_ok, held_misses = score(self._fn, evidence)
         recalled = ("\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n") if lines else ""
         onlooker = ""
-        if self._remark and self._remark.get("remark"):
+        if not plain and self._remark and self._remark.get("remark"):
             onlooker = f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
-        messages = [{"role": "user", "content": PROMPT.format(
-            evidence=render_evidence(evidence), recalled=recalled, onlooker=onlooker, max_asks=MAX_ASKS)}]
+        if plain:
+            first = PROMPT_PLAIN.format(evidence=render_evidence(evidence))
+        else:
+            first = PROMPT.format(evidence=render_evidence(evidence), recalled=recalled, onlooker=onlooker,
+                                  max_asks=MAX_ASKS)
+        messages = [{"role": "user", "content": first}]
         if self.code is not None:
             messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
-            messages.append({"role": "user", "content": FEEDBACK.format(
+            messages.append({"role": "user", "content": (FEEDBACK_PLAIN if plain else FEEDBACK).format(
                 ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses))})
         try:
             text, usage = self._chat(self.endpoint, messages)
@@ -828,13 +869,14 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
 
 
 def create_mind(endpoint: ModelEndpoint | None = None,
-                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> Mind:
-    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn)
+                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat, prompt: str = "full") -> Mind:
+    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, prompt)
 
 
 __all__ = [
     "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS",
     "PROGRAM_TAGS", "PROGRESS_PREFIX", "PROGRESS_WINDOW", "RESOLVED_PREFIX", "STATUS_FIELDS", "VALENCE_PREFIX",
+    "PROMPTS", "PROMPT_PLAIN",
     "Mind", "ModelEndpoint", "ProgramError", "Thought", "Transition",
     "chat", "compile_program", "create_mind", "expected_status", "extract_asks", "mind_rule",
     "region_valence", "render_evidence", "run_full", "run_program", "score", "standing_status",
