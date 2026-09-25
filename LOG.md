@@ -1888,3 +1888,34 @@ Tests pinned one scar per mismatch in five places here and five in dil-core;
 each now pins both sides. 252 tests. On 12 live `ls20` cycles with no model
 reachable the run holds together: 11 frame scars, the mind thinking on each,
 C5 `partial` and C7 `fail` as before.
+
+### The v0.3.5 mind's first run on Kaggle
+
+Kernel `dil-arc3-run` v2, code `1d30b8d`, `ls20`, 60 cycles, the same model and
+settings. Outputs in `scripts/data/kaggle/dil-run/output-v035/`. Notebook 2,199 s
+(game 1,838 s, 2.5 times the last run) — about 0.61 h of GPU quota by wall time,
+not read from Kaggle's page.
+
+- **The mechanism ran as designed and the trace shows it.** The program
+  `written-1-0` circulated between `running` and `scar` on almost every cycle:
+  53 scars of its own, each followed by `scar → running` when used again.
+  Recalled scarred frames returned to use 39 times. The model chose what to read
+  — 24 queries over 7 cues, frames, statuses, its own program, and from cycle 37
+  the onlooker's remarks — and the mind thought on the onlooker once (cycle 43).
+  Conformance: C1, C3, C5, C6 (with the `held_by` check), C7 pass; C4 partial,
+  C2 unverifiable.
+- **Prediction was far worse.** The frame expectation held on 4 of 59 cycles,
+  against 28 in the runs before; the best candidate reached 20 of 24 once (cycle
+  39) and slid back. The first program was already worse — 1 of 2 against 2 of 2,
+  in the same first situation — and the earlier runs had repeated exactly, so
+  the change in the prompt (the status report, the `ASK` instructions) is the
+  likely cause. One run does not show it.
+- **The onlooker's objection changed nothing.** From cycle 41 it said
+  "back-and-forth" (ACTION3/ACTION4 since cycle 38) and the agent alternated 3
+  and 4 to the end. Every `resolved` and `progress` reading in the field was 0
+  or near it, so the respond policy's tie-break alternated — the very pattern the
+  onlooker named. The scar on the program does not yet reach the self in any
+  form that tells one action from another.
+- One thought failed to load: the model indented its whole code block
+  (`IndentationError`).
+- 0 levels; moves `1:13 2:13 3:14 4:20`.
