@@ -97,8 +97,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   just seen (short-term perception, each with the state and levels the region
   reported) once the region has said all it says in a cycle, the mind pushes
   the next action as T5's `test` — if the region affords it (RESET always).
-  `src/arc3/command.py` carries it out and weighs nothing. With no such command the mind thinks again while the body
-  waits (`MAX_WAIT_THOUGHTS = 2`, declared, not measured); then the body stands
+  `src/arc3/command.py` carries it out and weighs nothing. With no such
+  command the mind thinks again while the body waits (`MAX_WAIT_THOUGHTS = 2`,
+  declared, not measured); then the body stands
   still, and in an informational region the run ends — no action is made up in
   the mind's place (Plone: "Cơ thể có thể đơ để đợi"). Cycle 0's RESET is the
   host's start-up (§4). What else the mind sends out is a question to its own
