@@ -2229,3 +2229,27 @@ through. Each step that got nowhere matched.
   against the budget and cost no action.
 
 254 tests.
+
+### A path to a scored submission (Plone, same day)
+
+Plone: a submission is allowed each day, and two have gone unused. A submission
+is a measurement on the hidden games. Nothing had been submitted but the starter
+kit's random agent, because the notebook played only the offline games; a
+scored rerun plays through the gateway.
+
+- `scripts/run_competition.py` plays every game the arcade offers on one
+  scorecard, each made once, `--concurrency` at once, with a deadline, as the
+  official harness does. Each game runs in its own process (`run_game.py
+  --remote`), reaching its game through `world/remote.py`: one arcade, one
+  process, plain data both ways.
+- The notebook's run cell waits for the gateway in a scored rerun. Otherwise it
+  plays the chosen games offline and writes the placeholder submission.
+- Checked here: two offline games at once through the served region, the
+  scorecard closed; the deadline stopping a running game and starting no other.
+  With no model reachable, each game stood still for 5 of its 6 cycles, the
+  onlooker saying so each time.
+- **Not checked, and only a scored rerun can check it:** the gateway, the
+  scorecard driven from several processes' requests, and whether ~110 games fit
+  in 9 h at 4 at once.
+
+256 tests.

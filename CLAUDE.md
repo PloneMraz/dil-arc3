@@ -552,6 +552,34 @@ played. The pipeline clears the step that is currently blocking other people.
 **Baseline calibration: a uniformly random agent scores 0.02.** That is the floor
 any DIL agent has to beat for Accuracy to mean anything.
 
+## dil-arc3's scored run — built 2026-09-25, not yet submitted
+
+The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
+
+- **Scored rerun** (`KAGGLE_IS_COMPETITION_RERUN`): it waits for the gateway
+  (`http://gateway:8001/api/games`), then `scripts/run_competition.py --mode
+  competition` plays every game the gateway offers. The gateway records each
+  action and writes the submission; the notebook writes none.
+- **Save & Run**: the same runner plays the chosen games offline, from the
+  competition's `environment_files`, and writes the placeholder
+  `submission.parquet` a commit needs.
+
+How it plays, following the official harness (`ARC-AGI-3-Agents/agents/swarm.py`):
+one arcade, **one scorecard, each game made on it once**, the scorecard closed at
+the end. Where it differs: each game runs in a process of its own
+(`run_game.py --remote`), because the mind bounds the programs it runs with
+SIGALRM, which needs a main thread. The arcade and its games stay in the one
+process, and each game's process reaches its game through `world/remote.py`, as
+plain data both ways; `GameAction` does not survive a pickle. `CONCURRENCY`
+games at once (4) share one model server. A deadline at 9 h less 20 min from the
+notebook's start: no game starts after it, and a game still running is stopped.
+
+Not verified, because only a scored rerun has a gateway: that the gateway takes
+one scorecard driven from several processes' requests through one arcade; that
+4 games at once finish ~110 games inside the deadline (from v9, one game of 60
+cycles took 201–750 s alone); and whether a rerun's GPU time counts against the
+weekly quota.
+
 ## How scoring works — settled
 
 **110 environments, not 100.** Kaggle staff (inversion): "Submissions run on all

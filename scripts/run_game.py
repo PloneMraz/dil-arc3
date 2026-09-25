@@ -16,7 +16,7 @@ of one, and says what it sees; the host hears it. `--alone` leaves it out.
 Nothing here submits to the competition.
 """
 from _paths import SRC, STARTER, DATA  # noqa: E402 — see scripts/_paths.py
-import argparse, collections, json, sys, tempfile, time
+import argparse, collections, json, os, sys, tempfile, time
 from pathlib import Path
 
 sys.path.insert(0, str(STARTER)); sys.path.insert(0, str(STARTER / "vendor" / "ARC-AGI-3-Agents"))
@@ -56,13 +56,22 @@ ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
+ap.add_argument("--remote", default=None,
+                help="HOST:PORT of the regions served by run_competition.py; the key is in DIL_REGIONS_KEY")
 a = ap.parse_args()
 
-if a.offline_dir:
-    arc = arc_agi.Arcade(operation_mode=OperationMode.OFFLINE, environments_dir=a.offline_dir)
+if a.remote:
+    # The game was made in another process, on the one arcade and scorecard
+    # a scored run allows (`world/remote.py`).
+    from world.remote import RemoteRegion
+    host, port = a.remote.rsplit(":", 1)
+    region = RemoteRegion((host, int(port)), os.environ["DIL_REGIONS_KEY"].encode(), a.game)
 else:
-    arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
-region = arc.make(a.game)
+    if a.offline_dir:
+        arc = arc_agi.Arcade(operation_mode=OperationMode.OFFLINE, environments_dir=a.offline_dir)
+    else:
+        arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
+    region = arc.make(a.game)
 world = region if a.alone else World(region, others={"onlooker": Onlooker()})
 source = create_source(world, GameAction, action_budget=a.cycles)
 host_source = source

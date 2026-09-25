@@ -167,26 +167,37 @@ else:  # Kaggle unpacked the archive into the dataset: find() gives scripts/, it
     shutil.copytree(find("run_game.py").parent, REPO)
 print(sorted(p.name for p in (REPO / "src").iterdir()))''',
     # ── 7 ──
-    '''# The runs: the agent plays each game in turn, the model thinks when an expectation fails.
-# One game, one agent, one store; the model's server is shared. Every line goes to
-# run-<game>.txt and, as it comes, to this log, so a run in progress shows its cycles.
-for game in GAMES:
-    RUN = W / f"run-{game}.txt"
+    '''# The runs. In a scored rerun (KAGGLE_IS_COMPETITION_RERUN) every game the gateway
+# offers is played on one scorecard, several at once, and the gateway writes the
+# submission; otherwise the chosen games are played offline from the competition's own
+# files, the same way, and a placeholder submission lets the commit through.
+# Each game is its own agent, with its own store; the model's server is shared.
+RERUN = bool(os.environ.get("KAGGLE_IS_COMPETITION_RERUN"))
+DEADLINE = T0 + 9 * 3600 - 20 * 60  # nothing starts after, and what runs stops: 20 min kept for the end
+cmd = [sys.executable, "-u", str(REPO / "scripts" / "run_competition.py"),
+       "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
+       "--cycles", str(CYCLES), "--concurrency", str(CONCURRENCY), "--deadline", str(DEADLINE), "--out", str(W)]
+if RERUN:
+    os.environ.setdefault("ARC_API_KEY", "test-key-123")
+    os.environ.setdefault("ARC_BASE_URL", "http://gateway:8001/")
     t = time.time()
-    with open(RUN, "w") as out:
-        proc = subprocess.Popen(
-            [sys.executable, "-u", str(REPO / "scripts" / "run_game.py"), game, str(CYCLES),
-             "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
-             "--offline-dir", str(ENVS), "--out", str(W / f"store-{game}")],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(REPO))
-        for line in proc.stdout:
-            out.write(line)
-            out.flush()
-            if " INFO " not in line:
-                print(f"[{game} {time.time() - t:6.0f}s] {line}", end="", flush=True)
-        proc.stdout.close()
-        proc.wait()
-    print(f"{game}: run exit {proc.returncode} after {time.time() - t:.0f}s", flush=True)''',
+    while True:  # the gateway comes up on its own time
+        try:
+            urllib.request.urlopen(os.environ["ARC_BASE_URL"] + "api/games", timeout=10); break
+        except Exception as exc:
+            if time.time() - t > 900:
+                raise RuntimeError(f"the gateway did not answer in 900s: {exc!r}")
+            time.sleep(5)
+    print(f"gateway ready in {time.time() - t:.0f}s", flush=True)
+    cmd += ["--mode", "competition", "--base-url", os.environ["ARC_BASE_URL"]]
+else:
+    cmd += ["--mode", "offline", "--offline-dir", str(ENVS), "--games", ",".join(GAMES)]
+done = subprocess.run(cmd, cwd=str(REPO), env=dict(os.environ))
+print(f"run_competition exit {done.returncode} after {time.time() - T0:.0f}s of notebook", flush=True)
+if not RERUN:
+    import pandas as pd
+    pd.DataFrame([["1_0", "1", True, 1]], columns=["row_id", "game_id", "end_of_game", "score"]) \
+        .to_parquet(W / "submission.parquet", index=False)''',
     # ── 8 ──
     '''print("==== vLLM throughput lines (last 5)")
 print("\\n".join([l for l in LOG.read_text().splitlines() if "throughput" in l][-5:]))
@@ -346,7 +357,7 @@ def _pack(dest: Path) -> None:
 
     with tarfile.open(dest, "w") as tf:
         tf.add(REPO / "src", arcname="dil-arc3/src", filter=keep)
-        for name in ("_paths.py", "run_game.py"):
+        for name in ("_paths.py", "run_game.py", "run_competition.py"):
             tf.add(SCRIPTS / name, arcname=f"dil-arc3/scripts/{name}")
 
 
@@ -357,6 +368,7 @@ def main() -> None:
     ap.add_argument("--cycles", type=int, default=60)
     ap.add_argument("--max-tokens", type=int, default=12288)
     ap.add_argument("--max-model-len", type=int, default=65536)
+    ap.add_argument("--concurrency", type=int, default=4, help="games played at once, on one model server")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -374,7 +386,8 @@ def main() -> None:
     }, indent=1))
 
     games = [g.strip() for g in a.game.split(",") if g.strip()]
-    params = (f"GAMES = {games!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\n")
+    params = (f"GAMES = {games!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\n"
+              f"CONCURRENCY = {a.concurrency}\n")
     chosen = list(CELLS)
     if serving == "flash-next":
         for i, cell in FLASH_CELLS.items():
