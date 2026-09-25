@@ -2130,7 +2130,7 @@ be put on either one alone.
 | ls20 | ACTION1 ×13, then ACTION2/ACTION1 alternating (38 + 21) | 46/60 | 21 | 0 | NOT_FINISHED | 480 s |
 | vc33 | ACTION6 ×50, sweeping x 60–63, y 24–28 (18 cells), then a wait | 25/52 | 29 | 0 | GAME_OVER, the body stood still | 413 s |
 | ar25 | ACTION4 ×59 | 48/60 | 13 | 0 | NOT_FINISHED | 201 s |
-| sk48 | ACTION4 ×58, ACTION1 once | 24/60 | many | 0 | NOT_FINISHED | 750 s |
+| sk48 | ACTION4 ×58, ACTION1 once | 24/60 | 37 | 0 | NOT_FINISHED | 750 s |
 
 - **The program predicted its own loop.** In ls20, from cycle 20 to 50 every frame
   held while the piece moved up and down. There was no mismatch, and so no
