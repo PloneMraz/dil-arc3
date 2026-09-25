@@ -1919,3 +1919,33 @@ not read from Kaggle's page.
 - One thought failed to load: the model indented its whole code block
   (`IndentationError`).
 - 0 levels; moves `1:13 2:13 3:14 4:20`.
+
+### The prompt, measured: the plain prompt back on the v0.3.5 mechanism
+
+Kernel `dil-arc3-run` v3, code `d41e1dd`, `--prompt plain`: the prompt of the
+runs before, word for word (checked against `48eaa27`), programs scored on the
+grid alone; every v0.3.5 mechanism in place. Outputs in
+`scripts/data/kaggle/dil-run/output-plain/`. Notebook 1,677 s, game 1,352 s.
+
+| | v2 (old mind, old prompt) | full prompt, v0.3.5 | plain prompt, v0.3.5 |
+|---|---|---|---|
+| frame expectation held, of 59 | 28 | **4** | **36** |
+| first thought: held / candidate, tokens | 0/2 → 2, 7,089 | 0/2 → 1, 7,466 | 0/2 → 1, 7,911 |
+| program versions | 6 | 6 | 4 |
+| scars: frame / region / onlooker | 31 / 45 / — | 108 / 4 / 10 | 44 / 6 / 14 |
+| C7 | pass | pass | pass |
+
+- **The fuller prompt is the likely cause of the collapse**: with the same
+  mechanism, the plain prompt held the frame on 36 of 59 cycles against 4. One
+  run each; not a rate.
+- **The runs are not deterministic across sessions, and an earlier entry said
+  they were.** The first prompt, rebuilt from each run's stored frames, is the
+  same byte for byte (same SHA-256) for v2 and this run, yet the first answer
+  differed (7,089 against 7,911 tokens). The v2 and onlooker runs had matched
+  move for move; that was two sessions agreeing, not a guarantee. "A third party
+  re-running this notebook should get this trace" is withdrawn: re-running gives
+  the same kind of trace, not the same one.
+- The onlooker objected at cycle 40 ("repeating" ACTION1 since 36) and the mind
+  thought on it twice; moves `1:16 2:15 3:14 4:15`; 0 levels.
+- Two thoughts failed on an indented code block (`IndentationError`), as in the
+  run before.
