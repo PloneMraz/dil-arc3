@@ -476,6 +476,9 @@ def test_after_the_game_ends_only_reset_is_a_command_and_the_mind_thinks_for_one
     assert [t.on for t in wm.thoughts] == ["frame", "no command", "no command"], \
         "ACTION1 is offered, but the game has ended: the body would not carry it out, so it is no command"
     assert result.response.action["actionId"] == 0
+    told = model.prompts[1][0]["content"]
+    assert "The game has ended (GAME_OVER): the only action that can be taken now is RESET (0)." in told
+    assert "The game now offers" not in told, "not what the game's own list still says"
 
 
 def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_in():

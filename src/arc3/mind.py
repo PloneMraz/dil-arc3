@@ -977,7 +977,14 @@ class Mind:
                       + tuple(i for i in (self._task_id, self._aim_id) if i is not None))
         held_ok, held_misses = score(self._fn, evidence)
         also = ""
-        if self._affords:
+        state = (self._seen[-1][0].status or {}).get("stateTo") if self._seen else None
+        if state in TERMINAL_STATES:
+            # What the body can carry out, said as it is: the game's own list of
+            # actions still names some after it has ended (vc33 names ACTION6),
+            # and a prompt that repeated it contradicted "no action the game can
+            # take now" — 27 thoughts in a row answered ACTION6 (LOG.md).
+            also += f"\nThe game has ended ({state}): the only action that can be taken now is RESET (0).\n"
+        elif self._affords:
             offered = ", ".join(f"ACTION{a}" for a in self._affords)
             also += f"\nThe game now offers: {offered} (and RESET, 0).\n"
         if lines:

@@ -2272,3 +2272,21 @@ not done it.
   name what that experiment was.
 
 256 tests.
+
+### The prompt said the game offered an action the mind refused (vc33, kernel running)
+
+Read from vc33's report in the aim run, before the kernel finished. `GAME_OVER` came
+at cycle 51. For the 9 still cycles after it the mind thought 27 times, "no
+command" and the onlooker's nudge. Each time the model answered ACTION6, 1,626
+tokens, the same answer. The prompt had said both "The game now offers: ACTION6
+(and RESET, 0)", the game's own list, which vc33 keeps after the end, and "Your
+propose gave no action the game can take now". The mind refused ACTION6 as the
+body does, and told the model the list that allowed it. Now, once the game has
+ended, the prompt says only that: "The game has ended (GAME_OVER): the only action
+that can be taken now is RESET (0)."
+
+Also seen there, not yet examined: 13 of vc33's thoughts did not load, all
+"unterminated triple-quoted string". The string opens at line 4 of programs of
+230–576 lines, or at the next-to-last line. The raw answers are in the run's store.
+The aim fell due unheard: `predict` held 2 frames of 52, so every thought was on
+the frame, the first part to fail. vc33 took 1,708 s, against 413 s in v9.
