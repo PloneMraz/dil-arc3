@@ -156,24 +156,26 @@ else:  # Kaggle unpacked the archive into the dataset: find() gives scripts/, it
     shutil.copytree(find("run_game.py").parent, REPO)
 print(sorted(p.name for p in (REPO / "src").iterdir()))''',
     # ── 7 ──
-    '''# The run: the agent plays, the model thinks when the expectation fails.
-# Every line goes to run.txt and, as it comes, to this log, so a run in progress
-# shows its cycles instead of hours of silence.
-RUN = W / "run.txt"
-t = time.time()
-with open(RUN, "w") as out:
-    proc = subprocess.Popen(
-        [sys.executable, "-u", str(REPO / "scripts" / "run_game.py"), GAME, str(CYCLES),
-         "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS), "--prompt", PROMPT,
-         "--offline-dir", str(ENVS), "--out", str(W / "store")],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(REPO))
-    for line in proc.stdout:
-        out.write(line)
-        out.flush()
-        if " INFO " not in line:
-            print(f"[{time.time() - t:6.0f}s] {line}", end="", flush=True)
-    proc.wait()
-print(f"run exit {proc.returncode} after {time.time() - t:.0f}s")''',
+    '''# The runs: the agent plays each game in turn, the model thinks when an expectation fails.
+# One game, one agent, one store; the model's server is shared. Every line goes to
+# run-<game>.txt and, as it comes, to this log, so a run in progress shows its cycles.
+for game in GAMES:
+    RUN = W / f"run-{game}.txt"
+    t = time.time()
+    with open(RUN, "w") as out:
+        proc = subprocess.Popen(
+            [sys.executable, "-u", str(REPO / "scripts" / "run_game.py"), game, str(CYCLES),
+             "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS), "--prompt", PROMPT,
+             "--offline-dir", str(ENVS), "--out", str(W / f"store-{game}")],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(REPO))
+        for line in proc.stdout:
+            out.write(line)
+            out.flush()
+            if " INFO " not in line:
+                print(f"[{game} {time.time() - t:6.0f}s] {line}", end="", flush=True)
+        proc.stdout.close()
+        proc.wait()
+    print(f"{game}: run exit {proc.returncode} after {time.time() - t:.0f}s", flush=True)''',
     # ── 8 ──
     '''print("==== vLLM throughput lines (last 5)")
 print("\\n".join([l for l in LOG.read_text().splitlines() if "throughput" in l][-5:]))
@@ -200,7 +202,7 @@ def _pack(dest: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=sorted(MODELS), default="35b-a3b")
-    ap.add_argument("--game", default="ls20")
+    ap.add_argument("--game", default="ls20", help="one game, or several separated by commas, played in turn")
     ap.add_argument("--cycles", type=int, default=60)
     ap.add_argument("--max-tokens", type=int, default=12288)
     ap.add_argument("--max-model-len", type=int, default=65536)
@@ -222,7 +224,8 @@ def main() -> None:
         "licenses": [{"name": "CC0-1.0"}],
     }, indent=1))
 
-    params = (f"GAME = {a.game!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\nPROMPT = {a.prompt!r}\n")
+    games = [g.strip() for g in a.game.split(",") if g.strip()]
+    params = (f"GAMES = {games!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\nPROMPT = {a.prompt!r}\n")
     cells = [c.replace('"MANIFEST"', f'"{manifest}"').replace('"SERVED"', f'"{served}"')
              .replace('"MAX_MODEL_LEN"', f'"{a.max_model_len}"') for c in CELLS]
     cells[6] = params + cells[6]
