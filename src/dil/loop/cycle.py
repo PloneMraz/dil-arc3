@@ -196,6 +196,11 @@ class RespondContext:
     expectations: tuple[Any, ...]
     # What the region supplied this cycle, including the afforded entity set.
     host: HostCycleInput
+    # DEVIATION from dil-core, declared: the actions T5 pushed to the region as
+    # tests this cycle (§6.4). dil-core hands them to the host after the cycle
+    # (`CycleResult.tests`); a host whose body carries them out needs them here,
+    # where the committed action is formed.
+    tests: tuple[Any, ...] = ()
 
 
 # Builds the cycle's committed action (DECIDE@IMPL, host-declared).
@@ -262,6 +267,8 @@ class CycleResult:
     # DEVIATION from dil-core, declared: how many data the agent wrote this
     # cycle, so the daemon can commit on it (dil-arc3's commit cadence).
     written: int = 0
+    # The actions T5 pushed to the region as tests this cycle (§6.4).
+    tests: tuple[Any, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1085,6 +1092,7 @@ class Cycle:
                     field=field,
                     expectations=pass_.t5.results,
                     host=host,
+                    tests=pass_.t5.tests,
                 )
             ),
             issuing_layer=8,
@@ -1289,6 +1297,7 @@ class Cycle:
             absences=len(pass_.t7.absences),
             collision_sources=tuple(collision_sources),
             written=len(written_tags),
+            tests=pass_.t5.tests,
         )
 
 

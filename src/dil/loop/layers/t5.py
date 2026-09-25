@@ -17,6 +17,8 @@ Ported from dil-core against DIL protocol v0.3.3.
 
 from __future__ import annotations
 
+import inspect
+
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
@@ -137,6 +139,31 @@ class T5Output:
     results: tuple[T5Result, ...] = dc_field(default_factory=tuple)
     # What the rule wrote this cycle, in order; the driver takes each into `[data]`.
     writes: tuple[WriteRequest, ...] = dc_field(default_factory=tuple)
+    # The actions the rule pushed to the region as tests this cycle, in order (§6.4).
+    tests: tuple[Any, ...] = dc_field(default_factory=tuple)
+
+
+# An action pushed to the region to test an expectation (§6.4): "an action that
+# pushes to the region to see whether the return matches the Expectation just
+# built". The rule thinks; it does not act: a test is recorded as an emission
+# from T5, and it reaches the region only if the host has a body to carry it
+# out. Ported from dil-core a8ef7ce.
+TestFn = Callable[[Any], None]
+
+
+def region_test(action: Any) -> dict[str, Any]:
+    """The emission a test is recorded as: an action for the region, from T5."""
+    return {"kind": "test", "action": action}
+
+
+def _takes_test(rule: Callable[..., Any]) -> bool:
+    """Whether a rule receives `test`: rules written before it existed do not."""
+    try:
+        params = inspect.signature(rule).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(p.kind is p.VAR_KEYWORD or p.name == "test" for p in params) or \
+        sum(p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) for p in params) >= 7
 
 
 def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
@@ -156,6 +183,7 @@ class T5(BaseLayer):
         predict: PredictRule | None = None,
     ) -> None:
         self._predict = predict if predict is not None else persistence
+        self._predict_tests = _takes_test(self._predict)
         self._window_size = (
             baseline_window if baseline_window is not None else BASELINE_WINDOW
         )
@@ -199,6 +227,13 @@ class T5(BaseLayer):
         def write(request: WriteRequest) -> None:
             writes.append(request)
 
+        # And its road to the region: a test, recorded from T5 (§6.4).
+        tests: list[Any] = []
+
+        def test(action: Any) -> None:
+            tests.append(action)
+            emit(region_test(action))
+
         for b in input.bound:
             entity_id = b.entity_id
             observed = b.unit
@@ -211,8 +246,10 @@ class T5(BaseLayer):
             # The rule may report upward into the field; the contribution is
             # bound to T5, since it is T5's declared rule that made it. It may
             # also ask the store; the query is traced to T5 for the same reason.
-            out = self._predict(
-                entity_id, tuple(window), observed, contribute, ask, write
+            out = (
+                self._predict(entity_id, tuple(window), observed, contribute, ask, write, test)
+                if self._predict_tests
+                else self._predict(entity_id, tuple(window), observed, contribute, ask, write)
             )
             declared = isinstance(out, Expecting)
             predicted = out.predicted if declared else out
@@ -261,7 +298,7 @@ class T5(BaseLayer):
                 )
             }
         )
-        return T5Output(results=tuple(results), writes=tuple(writes))
+        return T5Output(results=tuple(results), writes=tuple(writes), tests=tuple(tests))
 
     def info_units(self, output: T5Output) -> Sequence[InfoUnit]:
         # INV-4: predicted and observed are InfoUnits leaving the layer.

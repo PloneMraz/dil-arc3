@@ -40,23 +40,23 @@ they are not interchangeable:
 |---|---|
 | **DIL** | the operating mechanism of the whole. Not a part beside other parts — how the body runs. Present everywhere, located nowhere. |
 | **host** | the container and the sense organs. It declares its faculties; DIL threads through. |
-| **model** | the thinking organ. An organ, not a subject. |
-| **the self** | what occurs while the loop runs. **The self acts.** |
+| **model** | the thinking organ's engine: replaceable. The **mind** is the design — it reads, expects, is curious, wants, and constructs behaviour; another model changes how well it thinks, not what it is. |
+| **the self** | what the loop produces when it runs (§7): a law, not a part, **located in no file** — "host, self, and agent are one motion at three descriptive levels, not three entities" (§2). Its behaviour is the body's motion under the mind's command. The word is not used in the code (Plone, 2026-09-25). |
 
 ### The line that must not be crossed
 
-**The model commits no action.** It thinks: it works out the region's rules as a
-program, predicts what the region returns, and — from where the game stands —
-**proposes** the next action toward getting through the level (Plone,
-2026-09-25: "Mind đâu hành động, nó chỉ tính toán, tìm ra hướng đi, có kỳ vọng
-và đề xuất hướng đi, rồi self tạo ra hành vi để đáp ứng đề xuất đó thôi"). The
-proposal is data: it enters the field and so appraisal (§6.4 — an emission
-changes when "the InfoUnit set entering appraisal has changed"), and the self
-commits the move, through the host, after appraisal. The mind never reaches the
-committed action and never sees the afforded set; a proposal the region does not
-afford is not taken.
+**The mind acts on nothing; it commands, and the body carries out.** The body
+takes in what the region returns; the mind reads it, forms expectations, is
+curious and wants — in its thinking, not in a formula — and constructs the next
+action toward getting through the level; it commands it; the body carries it
+out; mismatch comes back; the loop goes on (Plone, 2026-09-25). The command is
+T5's **test** (§6.4: "an action that pushes to the region to see whether the
+return matches the Expectation just built"), recorded from T5 in `[event]` and
+carried out by the body at link 5 in the same cycle. The mind sees what the
+region offers — it reads everything — and a command the region does not afford
+is not carried out: the body waits.
 
-What judges a proposal is the region, never the mind: the move's return is
+What judges a command is the region, never the mind: the move's return is
 compared with what the program predicted, and when it does not hold, the
 program is scarred and the mind thinks again. That is what keeps the invariants:
 
@@ -66,10 +66,10 @@ program is scarred and the mind thinks again. That is what keeps the invariants:
   model is shown what the mind asked for and its short-term perception, bounded;
   never the whole history.
 - **INV-6** — model output is self-written; the returned grid is
-  environment-pushed. The proposal is the mind's; what comes back is the
+  environment-pushed. The command is the mind's; what comes back is the
   region's.
 - **INV-8** — appraisal may not draw its criteria from the state being edited.
-  The mind proposes; it does not score its proposal — the region's return does,
+  The mind commands; it does not score its command — the region's return does,
   and the scar lands on the program.
 
 ### What this settles about model choice
@@ -92,13 +92,20 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   and computes nothing from it: two signals a cycle, the frame (both grid stacks
   and the move, as the engine returned them) and the region's status. Never name
   a computation of the mind with a verb of the senses.
-- **The mind does not act; it proposes.** It supplies expectations and, from
-  its program's `propose(grid)`, a proposed next action, reported to the field
-  as `proposed:action:k` (and `proposed:x`/`y` for ACTION6). The self answers the
-  proposal first when the region affords it; otherwise curiosity shifted by want
-  decides as before. The mind never sees the afforded set or reaches the
-  committed action. What it sends out beyond the field is a question to its own
+- **The mind commands; the body carries out.** From its program's
+  `propose(grid)`, run on where the game stands once the region has said all it
+  says in a cycle, the mind pushes the next action as T5's `test` — if the
+  region affords it (RESET always). `src/arc3/command.py` carries it out and
+  weighs nothing. With no such command the mind thinks again while the body
+  waits (`MAX_WAIT_THOUGHTS = 2`, declared, not measured); then the body stands
+  still, and in an informational region the run ends — no action is made up in
+  the mind's place (Plone: "Cơ thể có thể đơ để đợi"). Cycle 0's RESET is the
+  host's start-up (§4). What else the mind sends out is a question to its own
   memory: `ask(cue)`, a store query, traced to T5 with register ↔.
+- **Curiosity, want and expectation are the mind's, arising in its thinking.**
+  Nothing in code computes or weighs them: the per-action `resolved`,
+  `progress` and `valence` readings and the formula that composed them are gone
+  (Plone, 2026-09-25).
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
   through the levels; no kind of game, mechanic or strategy is named. It enters
@@ -144,7 +151,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   expectation it made; the observation repeated, for a standing one — each with
   its own scar record of the same ResistEvent. A scar used again returns to
   `running`, so the program circulates between the two as its expectations meet
-  the region. This is how the mind turns the self: what enters appraisal
+  the region. This is how the mind turns behaviour: what enters appraisal
   changes (§6.4). A mismatch with the agent's own revision coming back from the
   store scars no expecting side.
 - **The cycle datum goes to `scar` only when what it carries collides**: an
@@ -170,11 +177,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   meets one resistance source, the frame, and C7 establishes diversity-loss.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
-- **The onlooker's remark reaches the mind, and reaches the self only through
-  it.** A change of the onlooker's stance sets the mind thinking, and the model
-  is shown what it says; what the self reads is still the field the mind
-  reports, per action, from how the program holds. Whether that is enough to
-  turn behaviour is not yet measured.
+- **The onlooker's remark reaches behaviour only through the mind.** A change of
+  its stance sets the mind thinking and the model is shown what it says; the
+  next command is the mind's. Whether that turns behaviour is not yet measured.
 - **One expectation a run is not attributed**: the cycle the program first
   comes back, T5 meets the frame before the store arrival that tells the mind
   its datum's id. Every later one is the program's.
@@ -241,7 +246,7 @@ are below.
 - **Tag H — situation fit.** The frame fits when the grid the mind's program
   predicted equals, cell for cell, the grid the region returned (the last of each
   stack); the region's status, when the region reports what it reported last —
-  its `context`, the action just taken, is the self's and is not expected back.
+  its `context`, the action just taken, is the agent's own and is not expected back.
   Not against a correct answer: no answer is ever revealed during a run.
 - **Tag F — open-tag keys.** Declared in `src/arc3/decisions.py`
   (`OPEN_TAG_KEYS`): `domain`, `kind`, `source`, `object`, `sense`, each naming
@@ -257,14 +262,13 @@ two in its own form (a `present` set, a `predict` rule for T5).
 1. **`HostCycleInput.afforded` → `T7Input.present`.** T7 registers an absence
    only against entities the region says are there.
 2. **T5's `PredictRule`** — the seam the mind plugs into. It supplies the
-   expectation and nothing else; it may `ask` and `write`.
+   expectation; it may `ask`, `write` and `test` (dil-core `a8ef7ce`).
 3. **`Cycle(respond=...)`, a host-declared `RespondPolicy`**, at the close of the
-   meaning-channel after appraisal, issuing layer T8 — **not in a layer**, since
-   a layer emitting the move would make the thinking organ the actor.
-   `src/arc3/respond.py` commits the afforded action the mind is learning fastest
-   about, shifted by how the region answered it — `−(progress + valence)`, lower
-   first, an untried action first — and reads only the field. From a terminal
-   frame it commits RESET.
+   meaning-channel after appraisal, issuing layer T8, with the cycle's T5 tests in
+   `RespondContext.tests`. `src/arc3/command.py` is the body carrying out the
+   mind's command: the last T5 test, if the region affords it; RESET at cycle 0;
+   otherwise it waits. dil-core has no body and hands the tests over after the
+   cycle (`CycleResult.tests`).
 4. **`COMMIT_CADENCE`** (Plone: too costly for a full agent, right for this one):
    dil-arc3 also commits at the close of every cycle in which the agent wrote a
    datum, so every version of the program is in a snapshot tied to its place in

@@ -2,11 +2,13 @@
 
 The mind is the thinking: the model (Qwen3.6, served over HTTP) and the program
 it writes — `predict(grid, action, x, y)` and `propose(grid)` — kept as data in
-the store. It supplies expectations, proposes the next action toward getting
-through the level, and reports how its understanding stands; it never sees the
-afforded set and never reaches the committed action. The self acts, answering
-the proposal (Plone, 2026-09-25). What it is told its thinking is for is a prior
-in its store (`task.py`), recalled like anything else.
+the store. It reads what the body took in, expects, is curious and wants — in
+its thinking, not in a formula — and constructs the next action, commanding it
+as T5's test (§6.4); the body carries it out (`command.py`). It acts on nothing
+(Plone, 2026-09-25). What it is told its thinking is for is a prior in its store
+(`task.py`), recalled like anything else. The model is replaceable: another
+model is another endpoint, and changes how well the mind thinks, not what it
+is.
 
 The program is its understanding of the region. It predicts what the region
 returns for a move: the next grid, and — when it says so — what the region will
@@ -41,14 +43,15 @@ circulates between the two for as long as its expectations meet the region, and
 a third party reads each turn. A standing expectation is the observation it
 repeats.
 
-What it reports upward into the field (INV-7), per action, from its one
-understanding — the program:
-
-- `resolved:action:k` — how often the program's expectation held after k;
-- `progress:action:k` — how fast that is changing, which curiosity follows;
-- `valence:action:k` — how the region has answered k, read against the directive.
-
-The self's respond policy reads the field and nothing else.
+WHAT IT COMMANDS. When the region has said all it says in a cycle, the mind
+runs `propose` on where the game stands and, if the region affords the action
+(RESET always is), pushes it as T5's test: recorded from T5 in `[event]`, and
+carried out by the body in the same cycle. With no such command it thinks
+again while the body waits, at most MAX_WAIT_THOUGHTS times; then the body
+stands still. Until 2026-09-25 the mind reported `resolved`, `progress` and
+`valence` per action to the field and a policy weighed them: curiosity and want
+written as a formula, and a proposal read one cycle late (INV-7). Both are gone
+(LOG.md).
 
 The model is reached over an OpenAI-compatible HTTP endpoint (llama.cpp locally,
 vLLM on Kaggle) with the standard library only — `dependencies = []` holds.
@@ -91,18 +94,6 @@ STATUS_FIELDS: Final = ("stateTo", "levelsDelta", "depthDelta")
 # The keys a cue may carry: the open-tag dimensions (tag F) and provenance.
 CUE_KEYS: Final = frozenset({"domain", "kind", "source", "object", "sense", "provenance"})
 
-# The field keys the mind reports under, per action (INV-7, up-channel).
-RESOLVED_PREFIX: Final = "resolved:"
-PROGRESS_PREFIX: Final = "progress:"
-VALENCE_PREFIX: Final = "valence:"
-
-# How many uses of an action make one window of learning progress (DECLARED,
-# tunable, carried from the mind this replaced). Progress compares the last
-# window's accuracy with the one before it, so an action needs twice this many
-# uses before it has a progress at all; until then it counts as still being
-# learned, which is also what makes an untried action come first.
-PROGRESS_WINDOW: Final = 4
-
 # DECLARED limits on what one act of thinking can hold, set by the model's
 # context, not by the loop: how many steps the prompt shows, how many of the
 # program's misses it lists, how many questions one answer may put to memory,
@@ -117,41 +108,10 @@ MAX_MISSES_SHOWN: Final = 3
 MAX_ASKS: Final = 4
 MAX_RECALLED_LINES: Final = 40
 PROGRAM_SECONDS: Final = 2
-
-# The prompt the mind thought with until 2026-09-25, word for word: the grid
-# alone, no report from the game, no word of asking memory. Kept to measure
-# what the fuller prompt changed (`--prompt plain`): with it, the runs before
-# repeated exactly, so a first thought that repeats them too isolates the prompt.
-PROMPT_PLAIN: Final = """You are looking at a turn-based game on a 64x64 grid. Each cell holds a colour 0-15, shown as one hex digit.
-Actions are ACTION1..ACTION7; ACTION6 also carries a cell (x = column, y = row). Nobody has told you the rules; infer them from the evidence.
-
-{evidence}
-
-Write a Python function
-
-    def predict(grid: list[list[int]], action: int, x: int | None = None, y: int | None = None) -> list[list[int]]:
-
-that returns the next grid for ANY grid of this game and any action. Aim for the general
-mechanism (what moves, how far, what blocks it, anything that changes on every step), not a
-lookup of these particular transitions. Use only the Python standard library. Return only one
-```python code block."""
-
-FEEDBACK_PLAIN: Final = """Your function was run on those transitions. It got {ok}/{n} exactly right.
-Some it got wrong (expected vs yours, as changed cells relative to the grid before):
-{misses}
-
-Revise `predict` so it explains all the evidence. Return only one ```python code block."""
-
-# "task": what the mind is told comes from its store (`task.py`, a prior); "plain":
-# the prompt before 2026-09-25, word for word, kept for comparison. The fuller
-# prompt of the first v0.3.5 run is gone: with it the frame held on 4 cycles of
-# 59, against 36 with the plain one on the same mechanism (LOG.md, 2026-09-25).
-PROMPTS: Final = ("task", "plain")
-
-# The field keys a proposal is reported under (INV-7): per action, 1.0 for the
-# one proposed and 0.0 for the rest; and ACTION6's cell when that is proposed.
-PROPOSED_PREFIX: Final = "proposed:"
-
+# How many more times the mind thinks, in the same cycle, when it has no command
+# the body can carry out — while the body waits. DECLARED, not measured: a model
+# that fails this often leaves the body standing still, and the run ends.
+MAX_WAIT_THOUGHTS: Final = 2
 
 @dataclass(frozen=True, slots=True)
 class Transition:
@@ -187,29 +147,6 @@ def transition_of(payload: dict[str, Any]) -> Transition | None:
         )
     except (KeyError, IndexError, TypeError, ValueError):
         return None
-
-
-def region_valence(status: object, directive: dict[str, Any] | None) -> float:
-    """How the region answered, read against the directive the mind recalled.
-
-    The signs are not in this code: which of the region's states is the
-    objective, which ends the run without it, and what counts on the way come
-    from the directive, admitted as `prior` and recalled on a cue. With no
-    directive recalled every answer reads 0: a character with no problem to solve
-    has nothing to prefer.
-    """
-    if not isinstance(status, dict) or not directive:
-        return 0.0
-    objective = (directive.get("objective") or {}).get("state")
-    ended_without = (directive.get("ended_without") or {}).get("state")
-    if ended_without is not None and status.get("stateTo") == ended_without:
-        return -1.0
-    if objective is not None and status.get("stateTo") == objective:
-        return 1.0
-    toward = (directive.get("toward") or {}).get("count")
-    if toward == "levels_completed" and (status.get("levelsDelta") or 0) > 0:
-        return 1.0
-    return 0.0
 
 
 # ── rendering what the model is shown ──────────────────────────────────────
@@ -474,8 +411,12 @@ class ModelEndpoint:
     # Measured: 0.2 with thinking off wrote the 95% program on Kaggle (LOG.md,
     # 2026-09-24, run 2). Qwen's card recommends 0.7/0.8/20 for non-thinking; declared.
     temperature: float = 0.2
-    think: bool = False
     timeout: int = 3600
+    # Anything the served model needs beyond the OpenAI-compatible request — for
+    # Qwen with thinking off, {"chat_template_kwargs": {"enable_thinking": False}}.
+    # The mind knows no model: another model is another endpoint, and changes how
+    # well it thinks, not what the mind is.
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
 def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, dict[str, Any]]:
@@ -483,8 +424,7 @@ def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, 
         "model": endpoint.model, "messages": messages,
         "temperature": endpoint.temperature, "max_tokens": endpoint.max_tokens,
     }
-    if not endpoint.think:
-        payload["chat_template_kwargs"] = {"enable_thinking": False}
+    payload.update(endpoint.extra)
     req = urllib.request.Request(
         endpoint.url.rstrip("/") + "/chat/completions",
         data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"},
@@ -518,17 +458,12 @@ class Thought:
 
 
 class Mind:
-    """The one mind: a program the model writes, tested, rewritten on mismatch."""
+    """The one mind: it reads, expects, thinks, and commands the body's next action."""
 
     def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
-                 prompt: str = "task", task: dict[str, str] | None = None) -> None:
-        if prompt not in PROMPTS:
-            raise ValueError(f"prompt must be one of {PROMPTS}")
+                 task: dict[str, str] | None = None) -> None:
         self.endpoint = endpoint
         self._chat = chat_fn
-        # Which prompt it thinks with: "task" (what it is told, read from its
-        # store) or "plain" (the grid alone, word for word as before).
-        self.prompt = prompt
         # What it is told its thinking is for, once recalled (`task.py`), and the
         # datum it came from; a test may hand it in, as if recalled. A thought
         # that comes before it waits for it.
@@ -538,10 +473,7 @@ class Mind:
         self._pending: str | None = None
         self.code: str | None = None
         self._fn: Callable[..., Any] | None = None
-        # What the program proposes to do next, and every proposal so far with the
-        # frame call it was made at (for the run's report; the trace is the field).
         self._propose: Callable[..., Any] | None = None
-        self.proposals: list[tuple[int, Proposal | None]] = []
         self.version = 0
         # The program's datum in `[data]`, learned when it arrives back at T1.
         self.datum_id: str | None = None
@@ -558,29 +490,29 @@ class Mind:
         # from and, once it arrives, what the region reported — as long as T5's
         # window, and no longer.
         self._seen: list[tuple[Transition, InfoUnit]] = []
-        # What the program said of the status for the step just seen, and
-        # whether that step's expectation — frame and status — held.
         self._said: Status | None = None
         self._said_by_program = False
         self._status_seen_at: int | None = None
+        # What the region says it offers next, from its own report.
+        self._affords: tuple[int, ...] = ()
+        # A command still owed this cycle, once what it is for comes back.
+        self._command_due = False
         # The onlooker's current remark on its behaviour, as it last arrived.
         self._remark: dict[str, Any] | None = None
         self._thought_at: int | None = None
         self.frame_calls = 0
         self.thoughts: list[Thought] = []
-        # The directive, once recalled and run up the layers; None until then.
-        self._directive: dict[str, Any] | None = None
-        # Per action: whether the program's expectation held after it (1/0), in
-        # order, and every reading of how the region answered it. Accrued
-        # (INV-5); the field only ever carries the current reading.
-        self._uses: dict[str, list[int]] = {}
-        self._valence: dict[str, list[float]] = {}
+        # For the run's report only, never the field: whether each frame
+        # expectation held, and each command given (the trace is `[event]`).
+        self.holds: list[int] = []
+        self.commands: list[tuple[int, Proposal | None]] = []
 
     # ── what arrives ──
 
     def take_return(self, ret: dict[str, Any], write: Callable[[WriteRequest], None] | None,
-                    ask: Callable[[dict[str, str]], None] | None = None) -> None:
-        """A store return: its task, the directive, something it asked for, or its own program back."""
+                    ask: Callable[[dict[str, str]], None] | None = None,
+                    test: Callable[[Any], None] | None = None) -> None:
+        """A store return: its task, something it asked for, or its own program back."""
         open_tags = ret.get("open", {})
         payload = ret.get("payload")
         entity = str(ret.get("entity"))
@@ -588,9 +520,9 @@ class Mind:
             self._task, self._task_id = payload, entity
             if self._pending is not None:
                 self.think(self._pending, ask, write)
+            if self._command_due:
+                self.command(ask, write, test)
             return
-        if isinstance(payload, dict) and isinstance(payload.get("objective"), dict):
-            self._directive = payload
         kind = open_tags.get("kind")
         if kind == PROGRAM_TAGS["kind"]:
             if self.datum_id is None and isinstance(payload, dict) and payload.get("code") is not None:
@@ -612,51 +544,6 @@ class Mind:
         line = _recalled_line(kind, open_tags, payload)
         if line:
             self._recalled_lines[entity] = line
-
-    # ── what it knows so far ──
-
-    def directive(self) -> dict[str, Any] | None:
-        return self._directive
-
-    def resolution(self, context: str) -> float | None:
-        """How often the program's expectation held after this action, so far."""
-        uses = self._uses.get(context)
-        return sum(uses) / len(uses) if uses else None
-
-    def progress(self, context: str) -> float:
-        """How fast the program's hold on this action is changing.
-
-        The size of the change in accuracy between the last window of uses and
-        the one before. Curiosity follows it rather than ignorance: what cannot be
-        learned shows no progress, and is left alone (the "noisy TV" failure the
-        mind this replaced measured). A revision that suddenly explains an action
-        — or a world that changed under it — shows as progress again. Fewer than
-        two windows of uses counts as still being learned.
-        """
-        uses = self._uses.get(context, [])
-        if len(uses) < 2 * PROGRESS_WINDOW:
-            return 1.0
-        recent = uses[-PROGRESS_WINDOW:]
-        before = uses[-2 * PROGRESS_WINDOW:-PROGRESS_WINDOW]
-        return abs(sum(recent) / PROGRESS_WINDOW - sum(before) / PROGRESS_WINDOW)
-
-    def valence(self, context: str) -> float | None:
-        """How the region has answered this action, so far, on average."""
-        readings = self._valence.get(context)
-        return sum(readings) / len(readings) if readings else None
-
-    def report(self, context: str, contribute: Callable[[dict[str, float]], None] | None) -> None:
-        """Report this action's reading upward into the field (INV-7)."""
-        if contribute is None or not context:
-            return
-        reading: dict[str, float] = {PROGRESS_PREFIX + context: self.progress(context)}
-        resolution = self.resolution(context)
-        if resolution is not None:
-            reading[RESOLVED_PREFIX + context] = resolution
-        valence = self.valence(context)
-        if valence is not None:
-            reading[VALENCE_PREFIX + context] = valence
-        contribute(reading)
 
     def held_by(self) -> tuple[str, ...]:
         """The datum an expectation the program made is: the program's, once known."""
@@ -687,39 +574,34 @@ class Mind:
         self.frame_calls += 1
         # What its thinking is for, read from its own memory, once: the answer
         # arrives next cycle, and a thought before it waits for it.
-        if self.prompt == "task" and self._task is None and not self._task_asked and ask is not None:
+        if self._task is None and not self._task_asked and ask is not None:
             ask(dict(TASK_CUE))
             self._task_asked = True
-        # 1. Predict, from the situation alone.
+        # 1. Expect, from the situation alone.
         expected, said, by_program = self._expect_full(t)
         self._said, self._said_by_program = said, said is not None
         predicted = InfoUnit(
             content={**content, "value": {**payload, "grids": [expected]}},
             ref_frame=observed.ref_frame, t=observed.t,
         )
-        # 2. Then look: this step joins short-term perception, and the program's
-        #    hold under this action accrues.
+        # 2. Then look: this step joins short-term perception.
         self._seen = [*self._seen, (t, observed)][-BASELINE_WINDOW:]
         hit = expected == t.after
-        context = str(payload.get("context") or "")
-        if context:
-            self._uses.setdefault(context, []).append(int(hit))
+        self.holds.append(int(hit))
         # 3. The expectation failed: think. A mismatch is the loop's to register;
         #    thinking is the mind's.
         if not hit:
             self.think("frame", ask, write)
-        self.report(context, contribute)
-        # 4. From where the game now stands, what it proposes to do next.
-        self.propose_from(t.after, contribute)
         held = self.held_by() if by_program else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
     def on_status(self, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
-                  window, contribute, ask, write) -> InfoUnit | Expecting:
+                  window, contribute, ask, write, test) -> InfoUnit | Expecting:
         standing_unit = window[-1] if window else observed
         standing = _content_value(standing_unit)
         status_now = payload.get("status") if isinstance(payload.get("status"), dict) else None
-        context = str(payload.get("context") or "")
+        # What the region says it offers next.
+        self._affords = tuple(int(a) for a in payload.get("affords") or ())
         # The step just seen gets what the region reported of itself.
         if self._seen and self._status_seen_at != self.frame_calls and status_now is not None:
             t, unit = self._seen[-1]
@@ -727,8 +609,7 @@ class Mind:
             self._status_seen_at = self.frame_calls
         # The expectation: what the region reported last, under this action —
         # or, where the program said the status, what it said, the fields it
-        # left out staying as they were (the state it is in, no change in levels
-        # or depth), as the model is told and as its programs are scored.
+        # left out staying as they were.
         value = standing if isinstance(standing, dict) else dict(payload)
         value = {**value, "context": payload.get("context")} if "context" in payload else value
         if self._said_by_program and status_now is not None:
@@ -739,18 +620,10 @@ class Mind:
             base = standing_unit.content if isinstance(standing_unit.content, dict) else {}
             predicted = InfoUnit(content={**base, "value": value}, ref_frame=standing_unit.ref_frame,
                                  t=standing_unit.t)
-        hit = value == payload
-        # A miss here is the program's too, when it said the status: this step's
-        # expectation did not hold.
-        if not hit and context and self._uses.get(context):
-            self._uses[context][-1] = 0
-        if context and status_now is not None:
-            self._valence.setdefault(context, []).append(region_valence(status_now, self._directive))
-            self.report(context, contribute)
-        if not hit:
+        if value != payload:
             self.think("status", ask, write)
-        # What it is: the observation it stands on, and the program, when the
-        # program said the status.
+        # The region has said all it says this cycle: construct the next action.
+        self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()
         if self._said_by_program:
             held = (*held, *self.held_by())
@@ -766,45 +639,59 @@ class Mind:
             self.think("onlooker", ask, write)
         return predicted
 
-    # ── proposing ──
+    # ── commanding ──
 
-    def propose_from(self, grid: Grid, contribute: Callable[[dict[str, float]], None] | None) -> None:
-        """Report upward what the program proposes to do next from this state.
+    def command(self, ask, write, test) -> None:
+        """Construct the next action from where the game stands, and command it.
 
-        The mind acts on nothing: it computes a direction and proposes it, and the
-        proposal enters the field like any reading (INV-7) — the self answers it
-        (§6.4: what enters appraisal changed). Per action, 1.0 for the one proposed
-        and 0.0 for the rest, so a proposal withdrawn is withdrawn in the field too.
+        The mind acts on nothing: the command is T5's test (§6.4), recorded from
+        T5, and the body carries it out if the region affords it. Curiosity,
+        want and expectation are the mind's thinking, in the program it wrote;
+        nothing here weighs them. With no command the body can carry out, the
+        mind thinks again while the body waits — at most MAX_WAIT_THOUGHTS
+        times; then the body stands still.
         """
-        if contribute is None or self._fn is None:
+        if not self._seen:
             return
-        proposal: Proposal | None = None
-        if self._propose is not None:
-            try:
-                proposal = run_propose(self._propose, grid)
-            except ProgramError:
-                proposal = None
-        self.proposals.append((self.frame_calls, proposal))
-        reading = {f"{PROPOSED_PREFIX}action:{k}": (1.0 if proposal and proposal[0] == k else 0.0)
-                   for k in range(1, 8)}
-        if proposal and proposal[1] is not None:
-            reading[f"{PROPOSED_PREFIX}x"] = float(proposal[1])
-            reading[f"{PROPOSED_PREFIX}y"] = float(proposal[2])
-        contribute(reading)
+        if self._task is None:
+            self._command_due = True  # it waits for what it is for
+            return
+        self._command_due = False
+        grid = self._seen[-1][0].after
+        for attempt in range(MAX_WAIT_THOUGHTS + 1):
+            proposal = self._proposal(grid)
+            if proposal is not None and (proposal[0] == 0 or proposal[0] in self._affords):
+                self.commands.append((self.frame_calls, proposal))
+                if test is not None:
+                    action, x, y = proposal
+                    test({"kind": "move", "actionId": action, "x": x, "y": y})
+                return
+            if attempt < MAX_WAIT_THOUGHTS:
+                self.think("no command", ask, write, again=True)
+        self.commands.append((self.frame_calls, None))
+
+    def _proposal(self, grid: Grid) -> Proposal | None:
+        if self._propose is None:
+            return None
+        try:
+            return run_propose(self._propose, grid)
+        except ProgramError:
+            return None
 
     # ── thinking ──
 
     def think(self, on: str, ask: Callable[[dict[str, str]], None] | None,
-              write: Callable[[WriteRequest], None] | None) -> None:
-        """An expectation met a mismatch: have the model write a better program.
+              write: Callable[[WriteRequest], None] | None, again: bool = False) -> None:
+        """An expectation met a mismatch, or no command came: have the model think.
 
         The evidence is what the store answered to what it asked (oldest), and
         the steps it has just seen — each with the datum it came from, so a write
-        records exactly what it was built from. Once a cycle at most.
+        records exactly what it was built from. Once a cycle for a mismatch;
+        `again` is the body waiting for a command.
         """
-        if self._thought_at == self.frame_calls:
+        if self._thought_at == self.frame_calls and not again:
             return
-        if self.prompt == "task" and self._task is None:
+        if self._task is None:
             # What it is for has not come back from memory yet: the thought waits.
             self._pending = on
             return
@@ -824,30 +711,29 @@ class Mind:
         while len(chosen) > 1 and len(render_evidence([t for t, _ in chosen])) > MAX_EVIDENCE_CHARS:
             chosen = chosen[1:]
         shown = [t for t, _ in chosen]
-        plain = self.prompt == "plain"
         # Programs are scored on the grid alone, as the model is asked to predict it.
         evidence = [dataclasses.replace(t, status=None) for t in shown]
-        lines = [] if plain else list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
+        lines = list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
         built_from = (tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
-                      + ((self._task_id,) if self._task_id is not None and not plain else ()))
+                      + ((self._task_id,) if self._task_id is not None else ()))
         held_ok, held_misses = score(self._fn, evidence)
-        if plain:
-            first = PROMPT_PLAIN.format(evidence=render_evidence(evidence))
-            feedback = FEEDBACK_PLAIN
-        else:
-            also = ""
-            if lines:
-                also += "\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n"
-            if self._remark and self._remark.get("remark"):
-                also += f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
-            grid = shown[-1].after if shown else [[]]
-            first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
-                                              evidence=render_evidence(shown, report=True), also=also)
-            feedback = self._task["feedback"]
+        also = ""
+        if self._affords:
+            offered = ", ".join(f"ACTION{a}" for a in self._affords)
+            also += f"\nThe game now offers: {offered} (and RESET, 0).\n"
+        if lines:
+            also += "\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n"
+        if self._remark and self._remark.get("remark"):
+            also += f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
+        if on == "no command":
+            also += "\nYour propose gave no action the game offers now.\n"
+        grid = shown[-1].after if shown else [[]]
+        first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
+                                          evidence=render_evidence(shown, report=True), also=also)
         messages = [{"role": "user", "content": first}]
         if self.code is not None:
             messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
-            messages.append({"role": "user", "content": feedback.format(
+            messages.append({"role": "user", "content": self._task["feedback"].format(
                 ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses))})
         try:
             text, usage = self._chat(self.endpoint, messages)
@@ -871,7 +757,10 @@ class Mind:
             self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, str(exc), on, asks))
             return
         cand_ok, _ = score(fn, evidence)
-        adopted = self._fn is None or cand_ok > held_ok
+        # Kept when it explains the evidence better; when the body is waiting for
+        # a command, also when it explains as much and can give one.
+        adopted = (self._fn is None or cand_ok > held_ok
+                   or (on == "no command" and cand_ok >= held_ok and propose is not None))
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, "", on, asks))
         if not adopted:
             return
@@ -891,15 +780,8 @@ class Mind:
     def _misses_text(self, misses: list[tuple[Transition, Any]]) -> str:
         out = []
         for t, got in misses[:MAX_MISSES_SHOWN]:
-            if isinstance(got, str):
-                mine = got
-            else:
-                grid, said = got
-                mine = describe_change(t.before, grid)
-                if t.status is not None:
-                    mine += describe_status(expected_status(said, _no_change(t.status)))
-            out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}{describe_status(t.status)}"
-                       f"\n  yours:    {mine}")
+            mine = got if isinstance(got, str) else describe_change(t.before, got[0])
+            out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
         return "\n".join(out)
 
 
@@ -926,8 +808,8 @@ def standing_status(held: InfoUnit, payload: dict[str, Any]) -> InfoUnit:
     """What the region is expected to report: what it reported last, under this action.
 
     The status payload carries the action just taken as its `context`, and that
-    is the self's act, not the region's word — T2 classifies it, and the self
-    knows it before the region answers. Expecting last cycle's action back would
+    is the agent's own act, not the region's word — T2 classifies it, and the
+    mind knows it before the region answers. Expecting last cycle's action back would
     register every change of move as the region resisting: on the first Kaggle
     run, 42 of 45 status scars were that and nothing else (LOG.md, 2026-09-24).
     So the standing expectation holds what the region said, and takes the context
@@ -944,7 +826,7 @@ def standing_status(held: InfoUnit, payload: dict[str, Any]) -> InfoUnit:
 def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     """The mind at T5's seam (`PredictRule`): one rule, one mind, every arrival."""
 
-    def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None):
+    def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None):
         content = observed.content if isinstance(observed.content, dict) else {}
         channel = content.get("channel")
         payload = _content_value(observed)
@@ -954,7 +836,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
             # Something the character asked its store for, arriving like any
             # other return. The mind reads it; it is not an Other to predict.
             if isinstance(payload, dict):
-                mind.take_return(payload, write, ask)
+                mind.take_return(payload, write, ask, test)
             return observed
 
         if channel == FRAME_CHANNEL and isinstance(payload, dict):
@@ -963,7 +845,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
                 return mind.on_frame(t, observed, content, payload, window, contribute, ask, write)
 
         if channel == STATUS_CHANNEL and isinstance(payload, dict):
-            return mind.on_status(observed, content, payload, window, contribute, ask, write)
+            return mind.on_status(observed, content, payload, window, contribute, ask, write, test)
 
         if channel == ONLOOKER_CHANNEL and isinstance(payload, dict):
             return mind.on_remark(observed, payload, window, contribute, ask, write)
@@ -974,17 +856,16 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
 
 
 def create_mind(endpoint: ModelEndpoint | None = None,
-                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat, prompt: str = "task",
+                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
                 task: dict[str, str] | None = None) -> Mind:
-    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, prompt, task)
+    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, task)
 
 
 __all__ = [
-    "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS",
-    "PROGRAM_TAGS", "PROGRESS_PREFIX", "PROGRESS_WINDOW", "RESOLVED_PREFIX", "STATUS_FIELDS", "VALENCE_PREFIX",
-    "PROMPTS", "PROMPT_PLAIN", "PROPOSED_PREFIX", "Proposal",
-    "Mind", "ModelEndpoint", "ProgramError", "Thought", "Transition",
-    "chat", "compile_functions", "compile_program", "create_mind", "run_propose", "expected_status", "extract_asks", "mind_rule",
-    "region_valence", "render_evidence", "run_full", "run_program", "score", "standing_status",
+    "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "MAX_WAIT_THOUGHTS",
+    "PROGRAM_SECONDS", "PROGRAM_TAGS", "STATUS_FIELDS",
+    "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
+    "chat", "compile_functions", "compile_program", "create_mind", "expected_status", "extract_asks",
+    "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "score", "standing_status",
     "transition_of",
 ]

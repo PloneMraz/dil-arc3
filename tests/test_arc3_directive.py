@@ -1,17 +1,18 @@
-"""The directive: recalled from the store, then read by the mind.
+"""The directive: host data admitted as `prior`, recalled on a cue, read by the model.
 
-Until 2026-09-23 the signs the mind put on the region's answers were written in
-its code. They now come from the directive, which is host data admitted as
-`prior` and recalled by T3 when the region's status first arrives. These pin
-both halves: the mind reads nothing into an answer without a directive, and the
-directive reaches the mind by the protocol's road, not a side door.
+It no longer reaches behaviour through a formula — the signs a formula put on
+the region's answers were a want written in code, and want is the mind's, arising
+in its thinking (Plone, 2026-09-25). What is pinned: the directive reaches the
+mind by the protocol's road, not a side door, and when the mind thinks, the
+model is shown what it recalled.
 """
 
 from __future__ import annotations
 
-from arc3.mind import create_mind, mind_rule, region_valence
-from arc3.observe import FRAME_CHANNEL, REGION_ENTITY, STATUS_CHANNEL, admit, transducers
+from arc3.mind import ModelEndpoint, create_mind, mind_rule
+from arc3.observe import FRAME_CHANNEL, REGION_ENTITY, STATUS_CHANNEL, transducers
 from arc3.prior import DIRECTIVE, RULES
+from arc3.task import MIND_TASK
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
@@ -27,51 +28,34 @@ from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
 from dil.store.tagging_gate import HostDatum, admit_host_data
 
-WON = {"stateTo": "WIN", "levelsDelta": 0}
-LOST = {"stateTo": "GAME_OVER", "levelsDelta": 0}
-LEVEL = {"stateTo": "NOT_FINISHED", "levelsDelta": 1}
-NOTHING = {"stateTo": "NOT_FINISHED", "levelsDelta": 0}
+NOTHING = {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
+SAID = "You are playing a game. Your goal is to win."
 
 
-# ── the mind reads against the directive, and only against it ──
+class Listener:
+    """A model that only records what it was shown."""
 
+    def __init__(self):
+        self.prompts = []
 
-def test_with_no_directive_nothing_is_better_or_worse():
-    """A character with no problem to solve has nothing to prefer."""
-    for status in (WON, LOST, LEVEL, NOTHING):
-        assert region_valence(status, None) == 0.0
-
-
-def test_the_directive_says_which_answers_are_toward_and_which_away():
-    d = DIRECTIVE.payload
-    assert region_valence(WON, d) == 1.0
-    assert region_valence(LEVEL, d) == 1.0
-    assert region_valence(LOST, d) == -1.0
-    assert region_valence(NOTHING, d) == 0.0
-
-
-def test_the_mind_takes_up_a_recalled_directive_and_nothing_else():
-    mind = create_mind()
-    mind.take_return({"entity": "prior:world", "payload": {"says": []}, "open": {}}, None)
-    assert mind.directive() is None
-    mind.take_return({"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}, None)
-    assert mind.directive() == DIRECTIVE.payload
+    def __call__(self, endpoint, messages):
+        self.prompts.append(messages)
+        return "", {}
 
 
 def test_a_recalled_datum_is_read_not_predicted_as_an_other():
-    mind = create_mind()
+    mind = create_mind(ModelEndpoint(), chat_fn=Listener(), task=MIND_TASK.payload)
     rule = mind_rule(mind)
     from dil.loop.types import InfoUnit, RefFrame
 
     unit = InfoUnit(
         content={"infoType": "raw", "channel": STORE_CHANNEL,
-                 "value": {"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}},
+                 "value": {"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": DIRECTIVE.open}},
         ref_frame=RefFrame(bound_layer=3, ref=f"channel:{STORE_CHANNEL}"),
         t=1,
     )
     assert rule(DIRECTIVE.id, (), unit) is unit
-    assert mind.directive() == DIRECTIVE.payload
-    assert mind.frame_calls == 0 and mind.valence("action:1") is None, "it did not become an Other the mind predicts"
+    assert mind.frame_calls == 0, "it did not become an Other the mind predicts"
 
 
 # ── end to end: status arrives, the directive is recalled, the mind reads it ──
@@ -94,8 +78,9 @@ def _store_with_rules():
     return data
 
 
-def test_the_first_status_report_brings_the_directive_to_mind():
-    mind = create_mind()
+def test_the_first_status_report_brings_the_directive_to_mind_and_the_model_reads_it():
+    model = Listener()
+    mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload)
     data, events = _store_with_rules(), create_event_log()
     layers = Layers(
         t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -106,10 +91,7 @@ def test_the_first_status_report_brings_the_directive_to_mind():
                          events=events, initial_emission=Emission(action=None))
 
     cycle.run(HostCycleInput(signals=(_status(1, NOTHING),)))
-    assert mind.directive() is None, "asked for this cycle, not yet arrived"
-
     cycle.run(HostCycleInput(signals=(_status(2, NOTHING),)))
-    assert mind.directive() == DIRECTIVE.payload
     # A status report is about the region's status, its levels, and what may be
     # done next: what is about those came to mind; what is about seeing did not,
     # because nothing has been seen yet.
@@ -122,9 +104,13 @@ def test_the_first_status_report_brings_the_directive_to_mind():
         "actions": "running", "seeing": "prior", "world": "prior",
     }
 
-    # From here the region's answers are read against it.
-    cycle.run(HostCycleInput(signals=(_status(3, LEVEL),)))
-    assert mind.valence("action:1") is not None and mind.valence("action:1") > 0
+    # When the mind next thinks, the model is shown what it recalled.
+    grid, moved = [[0, 0], [0, 0]], [[1, 0], [0, 0]]
+    miss = Signal(source_id=FRAME_CHANNEL, raw_payload={
+        "entity": "frame", "before": [grid], "grids": [moved],
+        "move": {"kind": "move", "actionId": 1, "x": None, "y": None}, "context": "action:1"}, t=3)
+    cycle.run(HostCycleInput(signals=(miss,)))
+    assert model.prompts and SAID in model.prompts[-1][0]["content"]
 
     # The first frame seen brings what the character was told about seeing. What
     # it was told about the world's things has no arrival that is about things

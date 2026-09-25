@@ -12,9 +12,10 @@ The words are this project's own, not quoted from the competition's documents,
 and the tag says so (`source: dil-arc3`). They are neutral: the scored games are
 unseen, so nothing here names a kind of game, a mechanic or a strategy. They
 give the aim — to get through the levels — and the task that serves it: work the
-rules out as a program that says what the game returns, and propose the next
-action toward the aim. Proposing is not acting: the proposal is data the self
-answers (§6.4); the mind acts on nothing.
+rules out as a program that says what the game returns, and give the next action
+toward the aim. The mind commands it as T5's test (§6.4) and the body carries it
+out; the mind acts on nothing. Curiosity, want and expectation are left to the
+thinking: nothing here names them.
 
 `{rows}`, `{cols}`, `{evidence}` and `{also}` are filled when the mind thinks.
 """
@@ -30,7 +31,7 @@ TASK_SOURCE: Final = "dil-arc3"
 
 TASK: Final = """You are meeting a game you have not seen before. The aim is to find how to get through its levels. Nobody has told you its rules: work them out from what you have seen.
 
-Each step shows the game's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what the game returned. Actions are ACTION1 to ACTION7; ACTION6 also carries a cell (x = column, y = row).
+Each step shows the game's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what the game returned. Actions are RESET (0) and ACTION1 to ACTION7; ACTION6 also carries a cell (x = column, y = row). Only the actions the game offers at a step can be taken there.
 
 {evidence}
 {also}
@@ -39,7 +40,7 @@ Write two Python functions, using only the standard library:
     def predict(grid, action, x=None, y=None):
         # the grid the game will return for this state and this action
     def propose(grid):
-        # the action you would take next to get through the level: (action, x, y)
+        # the action to take next, from this state, to get through the level: (action, x, y)
 
 State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program; provenance: scar or running)."""
 

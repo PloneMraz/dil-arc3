@@ -29,7 +29,7 @@ class IllegalMove(Exception):
 
 @dataclass(frozen=True, slots=True)
 class Move:
-    """One action the self may emit: an id, plus coordinates when id is 6.
+    """One action the agent may commit: an id, plus coordinates when id is 6.
 
     RHAE counts every one of these. Deliberation is free; this is not.
     """

@@ -75,7 +75,7 @@ class Script:
         return f"```python\n{code}```\n{ask}", {"completion_tokens": 10, "seconds": 0.0}
 
 
-def loop(model: Script):
+def loop(model: Script, respond=None):
     # What the mind is told, handed in as if recalled; the store's road is tested
     # on its own below.
     wm = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload)
@@ -89,6 +89,7 @@ def loop(model: Script):
         ),
         glob=glob, data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
+        **({"respond": respond} if respond is not None else {}),
     )
     loop.glob = glob
     return wm, cycle, data, events
@@ -212,7 +213,7 @@ def test_evidence_that_would_not_fit_the_context_is_dropped_oldest_first(monkeyp
     assert wm.thoughts[-1].evidence == 1, "the older transition was dropped to fit"
 
 
-# ── what the one mind reports to the field, which is all the self reads ──
+# ── the region's own report ──
 
 
 def status(state: str = "NOT_FINISHED", levels: int = 0, action: int = 1) -> Signal:
@@ -223,33 +224,11 @@ def status(state: str = "NOT_FINISHED", levels: int = 0, action: int = 1) -> Sig
     })
 
 
-def test_the_mind_reports_per_action_how_its_program_holds_and_how_fast_that_moves():
-    model = Script(RIGHT)
-    wm, cycle, data, events = loop(model)
-    run(cycle, frame(lit(0), lit(1)))            # miss: nothing changes was wrong
-    run(cycle, frame(lit(1), lit(2)))            # hit: the program holds
-    field = loop.glob.current().params
-    assert field["resolved:action:1"] == 0.5, "one frame of two after ACTION1 predicted"
-    assert field["progress:action:1"] == 1.0, "too few uses to have a progress: still being learned"
-    assert wm.resolution("action:1") == 0.5
-
-
-def test_progress_is_the_change_between_the_last_two_windows_of_uses():
-    wm = create_mind(ModelEndpoint(), chat_fn=Script())
-    wm._uses["action:1"] = [0, 0, 0, 0, 1, 1, 1, 1]
-    assert wm.progress("action:1") == 1.0, "a revision that suddenly explains it: learning"
-    wm._uses["action:1"] = [1] * 8
-    assert wm.progress("action:1") == 0.0, "held and settled: nothing left to learn here"
-
-
-def test_the_region_is_answered_against_the_directive_and_the_status_is_the_standing_expectation():
+def test_the_status_is_the_standing_expectation_and_its_mismatch_sets_the_mind_thinking():
     model = Script()
     wm, cycle, data, events = loop(model)
-    wm.take_return({"entity": DIRECTIVE.id, "payload": DIRECTIVE.payload, "open": {}}, None)
     run(cycle, status())
-    run(cycle, status(levels=1))                 # a level: toward the objective
-    field = loop.glob.current().params
-    assert field["valence:action:1"] > 0
+    run(cycle, status(levels=1))                 # a level: the region said something new
     scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
     # Both sides of the one mismatch (v0.3.5): the status that returned, and the
     # status the standing expectation was.
@@ -276,6 +255,9 @@ def test_a_change_of_move_is_not_the_region_resisting():
 SAYS_LEVEL = '''
 def predict(grid, action, x=None, y=None):
     return {"grid": [row[:] for row in grid], "status": {"levelsDelta": 1}}
+
+def propose(grid):
+    return (1, None, None)
 '''
 
 
@@ -300,27 +282,7 @@ def test_a_program_that_says_the_status_is_what_meets_the_status_when_it_fails()
 
 
 
-def test_the_plain_prompt_is_the_grid_alone_as_before():
-    from arc3.mind import PROMPT_PLAIN
-
-    model = Script(RIGHT)
-    wm = create_mind(ModelEndpoint(), chat_fn=model, prompt="plain")
-    rule = mind_rule(wm)
-    data, events = create_data_store(), create_event_log()
-    cycle = create_cycle(
-        layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-                      t5=create_t5(predict=rule), t6=create_t6(), t7=create_t7(), t8=create_t8()),
-        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
-        initial_emission=Emission(action="boot"), admit=admit,
-    )
-    run(cycle, frame(lit(0), lit(1)), status())
-    shown = model.prompts[0][0]["content"]
-    t = Transition(before=lit(0), action=1, x=None, y=None, after=lit(1))
-    assert shown == PROMPT_PLAIN.format(evidence=render_evidence([t])), "word for word, no report, no asking"
-    assert "ASK" not in shown and "game:" not in shown
-
-
-# ── what it is told, from its store; what it proposes; what the self does ──
+# ── what it is told, from its store; what it commands; what the body does ──
 
 
 PROPOSING = '''
@@ -367,41 +329,60 @@ def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
     assert data.get(MIND_TASK.id).fixed.provenance == "running", "recalled: it ran"
 
 
-def test_the_mind_proposes_from_where_the_game_stands_and_the_field_carries_it():
-    model = Script(PROPOSING)
-    wm, cycle, data, events = loop(model)
-    run(cycle, frame(lit(0), lit(1)))  # PROPOSING written
-    run(cycle, frame(lit(1), lit(2)))  # in use: it proposes ACTION1 from the grid now
-    field = loop.glob.current().params
-    assert field["proposed:action:1"] == 1.0 and field["proposed:action:2"] == 0.0
-    assert wm.proposals[-1] == (2, (1, None, None))
-
-
-def test_the_self_answers_the_proposal_before_curiosity_and_takes_its_cell():
-    from dil.loop.cycle import RespondContext  # noqa: F401 — the context the policy reads
-    from types import SimpleNamespace
-
-    from arc3.respond import least_resolved
-
-    def ctx(params, affords):
-        sig = Signal(source_id=STATUS_CHANNEL, t=1, raw_payload={
-            "entity": "region", "status": {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED",
-                                           "levelsDelta": 0, "depthDelta": 0},
-            "context": "action:1", "affords": affords})
-        return SimpleNamespace(host=SimpleNamespace(signals=(sig,)), field=SimpleNamespace(params=params))
-
-    # A fresh self each time: it remembers what it has committed, and that
-    # breaks ties.
-    # Curiosity alone would take the untried ACTION1; the mind proposes ACTION3.
-    assert least_resolved()(ctx({"proposed:action:3": 1.0}, [1, 2, 3]))["actionId"] == 3
-    assert least_resolved()(ctx({}, [1, 2, 3]))["actionId"] == 1, "no proposal: as before"
-    assert least_resolved()(ctx({"proposed:action:4": 1.0}, [1, 2, 3]))["actionId"] == 1, "not afforded: not taken"
-    click = least_resolved()(ctx({"proposed:action:6": 1.0, "proposed:x": 5.0, "proposed:y": 9.0}, [6]))
-    assert (click["actionId"], click["x"], click["y"]) == (6, 5, 9), "the cell it proposed"
-
-
 def test_a_block_indented_as_a_whole_still_loads():
     from arc3.mind import compile_functions
 
     fn, propose = compile_functions("    " + PROPOSING.replace("\n", "\n    "))
     assert fn([[1, 0]], 1) == [[0, 1]] and propose([[1, 0]]) == (1, None, None)
+
+
+def test_the_mind_commands_as_t5s_test_and_the_body_carries_it_out():
+    from arc3.command import carry_out
+    from dil.loop.cycle import RespondContext  # noqa: F401 — what link 5 reads
+
+    model = Script(PROPOSING)
+    wm, cycle, data, events = loop(model, respond=carry_out)
+    first = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status())))
+    assert first.tests == ({"kind": "move", "actionId": 1, "x": None, "y": None},), \
+        "from where the game stands, the program it just wrote commands ACTION1"
+    from_t5 = [r for r in of_kind(events, "emission") if r.issuing_layer == 5]
+    assert from_t5[-1].action == {"kind": "test", "action": first.tests[0]}, "recorded from T5, as a test"
+    assert first.response.action == {"kind": "move", "actionId": 1, "x": None, "y": None}, \
+        "the body carried out the command, in the same cycle"
+    assert wm.commands == [(1, (1, None, None))]
+
+
+def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
+    no_propose = RIGHT  # predicts, proposes nothing
+    from arc3.command import carry_out
+
+    model = Script(no_propose, PROPOSING)
+    wm, cycle, data, events = loop(model, respond=carry_out)
+    result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status())))
+    assert [t.on for t in wm.thoughts] == ["frame", "no command"]
+    assert "Your propose gave no action the game offers now." in model.prompts[1][0]["content"]
+    assert result.response.action["actionId"] == 1, "the second thought gave a command, and it was carried out"
+
+
+def test_the_body_carries_out_what_it_can_and_otherwise_stands_still():
+    from types import SimpleNamespace
+
+    from arc3.command import WAIT, carry_out
+
+    def ctx(tests, affords=(1, 2, 3), state="NOT_FINISHED", cycle=5):
+        sig = Signal(source_id=STATUS_CHANNEL, t=1, raw_payload={
+            "entity": "region", "status": {"stateFrom": "NOT_FINISHED", "stateTo": state,
+                                           "levelsDelta": 0, "depthDelta": 0},
+            "context": "action:1", "affords": list(affords)})
+        return SimpleNamespace(cycle=cycle, tests=tuple(tests), host=SimpleNamespace(signals=(sig,)))
+
+    move = lambda a, x=None, y=None: {"kind": "move", "actionId": a, "x": x, "y": y}  # noqa: E731
+    assert carry_out(ctx([move(3)]))["actionId"] == 3, "as commanded"
+    assert carry_out(ctx([])) == WAIT, "no command: it waits"
+    assert carry_out(ctx([], cycle=0))["actionId"] == 0, "cycle 0: start-up is the host's (§4)"
+    assert carry_out(ctx([move(4)])) == WAIT, "not afforded: it does not substitute, it waits"
+    assert carry_out(ctx([move(0)], affords=()))["actionId"] == 0, "RESET is always open"
+    assert carry_out(ctx([move(1)], state="GAME_OVER")) == WAIT, "a terminal frame takes only RESET"
+    click = carry_out(ctx([move(6, 5, 9)], affords=(6,)))
+    assert (click["actionId"], click["x"], click["y"]) == (6, 5, 9), "the cell it was given"
+

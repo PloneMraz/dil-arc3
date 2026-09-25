@@ -1,7 +1,7 @@
 """A live game with the one mind in the loop: the model thinks, DIL runs.
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
-        [--max-tokens N] [--think] [--prompt task|plain] [--alone] [--out DIR]
+        [--max-tokens N] [--think] [--alone] [--out DIR]
 
 The host carries the whole frame; the mind predicts it with the program the
 model wrote, thinks when the expectation fails (asking the store for the frames
@@ -30,7 +30,7 @@ from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.observe import admit
 from arc3.onlooker import onlooked
-from arc3.respond import least_resolved
+from arc3.command import carry_out
 from dil.conformance.checker import check_conformance
 from dil.loop.cycle import Layers
 from dil.loop.glob_mod import create_glob_mod
@@ -53,9 +53,6 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
-ap.add_argument("--prompt", choices=("task", "plain"), default="task",
-                help="task: what the mind is told, from its store (a prior); "
-                     "plain: the grid alone, word for word the prompt before 2026-09-25")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
 a = ap.parse_args()
@@ -66,8 +63,10 @@ else:
     arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
 source = create_source(arc.make(a.game), GameAction, action_budget=a.cycles)
 host_source = source if a.alone else onlooked(source)
-wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, think=a.think),
-                 prompt=a.prompt)
+# What this served model needs beyond the standard request: Qwen3 thinks unless
+# told not to. The mind itself knows no model.
+extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
+wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
     t5=create_t5(predict=mind_rule(wm)), t6=create_t6(),
@@ -76,7 +75,7 @@ layers = Layers(
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
 daemon = Daemon(
     host=declaration(a.game, store_root=store_root, onlooker=not a.alone), source=host_source, layers=layers,
-    glob=create_glob_mod(), initial_emission=Emission(action=None), respond=least_resolved(),
+    glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carry_out,
     admit=admit,
 )
 gate = daemon.start()
@@ -121,9 +120,9 @@ print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('re
 print(f"  commits               : {len(commits)}")
 print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")
 print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in wm.thoughts if t.asked]}")
-print(f"  what the mind proposed: {[(c, p[0] if p else None) for c, p in wm.proposals]}")
-followed = sum(1 for (c, p), m in zip(wm.proposals, list(source.delivered)[1:]) if p and p[0] == m.action_id)
-print(f"  proposals the self met: {followed} of {sum(1 for _, p in wm.proposals if p)}")
+print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in wm.commands]}")
+print(f"  frame expectation held: {sum(wm.holds)} of {len(wm.holds)}")
+print(f"  the body stood still  : {source.stood_still}")
 held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
 print(f"  scars by datum kind   : {dict(held_scars)}")
 print(f"  [event] records       : {len(recs)}")
@@ -132,7 +131,6 @@ for r in report.results:
     if r.id in ("5", "7"):
         print(f"    C{r.id}: {r.detail}")
 print(f"  moves committed       : {dict(collections.Counter(m.action_id for m in source.delivered))}")
-print(f"  field, per action     : {({k: round(v, 3) for k, v in sorted(daemon._glob.current().params.items()) if k.startswith(('resolved:', 'progress:', 'valence:'))})}")
 print(f"  final state           : {source.frame.state}  levels={source.frame.levels_completed}")
 if wm.code:
     print("\n--- the program the mind holds ---\n" + wm.code)

@@ -88,7 +88,7 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 # stack, which is the mind's reading (`mind.transition_of`). Nothing looser: a
 # program that is right on most cells is still wrong, and the mismatch is what
 # the mind thinks from. The region's status fits when the region reports what it
-# reported last; its `context`, the action just taken, is the self's act and is
+# reported last; its `context`, the action just taken, is the agent's own act and is
 # not expected back (`mind.standing_status`). Never against a correct answer:
 # none is revealed in a run.
 # The earlier declaration (equality of an effect signature, `effect.py`) and its

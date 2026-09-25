@@ -2,7 +2,7 @@
 
 `HostSource` says it plainly: *the agent acts through `deliver`*. DIL is the
 condition, not the actor. So this ring holds the game, reports what the region
-returned through `next`, and executes what the self committed through `deliver`.
+returned through `next`, and carries out the committed action through `deliver`.
 Nothing here chooses a move — the choice arrives already made, in the emission.
 
 Order within a cycle is the daemon's: `next()` → `cycle.run()` → `deliver()`. So
@@ -62,7 +62,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "delivered",
+        "delivered", "stood_still",
     )
 
     def __init__(
@@ -72,7 +72,7 @@ class Arc3Source:
         action_budget: int = DEFAULT_ACTION_BUDGET,
     ) -> None:
         # The host holds no model and computes nothing from what it takes in: it
-        # reads the engine's frame, carries it inward, and executes what the self
+        # reads the engine's frame, carries it inward, and carries out what was
         # committed. Working out what the grid means is the mind's.
         self._env = env
         self._ga = game_action_cls
@@ -82,8 +82,10 @@ class Arc3Source:
         self._t = 0
         self._budget = action_budget
         self._spent = 0
-        # What the self committed, in order — the run's own record of its acts.
+        # What was committed, in order — the run's own record of its acts.
         self.delivered: list[Move] = []
+        # Whether the body stood still for want of a command it could carry out.
+        self.stood_still = False
 
     @property
     def frame(self) -> Frame | None:
@@ -140,12 +142,17 @@ class Arc3Source:
         )
 
     def deliver(self, response: Emission) -> None:
-        """Execute what the self committed. **This is where the agent acts.**
+        """Carry out the committed action. **This is where the agent acts.**
 
         A move the current frame does not afford is refused rather than
         substituted. Quietly swapping in a legal action would put the choice in
-        the body, and the body does not choose.
+        the body, and the body does not choose. A body told to wait does not
+        move: nothing reaches the region, so nothing comes back, and the run
+        ends (`command.py`).
         """
+        if isinstance(response.action, dict) and response.action.get("kind") == "wait":
+            self.stood_still = True
+            return
         move = move_from_value(response.action)
         if self._frame is None:
             raise StepFailed("deliver before the game was opened")

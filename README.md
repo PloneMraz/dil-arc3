@@ -44,18 +44,18 @@ Settled deliberately, with Plone.
 | role | what it is | in this repo |
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
-| **host** | the body: takes in what the region returns and carries it inward, executes what was committed. **Computes nothing from what it takes in.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
+| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py` |
 | **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) and the programs its mind wrote (`nascent`, then `running`) | `src/dil/store/`, `src/arc3/prior.py` |
-| **mind** | the thinking organ — **one**: the model and the program it writes. Predicts, thinks when a prediction fails, proposes the next action, reports how its understanding stands. **Commits nothing.** | `src/arc3/mind.py` |
-| **self** | what occurs while the loop runs through them. **It is what acts.** | not a file (`respond.py` is the policy the committed action is formed by) |
+| **mind** | the thinking organ — **one**: the program the model writes, the model replaceable. Reads, expects, is curious and wants — in its thinking, not in a formula — and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/arc3/mind.py` |
+| **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
-The line that matters: **the mind does not act.** It supplies expectations and
-proposes a direction — the next action toward getting through the level — as
-data the self answers; it never sees which actions are available and never
-reaches the committed action. What judges a proposal is the region's return,
-which scars the program when it does not hold. Beyond the field, what it sends
-out is a question to its own memory: a store query, by cue, that it chooses
-itself (§6.4). The query is traced like any emission, so what the
+The line that matters: **the mind acts on nothing; it commands, and the body
+carries out.** The mind constructs the next action toward getting through the
+level and commands it as T5's test (§6.4); the body carries it out, or, with no
+command it can carry out, waits. What judges a command is the region's return,
+which scars the program when it does not hold. What else the mind sends out is a
+question to its own memory: a store query, by cue, that it chooses itself
+(§6.4). The query is traced like any emission, so what the
 mind read is in `[event]`. What it writes, it writes as data (§9 `nascent`), with
 what it was built from.
 
@@ -162,7 +162,7 @@ notebook that runs it with the model on a GPU.
 from arc3 import admit, transducers
 from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
-from arc3.respond import least_resolved
+from arc3.command import carry_out
 ```
 
 `scripts/run_game.py` shows the whole wiring; `src/arc3/decisions.py`

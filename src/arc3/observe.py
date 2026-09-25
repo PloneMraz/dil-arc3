@@ -12,14 +12,14 @@ Two signals travel each cycle, on two channels, through T3:
     predicts.
   - **the region's status** — the game speaking about itself: its state, the
     change in its level count, what it offers next. The agent controls none of
-    it, so it is an Other's report, and the self reads from it what may be done.
+    it, so it is an Other's report, and the mind reads from it what may be done.
 
 WHAT THIS REPLACED, 2026-09-24. The host used to call into a computation of the
 grid — `perceive.py` found pieces, `seeing.py` followed them across frames,
 `interpret.py` read what became of them — and send one signal per "thing" it
 found. That computation was a second mind: the grid read one way by counting
 things and another by the model's program, two understandings of one world that
-never met, and only the first reached the self. It was also misnamed: seeing is
+never met, and only the first reached behaviour. It was also misnamed: seeing is
 the eye's; what those modules did was compute. They are gone; the host takes in,
 the mind computes.
 """
@@ -55,8 +55,8 @@ ONLOOKER_ENTITY: Final = "onlooker"
 FRAME_INFO_TYPE: Final = "frame"
 STATUS_INFO_TYPE: Final = "region-status"
 
-# The id of the one self-written change: the agent's own move, observed back.
-SELF_MOVE_CHANGE: Final = "self:move"
+# The id of the one change the agent wrote: its own move, observed back.
+AGENT_MOVE_CHANGE: Final = "agent:move"
 
 
 def action_context(move: Move) -> str:
@@ -146,7 +146,7 @@ def observe(prev: Frame, move: Move, now: Frame, t: int) -> HostCycleInput:
         changes=(
             # The agent's own act, observed back. T2 matches this against the
             # emission it recorded and tags it SELF_WRITTEN.
-            ObservedChange(id=SELF_MOVE_CHANGE, value=move_value(move)),
+            ObservedChange(id=AGENT_MOVE_CHANGE, value=move_value(move)),
             # What the region did to itself.
             ObservedChange(id=REGION_ENTITY, value=status),
         ),

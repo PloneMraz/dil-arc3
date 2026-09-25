@@ -1984,3 +1984,52 @@ Two corrections from Plone, done as one package with the neutral prompt:
 258 tests. Six live cycles with no model: the mind asked `{"domain":
 "mind-task"}` at cycle 0 and its waiting thought ran at cycle 1, when the task
 arrived.
+
+### The mind commands as T5's test; the body carries out; nothing weighs for it (Plone, same day)
+
+Three corrections from Plone, done as one package:
+
+- **Curiosity, want and expectation arise in the mind's thinking; they are not
+  written.** "Chỉ cần model tư duy theo đúng chỉ thị thì 'curiosity',
+  'expectation' và 'want' sẽ là hệ quả, không cần phải gắn cứng." Gone: the
+  per-action `resolved`, `progress` and `valence` readings the mind computed,
+  `region_valence`, and the policy that composed them (`−(progress +
+  valence)`).
+- **The self is located nowhere.** §2: "Host, self, and agent are one motion at
+  three descriptive levels, not three entities"; §7: "The self is not a part the
+  host supplies". `respond.py` had been called the self's policy. The word is
+  gone from `src/arc3` and its scripts, except Python's `self` and the protocol's
+  `SELF_WRITTEN` (Plone approved both); `self:move` is now `agent:move`. `src/dil`,
+  a port of dil-core, keeps the protocol's own vocabulary.
+- **The body carries out what the mind commands.** "Cơ thể thu nhận dữ liệu từ
+  môi trường, mind đọc và xử lý dữ liệu đó rồi có kỳ vọng, tò mò và mong muốn,
+  rồi kiến tạo hành vi, ra lệnh cho cơ thể, cơ thể thực hiện lệnh." And: "Khi
+  mind chưa xuất lệnh, cơ thể có thể đơ để đợi."
+
+**A defect found on the way.** The proposal of the run before went to the field,
+and a contribution to the field takes effect at the next cycle (INV-7): the
+mind proposed from cycle N's grid and the move was made at cycle N+1, on another
+grid. The four-game notebook running with it (kernel `dil-arc3-run` v5) was
+cancelled at Plone's word; its behaviour meant nothing. §6.4 already had the
+road: "T5 emits a *test*: an action that pushes to the region to see whether the
+return matches the Expectation just built." Done in dil-core first (`a8ef7ce`,
+changelog `f7d912c`, 373 tests; no protocol change): the predict rule may call
+`test(action)`, recorded from T5 with register ↔, handed to the host as
+`CycleResult.tests`. Ported, with `RespondContext.tests` so link 5 sees the
+cycle's own tests (a deviation, declared).
+
+- `src/arc3/command.py` replaces `respond.py`: the body commits the mind's last
+  T5 test if the region affords it (RESET always), RESET at cycle 0 (§4, start-up
+  is the host's), and otherwise waits — a `wait` reaches no engine, nothing comes
+  back, and the run ends. No action is made up in the mind's place.
+- The mind commands when the region has said all it says in a cycle; it sees
+  what the region offers. With no command it can give, it thinks again while
+  the body waits, at most `MAX_WAIT_THOUGHTS = 2` (declared, not measured).
+- The model is replaceable: the endpoint takes `extra` for whatever the served
+  model needs (Qwen's `enable_thinking`), and the mind knows no model.
+- The plain prompt and `--prompt` are gone: a mind that writes no `propose`
+  gives no command, and the body would stand still at cycle 1.
+
+242 tests. Six live cycles with no model reachable: RESET at cycle 0; at cycle
+1 the mind had no program, thought twice for a command, the model failed both
+times, and the body stood still.
