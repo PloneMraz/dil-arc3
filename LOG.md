@@ -2033,3 +2033,42 @@ cycle's own tests (a deviation, declared).
 242 tests. Six live cycles with no model reachable: RESET at cycle 0; at cycle
 1 the mind had no program, thought twice for a command, the model failed both
 times, and the body stood still.
+
+### Four games under the command design: one move, repeated (2026-09-25)
+
+Kernel `dil-arc3-run` v6, on `e846c19`; the dataset was checked served (77 files,
+`src/arc3/command.py` among them) before the notebook was pushed. Qwen3.6-35B-A3B,
+no thinking, 60 cycles a game; ar25 and sk48 were drawn at random from the unseen
+games. Read back from each game's store (`[event]` and `[data]`), since the run's
+own summary broke (below).
+
+| game | cycles | what was committed | cells the moves changed | thoughts | levels | wall |
+|---|---|---|---|---|---|---|
+| ls20 | 60 | RESET, ACTION3 ×58, ACTION1 ×1 | 52 for three steps, then 2 (the step bar) | 25 | 0 | 1,245 s |
+| vc33 | 52 | RESET, ACTION6 (32,1) ×50, wait | 1–2 each step | 23 | 0 | 973 s |
+| ar25 | 60 | RESET, ACTION6 (20,16) ×59 | 0 every step | 2 | 0 | 63 s |
+| sk48 | 60 | RESET, ACTION6 (28,50) ×59 | 0 every step | 2 | 0 | 74 s |
+
+- **Every game: one command, repeated.** `propose(grid)` reads the grid alone,
+  so on a grid that returns the same, it returns the same.
+- **Where nothing moved, nothing was surprising, so nothing was thought.** In
+  ar25 and sk48 the program expected the click to change nothing, and it
+  changed nothing: 60 of 60 frames held, no frame scar, two thoughts in 60
+  cycles.
+- **The onlooker's objection changed nothing.** It said "repeating" on 51–55
+  cycles; its stance changed, and so scarred, twice a game. The mind thought
+  on it, but a candidate is adopted only when it predicts better, and a
+  candidate that predicts as well is not adopted however differently it would
+  act.
+- **vc33 ended as declared.** After 50 clicks the state was `GAME_OVER`. The
+  mind commanded no RESET, the body stood still, and the run ended at cycle 51.
+- Some thoughts ran to the 12,288-token cap and returned no code (ls20 and
+  vc33).
+- C5 and C7 pass on ls20 and vc33. They are partial on ar25 and sk48: one
+  resistance source, 2 collisions < window 8. C4 is partial on all four when
+  checked from the durable log ("cycle-marks not monotonic"); not examined yet.
+- **Fixed:** `run_game.py`'s summary read every T5 emission as a store query,
+  and a test emission has no `cue`. `KeyError` came after the per-cycle lines,
+  so the summary lines after it were lost in all four games.
+
+About 45 minutes of kernel (08:45–09:30 push to complete); GPU quota not checked.

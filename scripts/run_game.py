@@ -100,7 +100,7 @@ frame_ids = {k for k, d in daemon._data.entries() if d.open.get("kind") == "fram
 frame_scars = [r for r in recs if type(r).__name__ == "EventRecord" and r.datum_id in frame_ids]
 frames = sorted(frame_ids, key=lambda k: int(k.split("-")[1]))
 by_prov = collections.Counter(daemon._data.get(k).fixed.provenance for k in frames)
-queries = [r for r in kind("emission") if r.issuing_layer == 5]
+queries = [r for r in kind("emission") if r.issuing_layer == 5 and r.action.get("kind") == "query"]
 programs = [(k, d) for k, d in daemon._data.entries() if d.open.get("kind") == "program"]
 commits = daemon._commits.list() if daemon._commits is not None else []
 report = check_conformance(daemon._events)
