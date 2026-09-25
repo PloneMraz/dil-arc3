@@ -1,7 +1,7 @@
 """The mind — one, and it thinks with a language model.
 
 The mind is the thinking: the model (Qwen3.6, served over HTTP) and the program
-it writes — `predict(grid, action, x, y)` and `propose(grid)` — kept as data in
+it writes — `predict(grid, action, x, y)` and `propose(grid, steps)` — kept as data in
 the store. It reads what the body took in, expects, is curious and wants — in
 its thinking, not in a formula — and constructs the next action, commanding it
 as T5's test (§6.4); the body carries it out (`command.py`). It acts on nothing
@@ -22,7 +22,9 @@ then; at most once a cycle. No trigger, no constant: rewriting is the
 consequence of mismatch. It thinks from what it has: what the store answered to
 what it asked, the steps it has just seen (short-term perception, as long as
 T5's window, `BASELINE_WINDOW`), and what the onlooker says now. It keeps a new
-program only if it explains that evidence better. The first program is written
+program only if it explains that evidence better — or as well, when the body is
+waiting for a command, or when the onlooker objected: that objection is to how
+it acts, and is met by acting otherwise. The first program is written
 anew (`nascent`), each later one revises that datum; every write records what it
 was built from (v0.3.4) — exactly the evidence the model was shown.
 
@@ -44,8 +46,9 @@ a third party reads each turn. A standing expectation is the observation it
 repeats.
 
 WHAT IT COMMANDS. When the region has said all it says in a cycle, the mind
-runs `propose` on where the game stands and, if the region affords the action
-(RESET always is), pushes it as T5's test: recorded from T5 in `[event]`, and
+runs `propose` on where the game stands and the steps it has just seen (its
+short-term perception, each with what the region said of itself) and, if the
+region affords the action (RESET always is), pushes it as T5's test: recorded from T5 in `[event]`, and
 carried out by the body in the same cycle. With no such command it thinks
 again while the body waits, at most MAX_WAIT_THOUGHTS times; then the body
 stands still. Until 2026-09-25 the mind reported `resolved`, `progress` and
@@ -60,6 +63,7 @@ vLLM on Kaggle) with the standard library only — `dependencies = []` holds.
 from __future__ import annotations
 
 import dataclasses
+import inspect
 import json
 import textwrap
 import re
@@ -75,6 +79,7 @@ from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
+from .action import COMPLEX_ACTION
 from .observe import FRAME_CHANNEL, FRAME_KIND, ONLOOKER_CHANNEL, REMARK_KIND, STATUS_CHANNEL, STATUS_KIND
 from .task import TASK_CUE, TASK_DOMAIN
 
@@ -321,29 +326,62 @@ def run_program(fn: Callable[..., Any], t: Transition) -> Grid:
 Proposal = tuple[int, "int | None", "int | None"]
 
 
-def run_propose(fn: Callable[..., Any], grid: Grid) -> Proposal:
+def _takes_steps(fn: Callable[..., Any]) -> bool:
+    """Whether a `propose` reads the steps as well as the grid: a second
+    positional parameter, or `*args`. One written for the grid alone still runs."""
+    try:
+        params = list(inspect.signature(fn).parameters.values())
+    except (TypeError, ValueError):
+        return False
+    if any(p.kind is p.VAR_POSITIONAL for p in params):
+        return True
+    return len([p for p in params if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)]) >= 2
+
+
+def steps_of(seen: list[Transition]) -> list[dict[str, Any]]:
+    """The steps the mind has just seen, as its program reads them, oldest first:
+    each the grid before, the action, the grid after, and what the region said
+    of itself (its state, levels gained) when it said it. Copies: the program
+    may not change what was seen."""
+    return [
+        {"before": [r[:] for r in t.before], "action": t.action, "x": t.x, "y": t.y,
+         "after": [r[:] for r in t.after],
+         "state": (t.status or {}).get("stateTo"), "levels": (t.status or {}).get("levelsDelta")}
+        for t in seen
+    ]
+
+
+def run_propose(fn: Callable[..., Any], grid: Grid, steps: list[dict[str, Any]] | None = None) -> Proposal:
     """What the program proposes to do next from this state: (action, x, y).
 
-    An action is ACTION1..ACTION7; a cell must lie on the grid. Anything else is
-    not a proposal, and raises ProgramError."""
+    `propose(grid, steps)` reads where the game stands and the steps just seen;
+    a `propose(grid)` reads the grid alone. An action is RESET (0) or
+    ACTION1..ACTION7; a cell, for ACTION6, must lie on the grid — any other
+    action carries none, and a cell given with one is not the action's. Anything
+    else is not a proposal, and raises ProgramError."""
     guarded = threading.current_thread() is threading.main_thread()
     if guarded:
         old = signal.signal(signal.SIGALRM, _alarm)
         signal.alarm(PROGRAM_SECONDS)
     try:
-        out = fn([row[:] for row in grid])
-        if isinstance(out, int):
+        board = [row[:] for row in grid]
+        out = fn(board, list(steps or ())) if _takes_steps(fn) else fn(board)
+        if isinstance(out, (int, str)):
             out = (out,)
         if not isinstance(out, (tuple, list)) or not out:
             raise ProgramError("proposed no action")
         action = out[0]
         x = out[1] if len(out) > 1 else None
         y = out[2] if len(out) > 2 else None
-        if isinstance(action, str) and action.upper().startswith("ACTION"):
+        if isinstance(action, str) and action.upper() == "RESET":
+            action = 0
+        elif isinstance(action, str) and action.upper().startswith("ACTION"):
             action = action[6:]
         action = int(action)
-        if not 1 <= action <= 7:
+        if not 0 <= action <= 7:
             raise ProgramError(f"proposed ACTION{action}, which is no action")
+        if action != COMPLEX_ACTION:
+            return action, None, None
         if x is not None or y is not None:
             x, y = int(x), int(y)
             if not (0 <= y < len(grid) and 0 <= x < len(grid[0])):
@@ -658,8 +696,9 @@ class Mind:
             return
         self._command_due = False
         grid = self._seen[-1][0].after
+        steps = steps_of([t for t, _ in self._seen])
         for attempt in range(MAX_WAIT_THOUGHTS + 1):
-            proposal = self._proposal(grid)
+            proposal = self._proposal(grid, steps)
             if proposal is not None and (proposal[0] == 0 or proposal[0] in self._affords):
                 self.commands.append((self.frame_calls, proposal))
                 if test is not None:
@@ -670,11 +709,11 @@ class Mind:
                 self.think("no command", ask, write, again=True)
         self.commands.append((self.frame_calls, None))
 
-    def _proposal(self, grid: Grid) -> Proposal | None:
+    def _proposal(self, grid: Grid, steps: list[dict[str, Any]]) -> Proposal | None:
         if self._propose is None:
             return None
         try:
-            return run_propose(self._propose, grid)
+            return run_propose(self._propose, grid, steps)
         except ProgramError:
             return None
 
@@ -757,10 +796,13 @@ class Mind:
             self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, str(exc), on, asks))
             return
         cand_ok, _ = score(fn, evidence)
-        # Kept when it explains the evidence better; when the body is waiting for
-        # a command, also when it explains as much and can give one.
+        # Kept when it explains the evidence better. Also when it explains as much
+        # and can give a command, if the body is waiting for one — or if what set
+        # it thinking was the onlooker: an Other's objection is to how it acts,
+        # not to what it expects, and is answered by acting otherwise, not by
+        # predicting better (Plone, 2026-09-25).
         adopted = (self._fn is None or cand_ok > held_ok
-                   or (on == "no command" and cand_ok >= held_ok and propose is not None))
+                   or (on in ("no command", "onlooker") and cand_ok >= held_ok and propose is not None))
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, "", on, asks))
         if not adopted:
             return
@@ -867,5 +909,5 @@ __all__ = [
     "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
     "chat", "compile_functions", "compile_program", "create_mind", "expected_status", "extract_asks",
     "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "score", "standing_status",
-    "transition_of",
+    "steps_of", "transition_of",
 ]

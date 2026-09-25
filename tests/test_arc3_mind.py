@@ -386,3 +386,46 @@ def test_the_body_carries_out_what_it_can_and_otherwise_stands_still():
     click = carry_out(ctx([move(6, 5, 9)], affords=(6,)))
     assert (click["actionId"], click["x"], click["y"]) == (6, 5, 9), "the cell it was given"
 
+
+
+# ── what propose reads; what the onlooker's objection can change ──
+
+
+def test_propose_reads_the_steps_just_seen_and_may_reset():
+    from arc3.mind import run_propose, steps_of
+
+    over = Transition(before=lit(0), action=1, x=None, y=None, after=lit(1),
+                      status={"stateFrom": "NOT_FINISHED", "stateTo": "GAME_OVER", "levelsDelta": 0})
+    steps = steps_of([over])
+    assert steps == [{"before": lit(0), "action": 1, "x": None, "y": None, "after": lit(1),
+                      "state": "GAME_OVER", "levels": 0}]
+    reads = lambda grid, steps: (0,) if steps and steps[-1]["state"] == "GAME_OVER" else (1,)  # noqa: E731
+    assert run_propose(reads, lit(1), steps) == (0, None, None), "RESET is an action it may propose"
+    assert run_propose(reads, lit(1), []) == (1, None, None)
+    assert run_propose(lambda grid: (2,), lit(1), steps) == (2, None, None), "one written for the grid alone still runs"
+    assert run_propose(lambda grid, steps: "RESET", lit(1), steps) == (0, None, None)
+    assert run_propose(lambda grid: (3, 1, 1), lit(1)) == (3, None, None), "only ACTION6 carries a cell"
+    assert run_propose(lambda grid: (6, 2, 1), lit(1)) == (6, 2, 1)
+
+
+SAME_PREDICT_OTHER_MOVE = PROPOSING.replace("return (1, None, None)", "return (2, None, None)")
+
+
+def test_after_the_onlooker_objects_a_program_that_predicts_as_well_is_kept():
+    model = Script(PROPOSING, SAME_PREDICT_OTHER_MOVE)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))                   # PROPOSING written
+    run(cycle, frame(lit(1), lit(2)))                   # it holds: no thought
+    wm.think("onlooker", None, None)                    # the onlooker changed its stance
+    assert wm.thoughts[-1].candidate_score == wm.thoughts[-1].held_score
+    assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE, \
+        "its objection is to how the agent acts: a program that acts otherwise and predicts as well is kept"
+
+
+def test_on_a_frame_mismatch_a_program_that_predicts_only_as_well_is_not_kept():
+    model = Script(PROPOSING, SAME_PREDICT_OTHER_MOVE)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))
+    run(cycle, frame(lit(1), lit(2)))
+    wm.think("frame", None, None)
+    assert not wm.thoughts[-1].adopted and wm.code == PROPOSING

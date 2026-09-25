@@ -93,10 +93,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   and the move, as the engine returned them) and the region's status. Never name
   a computation of the mind with a verb of the senses.
 - **The mind commands; the body carries out.** From its program's
-  `propose(grid)`, run on where the game stands once the region has said all it
-  says in a cycle, the mind pushes the next action as T5's `test` — if the
-  region affords it (RESET always). `src/arc3/command.py` carries it out and
-  weighs nothing. With no such command the mind thinks again while the body
+  `propose(grid, steps)`, run on where the game stands and the steps it has
+  just seen (short-term perception, each with the state and levels the region
+  reported) once the region has said all it says in a cycle, the mind pushes
+  the next action as T5's `test` — if the region affords it (RESET always).
+  `src/arc3/command.py` carries it out and weighs nothing. With no such command the mind thinks again while the body
   waits (`MAX_WAIT_THOUGHTS = 2`, declared, not measured); then the body stands
   still, and in an informational region the run ends — no action is made up in
   the mind's place (Plone: "Cơ thể có thể đơ để đợi"). Cycle 0's RESET is the
@@ -134,7 +135,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   is a **revision**: the content changes, the provenance does not, and `[event]`
   gets a bare `revision` line with no content; the content is read from the
   commit snapshot. The mind keeps a new program only if it explains the evidence
-  better; the first is kept because there was none.
+  better; the first is kept because there was none. It also keeps one that
+  explains as much and can command, when the body is waiting for a command, or
+  when what set it thinking was the onlooker's objection — that objection is to
+  how the agent acts, and is met by acting otherwise (Plone, 2026-09-25).
 - **There is no trigger for rewriting, and no constant to declare.** Rewriting is
   the consequence of mismatch: if the mind does not adjust, the mismatch recurs.
 - **Every written datum records what it was built from** (protocol v0.3.4): ids
@@ -178,8 +182,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
 - **The onlooker's remark reaches behaviour only through the mind.** A change of
-  its stance sets the mind thinking and the model is shown what it says; the
-  next command is the mind's. Whether that turns behaviour is not yet measured.
+  its stance sets the mind thinking and the model is shown what it says; a
+  program that acts otherwise and predicts as well is kept. Whether that turns
+  behaviour on a live run is not yet measured. It scars only when its stance
+  changes, not at every repeat, so it sets the mind thinking only then.
 - **One expectation a run is not attributed**: the cycle the program first
   comes back, T5 meets the frame before the store arrival that tells the mind
   its datum's id. Every later one is the program's.

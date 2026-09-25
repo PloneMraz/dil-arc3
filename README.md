@@ -12,12 +12,14 @@ the agent leaves the loop to think.
 It runs, and it is being rebuilt around one mind. **It completes no levels.**
 
 **The mind is a language model** — Qwen3.6-35B-A3B, served offline — and the
-program it writes: `predict(grid, action)`, the next grid and what the region
-will report of itself, kept as data in the store and tested against the region
-every cycle. When an expectation meets a mismatch — the frame, the region's
+program it writes: `predict(grid, action, x, y)`, the next grid and what the
+region will report of itself, and `propose(grid, steps)`, the next action from
+where the game stands and the steps just seen — kept as data in the store, the
+prediction tested against the region every cycle. When an expectation meets a mismatch — the frame, the region's
 status, or an onlooker's objection to how the agent behaves — the program is
 scarred with it, and the mind has the model write a better one from what it
-has, keeps it only if it explains that evidence better, and writes it as a
+has, keeps it only if it explains that evidence better (or as well, when the
+body waits for a command or the onlooker objected), and writes it as a
 revision; the model also chooses what to ask its memory for next. Every step of
 that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in

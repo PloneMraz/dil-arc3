@@ -39,8 +39,10 @@ Write two Python functions, using only the standard library:
 
     def predict(grid, action, x=None, y=None):
         # the grid the game will return for this state and this action
-    def propose(grid):
+    def propose(grid, steps):
         # the action to take next, from this state, to get through the level: (action, x, y)
+        # steps: the steps you have just seen, oldest first, each a dict with
+        # before, action, x, y, after, and the game's state and levels gained when it said them
 
 State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program; provenance: scar or running)."""
 

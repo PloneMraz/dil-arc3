@@ -2072,3 +2072,27 @@ own summary broke (below).
   so the summary lines after it were lost in all four games.
 
 About 45 minutes of kernel (08:45–09:30 push to complete); GPU quota not checked.
+
+### The onlooker's objection can be met by acting otherwise; `propose` reads the steps (Plone, same day)
+
+Two changes Plone approved after the four-game run, and a defect found while
+making them:
+
+- **Adoption.** When the mind thinks because the onlooker changed its stance, a
+  candidate that predicts as well as the held program, and can command, is kept.
+  The objection is to how the agent acts, and it is met by acting otherwise; before
+  this change a program had to predict *better*, so an objection could never
+  change a move.
+- **`propose(grid, steps)`.** The program reads the steps the mind has just seen,
+  as well as the grid: its short-term perception (`BASELINE_WINDOW = 16`). Each
+  step gives the grid before, the action, the grid after, and the state and
+  levels the region reported. On a grid that does not change, a program can now
+  act on what it has already tried. A `propose(grid)` still runs. The prior's
+  words (`prior:mind-task`) now describe `steps`, and name nothing else new.
+- **Defect: the program could not propose RESET.** `run_propose` accepted ACTION1–7
+  only, although the body and the prior both offer RESET (0). This is part of
+  why vc33 stood still after `GAME_OVER`. Fixed: 0 is accepted, and so is
+  `"RESET"`. A cell given with an action other than ACTION6 is dropped, not
+  refused; before, the body refused the whole move and waited.
+
+245 tests.
