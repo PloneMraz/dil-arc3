@@ -26,7 +26,7 @@ This module supplies the MECHANISM only:
 
 WHO the reader is, and its lens, stay deployment-open in the protocol, like tag
 D. NOT USED BY THIS HOST: kept so that `src/dil/` stays a faithful port of
-dil-core. This host's reader is the onlooker (`arc3/onlooker.py`, tag E), which
+dil-core. This host's reader is the onlooker (`world/onlooker.py`, tag E), which
 does not use it: `form_reading` reads the agent's trace to check the cycle, and
 the onlooker, by design, sees only the agent's moves and never its log. Its
 remark enters through the host's own transducer on the `onlooker` channel.

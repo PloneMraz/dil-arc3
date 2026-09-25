@@ -38,6 +38,7 @@ from dil.host import (
 )
 from dil.loop.cycle import HostCycleInput
 from dil.loop.layers.t2 import Emission
+from dil.loop.types import Signal
 
 from .action import RESET, IllegalMove, Move, check_afforded, to_engine
 from .frame import Frame, read_frame
@@ -62,7 +63,7 @@ class Arc3Source:
 
     __slots__ = (
         "_env", "_ga", "_frame", "_prev", "_pending", "_t", "_budget", "_spent",
-        "delivered", "stood_still",
+        "_waited", "_waits", "delivered", "stood_still",
     )
 
     def __init__(
@@ -82,6 +83,9 @@ class Arc3Source:
         self._t = 0
         self._budget = action_budget
         self._spent = 0
+        # A cycle in which the body stood still, not yet reported; and how many.
+        self._waited = False
+        self._waits = 0
         # What was committed, in order — the run's own record of its acts.
         self.delivered: list[Move] = []
         # Whether the body stood still for want of a command it could carry out.
@@ -96,9 +100,20 @@ class Arc3Source:
     def spent(self) -> int:
         return self._spent
 
+    @property
+    def waits(self) -> int:
+        """How many cycles the body stood still."""
+        return self._waits
+
     def next(self) -> HostCycleInput | None:
-        """What the region returned, as the loop consumes it."""
-        if self._spent >= self._budget:
+        """What the region returned, and what is said of the agent, as the loop consumes it.
+
+        A cycle in which the body stood still is a cycle too: nothing reaches
+        the region, so the region returns nothing, and the host reports only
+        what it hears. It counts against the run's budget as an action does,
+        so standing still has an end; RHAE counts only the actions.
+        """
+        if self._spent + self._waits >= self._budget:
             return None
 
         if self._frame is None:
@@ -107,6 +122,12 @@ class Arc3Source:
             self._prev = self._frame
             self._pending = Move(RESET)
 
+        if self._waited:
+            self._waited = False
+            heard = self._heard(self._t)
+            self._t += 1
+            return HostCycleInput(signals=heard, afforded=frozenset(s.raw_payload["entity"] for s in heard))
+
         if self._pending is None or self._prev is None:
             # `deliver` has not run since the last report; nothing new happened.
             return None
@@ -114,9 +135,27 @@ class Arc3Source:
         host_input = observe(
             self._prev, self._pending, self._frame, t=self._t
         )
+        heard = self._heard(self._t)
         self._t += 1
         self._pending = None
-        return host_input
+        if not heard:
+            return host_input
+        return HostCycleInput(
+            signals=(*host_input.signals, *heard), changes=host_input.changes,
+            interactions=host_input.interactions,
+            afforded=None if host_input.afforded is None
+            else host_input.afforded | {s.raw_payload["entity"] for s in heard},
+        )
+
+    def _heard(self, t: int) -> tuple[Signal, ...]:
+        """What the Others in the world say of the agent now, as the host hears it:
+        one signal each on its channel for them. The host does not know what
+        they are; it hears them if the world has any (`world.World.remarks`)."""
+        remarks = getattr(self._env, "remarks", None)
+        if not callable(remarks):
+            return ()
+        return tuple(Signal(source_id=ONLOOKER_CHANNEL, t=t, raw_payload={"entity": name, **said})
+                     for name, said in remarks().items())
 
     def _open(self) -> Any:
         """Get the first real frame out of the engine.
@@ -147,11 +186,16 @@ class Arc3Source:
         A move the current frame does not afford is refused rather than
         substituted. Quietly swapping in a legal action would put the choice in
         the body, and the body does not choose. A body told to wait does not
-        move: nothing reaches the region, so nothing comes back, and the run
-        ends (`command.py`).
+        move: nothing reaches the region, and the next cycle carries only what
+        is said of the agent (`command.py`).
         """
         if isinstance(response.action, dict) and response.action.get("kind") == "wait":
             self.stood_still = True
+            self._waited = True
+            self._waits += 1
+            idle = getattr(self._env, "idle", None)
+            if callable(idle):
+                idle()  # a moment passes in the world, without an act
             return
         move = move_from_value(response.action)
         if self._frame is None:
@@ -189,7 +233,9 @@ def declaration(
     declares a real substrate (`store_root`): the in-memory fixture a test runs
     on has no requisition step, so nothing is admitted there.
 
-    `onlooker` declares the third channel, when the onlooker (tag E) stands by.
+    `onlooker` declares the third channel, when the world has an onlooker
+    (tag E): the host's ear for what an Other says of the agent. The onlooker
+    is in the world (`world/`), not in the host.
     """
     return HostDeclaration(
         # A frame arrives, a move goes out: the boundary is real and crossable.

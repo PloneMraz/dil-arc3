@@ -88,6 +88,7 @@ from dil.loop.types import InfoUnit
 from .action import COMPLEX_ACTION
 from .frame import TERMINAL_STATES
 from .observe import FRAME_CHANNEL, FRAME_KIND, ONLOOKER_CHANNEL, REMARK_KIND, STATUS_CHANNEL, STATUS_KIND
+from .aim import AIM_CUE, AIM_DOMAIN
 from .task import TASK_CUE, TASK_DOMAIN
 
 Grid = list[list[int]]
@@ -278,7 +279,13 @@ class ProgramError(Exception):
 
 
 def compile_functions(code: str) -> tuple[Callable[..., Any], Callable[..., Any] | None]:
-    """The program's `predict`, and its `propose` if it wrote one.
+    """The program's `predict`, and its `propose` if it wrote one."""
+    fn, propose, _goal = compile_all(code)
+    return fn, propose
+
+
+def compile_all(code: str) -> tuple[Callable[..., Any], Callable[..., Any] | None, Any]:
+    """The program's `predict`, its `propose` if it wrote one, and its `GOAL` as written.
 
     A block indented as a whole is taken as written: the indentation is the
     model's layout, not its program (two thoughts in two runs were lost to it).
@@ -292,7 +299,44 @@ def compile_functions(code: str) -> tuple[Callable[..., Any], Callable[..., Any]
     if not callable(fn):
         raise ProgramError("defines no predict()")
     propose = env.get("propose")
-    return fn, (propose if callable(propose) else None)
+    return fn, (propose if callable(propose) else None), env.get("GOAL")
+
+
+def goal_of(raw: Any, grid: Grid) -> dict[str, Any] | None:
+    """The aim a program holds itself to, or None when it holds none it can be held to.
+
+    It must say what will come back when it is reached — cells of the grid,
+    fields of the region's report — and within how many actions: an aim nothing
+    coming back could show is not taken (`aim.py`: where a regress stops)."""
+    if not isinstance(raw, dict):
+        return None
+    reached = _want_of(raw.get("reached_when"), grid)
+    try:
+        within = int(raw.get("within"))
+    except (TypeError, ValueError):
+        return None
+    if reached is None or within < 1:
+        return None
+    source = raw.get("source") if raw.get("source") in ("stated", "inferred") else "inferred"
+    return {"aim": str(raw.get("aim") or "")[:500], "source": source, "reached_when": reached, "within": within}
+
+
+def _goal_shown(goal: dict[str, Any]) -> dict[str, Any]:
+    reached = dict(goal["reached_when"])
+    if "cells" in reached:
+        reached["cells"] = {f"{r},{c}": v for (r, c), v in reached["cells"].items()}
+    return {**goal, "reached_when": reached}
+
+
+def _overlay(grid: Grid, cells: dict[tuple[int, int], int] | None) -> None:
+    for (r, c), v in (cells or {}).items():
+        if r < len(grid) and c < len(grid[r]):
+            grid[r][c] = v
+
+
+def _cells_missed(cells: dict[tuple[int, int], int], got: Grid) -> str:
+    return json.dumps({f"{r},{c}": [v, got[r][c]] for (r, c), v in cells.items()
+                       if r < len(got) and c < len(got[r]) and got[r][c] != v})
 
 
 def compile_program(code: str) -> Callable[..., Any]:
@@ -572,7 +616,7 @@ class Mind:
     """The one mind: it reads, expects, thinks, and commands the body's next action."""
 
     def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
-                 task: dict[str, str] | None = None) -> None:
+                 task: dict[str, str] | None = None, aim: dict[str, str] | None = None) -> None:
         self.endpoint = endpoint
         self._chat = chat_fn
         # What it is told its thinking is for, once recalled (`task.py`), and the
@@ -580,6 +624,13 @@ class Mind:
         # that comes before it waits for it.
         self._task: dict[str, str] | None = task
         self._task_id: str | None = None
+        # What it does with any aim (`aim.py`), recalled likewise; and the aim
+        # its program holds, with the step it falls due at.
+        self._aim: dict[str, str] | None = aim
+        self._aim_id: str | None = None
+        self._goal: dict[str, Any] | None = None
+        self._goal_due = 0
+        self._goal_status: Status | None = None
         self._task_asked = False
         self._pending: str | None = None
         self.code: str | None = None
@@ -612,7 +663,11 @@ class Mind:
         # by the region's return next cycle, as the program's expectation.
         self._wanted: tuple[Proposal, Want] | None = None
         self._want_status: Status | None = None
-        self._want_missed: str | None = None
+        # What did not come, for the next thought to be told.
+        self._missed: str | None = None
+        # Whether the region has spoken this cycle: in one it has not, the mind
+        # commands after the onlooker.
+        self._status_this_cycle = False
         # Whether its last questions could be answered with its own answers.
         self._asked_thoughts = False
         # The onlooker's current remark on its behaviour, as it last arrived.
@@ -634,8 +689,14 @@ class Mind:
         open_tags = ret.get("open", {})
         payload = ret.get("payload")
         entity = str(ret.get("entity"))
-        if open_tags.get("domain") == TASK_DOMAIN and isinstance(payload, dict) and "task" in payload:
-            self._task, self._task_id = payload, entity
+        domain = open_tags.get("domain")
+        if domain in (TASK_DOMAIN, AIM_DOMAIN) and isinstance(payload, dict) and ("task" in payload or "aim" in payload):
+            if domain == TASK_DOMAIN:
+                self._task, self._task_id = payload, entity
+            else:
+                self._aim, self._aim_id = payload, entity
+            if self._task is None or self._aim is None:
+                return
             if self._pending is not None:
                 self.think(self._pending, ask, write)
             if self._command_due:
@@ -692,24 +753,34 @@ class Mind:
     def on_frame(self, t: Transition, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
                  window, contribute, ask, write) -> InfoUnit | Expecting:
         self.frame_calls += 1
-        # What its thinking is for, read from its own memory, once: the answer
-        # arrives next cycle, and a thought before it waits for it.
-        if self._task is None and not self._task_asked and ask is not None:
-            ask(dict(TASK_CUE))
+        self._status_this_cycle = False
+        # What its thinking is for, and what it does with any aim, read from its
+        # own memory, once: the answers arrive next cycle, and a thought before
+        # them waits for them.
+        if not self._task_asked and ask is not None and (self._task is None or self._aim is None):
+            if self._task is None:
+                ask(dict(TASK_CUE))
+            if self._aim is None:
+                ask(dict(AIM_CUE))
             self._task_asked = True
-        # 1. Expect, from the situation alone — and, where the command that made
-        #    this step said what it would bring about, that too: both are the
-        #    program's expectation of this step.
+        # 1. Expect, from the situation alone; where the command that made this
+        #    step said what it was for, that too; and, when it falls due, the
+        #    aim reached. All three are the program's expectation of this step.
         expected, said, by_program = self._expect_full(t)
         foreseen = [row[:] for row in expected]
         wanted = self._wanted if self._wanted and self._wanted[0] == (t.action, t.x, t.y) else None
         self._wanted = None
         want = wanted[1] if wanted else {}
-        for (r, c), v in (want.get("cells") or {}).items():
-            if r < len(expected) and c < len(expected[r]):
-                expected[r][c] = v
+        _overlay(expected, want.get("cells"))
+        meant = [row[:] for row in expected]
+        due = self._goal is not None and self.frame_calls >= self._goal_due
+        goal = self._goal["reached_when"] if due else {}
+        _overlay(expected, goal.get("cells"))
         self._want_status = dict(want["status"]) if want.get("status") else None
-        by_program = by_program or bool(want)
+        self._goal_status = dict(goal["status"]) if goal.get("status") else None
+        if due:
+            self._goal_due = self.frame_calls + self._goal["within"]  # held again, from here
+        by_program = by_program or bool(want) or bool(goal)
         self._said, self._said_by_program = said, said is not None
         predicted = InfoUnit(
             content={**content, "value": {**payload, "grids": [expected]}},
@@ -720,22 +791,24 @@ class Mind:
         hit = expected == t.after
         self.holds.append(int(hit))
         # 3. The expectation failed: think. A mismatch is the loop's to register;
-        #    thinking is the mind's. When only what the command was for failed —
-        #    the grid came as predicted, the wanted cells did not — it is the
-        #    want that met the region.
+        #    thinking is the mind's. What it thinks on is the first part that
+        #    failed: the grid predicted, what the command was for, the aim.
         if not hit:
-            if foreseen == t.after:
-                missed = {f"{r},{c}": (v, t.after[r][c]) for (r, c), v in want["cells"].items()
-                          if r < len(t.after) and c < len(t.after[r]) and t.after[r][c] != v}
-                self._want_missed = f"cells (row,col): (wanted, came) {json.dumps(missed)}"
+            if foreseen != t.after:
+                self.think("frame", ask, write)
+            elif meant != t.after:
+                self._missed = f"cells (row,col): (wanted, came) {_cells_missed(want['cells'], t.after)}"
                 self.think("want", ask, write)
             else:
-                self.think("frame", ask, write)
+                self._missed = (f"your GOAL ({self._goal['aim']}) was not reached when you said: "
+                                f"cells (row,col): (expected, came) {_cells_missed(goal['cells'], t.after)}")
+                self.think("goal", ask, write)
         held = self.held_by() if by_program else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
     def on_status(self, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
                   window, contribute, ask, write, test) -> InfoUnit | Expecting:
+        self._status_this_cycle = True
         standing_unit = window[-1] if window else observed
         standing = _content_value(standing_unit)
         status_now = payload.get("status") if isinstance(payload.get("status"), dict) else None
@@ -746,32 +819,47 @@ class Mind:
             t, unit = self._seen[-1]
             self._seen[-1] = (dataclasses.replace(t, status=status_now), unit)
             self._status_seen_at = self.frame_calls
-        # The expectation: what the region reported last, under this action —
-        # or, where the program said the status, what it said, the fields it
-        # left out staying as they were.
-        value = standing if isinstance(standing, dict) else dict(payload)
-        value = {**value, "context": payload.get("context")} if "context" in payload else value
-        by_program = self._said_by_program or self._want_status is not None
-        if by_program and status_now is not None:
-            said = {**(self._said or {}), **(self._want_status or {})}
-            value = {**value, "status": expected_status(said, _no_change(status_now))}
+        # The expectation: what the region reported last, under this action — or,
+        # where the program said the status, what it said, the fields it left out
+        # staying as they were; with what the command was for, and the aim when
+        # it falls due, over it.
+        base = standing if isinstance(standing, dict) else dict(payload)
+        base = {**base, "context": payload.get("context")} if "context" in payload else base
+
+        def expecting(*parts: Status | None) -> dict[str, Any]:
+            said = {k: v for part in parts if part for k, v in part.items()}
+            if not said or status_now is None:
+                return base
+            return {**base, "status": expected_status(said, _no_change(status_now))}
+
+        own = self._said if self._said_by_program else None
+        value = expecting(own, self._want_status, self._goal_status)
+        by_program = self._said_by_program or bool(self._want_status) or bool(self._goal_status)
         if value == _content_value(standing_unit):
             predicted = standing_unit
         else:
-            base = standing_unit.content if isinstance(standing_unit.content, dict) else {}
-            predicted = InfoUnit(content={**base, "value": value}, ref_frame=standing_unit.ref_frame,
+            base_content = standing_unit.content if isinstance(standing_unit.content, dict) else {}
+            predicted = InfoUnit(content={**base_content, "value": value}, ref_frame=standing_unit.ref_frame,
                                  t=standing_unit.t)
         if value != payload:
-            without_want = (expected_status(self._said, _no_change(status_now))
-                            if self._said_by_program and status_now is not None else None)
-            if self._want_status and status_now is not None and (
-                    without_want or _no_change(status_now)) == status_now:
-                self._want_missed = (f"the game's report: wanted {json.dumps(self._want_status)}, "
-                                     f"came {json.dumps({k: status_now.get(k) for k in self._want_status})}")
+            aim = self._goal["reached_when"].get("status") if self._goal else None
+            if expecting(own) != payload and aim and status_now is not None and all(
+                    status_now.get(k) == v for k, v in aim.items()):
+                # The aim came before it was due: the program's time for it was wrong.
+                self._missed = f"your GOAL ({self._goal['aim']}) came sooner than you said"
+                self._goal_due = self.frame_calls + self._goal["within"]
+                self.think("goal", ask, write)
+            elif expecting(own) != payload:
+                self.think("status", ask, write)
+            elif expecting(own, self._want_status) != payload:
+                self._missed = (f"the game's report: wanted {json.dumps(self._want_status)}, "
+                                f"came {json.dumps({k: status_now.get(k) for k in self._want_status})}")
                 self.think("want", ask, write)
             else:
-                self.think("status", ask, write)
-        self._want_status = None
+                self._missed = (f"your GOAL ({self._goal['aim']}) was not reached when you said: the report "
+                                f"came {json.dumps({k: status_now.get(k) for k in self._goal_status})}")
+                self.think("goal", ask, write)
+        self._want_status = self._goal_status = None
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()
@@ -779,16 +867,22 @@ class Mind:
             held = (*held, *self.held_by())
         return Expecting(predicted=predicted, held_by=held)
 
-    def on_remark(self, observed: InfoUnit, payload: dict[str, Any], window, contribute, ask, write) -> InfoUnit:
+    def on_remark(self, observed: InfoUnit, payload: dict[str, Any], window, contribute, ask, write,
+                  test=None) -> InfoUnit:
         """What the onlooker says of the agent's behaviour. The standing
         expectation holds — it says what it said — and a change of stance is a
-        mismatch the mind thinks on."""
+        mismatch the mind thinks on. In a cycle the region said nothing in — the
+        body stood still — what the onlooker says is all that comes, and the
+        mind commands after it."""
         predicted = persistence("onlooker", window, observed, contribute, ask, write)
         self._remark = {k: v for k, v in payload.items() if k != "entity"}
         if _content_value(predicted) != payload:
             # Its own thought, even in a cycle the mind has thought in already:
             # the objection is to how the agent acts, and is met on its own terms.
             self.think("onlooker", ask, write, again=True)
+        if not self._status_this_cycle:
+            self.command(ask, write, test)
+        self._status_this_cycle = False
         return predicted
 
     # ── commanding ──
@@ -805,7 +899,7 @@ class Mind:
         """
         if not self._seen:
             return
-        if self._task is None:
+        if self._task is None or self._aim is None:
             self._command_due = True  # it waits for what it is for
             return
         self._command_due = False
@@ -813,20 +907,26 @@ class Mind:
         steps = steps_of([t for t, _ in self._seen])
         state = (self._seen[-1][0].status or {}).get("stateTo")
         for attempt in range(MAX_WAIT_THOUGHTS + 1):
-            proposal, want = self._proposal(grid, steps)
-            # What the body can carry out: RESET always; any other action the
-            # region offers, unless the game has ended — the body's own rule
-            # (`command.py`), so a command the body would not carry out is none.
-            if proposal is not None and (proposal[0] == 0 or (
-                    proposal[0] in self._affords and state not in TERMINAL_STATES)):
-                self.commands.append((self.frame_calls, proposal))
-                self._wanted = (proposal, want) if want else None
-                if test is not None:
-                    action, x, y = proposal
-                    test({"kind": "move", "actionId": action, "x": x, "y": y})
-                return
+            # A program that holds no aim commands nothing: the mind always
+            # holds an expectation of reaching one (Plone, 2026-09-25).
+            if self._fn is not None and self._goal is None:
+                reason = "no goal"
+            else:
+                proposal, want = self._proposal(grid, steps)
+                # What the body can carry out: RESET always; any other action the
+                # region offers, unless the game has ended — the body's own rule
+                # (`command.py`), so a command the body would not carry out is none.
+                if proposal is not None and (proposal[0] == 0 or (
+                        proposal[0] in self._affords and state not in TERMINAL_STATES)):
+                    self.commands.append((self.frame_calls, proposal))
+                    self._wanted = (proposal, want) if want else None
+                    if test is not None:
+                        action, x, y = proposal
+                        test({"kind": "move", "actionId": action, "x": x, "y": y})
+                    return
+                reason = "no command"
             if attempt < MAX_WAIT_THOUGHTS:
-                self.think("no command", ask, write, again=True)
+                self.think(reason, ask, write, again=True)
         self.commands.append((self.frame_calls, None))
 
     def _proposal(self, grid: Grid, steps: list[dict[str, Any]]) -> tuple[Proposal | None, Want | None]:
@@ -850,7 +950,7 @@ class Mind:
         """
         if self._thought_at == self.frame_calls and not again:
             return
-        if self._task is None:
+        if self._task is None or self._aim is None:
             # What it is for has not come back from memory yet: the thought waits.
             self._pending = on
             return
@@ -874,7 +974,7 @@ class Mind:
         evidence = [dataclasses.replace(t, status=None) for t in shown]
         lines = list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
         built_from = (tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
-                      + ((self._task_id,) if self._task_id is not None else ()))
+                      + tuple(i for i in (self._task_id, self._aim_id) if i is not None))
         held_ok, held_misses = score(self._fn, evidence)
         also = ""
         if self._affords:
@@ -886,11 +986,18 @@ class Mind:
             also += f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
         if on == "no command":
             also += "\nYour propose gave no action the game can take now.\n"
-        if on == "want" and self._want_missed:
-            also += f"\nYour last action did not bring about what your propose said it would: {self._want_missed}\n"
+        if on == "want" and self._missed:
+            also += f"\nYour last action did not bring about what your propose said it would: {self._missed}\n"
+        if on == "goal" and self._missed:
+            also += f"\n{self._missed[0].upper()}{self._missed[1:]}.\n"
+        if self._goal is not None:
+            also += f"\nThe GOAL your program holds: {json.dumps(_goal_shown(self._goal))}\n"
+        if on == "no goal":
+            also += "\nYour program holds no GOAL that what comes back could show reached.\n"
         grid = shown[-1].after if shown else [[]]
         first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
                                           evidence=render_evidence(shown, report=True), also=also)
+        first += "\n\n" + self._aim["aim"]
         messages = [{"role": "user", "content": first}]
         if self.code is not None:
             messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
@@ -910,12 +1017,13 @@ class Mind:
             for cue in asks:
                 ask(dict(cue))
         code = extract_code(text)
-        note, cand_ok, adopted, fn, propose = "", None, False, None, None
+        note, cand_ok, adopted, fn, propose, goal = "", None, False, None, None, None
         if code is None:
             note = "no code block"
         else:
             try:
-                fn, propose = compile_functions(code)
+                fn, propose, goal_raw = compile_all(code)
+                goal = goal_of(goal_raw, grid)
             except ProgramError as exc:
                 note = str(exc)
         if fn is not None:
@@ -926,9 +1034,11 @@ class Mind:
             # onlooker's objection, or a command that did not bring about what it
             # was for. Those are met by acting otherwise, not by predicting better
             # (Plone, 2026-09-25).
+            acting = on in ("no command", "onlooker", "want", "goal", "no goal")
             adopted = (self._fn is None or cand_ok > held_ok
-                       or (on in ("no command", "onlooker", "want") and cand_ok >= held_ok
-                           and propose is not None))
+                       or (acting and cand_ok >= held_ok and propose is not None
+                           and (on != "no goal" or goal is not None))
+                       or (self._goal is None and goal is not None and cand_ok >= held_ok))
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, note, on, asks))
         # The answer, whole, as the mind's own datum, built from what it was shown;
         # written after the program it kept, if it kept one.
@@ -937,6 +1047,8 @@ class Mind:
             answer["reasoning"] = reasoning
         if adopted:
             self._keep(code, fn, propose, write, built_from)
+            self._goal = goal
+            self._goal_due = self.frame_calls + goal["within"] if goal else 0
         if write is not None:
             write(WriteRequest(payload=answer, open=dict(THOUGHT_TAGS), built_from=built_from))
 
@@ -1031,7 +1143,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
             return mind.on_status(observed, content, payload, window, contribute, ask, write, test)
 
         if channel == ONLOOKER_CHANNEL and isinstance(payload, dict):
-            return mind.on_remark(observed, payload, window, contribute, ask, write)
+            return mind.on_remark(observed, payload, window, contribute, ask, write, test)
 
         return persistence(entity_id, window, observed, contribute, ask, write)
 
@@ -1040,15 +1152,15 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
 
 def create_mind(endpoint: ModelEndpoint | None = None,
                 chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
-                task: dict[str, str] | None = None) -> Mind:
-    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, task)
+                task: dict[str, str] | None = None, aim: dict[str, str] | None = None) -> Mind:
+    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, task, aim)
 
 
 __all__ = [
     "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "MAX_WAIT_THOUGHTS",
     "PROGRAM_SECONDS", "PROGRAM_TAGS", "STATUS_FIELDS", "THOUGHT_TAGS",
     "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
-    "chat", "compile_functions", "compile_program", "create_mind", "expected_status", "extract_asks",
+    "chat", "compile_all", "compile_functions", "compile_program", "goal_of", "create_mind", "expected_status", "extract_asks",
     "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "run_propose_full", "score",
     "standing_status",
     "steps_of", "transition_of",

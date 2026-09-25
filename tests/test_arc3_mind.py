@@ -14,6 +14,7 @@ from arc3.mind import (
 )
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from arc3.prior import DIRECTIVE
+from arc3.aim import MIND_AIM
 from arc3.task import MIND_TASK
 from dil.conformance.checker import check_conformance
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
@@ -78,7 +79,7 @@ class Script:
 def loop(model: Script, respond=None):
     # What the mind is told, handed in as if recalled; the store's road is tested
     # on its own below.
-    wm = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload)
+    wm = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload, aim=MIND_AIM.payload)
     rule = mind_rule(wm)
     data, events = create_data_store(), create_event_log()
     glob = create_glob_mod({"appraisalGain": 1.0}, 0)
@@ -262,6 +263,8 @@ def predict(grid, action, x=None, y=None):
 
 def propose(grid):
     return (1, None, None)
+
+GOAL = {"aim": "a level", "source": "inferred", "reached_when": {"status": {"levelsDelta": 1}}, "within": 50}
 '''
 
 
@@ -302,6 +305,9 @@ def predict(grid, action, x=None, y=None):
 
 def propose(grid):
     return (1, None, None)
+
+GOAL = {"aim": "the lit cell at the far end", "source": "inferred",
+        "reached_when": {"cells": {"0,2": 1}}, "within": 50}
 '''
 
 
@@ -311,8 +317,8 @@ def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
     model = Script(PROPOSING)
     wm = create_mind(ModelEndpoint(), chat_fn=model)  # told nothing in code
     data, events = create_data_store(), create_event_log()
-    data.put(MIND_TASK.id, admit_host_data(HostDatum(payload=MIND_TASK.payload, admitting_layer=1,
-                                                     open=MIND_TASK.open), 0))
+    for item in (MIND_TASK, MIND_AIM):
+        data.put(item.id, admit_host_data(HostDatum(payload=item.payload, admitting_layer=1, open=item.open), 0))
     cycle = create_cycle(
         layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
                       t5=create_t5(predict=mind_rule(wm)), t6=create_t6(), t7=create_t7(), t8=create_t8()),
@@ -321,7 +327,8 @@ def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
     )
     run(cycle, frame(lit(0), lit(1)))  # a mismatch before it knows what it is for: it asks, and waits
     queries = [r.action for r in of_kind(events, "emission") if r.issuing_layer == 5]
-    assert queries == [store_query({"domain": "mind-task"})]
+    assert queries == [store_query({"domain": "mind-task"}), store_query({"domain": "mind-aim"})], \
+        "what it is for, and what it does with any aim"
     assert model.prompts == [], "the thought waits for what it is for"
     run(cycle, frame(lit(1), lit(2)))  # it arrives from memory; the waiting thought happens
     assert len(model.prompts) == 1
@@ -330,6 +337,8 @@ def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
     assert "3x3 cells" in shown, "the grid's own size, not a fixed one"
     written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
     assert MIND_TASK.id in written["written-1-0"], "what the mind was told is among what it was built from"
+    assert MIND_AIM.id in written["written-1-0"]
+    assert "Whatever you are asked to do has an aim." in shown
     assert data.get(MIND_TASK.id).fixed.provenance == "running", "recalled: it ran"
 
 
@@ -363,8 +372,8 @@ def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
     model = Script(no_propose, PROPOSING)
     wm, cycle, data, events = loop(model, respond=carry_out)
     result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status())))
-    assert [t.on for t in wm.thoughts] == ["frame", "no command"]
-    assert "Your propose gave no action the game can take now." in model.prompts[1][0]["content"]
+    assert [t.on for t in wm.thoughts] == ["frame", "no goal"], "it holds no aim: it commands nothing yet"
+    assert "Your program holds no GOAL" in model.prompts[1][0]["content"]
     assert result.response.action["actionId"] == 1, "the second thought gave a command, and it was carried out"
 
 
@@ -477,8 +486,8 @@ def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_i
 
     model = Script(PROPOSING, PROPOSING, SAME_PREDICT_OTHER_MOVE)
     wm, cycle, data, events = loop(model)
-    run(cycle, frame(lit(0), lit(1)), remark({"remark": None}))
-    run(cycle, frame(lit(1), lit(1)), remark({"remark": "repeating", "move": [1, None, None], "since": 0}))
+    run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
+    run(cycle, frame(lit(1), lit(1)), status(), remark({"remark": "repeating", "act": {"act": 1}, "since": 0}))
     assert [t.on for t in wm.thoughts] == ["frame", "frame", "onlooker"]
     assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE
 
@@ -490,3 +499,66 @@ def test_a_fence_inside_a_docstring_does_not_close_the_block():
     text = f"Here it is.\n```python\n{code}```\nASK {{\"kind\": \"frame\"}}\n"
     assert extract_code(text) == code
     assert extract_code("    ```python\n    x = 1\n    ```") == "    x = 1\n    ", "all fences indented: read as before"
+
+
+# ── the aim the mind holds itself to ──
+
+
+GOAL_SOON = PROPOSING.replace('"within": 50', '"within": 1')
+GOAL_SOON_OTHER = GOAL_SOON.replace("return (1, None, None)", "return (2, None, None)")
+
+
+def test_an_aim_not_reached_when_the_program_said_sets_the_mind_thinking_on_the_goal():
+    model = Script(GOAL_SOON, GOAL_SOON_OTHER)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())     # kept; its GOAL falls due one action on
+    assert wm._goal["within"] == 1 and wm._goal["source"] == "inferred"
+    run(cycle, frame(lit(1), lit(2)), status())     # the grid comes as predicted: (0,2) lit — reached
+    assert [t.on for t in wm.thoughts] == ["frame"], "reached when it said: nothing to think on"
+    run(cycle, frame(lit(2), lit(2)), status())     # held again from here; ACTION1 at the edge changes nothing
+    run(cycle, frame(lit(0), lit(1)), status())     # due, and (0,2) is not lit
+    assert wm.thoughts[-1].on == "goal"
+    assert "was not reached when you said" in model.prompts[-1][0]["content"]
+    assert wm.thoughts[-1].adopted and wm.code == GOAL_SOON_OTHER, "met by acting otherwise"
+
+
+def test_an_aim_nothing_coming_back_could_show_is_not_one_it_holds():
+    from arc3.mind import goal_of
+
+    g = lit(0)
+    assert goal_of({"aim": "find out what the aim is", "source": "inferred", "within": 5}, g) is None
+    assert goal_of({"aim": "x", "reached_when": {"cells": {"9,9": 1}}, "within": 5}, g) is None, "off the grid"
+    assert goal_of({"aim": "x", "reached_when": {"status": {"mood": "good"}}, "within": 5}, g) is None, \
+        "not a field the region reports"
+    assert goal_of({"aim": "x", "reached_when": {"cells": {"0,1": 1}}, "within": 0}, g) is None
+    assert goal_of({"aim": "x", "reached_when": {"cells": {"0,1": 1}}, "within": 3}, g)["source"] == "inferred"
+
+
+def test_an_aim_that_comes_sooner_than_said_is_thought_on():
+    level_later = PROPOSING.replace('"reached_when": {"cells": {"0,2": 1}}, "within": 50',
+                                    '"reached_when": {"status": {"levelsDelta": 1}}, "within": 9')
+    model = Script(level_later, level_later)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())            # kept: a level, it says, in nine actions
+    run(cycle, frame(lit(1), lit(2)), status(levels=1))    # it comes at once
+    assert wm.thoughts[-1].on == "goal"
+    assert "came sooner than you said" in model.prompts[-1][0]["content"]
+
+
+def test_in_a_cycle_the_body_stood_still_the_mind_commands_after_the_onlooker():
+    from arc3.command import carry_out
+    from arc3.observe import ONLOOKER_CHANNEL
+
+    def remark(said):
+        return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+    model = Script(PROPOSING, PROPOSING)
+    standing = lambda: ("NOT_FINISHED", (1, 2))  # noqa: E731 — the frame the body stands on
+    wm, cycle, data, events = loop(model, respond=lambda ctx: carry_out(ctx, standing=standing))
+    cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status(), remark({"remark": None}))))
+    assert len(wm.commands) == 1
+    still = cycle.run(HostCycleInput(signals=(remark({"remark": "standing still", "since": 1, "for": 1}),),
+                                     afforded=frozenset({"onlooker"})))
+    assert [t.on for t in wm.thoughts] == ["frame", "onlooker"], "the nudge collides, and it thinks"
+    assert len(wm.commands) == 2 and still.response.action["actionId"] == 1, \
+        "nothing came from the region, so it commands after what the onlooker said"

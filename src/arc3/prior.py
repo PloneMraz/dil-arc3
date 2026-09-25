@@ -39,6 +39,7 @@ from typing import Final
 
 from dil.host import PreexistingItem
 
+from .aim import MIND_AIM
 from .task import MIND_TASK
 
 from .observe import (
@@ -230,7 +231,7 @@ RULES: Final[tuple[PreexistingItem, ...]] = (
 # Everything the character has before it lives: the published rules, quoted, and
 # what its mind is told its thinking is for (`task.py`, this project's own words,
 # tagged as such).
-PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK)
+PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK, MIND_AIM)
 
 
 class ArcRules:

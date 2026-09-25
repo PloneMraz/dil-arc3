@@ -12,6 +12,7 @@ from __future__ import annotations
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.observe import FRAME_CHANNEL, REGION_ENTITY, STATUS_CHANNEL, transducers
 from arc3.prior import DIRECTIVE, RULES
+from arc3.aim import MIND_AIM
 from arc3.task import MIND_TASK
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
@@ -44,7 +45,7 @@ class Listener:
 
 
 def test_a_recalled_datum_is_read_not_predicted_as_an_other():
-    mind = create_mind(ModelEndpoint(), chat_fn=Listener(), task=MIND_TASK.payload)
+    mind = create_mind(ModelEndpoint(), chat_fn=Listener(), task=MIND_TASK.payload, aim=MIND_AIM.payload)
     rule = mind_rule(mind)
     from dil.loop.types import InfoUnit, RefFrame
 
@@ -80,7 +81,7 @@ def _store_with_rules():
 
 def test_the_first_status_report_brings_the_directive_to_mind_and_the_model_reads_it():
     model = Listener()
-    mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload)
+    mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload, aim=MIND_AIM.payload)
     data, events = _store_with_rules(), create_event_log()
     layers = Layers(
         t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),

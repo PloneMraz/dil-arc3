@@ -9,8 +9,9 @@ that collided), keeps the program as data (`nascent`, then revisions), and every
 cycle in which it wrote is committed. What is printed is read back from the run's
 own `[event]` log, `[data]` and commits — the same ones a third party would read.
 
-The onlooker (tag E) stands by: an Other outside the agent that watches the moves
-it commits and says when it thinks the agent is stuck. `--alone` leaves it out.
+The game is played in a world (`world/`) with an onlooker in it (tag E): an Other
+outside the agent and outside its host, who sees the agent's acts, or the lack
+of one, and says what it sees; the host hears it. `--alone` leaves it out.
 
 Nothing here submits to the competition.
 """
@@ -29,8 +30,8 @@ from arc3 import transducers
 from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.observe import admit
-from arc3.onlooker import onlooked
-from arc3.command import carry_out
+from world import Onlooker, World
+from arc3.command import carrying_out
 from dil.conformance.checker import check_conformance
 from dil.loop.cycle import Layers
 from dil.loop.glob_mod import create_glob_mod
@@ -61,8 +62,10 @@ if a.offline_dir:
     arc = arc_agi.Arcade(operation_mode=OperationMode.OFFLINE, environments_dir=a.offline_dir)
 else:
     arc = arc_agi.Arcade(operation_mode=OperationMode.NORMAL)
-source = create_source(arc.make(a.game), GameAction, action_budget=a.cycles)
-host_source = source if a.alone else onlooked(source)
+region = arc.make(a.game)
+world = region if a.alone else World(region, others={"onlooker": Onlooker()})
+source = create_source(world, GameAction, action_budget=a.cycles)
+host_source = source
 # What this served model needs beyond the standard request: Qwen3 thinks unless
 # told not to. The mind itself knows no model.
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
@@ -75,7 +78,7 @@ layers = Layers(
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
 daemon = Daemon(
     host=declaration(a.game, store_root=store_root, onlooker=not a.alone), source=host_source, layers=layers,
-    glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carry_out,
+    glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carrying_out(source),
     admit=admit,
 )
 gate = daemon.start()
@@ -122,7 +125,8 @@ print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_scor
 print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in wm.thoughts if t.asked]}")
 print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in wm.commands]}")
 print(f"  frame expectation held: {sum(wm.holds)} of {len(wm.holds)}")
-print(f"  the body stood still  : {source.stood_still}")
+print(f"  the body stood still  : {source.waits} cycles")
+print(f"  the GOAL held         : {wm._goal and {k: v for k, v in wm._goal.items() if k != 'reached_when'}}")
 held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
 print(f"  scars by datum kind   : {dict(held_scars)}")
 print(f"  [event] records       : {len(recs)}")

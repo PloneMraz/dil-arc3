@@ -16,7 +16,8 @@ program it writes: `predict(grid, action, x, y)`, the next grid and what the
 region will report of itself, and `propose(grid, steps)`, the next action from
 where the game stands and the steps just seen — kept as data in the store, the
 prediction tested against the region every cycle. When an expectation meets a mismatch — the frame, the region's
-status, or an onlooker's objection to how the agent behaves — the program is
+status, what the program said a command or its aim would bring about, or an
+onlooker's objection to how the agent behaves — the program is
 scarred with it, and the mind has the model write a better one from what it
 has, keeps it only if it explains that evidence better (or as well, when the
 body waits for a command, the onlooker objected, or a command did not bring

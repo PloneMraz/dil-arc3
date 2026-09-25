@@ -1,18 +1,21 @@
-"""The onlooker (tag E): an Other outside the agent, judging how it behaves.
+"""The onlooker (tag E): an Other in the world, who sees the agent act and says what it sees.
 
-It sees the moves the agent commits and whether the level moved, nothing else.
-It says when it thinks the agent is stuck; the mismatch is between the agent,
-who expected no objection, and the onlooker, who has one — and it holds only
-when the onlooker changes its stance.
+It stands outside the agent and outside the host: in the world, beside the
+region. It sees acts, opaque, and moments without one — nothing of any game. The
+host hears it on a channel of its own. The mismatch is between the agent, who
+expected no objection, and the onlooker, who has one; it holds when the
+onlooker changes its stance — and each moment the agent stands still, it says so
+again.
 """
 
 from __future__ import annotations
 
-from arc3.action import Move
+from arc3.host import Arc3Source
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
-from arc3.observe import ONLOOKER_CHANNEL, STATUS_CHANNEL, admit, move_value, transducers
-from arc3.onlooker import REPEAT_AT, Onlooker, onlooked
-from dil.loop.cycle import HostCycleInput, Layers, create_cycle
+from arc3.observe import ONLOOKER_CHANNEL, admit, move_value, transducers
+from arc3.action import Move
+from arc3.command import WAIT
+from dil.loop.cycle import Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
 from dil.loop.layers.t2 import Emission, create_t2
@@ -22,78 +25,81 @@ from dil.loop.layers.t5 import create_t5
 from dil.loop.layers.t6 import create_t6
 from dil.loop.layers.t7 import create_t7
 from dil.loop.layers.t8 import create_t8
-from dil.loop.types import Signal
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
+from tests.test_arc3_host import FakeEnv, FakeGameAction, f
+from world import REPEAT_AT, Onlooker, World, act_of
 
 
-def saw(onlooker: Onlooker, *moves, levelled_at=()):
-    for cycle, m in enumerate(moves):
-        move = m if isinstance(m, tuple) else (m, None, None)
-        onlooker.saw(cycle, move, cycle in levelled_at)
+def a(n, **data):
+    return {"act": n, **data}
+
+
+def saw(onlooker, *acts):
+    for moment, act in enumerate(acts):
+        onlooker.saw(moment, act)
 
 
 # ── what it makes of what it sees ──
 
 
-def test_it_says_nothing_until_a_move_repeats_and_then_points_where_it_began():
+def test_it_says_nothing_until_an_act_repeats_and_then_points_where_it_began():
     o = Onlooker()
-    saw(o, 2, 1, 1, 1)
+    saw(o, a(2), a(1), a(1), a(1))
     assert o.remark() == {"remark": None}
-    o.saw(4, (1, None, None), False)
+    o.saw(4, a(1))
     assert REPEAT_AT == 4
-    assert o.remark() == {"remark": "repeating", "move": [1, None, None], "since": 1}
-    o.saw(5, (1, None, None), False)
+    assert o.remark() == {"remark": "repeating", "act": a(1), "since": 1}
+    o.saw(5, a(1))
     assert o.remark()["since"] == 1, "the same view, however long it runs"
 
 
-def test_it_reads_an_alternation_as_the_agent_undoing_itself():
+def test_it_reads_an_alternation_as_going_back_and_forth():
     o = Onlooker()
-    saw(o, 3, 1, 2, 1, 2)
-    assert o.remark() == {"remark": "back-and-forth", "moves": [[1, None, None], [2, None, None]], "since": 1}
+    saw(o, a(3), a(1), a(2), a(1), a(2))
+    assert o.remark() == {"remark": "back-and-forth", "acts": [a(1), a(2)], "since": 1}
 
 
-def test_a_level_reached_is_not_being_stuck_and_a_reset_starts_over():
+def test_standing_still_is_said_again_each_moment_it_lasts():
     o = Onlooker()
-    saw(o, 1, 1, 1, 1, levelled_at={2})
-    assert o.remark() == {"remark": None}, "only one move since the level moved"
-    o = Onlooker()
-    saw(o, 1, 1, 1, 0, 1)
+    saw(o, a(1), None)
+    assert o.remark() == {"remark": "standing still", "since": 1, "for": 1}
+    o.saw(2, None)
+    assert o.remark() == {"remark": "standing still", "since": 1, "for": 2}, "the same fact, longer: a new nudge"
+    o.saw(3, a(1))
     assert o.remark() == {"remark": None}
 
 
-def test_clicks_at_different_places_are_different_moves():
+def test_it_knows_no_game_every_act_is_just_an_act():
     o = Onlooker()
-    saw(o, (6, 1, 1), (6, 2, 2), (6, 3, 3), (6, 4, 4))
-    assert o.remark() == {"remark": None}
+    saw(o, a("RESET"), a("RESET"), a("RESET"), a("RESET"))
+    assert o.remark()["remark"] == "repeating", "no act is special to it"
+    o = Onlooker()
+    saw(o, a(6, x=1, y=1), a(6, x=2, y=2), a(6, x=3, y=3), a(6, x=4, y=4))
+    assert o.remark() == {"remark": None}, "acts that differ in what they carry are different acts"
 
 
-# ── in the loop ──
+# ── where it stands: in the world, not in the host ──
 
 
-class Body:
-    """A region that reports its status, the level never moving."""
-
-    def __init__(self, n: int) -> None:
-        self.n, self.t, self.delivered = n, 0, []
-
-    def next(self):
-        if self.t >= self.n:
-            return None
-        self.t += 1
-        return HostCycleInput(signals=(Signal(source_id=STATUS_CHANNEL, t=self.t, raw_payload={
-            "entity": "region", "status": {"stateTo": "NOT_FINISHED", "levelsDelta": 0},
-            "context": "action:1", "affords": [1, 2]}),), afforded=frozenset({"region"}))
-
-    def deliver(self, response):
-        self.delivered.append(response)
+def test_the_world_shows_each_act_to_the_others_once_they_watch():
+    env = FakeEnv([f(), f(), f()])
+    o = Onlooker()
+    world = World(env, others={"onlooker": o})
+    world.step(FakeGameAction(0))                 # before anyone watches: opening, unseen
+    assert world.remarks() == {"onlooker": {"remark": None}}
+    world.step(FakeGameAction(1))
+    world.idle()
+    assert o.remark() == {"remark": "standing still", "since": 1, "for": 1}
+    assert env.steps == [(0, {}), (1, {})], "the region got the acts; the idle moment reached it not"
+    assert act_of(FakeGameAction(6), {"x": 3, "y": 4}) == {"act": 6, "x": 3, "y": 4}
 
 
 def no_model(*_):
-    raise AssertionError("the model is not asked about the onlooker")
+    raise AssertionError("the model is not asked here")
 
 
-def test_the_mismatch_is_the_onlookers_change_of_stance_held_on_its_remark():
+def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_still():
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
@@ -104,32 +110,22 @@ def test_the_mismatch_is_the_onlookers_change_of_stance_held_on_its_remark():
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
     )
-    source = onlooked(Body(12))
-    plan = [1] * 7 + [2, 1, 2, 1, 2]
-    scars_at = []
-    for i, action in enumerate(plan):
+    source = Arc3Source(World(FakeEnv([f()] * 10), others={"onlooker": Onlooker()}),
+                        FakeGameAction, action_budget=6)
+    heard = []
+    plan = [move_value(Move(1))] + [dict(WAIT)] * 4
+    for action in plan:
         inp = source.next()
-        assert "onlooker" in inp.afforded, "it is there every cycle: its silence is no absence"
+        assert inp is not None
+        heard.append([s.raw_payload for s in inp.signals if s.source_id == ONLOOKER_CHANNEL])
         cycle.run(inp)
-        mine = [r for r in events.all() if type(r).__name__ == "EventRecord" and r.event.source_id == "onlooker"]
-        scars_at += [i] * (len(mine) - len(scars_at))
-        source.deliver(Emission(action=move_value(Move(action))))
-
-    # ACTION1 committed at cycles 0-3 is seen by cycle 4: "repeating" — one mismatch.
-    # Kept while the agent keeps at it; the change of move ends it — a second.
-    # 1 2 1 2, from the last ACTION1 at cycle 6, is seen by cycle 10 — a third.
-    # Each scars both sides (v0.3.5): the remark that came, and the one expected.
-    assert scars_at == [4, 4, 8, 8, 10, 10]
-    remarks = [d for _, d in data.entries() if d.open == {"domain": "reflection", "kind": "remark",
-                                                          "source": ONLOOKER_CHANNEL}]
-    assert len(remarks) == 12, "every remark is kept as data"
-    held = [r for r in events.all() if type(r).__name__ == "EventRecord" and r.event.source_id == "onlooker"]
-    assert all(data.get(r.datum_id).open["kind"] == "remark" for r in held), "the scar is on the remark"
-    assert set(data.get(held[0].datum_id).payload) == {"entity", "remark", "move", "since"}, \
-        "a view of the behaviour, not a retold collision"
-    said = [data.get(r.datum_id).payload for r in held]
-    assert [(p["remark"], p.get("since")) for p in said] == [
-        ("repeating", 0), (None, None),        # it objected; the agent expected silence
-        (None, None), ("repeating", 0),        # it took it back; the agent expected the objection
-        ("back-and-forth", 6), (None, None),   # it objected again
-    ]
+        source.deliver(Emission(action=action))
+    inp = source.next()
+    assert inp is not None and {s.source_id for s in inp.signals} == {ONLOOKER_CHANNEL}, \
+        "a cycle the body stood still in carries only what is heard"
+    assert inp.afforded == {"onlooker"}, "the region is not counted absent: nothing was done to it"
+    assert heard[-1] == [{"entity": "onlooker", "remark": "standing still", "since": 1, "for": 3}]
+    assert source.next() is None, "standing still counts against the budget: it has an end"
+    assert source.spent == 1 and source.waits == 4, "the waits cost no action"
+    scars = [r for r in events.all() if type(r).__name__ == "EventRecord" and r.event.source_id == "onlooker"]
+    assert len({r.anchor.cycle for r in scars}) == 3, "each nudge is a new remark, and collides"

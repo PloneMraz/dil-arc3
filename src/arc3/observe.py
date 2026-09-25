@@ -45,9 +45,9 @@ FRAME_ENTITY: Final = "frame"
 STATUS_CHANNEL: Final = "arc3-status"
 # The Other that is the game itself: its state and level counter.
 REGION_ENTITY: Final = "region"
-# The channel the onlooker speaks on (`onlooker.py`, tag E): an Other outside the
-# agent, judging how it behaves. The host carries what it says in, as it carries
-# the region's returns; it computes nothing from it.
+# The host's ear for an Other in the world (`world/onlooker.py`, tag E), judging
+# how the agent behaves. The host carries what it hears in, as it carries the
+# region's returns; it computes nothing from it, and does not know who speaks.
 ONLOOKER_CHANNEL: Final = "onlooker"
 ONLOOKER_ENTITY: Final = "onlooker"
 

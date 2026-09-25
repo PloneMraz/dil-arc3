@@ -25,7 +25,7 @@ terminal emission as a marker.
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 from dil.loop.cycle import RespondContext
 
@@ -55,14 +55,24 @@ def _command(ctx: RespondContext) -> Move | None:
     return None
 
 
-def carry_out(ctx: RespondContext) -> Any:
-    """Commit what the mind commanded, if the body can; otherwise stand still."""
+def carry_out(ctx: RespondContext, standing: Callable[[], tuple[str, tuple[int, ...]]] | None = None) -> Any:
+    """Commit what the mind commanded, if the body can; otherwise stand still.
+
+    What the body can do is read from the region's report this cycle. In a
+    cycle the region said nothing in — the body stood still before it — the
+    body goes by where it stands (`standing`: the state and the actions of the
+    frame it is on), which nothing has changed since."""
     command = _command(ctx)
     if command is None:
         return move_value(Move(RESET)) if ctx.cycle == 0 else dict(WAIT)
     report = _status(ctx)
-    state = (report.get("status") or {}).get("stateTo")
-    affords = tuple(int(a) for a in report.get("affords") or ())
+    if report:
+        state = (report.get("status") or {}).get("stateTo")
+        affords = tuple(int(a) for a in report.get("affords") or ())
+    elif standing is not None:
+        state, affords = standing()
+    else:
+        state, affords = None, ()
     if command.action_id == RESET:
         return move_value(command)
     if state in TERMINAL_STATES or command.action_id not in affords:
@@ -72,8 +82,15 @@ def carry_out(ctx: RespondContext) -> Any:
     return move_value(command)
 
 
+def carrying_out(source: Any) -> Callable[[RespondContext], Any]:
+    """`carry_out` for a body over `source`, which knows the frame it stands on."""
+    def respond(ctx: RespondContext) -> Any:
+        return carry_out(ctx, standing=lambda: (source.frame.state, tuple(source.frame.available_actions)))
+    return respond
+
+
 def is_wait(action: Any) -> bool:
     return isinstance(action, dict) and action.get("kind") == WAIT["kind"]
 
 
-__all__ = ["WAIT", "carry_out", "is_wait"]
+__all__ = ["WAIT", "carry_out", "carrying_out", "is_wait"]

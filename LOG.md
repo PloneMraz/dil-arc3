@@ -2193,3 +2193,39 @@ had been lost to "unterminated triple-quoted string" at line 2. That this was
 the cause is not confirmed; the answers were not kept then, and they are now.
 
 249 tests.
+
+### The mind holds an aim; the onlooker stands in the world; standing still is a cycle (Plone, same day)
+
+After the Flash-Next run, Plone asked why a mind given an aim held no expectation
+of reaching it. The aim was words in the prompt, read only while the model
+thought, and never made an expectation the loop held. Worse, the standing
+expectation of the region's report was "as before": `levelsDelta 0`, not getting
+through. Each step that got nowhere matched.
+
+- **The mind always holds an expectation of reaching an aim** — whatever aim the
+  task it receives has (Plone: not the levels of this game). The words are the
+  mind's own prior, `prior:mind-aim` (`src/arc3/aim.py`), apart from the
+  environment's task, and name no environment. When the task states no aim, the
+  mind works one out and says it is its inference. The program writes `GOAL =
+  {aim, source, reached_when, within}`. When the aim falls due it joins the
+  program's expectation of that step; not reached then, or reached sooner, the
+  mind thinks on `goal`. A program with no `GOAL` the region could show reached
+  commands nothing.
+- **Where a regress stops** (Plone warned of one): the mind thinks only on what
+  comes from outside, or while the body waits; an aim must ground out in what
+  comes back; standing still is said by the onlooker each moment, and costs the
+  run's budget.
+- **The onlooker is in the world, not in the host.** It had been a wrapper around
+  the body's source, in `src/arc3/`, and read the level count and knew RESET.
+  Now `src/world/` is what lies outside the agent: the region and the Others who
+  see it act. The host touches the region and hears the Others on its own
+  channel; it does not know what they are. The onlooker knows no game: acts are
+  opaque. Its remarks are "standing still" (said anew each moment it lasts),
+  "repeating", "back-and-forth".
+- **A cycle the body stood still in is a cycle.** It had ended the run, so no
+  Other could ever speak to a stalled agent. Now the host reports only what it
+  hears, and T7 counts no absence of the region. The mind commands after the
+  onlooker, and the body goes by the frame it stands on. Such cycles count
+  against the budget and cost no action.
+
+254 tests.

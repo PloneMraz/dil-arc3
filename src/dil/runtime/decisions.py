@@ -6,9 +6,9 @@ thresholds (§11, conformance criterion 7).
 
 **Tag E is settled for this host.** Reflection needs a third party, and a Kaggle
 evaluation session has neither a network nor a human. The reader here is an
-onlooker — an Other outside the agent, a piece of code judging its behaviour
-(`arc3/onlooker.py`). Its remark enters through the host's own transducer on
-the `onlooker` channel; it does not use `reflection.py`, which is kept as
+onlooker — an Other in the world, outside the agent and its host, a piece of
+code judging its behaviour (`world/onlooker.py`). Its remark enters through the
+host's own transducer on the `onlooker` channel; it does not use `reflection.py`, which is kept as
 ported from dil-core and not used here.
 
 Ported from dil-core against DIL protocol v0.3.3.
@@ -30,15 +30,16 @@ MODE_B_SOURCE: Final = "host-source (live external input the agent does not cont
 
 # DECIDE@IMPL tag E — the read-collision-into-coordinates mechanism (§8.4).
 REFLECTION_MECHANISM: str = (
-    "an onlooker: an Other outside the agent, a separate piece of code and not an "
-    "agent, that watches the moves the agent commits and whether the level moved, "
-    "and says when it judges the agent stuck — 'repeating' (the same move 4 times, "
-    "the level unchanged; not measured) or 'back-and-forth' (x y x y), each pointing "
-    "at the cycle the pattern began (arc3/onlooker.py). Its remark enters on the "
+    "an onlooker: an Other in the world, outside the agent and its host, a separate "
+    "piece of code and not an agent, that sees the agent's acts (opaque) and the "
+    "moments without one, knows no game, and says what it sees — 'standing still' "
+    "(said anew each moment), 'repeating' (the same act 4 times; not measured) or "
+    "'back-and-forth' (x y x y), each pointing at the moment it began "
+    "(world/onlooker.py). Its remark enters on the "
     "declared T3 channel `onlooker`, is kept as data (domain reflection), and "
     "collides when the onlooker changes its stance: a mismatch between the agent and "
     "the onlooker, never a retelling of a collision the agent already recorded. It "
-    "returns and does not write. LIMIT, declared: its stance is two written rules, "
+    "returns and does not write. LIMIT, declared: its stance is three written rules, "
     "so it objects only to what they name"
 )
 # Rationale: §8.4's reader is a third party with a view of its own, and an Other

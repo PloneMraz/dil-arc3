@@ -63,7 +63,8 @@ def test_the_host_declares_the_rules_as_preexisting_memory():
     pre = declaration("ls20").store.preexisting
     assert pre is not None
     assert [i.id for i in pre.scan()] == [i.id for i in PRIOR]
-    assert [i.id for i in PRIOR] == [*(i.id for i in RULES), MIND_TASK.id], "the rules, then what the mind is told"
+    assert [i.id for i in PRIOR] == [*(i.id for i in RULES), MIND_TASK.id, "prior:mind-aim"], \
+        "the rules, then what the mind is told, then what the mind does with any aim"
 
 
 def test_what_the_mind_is_told_is_marked_as_this_projects_own_words():

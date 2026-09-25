@@ -132,6 +132,22 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **A mismatch on any channel sets the mind thinking** — the frame, the status,
   or the onlooker's change of stance — at most once a cycle; a change of the
   onlooker's stance is thought on even in a cycle already thought in.
+- **The mind always holds an expectation of reaching an aim** (Plone,
+  2026-09-25): whatever aim the task it receives has — stated, or worked out and
+  said to be its inference. The words are the mind's own prior
+  (`prior:mind-aim`, `src/arc3/aim.py`), apart from the environment's task; they
+  name no environment. The program writes `GOAL = {aim, source, reached_when,
+  within}`: `reached_when` is what will come back when the aim is reached, and
+  when the aim falls due it joins the program's expectation of that step. Not
+  reached then, or reached sooner: the mind thinks on `goal`, and a program that
+  predicts as well and acts otherwise is kept; the aim is then held again from
+  that step. A program with no `GOAL` the region could show reached commands
+  nothing: the mind thinks again while the body waits.
+- **Where a regress stops.** (1) The mind thinks only on what comes from outside
+  — a return, the onlooker — or while the body waits; one thought never sets off
+  another. (2) An aim must ground out in what comes back: an aim nothing coming
+  back could show is not taken. (3) Standing still is said by the onlooker each
+  moment, and standing costs the run's budget, which ends it.
 - **What a command is for is an expectation too** (Plone, 2026-09-25). `propose`
   may return `(action, x, y, want)`, `want` being cells of the next grid and
   fields of the region's next report. It joins the program's expectation of the
@@ -197,14 +213,22 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   onlooker's reasons to object.
 - **The onlooker's remark reaches behaviour only through the mind.** A change of
   its stance sets the mind thinking and the model is shown what it says; a
-  program that acts otherwise and predicts as well is kept. Whether that turns
-  behaviour on a live run is not yet measured. It scars only when its stance
-  changes, not at every repeat, so it sets the mind thinking only then.
+  program that acts otherwise and predicts as well is kept. It scars only when
+  its stance changes, not at every repeat, so it sets the mind thinking only
+  then — except standing still, which it says anew each moment.
+- **A cycle the body stood still in is a cycle.** The region returns nothing, the
+  host reports only what it hears, and T7 counts no absence of the region
+  (nothing was done to it). The mind commands after the onlooker; the body goes
+  by the frame it stands on. Such cycles count against the run's budget and cost
+  no action. Without an onlooker nothing arrives in them, so the mind is never
+  asked, and the run spends its budget standing.
+- **The aim's time is the model's.** `within` is how many actions the model
+  expects; a large one means the aim is not met by the region within a run. Not
+  bounded by the host's budget, which would put an environment's constant in the
+  mind (declared).
 - **One expectation a run is not attributed**: the cycle the program first
   comes back, T5 meets the frame before the store arrival that tells the mind
   its datum's id. Every later one is the program's.
-- Want has nothing to seek: the directive says what counts as reaching the goal,
-  not how to get there, and no level has been completed to learn from.
 
 ## DECIDE@IMPL — what this implementation declares
 
@@ -236,23 +260,32 @@ are below.
   not a kind (§2: "any entity occupying the relational position not-Self"), and
   a B-source may be "a hard third party … so long as it can resist" (spec,
   DECIDE@IMPL-D). So the reader is **a separate piece of code, not an agent and
-  not a mind**: `src/arc3/onlooker.py`.
+  not a mind**: `src/world/onlooker.py`.
 
-  - **It judges the agent's behaviour, not the region.** It sees the moves the
-    agent commits and whether the level moved; not the grid, not the agent's
-    store, `[event]` or program. It plays no game.
-  - **Its stance**: "repeating" (the same move `REPEAT_AT = 4` times running, the
-    level unchanged — **not measured**, declared as chosen) and "back-and-forth"
-    (x y x y, the level unchanged). Each remark points at the cycle the pattern
-    began. It has no claim of being right.
+  - **Where it stands: in the world, not in the host** (Plone, 2026-09-25).
+    `src/world/` is what lies outside the agent: the region it acts on, and the
+    Others who see it act. The host's body touches the region and, when it does
+    not act, lets a moment pass (`World.idle`); the Others see each act or its
+    lack. The host hears what they say on its own channel (`onlooker`, declared
+    by `declaration(onlooker=True)`); it does not hold, wrap or call them, and
+    does not know what they are.
+  - **It judges the agent's behaviour, not the region, and knows no game.** It
+    sees acts, opaque (two are the same or not), and moments without one; not
+    the grid, not the region's report, not the agent's store, `[event]` or
+    program. No levels, no RESET: every act is an act.
+  - **Its stance**, neutral about any environment: "standing still" (no act since
+    a moment, `for` how many — said again each moment it lasts, a new nudge),
+    "repeating" (the same act `REPEAT_AT = 4` times running — **not measured**,
+    declared as chosen) and "back-and-forth" (x y x y). Each points at the moment
+    it began. It has no claim of being right: a repetition that is getting
+    somewhere is remarked on too.
   - **The mismatch is between the agent and the onlooker.** The agent's standing
-    expectation is that the onlooker says nothing (it does not think it is
-    stuck); a change of stance collides, and the scar is on the remark's datum
-    (`domain: reflection`, `kind: remark`). While the onlooker keeps its stance,
-    nothing collides.
-  - It returns and does not write: its one channel is `onlooker`, declared by the
-    host (`declaration(onlooker=True)`); it holds no handle on the agent.
-  - `scripts/run_game.py` has it stand by; `--alone` leaves it out.
+    expectation is that the onlooker says what it said; a change of stance
+    collides, and the scar is on the remark's datum (`domain: reflection`,
+    `kind: remark`). While it keeps its stance, nothing collides — except that
+    standing still is said anew each moment.
+  - It returns and does not write; it holds no handle on the agent.
+  - `scripts/run_game.py` puts it in the world; `--alone` leaves it out.
 
   **Not the peer.** A peer agent relaying this agent's recorded collisions only
   retells what the agent already wrote — a compliant source, re-authorable by the
