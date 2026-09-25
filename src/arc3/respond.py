@@ -52,6 +52,12 @@ UNMET_PROGRESS: Final = 1.0
 # carries.
 _PROGRESS: Final = "progress:action:"
 _VALENCE: Final = "valence:action:"
+# What the mind proposes to do next (Plone, 2026-09-25): per action 1.0 for the
+# one proposed, and ACTION6's cell. The mind computes a direction and proposes
+# it; the self answers the proposal. Read from the field, as everything here is.
+_PROPOSED: Final = "proposed:action:"
+_PROPOSED_X: Final = "proposed:x"
+_PROPOSED_Y: Final = "proposed:y"
 
 
 def _payload(ctx: RespondContext) -> dict[str, Any] | None:
@@ -144,8 +150,14 @@ class LeastResolved:
 
         params = ctx.field.params
 
-        def rank(action_id: int) -> tuple[float, int, int]:
+        # The self answers what the mind proposes, when it proposes an action
+        # the region affords; otherwise, and among the rest, curiosity shifted by
+        # want decides as before. DECLARED: the proposal comes first — the mind
+        # computed it from everything it understands, and when it is wrong, the
+        # program it came from is scarred and the mind thinks again.
+        def rank(action_id: int) -> tuple[float, float, int, int]:
             return (
+                -params.get(f"{_PROPOSED}{action_id}", 0.0),
                 compose(
                     params.get(f"{_PROGRESS}{action_id}", UNMET_PROGRESS),
                     params.get(f"{_VALENCE}{action_id}", 0.0),
@@ -156,6 +168,9 @@ class LeastResolved:
 
         action_id = min(affords, key=rank)
         self._taken[action_id] = self._taken.get(action_id, 0) + 1
+        if action_id == COMPLEX_ACTION and params.get(f"{_PROPOSED}{action_id}", 0.0) > 0 \
+                and _PROPOSED_X in params and _PROPOSED_Y in params:
+            return move_value(Move(COMPLEX_ACTION, x=int(params[_PROPOSED_X]), y=int(params[_PROPOSED_Y])))
         if action_id == COMPLEX_ACTION:
             x, y = self._coords[self._sweeps % len(self._coords)]
             self._sweeps += 1

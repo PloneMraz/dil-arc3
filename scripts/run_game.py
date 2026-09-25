@@ -1,7 +1,7 @@
 """A live game with the one mind in the loop: the model thinks, DIL runs.
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
-        [--max-tokens N] [--think] [--prompt full|plain] [--alone] [--out DIR]
+        [--max-tokens N] [--think] [--prompt task|plain] [--alone] [--out DIR]
 
 The host carries the whole frame; the mind predicts it with the program the
 model wrote, thinks when the expectation fails (asking the store for the frames
@@ -53,8 +53,9 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
-ap.add_argument("--prompt", choices=("full", "plain"), default="full",
-                help="plain: the grid alone, word for word the prompt before 2026-09-25")
+ap.add_argument("--prompt", choices=("task", "plain"), default="task",
+                help="task: what the mind is told, from its store (a prior); "
+                     "plain: the grid alone, word for word the prompt before 2026-09-25")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
 a = ap.parse_args()
@@ -120,6 +121,9 @@ print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('re
 print(f"  commits               : {len(commits)}")
 print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")
 print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in wm.thoughts if t.asked]}")
+print(f"  what the mind proposed: {[(c, p[0] if p else None) for c, p in wm.proposals]}")
+followed = sum(1 for (c, p), m in zip(wm.proposals, list(source.delivered)[1:]) if p and p[0] == m.action_id)
+print(f"  proposals the self met: {followed} of {sum(1 for _, p in wm.proposals if p)}")
 held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
 print(f"  scars by datum kind   : {dict(held_scars)}")
 print(f"  [event] records       : {len(recs)}")

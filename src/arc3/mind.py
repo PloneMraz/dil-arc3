@@ -1,9 +1,12 @@
 """The mind — one, and it thinks with a language model.
 
 The mind is the thinking: the model (Qwen3.6, served over HTTP) and the program
-it writes, `predict(grid, action, x, y)`, kept as data in the store. It supplies
-expectations and reports how its understanding stands; it never sees the
-afforded set and never reaches the committed action. The self acts.
+it writes — `predict(grid, action, x, y)` and `propose(grid)` — kept as data in
+the store. It supplies expectations, proposes the next action toward getting
+through the level, and reports how its understanding stands; it never sees the
+afforded set and never reaches the committed action. The self acts, answering
+the proposal (Plone, 2026-09-25). What it is told its thinking is for is a prior
+in its store (`task.py`), recalled like anything else.
 
 The program is its understanding of the region. It predicts what the region
 returns for a move: the next grid, and — when it says so — what the region will
@@ -55,6 +58,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import textwrap
 import re
 import signal
 import threading
@@ -69,6 +73,7 @@ from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
 from .observe import FRAME_CHANNEL, FRAME_KIND, ONLOOKER_CHANNEL, REMARK_KIND, STATUS_CHANNEL, STATUS_KIND
+from .task import TASK_CUE, TASK_DOMAIN
 
 Grid = list[list[int]]
 Status = dict[str, Any]
@@ -113,39 +118,6 @@ MAX_ASKS: Final = 4
 MAX_RECALLED_LINES: Final = 40
 PROGRAM_SECONDS: Final = 2
 
-PROMPT: Final = """You are looking at a turn-based game on a 64x64 grid. Each cell holds a colour 0-15, shown as one hex digit.
-Actions are ACTION1..ACTION7; ACTION6 also carries a cell (x = column, y = row). Nobody has told you the rules; infer them from the evidence.
-After each step the game also reports on itself: its state, how many levels were completed by the step (levels +n), and how many grids its frame stacked (depth +n).
-
-{evidence}
-{recalled}{onlooker}
-Write a Python function
-
-    def predict(grid: list[list[int]], action: int, x: int | None = None, y: int | None = None):
-
-that returns what the game returns for ANY grid of this game and any action: the next grid, or
-{{"grid": next_grid, "status": {{"stateTo": ..., "levelsDelta": ..., "depthDelta": ...}}}} when you can also
-say what the game will report (any status field you leave out is taken to stay as it was). Aim for
-the general mechanism (what moves, how far, what blocks it, what changes on every step, what ends
-a level), not a lookup of these particular steps. Use only the Python standard library.
-
-You may also ask your memory for evidence for your next attempt. Anything in it can be asked for,
-by its tags, one question a line (at most {max_asks}), for example:
-ASK {{"kind": "frame", "provenance": "scar"}}
-Tags in your memory: kind = frame (a step you saw), status (what the game reported), remark (what an
-onlooker said about your moves), program (your own function); domain = arc3-rules (the rules you
-were told); provenance = scar (it went against an expectation) or running. Answers arrive before you
-think next.
-
-Return one ```python code block, and any ASK lines."""
-
-FEEDBACK: Final = """Your function was run on those steps. It got {ok}/{n} exactly right.
-Some it got wrong (expected vs yours, as changed cells relative to the grid before, and the report):
-{misses}
-
-Revise `predict` so it explains all the evidence. Return one ```python code block, and any ASK lines."""
-
-
 # The prompt the mind thought with until 2026-09-25, word for word: the grid
 # alone, no report from the game, no word of asking memory. Kept to measure
 # what the fuller prompt changed (`--prompt plain`): with it, the runs before
@@ -170,7 +142,15 @@ Some it got wrong (expected vs yours, as changed cells relative to the grid befo
 
 Revise `predict` so it explains all the evidence. Return only one ```python code block."""
 
-PROMPTS: Final = ("full", "plain")
+# "task": what the mind is told comes from its store (`task.py`, a prior); "plain":
+# the prompt before 2026-09-25, word for word, kept for comparison. The fuller
+# prompt of the first v0.3.5 run is gone: with it the frame held on 4 cycles of
+# 59, against 36 with the plain one on the same mechanism (LOG.md, 2026-09-25).
+PROMPTS: Final = ("task", "plain")
+
+# The field keys a proposal is reported under (INV-7): per action, 1.0 for the
+# one proposed and 0.0 for the rest; and ACTION6's cell when that is proposed.
+PROPOSED_PREFIX: Final = "proposed:"
 
 
 @dataclass(frozen=True, slots=True)
@@ -268,12 +248,26 @@ def describe_status(status: Status | None) -> str:
             f"levels {status.get('levelsDelta', 0):+}, depth {status.get('depthDelta', 0):+}")
 
 
-def render_evidence(transitions: list[Transition]) -> str:
+def describe_report(status: Status | None) -> str:
+    """What the game reported of itself, said only when it said something new: a
+    level completed, or a change of state."""
+    if not status:
+        return ""
+    said = []
+    if status.get("levelsDelta"):
+        said.append(f"levels {status['levelsDelta']:+}")
+    if status.get("stateTo") != status.get("stateFrom"):
+        said.append(f"state {status.get('stateTo')}")
+    return f" (the game reported: {', '.join(said)})" if said else ""
+
+
+def render_evidence(transitions: list[Transition], report: bool = False) -> str:
     """The transitions as the model reads them: chains, each from a full grid.
 
     A chain is a run in which each step starts from the grid the one before it
     produced; each chain opens with its first grid in full, then one line per
-    step as the cells it changed, and what the region reported, when known.
+    step as the cells it changed — and, with `report`, what the game reported of
+    itself when that was news.
     """
     chains: list[list[Transition]] = []
     for t in transitions:
@@ -286,7 +280,8 @@ def render_evidence(transitions: list[Transition]) -> str:
     for chain in chains:
         out.append("Starting from this grid (row 0 first):\n" + show(chain[0].before))
         for t in chain:
-            out.append(f"#{n} {_name(t)}: {describe_change(t.before, t.after)}{describe_status(t.status)}")
+            note = describe_report(t.status) if report else ""
+            out.append(f"#{n} {_name(t)}: {describe_change(t.before, t.after)}{note}")
             n += 1
     return "\n".join(out)
 
@@ -321,16 +316,26 @@ class ProgramError(Exception):
     """The program would not load, raised, ran too long, or returned no grid."""
 
 
-def compile_program(code: str) -> Callable[..., Any]:
+def compile_functions(code: str) -> tuple[Callable[..., Any], Callable[..., Any] | None]:
+    """The program's `predict`, and its `propose` if it wrote one.
+
+    A block indented as a whole is taken as written: the indentation is the
+    model's layout, not its program (two thoughts in two runs were lost to it).
+    """
     env: dict[str, Any] = {}
     try:
-        exec(compile(code, "<world-model>", "exec"), env)  # noqa: S102 — the model's own program
+        exec(compile(textwrap.dedent(code), "<world-model>", "exec"), env)  # noqa: S102 — the model's own program
     except Exception as exc:  # noqa: BLE001
         raise ProgramError(f"does not load: {exc!r}") from exc
     fn = env.get("predict")
     if not callable(fn):
         raise ProgramError("defines no predict()")
-    return fn
+    propose = env.get("propose")
+    return fn, (propose if callable(propose) else None)
+
+
+def compile_program(code: str) -> Callable[..., Any]:
+    return compile_functions(code)[0]
 
 
 def _alarm(_signum: int, _frame: Any) -> None:
@@ -374,6 +379,47 @@ def run_full(fn: Callable[..., Any], t: Transition) -> tuple[Grid, Status | None
 def run_program(fn: Callable[..., Any], t: Transition) -> Grid:
     """The program's grid for a transition's situation; raises ProgramError."""
     return run_full(fn, t)[0]
+
+
+Proposal = tuple[int, "int | None", "int | None"]
+
+
+def run_propose(fn: Callable[..., Any], grid: Grid) -> Proposal:
+    """What the program proposes to do next from this state: (action, x, y).
+
+    An action is ACTION1..ACTION7; a cell must lie on the grid. Anything else is
+    not a proposal, and raises ProgramError."""
+    guarded = threading.current_thread() is threading.main_thread()
+    if guarded:
+        old = signal.signal(signal.SIGALRM, _alarm)
+        signal.alarm(PROGRAM_SECONDS)
+    try:
+        out = fn([row[:] for row in grid])
+        if isinstance(out, int):
+            out = (out,)
+        if not isinstance(out, (tuple, list)) or not out:
+            raise ProgramError("proposed no action")
+        action = out[0]
+        x = out[1] if len(out) > 1 else None
+        y = out[2] if len(out) > 2 else None
+        if isinstance(action, str) and action.upper().startswith("ACTION"):
+            action = action[6:]
+        action = int(action)
+        if not 1 <= action <= 7:
+            raise ProgramError(f"proposed ACTION{action}, which is no action")
+        if x is not None or y is not None:
+            x, y = int(x), int(y)
+            if not (0 <= y < len(grid) and 0 <= x < len(grid[0])):
+                raise ProgramError(f"proposed a cell off the grid: ({x}, {y})")
+        return action, x, y
+    except ProgramError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ProgramError(f"propose raised {exc!r}") from exc
+    finally:
+        if guarded:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old)
 
 
 def expected_status(said: Status | None, standing: Status | None) -> Status | None:
@@ -475,16 +521,27 @@ class Mind:
     """The one mind: a program the model writes, tested, rewritten on mismatch."""
 
     def __init__(self, endpoint: ModelEndpoint, chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
-                 prompt: str = "full") -> None:
+                 prompt: str = "task", task: dict[str, str] | None = None) -> None:
         if prompt not in PROMPTS:
             raise ValueError(f"prompt must be one of {PROMPTS}")
         self.endpoint = endpoint
         self._chat = chat_fn
-        # Which prompt it thinks with: "full" (the grid, the game's report, and
-        # asking memory) or "plain" (the grid alone, word for word as before).
+        # Which prompt it thinks with: "task" (what it is told, read from its
+        # store) or "plain" (the grid alone, word for word as before).
         self.prompt = prompt
+        # What it is told its thinking is for, once recalled (`task.py`), and the
+        # datum it came from; a test may hand it in, as if recalled. A thought
+        # that comes before it waits for it.
+        self._task: dict[str, str] | None = task
+        self._task_id: str | None = None
+        self._task_asked = False
+        self._pending: str | None = None
         self.code: str | None = None
         self._fn: Callable[..., Any] | None = None
+        # What the program proposes to do next, and every proposal so far with the
+        # frame call it was made at (for the run's report; the trace is the field).
+        self._propose: Callable[..., Any] | None = None
+        self.proposals: list[tuple[int, Proposal | None]] = []
         self.version = 0
         # The program's datum in `[data]`, learned when it arrives back at T1.
         self.datum_id: str | None = None
@@ -521,11 +578,17 @@ class Mind:
 
     # ── what arrives ──
 
-    def take_return(self, ret: dict[str, Any], write: Callable[[WriteRequest], None] | None) -> None:
-        """A store return: the directive, something it asked for, or its own program back."""
+    def take_return(self, ret: dict[str, Any], write: Callable[[WriteRequest], None] | None,
+                    ask: Callable[[dict[str, str]], None] | None = None) -> None:
+        """A store return: its task, the directive, something it asked for, or its own program back."""
         open_tags = ret.get("open", {})
         payload = ret.get("payload")
         entity = str(ret.get("entity"))
+        if open_tags.get("domain") == TASK_DOMAIN and isinstance(payload, dict) and "task" in payload:
+            self._task, self._task_id = payload, entity
+            if self._pending is not None:
+                self.think(self._pending, ask, write)
+            return
         if isinstance(payload, dict) and isinstance(payload.get("objective"), dict):
             self._directive = payload
         kind = open_tags.get("kind")
@@ -622,6 +685,11 @@ class Mind:
     def on_frame(self, t: Transition, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
                  window, contribute, ask, write) -> InfoUnit | Expecting:
         self.frame_calls += 1
+        # What its thinking is for, read from its own memory, once: the answer
+        # arrives next cycle, and a thought before it waits for it.
+        if self.prompt == "task" and self._task is None and not self._task_asked and ask is not None:
+            ask(dict(TASK_CUE))
+            self._task_asked = True
         # 1. Predict, from the situation alone.
         expected, said, by_program = self._expect_full(t)
         self._said, self._said_by_program = said, said is not None
@@ -641,6 +709,8 @@ class Mind:
         if not hit:
             self.think("frame", ask, write)
         self.report(context, contribute)
+        # 4. From where the game now stands, what it proposes to do next.
+        self.propose_from(t.after, contribute)
         held = self.held_by() if by_program else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
@@ -696,6 +766,32 @@ class Mind:
             self.think("onlooker", ask, write)
         return predicted
 
+    # ── proposing ──
+
+    def propose_from(self, grid: Grid, contribute: Callable[[dict[str, float]], None] | None) -> None:
+        """Report upward what the program proposes to do next from this state.
+
+        The mind acts on nothing: it computes a direction and proposes it, and the
+        proposal enters the field like any reading (INV-7) — the self answers it
+        (§6.4: what enters appraisal changed). Per action, 1.0 for the one proposed
+        and 0.0 for the rest, so a proposal withdrawn is withdrawn in the field too.
+        """
+        if contribute is None or self._fn is None:
+            return
+        proposal: Proposal | None = None
+        if self._propose is not None:
+            try:
+                proposal = run_propose(self._propose, grid)
+            except ProgramError:
+                proposal = None
+        self.proposals.append((self.frame_calls, proposal))
+        reading = {f"{PROPOSED_PREFIX}action:{k}": (1.0 if proposal and proposal[0] == k else 0.0)
+                   for k in range(1, 8)}
+        if proposal and proposal[1] is not None:
+            reading[f"{PROPOSED_PREFIX}x"] = float(proposal[1])
+            reading[f"{PROPOSED_PREFIX}y"] = float(proposal[2])
+        contribute(reading)
+
     # ── thinking ──
 
     def think(self, on: str, ask: Callable[[dict[str, str]], None] | None,
@@ -708,6 +804,11 @@ class Mind:
         """
         if self._thought_at == self.frame_calls:
             return
+        if self.prompt == "task" and self._task is None:
+            # What it is for has not come back from memory yet: the thought waits.
+            self._pending = on
+            return
+        self._pending = None
         self._thought_at = self.frame_calls
         sourced: list[tuple[Transition, object]] = [
             *((t, datum_id) for datum_id, t in self._recalled.items()),
@@ -722,27 +823,31 @@ class Mind:
         chosen = list(by_key.values())[-MAX_SHOWN:]
         while len(chosen) > 1 and len(render_evidence([t for t, _ in chosen])) > MAX_EVIDENCE_CHARS:
             chosen = chosen[1:]
-        evidence = [t for t, _ in chosen]
+        shown = [t for t, _ in chosen]
         plain = self.prompt == "plain"
-        if plain:
-            # The grid alone, as before: no report from the game shown or scored.
-            evidence = [dataclasses.replace(t, status=None) for t in evidence]
+        # Programs are scored on the grid alone, as the model is asked to predict it.
+        evidence = [dataclasses.replace(t, status=None) for t in shown]
         lines = [] if plain else list(self._recalled_lines.items())[-MAX_RECALLED_LINES:]
-        built_from = tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
+        built_from = (tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
+                      + ((self._task_id,) if self._task_id is not None and not plain else ()))
         held_ok, held_misses = score(self._fn, evidence)
-        recalled = ("\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n") if lines else ""
-        onlooker = ""
-        if not plain and self._remark and self._remark.get("remark"):
-            onlooker = f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
         if plain:
             first = PROMPT_PLAIN.format(evidence=render_evidence(evidence))
+            feedback = FEEDBACK_PLAIN
         else:
-            first = PROMPT.format(evidence=render_evidence(evidence), recalled=recalled, onlooker=onlooker,
-                                  max_asks=MAX_ASKS)
+            also = ""
+            if lines:
+                also += "\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n"
+            if self._remark and self._remark.get("remark"):
+                also += f"\nAn onlooker watching your moves says: {json.dumps(self._remark)}\n"
+            grid = shown[-1].after if shown else [[]]
+            first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
+                                              evidence=render_evidence(shown, report=True), also=also)
+            feedback = self._task["feedback"]
         messages = [{"role": "user", "content": first}]
         if self.code is not None:
             messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
-            messages.append({"role": "user", "content": (FEEDBACK_PLAIN if plain else FEEDBACK).format(
+            messages.append({"role": "user", "content": feedback.format(
                 ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses))})
         try:
             text, usage = self._chat(self.endpoint, messages)
@@ -761,7 +866,7 @@ class Mind:
                                          "no code block", on, asks))
             return
         try:
-            fn = compile_program(code)
+            fn, propose = compile_functions(code)
         except ProgramError as exc:
             self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, None, False, usage, str(exc), on, asks))
             return
@@ -770,7 +875,7 @@ class Mind:
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, "", on, asks))
         if not adopted:
             return
-        self.code, self._fn = code, fn
+        self.code, self._fn, self._propose = code, fn, propose
         self.version += 1
         payload = {"code": code, "version": self.version}
         if write is None:
@@ -849,7 +954,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
             # Something the character asked its store for, arriving like any
             # other return. The mind reads it; it is not an Other to predict.
             if isinstance(payload, dict):
-                mind.take_return(payload, write)
+                mind.take_return(payload, write, ask)
             return observed
 
         if channel == FRAME_CHANNEL and isinstance(payload, dict):
@@ -869,16 +974,17 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
 
 
 def create_mind(endpoint: ModelEndpoint | None = None,
-                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat, prompt: str = "full") -> Mind:
-    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, prompt)
+                chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat, prompt: str = "task",
+                task: dict[str, str] | None = None) -> Mind:
+    return Mind(endpoint if endpoint is not None else ModelEndpoint(), chat_fn, prompt, task)
 
 
 __all__ = [
     "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "PROGRAM_SECONDS",
     "PROGRAM_TAGS", "PROGRESS_PREFIX", "PROGRESS_WINDOW", "RESOLVED_PREFIX", "STATUS_FIELDS", "VALENCE_PREFIX",
-    "PROMPTS", "PROMPT_PLAIN",
+    "PROMPTS", "PROMPT_PLAIN", "PROPOSED_PREFIX", "Proposal",
     "Mind", "ModelEndpoint", "ProgramError", "Thought", "Transition",
-    "chat", "compile_program", "create_mind", "expected_status", "extract_asks", "mind_rule",
+    "chat", "compile_functions", "compile_program", "create_mind", "run_propose", "expected_status", "extract_asks", "mind_rule",
     "region_valence", "render_evidence", "run_full", "run_program", "score", "standing_status",
     "transition_of",
 ]

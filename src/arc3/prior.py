@@ -39,6 +39,8 @@ from typing import Final
 
 from dil.host import PreexistingItem
 
+from .task import MIND_TASK
+
 from .observe import (
     ACTIONS_OBJECT,
     LEVELS_OBJECT,
@@ -225,6 +227,11 @@ RULES: Final[tuple[PreexistingItem, ...]] = (
     DIRECTIVE, LEVELS, COST, SEEING, ACTIONS_ITEM, WORLD,
 )
 
+# Everything the character has before it lives: the published rules, quoted, and
+# what its mind is told its thinking is for (`task.py`, this project's own words,
+# tagged as such).
+PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK)
+
 
 class ArcRules:
     """The host's pre-existing memory: the rules, offered for admission.
@@ -235,11 +242,11 @@ class ArcRules:
 
     __slots__ = ("_items",)
 
-    def __init__(self, items: tuple[PreexistingItem, ...] = RULES) -> None:
+    def __init__(self, items: tuple[PreexistingItem, ...] = PRIOR) -> None:
         self._items = items
 
     def scan(self) -> Iterable[PreexistingItem]:
         return iter(self._items)
 
 
-__all__ = ["DIRECTIVE", "DOMAIN", "RULES", "ArcRules"]
+__all__ = ["DIRECTIVE", "DOMAIN", "PRIOR", "RULES", "ArcRules"]

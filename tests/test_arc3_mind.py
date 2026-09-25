@@ -14,6 +14,7 @@ from arc3.mind import (
 )
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from arc3.prior import DIRECTIVE
+from arc3.task import MIND_TASK
 from dil.conformance.checker import check_conformance
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
@@ -75,7 +76,9 @@ class Script:
 
 
 def loop(model: Script):
-    wm = create_mind(ModelEndpoint(), chat_fn=model)
+    # What the mind is told, handed in as if recalled; the store's road is tested
+    # on its own below.
+    wm = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload)
     rule = mind_rule(wm)
     data, events = create_data_store(), create_event_log()
     glob = create_glob_mod({"appraisalGain": 1.0}, 0)
@@ -152,7 +155,7 @@ def test_a_better_program_revises_the_datum_and_the_log_says_so():
     assert data.get("written-0-0").fixed.provenance == "running", "a revision moves nothing"
     # The second prompt shows the held program and where it failed, and its
     # evidence already holds the first frame: T5's window, not a store answer.
-    assert "Your function was run" in model.prompts[1][-1]["content"]
+    assert "Your predict was run" in model.prompts[1][-1]["content"]
     assert wm.thoughts[1].evidence == 2
     written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
     assert written["written-0-0"] == ("signal-0-0", "signal-1-0"), "the revision names both frames it drew on"
@@ -315,3 +318,90 @@ def test_the_plain_prompt_is_the_grid_alone_as_before():
     t = Transition(before=lit(0), action=1, x=None, y=None, after=lit(1))
     assert shown == PROMPT_PLAIN.format(evidence=render_evidence([t])), "word for word, no report, no asking"
     assert "ASK" not in shown and "game:" not in shown
+
+
+# ── what it is told, from its store; what it proposes; what the self does ──
+
+
+PROPOSING = '''
+def predict(grid, action, x=None, y=None):
+    g = [row[:] for row in grid]
+    if action == 1:
+        for r, row in enumerate(grid):
+            for c, v in enumerate(row):
+                if v == 1 and c + 1 < len(row):
+                    g[r][c] = 0
+                    g[r][c + 1] = 1
+    return g
+
+def propose(grid):
+    return (1, None, None)
+'''
+
+
+def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
+    from dil.store.tagging_gate import HostDatum, admit_host_data
+
+    model = Script(PROPOSING)
+    wm = create_mind(ModelEndpoint(), chat_fn=model)  # told nothing in code
+    data, events = create_data_store(), create_event_log()
+    data.put(MIND_TASK.id, admit_host_data(HostDatum(payload=MIND_TASK.payload, admitting_layer=1,
+                                                     open=MIND_TASK.open), 0))
+    cycle = create_cycle(
+        layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+                      t5=create_t5(predict=mind_rule(wm)), t6=create_t6(), t7=create_t7(), t8=create_t8()),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    run(cycle, frame(lit(0), lit(1)))  # a mismatch before it knows what it is for: it asks, and waits
+    queries = [r.action for r in of_kind(events, "emission") if r.issuing_layer == 5]
+    assert queries == [store_query({"domain": "mind-task"})]
+    assert model.prompts == [], "the thought waits for what it is for"
+    run(cycle, frame(lit(1), lit(2)))  # it arrives from memory; the waiting thought happens
+    assert len(model.prompts) == 1
+    shown = model.prompts[0][0]["content"]
+    assert shown.startswith("You are meeting a game you have not seen before.")
+    assert "3x3 cells" in shown, "the grid's own size, not a fixed one"
+    written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
+    assert MIND_TASK.id in written["written-1-0"], "what the mind was told is among what it was built from"
+    assert data.get(MIND_TASK.id).fixed.provenance == "running", "recalled: it ran"
+
+
+def test_the_mind_proposes_from_where_the_game_stands_and_the_field_carries_it():
+    model = Script(PROPOSING)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))  # PROPOSING written
+    run(cycle, frame(lit(1), lit(2)))  # in use: it proposes ACTION1 from the grid now
+    field = loop.glob.current().params
+    assert field["proposed:action:1"] == 1.0 and field["proposed:action:2"] == 0.0
+    assert wm.proposals[-1] == (2, (1, None, None))
+
+
+def test_the_self_answers_the_proposal_before_curiosity_and_takes_its_cell():
+    from dil.loop.cycle import RespondContext  # noqa: F401 — the context the policy reads
+    from types import SimpleNamespace
+
+    from arc3.respond import least_resolved
+
+    def ctx(params, affords):
+        sig = Signal(source_id=STATUS_CHANNEL, t=1, raw_payload={
+            "entity": "region", "status": {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED",
+                                           "levelsDelta": 0, "depthDelta": 0},
+            "context": "action:1", "affords": affords})
+        return SimpleNamespace(host=SimpleNamespace(signals=(sig,)), field=SimpleNamespace(params=params))
+
+    # A fresh self each time: it remembers what it has committed, and that
+    # breaks ties.
+    # Curiosity alone would take the untried ACTION1; the mind proposes ACTION3.
+    assert least_resolved()(ctx({"proposed:action:3": 1.0}, [1, 2, 3]))["actionId"] == 3
+    assert least_resolved()(ctx({}, [1, 2, 3]))["actionId"] == 1, "no proposal: as before"
+    assert least_resolved()(ctx({"proposed:action:4": 1.0}, [1, 2, 3]))["actionId"] == 1, "not afforded: not taken"
+    click = least_resolved()(ctx({"proposed:action:6": 1.0, "proposed:x": 5.0, "proposed:y": 9.0}, [6]))
+    assert (click["actionId"], click["x"], click["y"]) == (6, 5, 9), "the cell it proposed"
+
+
+def test_a_block_indented_as_a_whole_still_loads():
+    from arc3.mind import compile_functions
+
+    fn, propose = compile_functions("    " + PROPOSING.replace("\n", "\n    "))
+    assert fn([[1, 0]], 1) == [[0, 1]] and propose([[1, 0]]) == (1, None, None)

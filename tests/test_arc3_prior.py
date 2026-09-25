@@ -12,7 +12,8 @@ from dil.runtime.requisition import requisition
 from dil.store.tagging_gate import HostDatum, admit_host_data
 
 from arc3.host import declaration
-from arc3.prior import DIRECTIVE, DOMAIN, RULES, ArcRules
+from arc3.prior import DIRECTIVE, DOMAIN, PRIOR, RULES, ArcRules
+from arc3.task import MIND_TASK, TASK_SOURCE
 
 
 def _quotes(value):
@@ -61,13 +62,20 @@ def test_the_directive_names_what_a_frame_reports():
 def test_the_host_declares_the_rules_as_preexisting_memory():
     pre = declaration("ls20").store.preexisting
     assert pre is not None
-    assert [i.id for i in pre.scan()] == [i.id for i in RULES]
+    assert [i.id for i in pre.scan()] == [i.id for i in PRIOR]
+    assert [i.id for i in PRIOR] == [*(i.id for i in RULES), MIND_TASK.id], "the rules, then what the mind is told"
+
+
+def test_what_the_mind_is_told_is_marked_as_this_projects_own_words():
+    assert MIND_TASK.open["source"] == TASK_SOURCE == "dil-arc3"
+    assert all(item.open["source"] != TASK_SOURCE for item in RULES), "the rules are quoted, not written here"
 
 
 def test_the_runtime_admits_them_through_the_gate(tmp_path):
     got = requisition(declaration("ls20", store_root=str(tmp_path)), now=1)
     try:
-        assert got.admitted == len(RULES)
+        assert got.admitted == len(PRIOR)
+        assert got.data.get(MIND_TASK.id).fixed.provenance == "prior"
         assert got.rejected == ()
         stored = got.data.get(DIRECTIVE.id)
         assert stored is not None

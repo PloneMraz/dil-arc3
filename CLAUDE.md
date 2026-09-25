@@ -45,28 +45,32 @@ they are not interchangeable:
 
 ### The line that must not be crossed
 
-**The model emits no action.** It supplies predictions and models into the loop —
-material for T5 expectation, T6 other-model synthesis, T8 abstraction. What the
-region returns then *collides* with that prediction, and the collision — the place
-the model was wrong — is the information that accrues. The move is emitted by the
-agent under DIL, through the host: by the self, after appraisal, on criteria that
-lie outside the state being edited.
+**The model commits no action.** It thinks: it works out the region's rules as a
+program, predicts what the region returns, and — from where the game stands —
+**proposes** the next action toward getting through the level (Plone,
+2026-09-25: "Mind đâu hành động, nó chỉ tính toán, tìm ra hướng đi, có kỳ vọng
+và đề xuất hướng đi, rồi self tạo ra hành vi để đáp ứng đề xuất đó thôi"). The
+proposal is data: it enters the field and so appraisal (§6.4 — an emission
+changes when "the InfoUnit set entering appraisal has changed"), and the self
+commits the move, through the host, after appraisal. The mind never reaches the
+committed action and never sees the afforded set; a proposal the region does not
+afford is not taken.
 
-A model that picks the move rebuilds the design this replaced — DIL as a wrapper
-around a policy — and breaks four invariants outright:
+What judges a proposal is the region, never the mind: the move's return is
+compared with what the program predicted, and when it does not hold, the
+program is scarred and the mind thinks again. That is what keeps the invariants:
 
-- **INV-4** — no layer assigns meaning to a signal in isolation; meaning is a
-  function of (signal, lower-layer context). A model reading a frame and naming a
-  move is meaning assigned in isolation.
-- **INV-5** — temporal state forms only by sequential accrual, never loaded. Refeeding
-  the whole game history into a context window each step is a load, not an accrual:
-  the guard's own note calls it "a reloaded context masquerading as a self".
-- **INV-6** — every change is classified self-written or environment-pushed before
-  interpretation. Model output is self-written; the returned grid is
-  environment-pushed. Conflating them destroys the only signal that matters.
-- **INV-8** — appraisal may not draw its criteria from the state being edited,
-  "otherwise it is self-scoring and hackable". A model that both proposes and
-  justifies the move is scoring itself.
+- **INV-4** — no layer assigns meaning to a signal in isolation. The program is
+  built from the store and the window, and tested against the region.
+- **INV-5** — temporal state forms only by sequential accrual, never loaded. The
+  model is shown what the mind asked for and its short-term perception, bounded;
+  never the whole history.
+- **INV-6** — model output is self-written; the returned grid is
+  environment-pushed. The proposal is the mind's; what comes back is the
+  region's.
+- **INV-8** — appraisal may not draw its criteria from the state being edited.
+  The mind proposes; it does not score its proposal — the region's return does,
+  and the scar lands on the program.
 
 ### What this settles about model choice
 
@@ -88,11 +92,18 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   and computes nothing from it: two signals a cycle, the frame (both grid stacks
   and the move, as the engine returned them) and the region's status. Never name
   a computation of the mind with a verb of the senses.
-- **The mind does not act.** It supplies the expectation and never sees the
-  afforded set or reaches the committed action. The one thing it sends out is a
-  question to its own memory: T5 hands its rule `ask(cue)`, which emits a store
-  query and nothing else, traced to T5 with register ↔ and answered at T1 the
-  next cycle.
+- **The mind does not act; it proposes.** It supplies expectations and, from
+  its program's `propose(grid)`, a proposed next action, reported to the field
+  as `proposed:action:k` (and `proposed:x`/`y` for ACTION6). The self answers the
+  proposal first when the region affords it; otherwise curiosity shifted by want
+  decides as before. The mind never sees the afforded set or reaches the
+  committed action. What it sends out beyond the field is a question to its own
+  memory: `ask(cue)`, a store query, traced to T5 with register ↔.
+- **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
+  this project's own words (`source: dil-arc3`), neutral — the aim is to get
+  through the levels; no kind of game, mechanic or strategy is named. It enters
+  through the tagging-gate, the mind recalls it at its first arrival (a thought
+  before it waits for it), and every program names it in `built_from`.
 - **The mind reads by asking; nothing is poured into it.** It may read anything
   in the store, and the model chooses what: `ASK {...}` lines in its answer, a
   cue by any tag key and `provenance` — frames, statuses, the onlooker's remarks,

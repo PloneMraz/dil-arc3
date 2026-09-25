@@ -46,13 +46,16 @@ Settled deliberately, with Plone.
 | **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, executes what was committed. **Computes nothing from what it takes in.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py` |
 | **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) and the programs its mind wrote (`nascent`, then `running`) | `src/dil/store/`, `src/arc3/prior.py` |
-| **mind** | the thinking organ — **one**: the model and the program it writes. Predicts, thinks when a prediction fails, reports how its understanding stands. **Chooses nothing.** | `src/arc3/mind.py` |
+| **mind** | the thinking organ — **one**: the model and the program it writes. Predicts, thinks when a prediction fails, proposes the next action, reports how its understanding stands. **Commits nothing.** | `src/arc3/mind.py` |
 | **self** | what occurs while the loop runs through them. **It is what acts.** | not a file (`respond.py` is the policy the committed action is formed by) |
 
-The line that matters: **the mind does not act.** It supplies an expectation —
-it never sees which actions are available and never reaches the committed action.
-The one thing it sends out is a question to its own memory: a store query, by cue,
-that it chooses itself (§6.4). The query is traced like any emission, so what the
+The line that matters: **the mind does not act.** It supplies expectations and
+proposes a direction — the next action toward getting through the level — as
+data the self answers; it never sees which actions are available and never
+reaches the committed action. What judges a proposal is the region's return,
+which scars the program when it does not hold. Beyond the field, what it sends
+out is a question to its own memory: a store query, by cue, that it chooses
+itself (§6.4). The query is traced like any emission, so what the
 mind read is in `[event]`. What it writes, it writes as data (§9 `nascent`), with
 what it was built from.
 

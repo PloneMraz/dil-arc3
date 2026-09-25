@@ -1949,3 +1949,38 @@ grid alone; every v0.3.5 mechanism in place. Outputs in
   thought on it twice; moves `1:16 2:15 3:14 4:15`; 0 levels.
 - Two thoughts failed on an indented code block (`IndentationError`), as in the
   run before.
+
+### What the mind is told becomes a prior; the mind proposes, the self answers (Plone, same day)
+
+Two corrections from Plone, done as one package with the neutral prompt:
+
+- **The prompt is a prior.** "Bản chất prompt cũng có khác gì datum có tag
+  'prior' đâu." The words the model was given lived in code: in no store, under
+  no tag, in no `[event]` line, in no program's `built_from` — a side door. They
+  are now `prior:mind-task` (`src/arc3/task.py`), admitted through the
+  tagging-gate with the rules, tagged `source: dil-arc3` because they are this
+  project's words and not the competition's. The mind asks for them at its first
+  arrival; a thought that comes before they arrive waits for them; every program
+  names them in `built_from`.
+- **Neutral, with the aim.** The scored games are unseen and all of them are
+  played, so the words name no kind of game or mechanic — the old hint "what
+  moves, how far, what blocks it" was written while looking at `ls20`. They give
+  the aim, to get through the levels, and the task that serves it. The grid's
+  size is read from the frame. The game's report shows only when it is news (a
+  level, a change of state); asking memory is one sentence. Built on the plain
+  prompt, which measured well; the full prompt is removed.
+- **The mind proposes; the self answers.** "Mind đâu hành động, nó chỉ tính
+  toán, tìm ra hướng đi, có kỳ vọng và đề xuất hướng đi, rồi self tạo ra hành vi
+  để đáp ứng đề xuất đó thôi." Earlier text here said the mind "chooses nothing"
+  and that a model picking the move breaks INV-8; that conflated proposing with
+  acting. The model now also writes `propose(grid)`; each cycle the mind runs it
+  on the state the game stands in and reports `proposed:action:k` (and ACTION6's
+  cell) to the field. The self answers a proposal the region affords before
+  curiosity and want; with none, it chooses as before. What judges a proposal is
+  the region's return, which scars the program when it does not hold — the mind
+  never scores its own proposal.
+- A code block indented as a whole now loads (two thoughts were lost to it).
+
+258 tests. Twelve live cycles with no model: the mind asked `{"domain":
+"mind-task"}` at cycle 0 and its waiting thought ran at cycle 1, when the task
+arrived.
