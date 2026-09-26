@@ -141,8 +141,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   when the aim falls due it joins the program's expectation of that step. Not
   reached then, or reached sooner: the mind thinks on `goal`, and a program that
   predicts as well and acts otherwise is kept; the aim is then held again from
-  that step. A program with no `GOAL` the region could show reached commands
-  nothing: the mind thinks again while the body waits.
+  that step. **The aim is the mind's, not the program's**: a program that states
+  one replaces it, one that states none leaves the mind the aim it held. With no
+  aim held at all, the mind commands nothing and thinks again while the body
+  waits. Why a `GOAL` was not taken (`goal_check`), or why the last answer did
+  not load, is said to the model in the last message, where it reads what to do.
 - **Where a regress stops.** (1) The mind thinks only on what comes from outside
   — a return, the onlooker — or while the body waits; one thought never sets off
   another. (2) An aim must ground out in what comes back: an aim nothing coming

@@ -2290,3 +2290,48 @@ Also seen there, not yet examined: 13 of vc33's thoughts did not load, all
 230–576 lines, or at the next-to-last line. The raw answers are in the run's store.
 The aim fell due unheard: `predict` held 2 frames of 52, so every thought was on
 the frame, the first part to fail. vc33 took 1,708 s, against 413 s in v9.
+
+### The aim run, read from its stores (2026-09-27)
+
+Kernel `dil-arc3-run`, code `fa83817` (before the rename and the fix for the ended
+game): Qwen3.8-Flash-Next NVFP4, four games, 60 cycles, the mind's aim prior, the
+onlooker in the world. Notebook 4,204 s. Outputs in
+`scripts/data/kaggle/dil-run/output-aim/`. The first download was cut short when
+the session ended; it was downloaded again.
+
+| game | commands | frames held | aim held | stood still | levels | wall |
+|---|---|---|---|---|---|---|
+| ls20 | ACTION2 ×58 | 55/60 | inferred, `levelsDelta 1` within 10 | 0 | 0 | 348 s |
+| vc33 | ACTION6 ×50, then none | 2/52 | inferred, within 10 | 9 cycles after `GAME_OVER` | 0 | 1,708 s |
+| ar25 | ACTION1 ×5, then none | 2/7 | none after cycle 7 | 54 cycles | 0 | 927 s |
+| sk48 | ACTION6 ×59 (the cell moved once) | 60/60 | inferred, within 5 | 0 | 0 | 89 s |
+
+- **The aim was held and met the region.** Every game's model stated an aim,
+  `inferred`, as reaching a level. In ls20 it fell due every 10 actions and the
+  mind thought on `goal` at 17, 27, 37 and 57; in sk48, 8 times. **Behaviour did
+  not turn**: each candidate predicted as well, was kept, and proposed the same
+  action.
+- **ar25 lost its aim and stood still for 54 cycles.** At cycle 7 a better
+  predictor with no `GOAL` was kept, and the aim went with the program it
+  replaced. 108 "no goal" thoughts followed, and none wrote a `GOAL`: each
+  revised the held program, which had none, as the last message asked ("Revise
+  your functions"). The note that it had no aim sat at the head of the first
+  message.
+- **vc33 after `GAME_OVER`**: see the entry before; fixed in `330ea56`.
+- **The unterminated strings, read from the kept answers** (vc33, 13):
+  - 6 answers opened a block, thought inside a docstring they never closed,
+    then began a whole new block and closed it. `extract_code` took from the
+    first opener to the only closer.
+  - 7 wrote one block whose docstring never closed.
+
+Fixed (Plone approved the first two):
+
+- **The aim is the mind's.** A program that states one replaces it; one that
+  states none leaves the mind the aim it held.
+- **Why an answer was not taken is said to the model**, in the last message:
+  why a `GOAL` was not taken (`goal_check`), or why the code did not load. The
+  feedback now asks to revise "predict, propose and GOAL".
+- `extract_code` reads the last block that opens and closes.
+- `run_game.py`'s summary lists the program's moves apart from the answers.
+
+259 tests.

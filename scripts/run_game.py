@@ -127,7 +127,10 @@ print(f"  scars by source       : {dict(scar_sources)}")
 print(f"  onlooker's remarks    : {len(remarks)} cycles  first {remarks[:3]}")
 print(f"  mind asked the store  : {len(queries)} times  cues {sorted({json.dumps(q.action['cue']) for q in queries})}")
 print(f"  programs in [data]    : {[(k, d.fixed.provenance, d.payload.get('version')) for k, d in programs]}")
-print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id.startswith('written-')]}")
+program_ids = {k for k, _ in programs}
+answers = [d for _, d in daemon._data.entries() if d.open.get("kind") == "thought"]
+print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id in program_ids]}")
+print(f"  answers kept          : {len(answers)}  not taken: {sum(1 for d in answers if d.payload.get('note'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
 print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")

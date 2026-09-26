@@ -52,7 +52,7 @@ FEEDBACK: Final = """Your predict was run on those steps. It got {ok}/{n} exactl
 Some it got wrong (expected vs yours, as changed cells relative to the grid before):
 {misses}
 
-Revise your functions so they explain all the evidence. Return one ```python code block."""
+Revise your program — predict, propose and GOAL — so it explains all the evidence. Return one ```python code block."""
 
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",

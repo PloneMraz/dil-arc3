@@ -373,7 +373,9 @@ def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
     wm, cycle, data, events = loop(model, respond=carry_out)
     result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), status())))
     assert [t.on for t in wm.thoughts] == ["frame", "no goal"], "it holds no aim: it commands nothing yet"
-    assert "Your program holds no GOAL" in model.prompts[1][0]["content"]
+    last = model.prompts[1][-1]["content"]
+    assert "Your program holds no GOAL" in last, "said where the model reads what to do: the last message"
+    assert "Your last answer was not taken: the program defines no GOAL." in last
     assert result.response.action["actionId"] == 1, "the second thought gave a command, and it was carried out"
 
 
@@ -565,3 +567,36 @@ def test_in_a_cycle_the_body_stood_still_the_mind_commands_after_the_onlooker():
     assert [t.on for t in wm.thoughts] == ["frame", "onlooker"], "the nudge collides, and it thinks"
     assert len(wm.commands) == 2 and still.response.action["actionId"] == 1, \
         "nothing came from the region, so it commands after what the onlooker said"
+
+
+NO_GOAL_BETTER = RIGHT + '''
+def propose(grid):
+    return (1, None, None)
+'''
+
+
+def test_the_aim_is_the_minds_a_better_program_with_none_does_not_take_it_away():
+    model = Script(PROPOSING, NO_GOAL_BETTER)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())
+    held = wm._goal
+    assert held is not None
+    wm.think("no command", None, None, again=True)     # a candidate with no GOAL, predicting as well, and kept
+    assert wm.thoughts[-1].adopted and wm.code == NO_GOAL_BETTER
+    assert wm._goal == held, "the mind keeps the aim it held"
+
+
+def test_why_a_goal_is_not_taken_is_said():
+    from arc3.mind import goal_check
+
+    assert goal_check(None, lit(0)) == (None, "the program defines no GOAL")
+    g, why = goal_check({"aim": "x", "reached_when": {"state": "WIN"}, "within": 3}, lit(0))
+    assert g is None and "reached_when names nothing that comes back" in why and "stateTo" in why
+
+
+def test_an_abandoned_block_before_a_whole_one_is_not_read():
+    from arc3.mind import extract_code
+
+    text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
+            "```python\nGOAL = 1\ndef predict(grid, action):\n    return grid\n```\n")
+    assert extract_code(text) == "GOAL = 1\ndef predict(grid, action):\n    return grid\n"

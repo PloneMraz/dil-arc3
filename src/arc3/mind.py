@@ -243,13 +243,20 @@ def render_evidence(transitions: list[Transition], report: bool = False) -> str:
 def extract_code(text: str) -> str | None:
     """The last code block of an answer.
 
-    A block opens and closes with a fence at the start of a line. A fence
-    anywhere else — inside a docstring, say — does not close it: four thoughts
-    in one run were cut at line 2, inside an opening docstring (LOG.md,
-    2026-09-25). An answer whose fences are all indented is read the old way."""
-    m = re.findall(r"^```(?:python|py)?[ \t]*\n(.*?)^```[ \t]*$", text, re.S | re.M)
-    if not m:
-        m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
+    A block opens and closes with a fence at the start of a line; a fence
+    anywhere else — inside a docstring, say — does not close it. An answer whose
+    fences are all indented is read the old way."""
+    lines = text.splitlines(keepends=True)
+    closers = [i for i, line in enumerate(lines) if re.fullmatch(r"```[ \t]*\n?", line)]
+    openers = [i for i, line in enumerate(lines) if re.fullmatch(r"```(?:python|py)[ \t]*\n?", line)]
+    # The last block that opens and closes: a model that abandons a block and
+    # starts again leaves an open one before it — six answers in one run did,
+    # each thinking inside a docstring it never closed (LOG.md, 2026-09-27).
+    for start in reversed(openers):
+        end = next((i for i in closers if i > start), None)
+        if end is not None:
+            return "".join(lines[start + 1:end])
+    m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
     return m[-1] if m else None
 
 
@@ -303,22 +310,35 @@ def compile_all(code: str) -> tuple[Callable[..., Any], Callable[..., Any] | Non
 
 
 def goal_of(raw: Any, grid: Grid) -> dict[str, Any] | None:
-    """The aim a program holds itself to, or None when it holds none it can be held to.
+    """The aim a program holds itself to, or None when it holds none it can be held to."""
+    return goal_check(raw, grid)[0]
+
+
+def goal_check(raw: Any, grid: Grid) -> tuple[dict[str, Any] | None, str | None]:
+    """The aim a program holds itself to — or None, and why it is not one.
 
     It must say what will come back when it is reached — cells of the grid,
     fields of the region's report — and within how many actions: an aim nothing
-    coming back could show is not taken (`aim.py`: where a regress stops)."""
+    coming back could show is not taken (`aim.py`: where a regress stops). The
+    reason goes back to the model, as a failed load does."""
+    if raw is None:
+        return None, "the program defines no GOAL"
     if not isinstance(raw, dict):
-        return None
+        return None, "GOAL is not a dict"
     reached = _want_of(raw.get("reached_when"), grid)
+    if reached is None:
+        return None, ("GOAL's reached_when names nothing that comes back: it must be "
+                      '{"cells": {"row,col": colour}} on the grid, or {"status": {...}} with the '
+                      f"fields the game reports ({', '.join(STATUS_FIELDS)})")
     try:
         within = int(raw.get("within"))
     except (TypeError, ValueError):
-        return None
-    if reached is None or within < 1:
-        return None
+        return None, "GOAL's within is not a number of actions"
+    if within < 1:
+        return None, "GOAL's within must be at least 1"
     source = raw.get("source") if raw.get("source") in ("stated", "inferred") else "inferred"
-    return {"aim": str(raw.get("aim") or "")[:500], "source": source, "reached_when": reached, "within": within}
+    return {"aim": str(raw.get("aim") or "")[:500], "source": source, "reached_when": reached,
+            "within": within}, None
 
 
 def _goal_shown(goal: dict[str, Any]) -> dict[str, Any]:
@@ -663,8 +683,10 @@ class Mind:
         # by the region's return next cycle, as the program's expectation.
         self._wanted: tuple[Proposal, Want] | None = None
         self._want_status: Status | None = None
-        # What did not come, for the next thought to be told.
+        # What did not come, for the next thought to be told; and what was wrong
+        # with the last answer — a program that did not load, a GOAL not taken.
         self._missed: str | None = None
+        self._last_note: str | None = None
         # Whether the region has spoken this cycle: in one it has not, the mind
         # commands after the onlooker.
         self._status_this_cycle = False
@@ -999,17 +1021,23 @@ class Mind:
             also += f"\n{self._missed[0].upper()}{self._missed[1:]}.\n"
         if self._goal is not None:
             also += f"\nThe GOAL your program holds: {json.dumps(_goal_shown(self._goal))}\n"
+        notes = ""
         if on == "no goal":
-            also += "\nYour program holds no GOAL that what comes back could show reached.\n"
+            notes += "\nYour program holds no GOAL that what comes back could show reached.\n"
+        if self._last_note:
+            notes += f"\nYour last answer was not taken: {self._last_note}.\n"
         grid = shown[-1].after if shown else [[]]
         first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
                                           evidence=render_evidence(shown, report=True), also=also)
         first += "\n\n" + self._aim["aim"]
+        # What was wrong goes where the model reads what to do: the last message.
+        if self.code is None:
+            first += notes
         messages = [{"role": "user", "content": first}]
         if self.code is not None:
             messages.append({"role": "assistant", "content": f"```python\n{self.code}```"})
             messages.append({"role": "user", "content": self._task["feedback"].format(
-                ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses))})
+                ok=held_ok, n=len(evidence), misses=self._misses_text(held_misses)) + notes})
         try:
             text, usage = self._chat(self.endpoint, messages)
         except Exception as exc:  # noqa: BLE001 — a model that fails leaves the program as it is
@@ -1030,7 +1058,9 @@ class Mind:
         else:
             try:
                 fn, propose, goal_raw = compile_all(code)
-                goal = goal_of(goal_raw, grid)
+                goal, goal_note = goal_check(goal_raw, grid)
+                if goal_note:
+                    note = goal_note
             except ProgramError as exc:
                 note = str(exc)
         if fn is not None:
@@ -1046,6 +1076,7 @@ class Mind:
                        or (acting and cand_ok >= held_ok and propose is not None
                            and (on != "no goal" or goal is not None))
                        or (self._goal is None and goal is not None and cand_ok >= held_ok))
+        self._last_note = note or None
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, note, on, asks))
         # The answer, whole, as the mind's own datum, built from what it was shown;
         # written after the program it kept, if it kept one.
@@ -1054,8 +1085,12 @@ class Mind:
             answer["reasoning"] = reasoning
         if adopted:
             self._keep(code, fn, propose, write, built_from)
-            self._goal = goal
-            self._goal_due = self.frame_calls + goal["within"] if goal else 0
+            if goal is not None:
+                # The aim is the mind's: a program that states one replaces it;
+                # one that states none leaves the mind the aim it held (ar25 lost
+                # its aim to a better predictor with none, and stood still).
+                self._goal = goal
+                self._goal_due = self.frame_calls + goal["within"]
         if write is not None:
             write(WriteRequest(payload=answer, open=dict(THOUGHT_TAGS), built_from=built_from))
 
@@ -1167,7 +1202,7 @@ __all__ = [
     "CUE_KEYS", "MAX_ASKS", "MAX_EVIDENCE_CHARS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "MAX_WAIT_THOUGHTS",
     "PROGRAM_SECONDS", "PROGRAM_TAGS", "STATUS_FIELDS", "THOUGHT_TAGS",
     "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
-    "chat", "compile_all", "compile_functions", "compile_program", "goal_of", "create_mind", "expected_status", "extract_asks",
+    "chat", "compile_all", "compile_functions", "compile_program", "goal_check", "goal_of", "create_mind", "expected_status", "extract_asks",
     "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "run_propose_full", "score",
     "standing_status",
     "steps_of", "transition_of",
