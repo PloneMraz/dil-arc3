@@ -2388,3 +2388,28 @@ model's.
 
 263 tests. Not in the notebook that runs tonight (built on `c7a2257`); it goes
 into the next one.
+
+### The first submission of dil-arc3 (2026-09-26, UTC)
+
+Plone asked for a submission that day, with the fix for "rethinks but acts the
+same" in it and no full re-run. Kaggle submits only a notebook version that has
+run to the end, so two versions ran:
+
+- **v11** (`c7a2257`, before the fix), Save & Run on four games offline, 60
+  cycles each, **4 at once, through `run_competition.py`**. Server ready in
+  820 s. The four games together took **388 s**: ar25 384 s, ls20 306 s, sk48
+  154 s, vc33 90 s. All exited 0, none stood still, no level; 1,512 s of notebook.
+  This was the first run of the parallel path on Kaggle. It was kept as the
+  fallback.
+- **v12** (`3b31806`, with the fix), Save & Run on ls20 alone to be quick. Server
+  ready in 690 s; ls20 took 1,261 s, 53 answers kept, 5 not taken, no level;
+  2,281 s of notebook. The new rule acted at once: at cycle 5 a candidate that
+  proposed RESET again was not kept, and the model was told why. The commands
+  went RESET ×10, ACTION1 ×2, then ACTION2.
+- **Submitted: v12**, at 20:42:04 UTC, ref `56588469`, "dil-arc3 3b31806: DIL
+  loop, Qwen3.8-Flash-Next NVFP4, 60 cycles a game, 4 at once". The scored
+  rerun goes through the gateway branch, which no run before it could exercise.
+- **Timing risk, not measured on the scored run.** ls20 alone took 1,261 s in v12
+  and 306 s in v11. At 4 at once, ~110 games at v12's pace would not fit in 9 h;
+  the deadline (9 h less 20 min) stops what runs and starts nothing more, so the
+  notebook should end in time with fewer games played.
