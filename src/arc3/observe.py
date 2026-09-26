@@ -218,7 +218,7 @@ REMARK_KIND: Final = "remark"
 def admit(signal: Signal) -> HostDatum | None:
     """Which region returns this host keeps as data of their own (§10, DECIDE@IMPL).
 
-    All three: what the region returned is what the character met, and a return
+    All three: what the region returned is what the agent met, and a return
     it does not keep can neither be asked for later nor be the datum that
     collides when the expectation about it fails. The onlooker's remark is kept
     on the same ground, as `domain: reflection`.

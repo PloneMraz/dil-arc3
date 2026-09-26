@@ -160,10 +160,11 @@ class HostCycleInput:
     # only against these, because an entity the region itself says is not there
     # cannot be silent; silence presupposes the chance to speak.
     #
-    # Needed because this host's entities are affordances, which return only when
-    # the agent uses one, and it uses one per cycle. Without it, N-1 absences
-    # were recorded every cycle for ever: measured at 444 of 481 scars over 159
-    # real ls20 cycles. `None` means the host does not report presence and the
+    # Needed first when this host's entities were affordances, which return only
+    # when the agent uses one: N-1 absences were recorded every cycle for ever,
+    # measured at 444 of 481 scars over 159 real ls20 cycles. It is still needed:
+    # in a cycle the body stood still in, the region is not present — nothing was
+    # done to it — and only the onlooker is. `None` means the host does not report presence and the
     # original behaviour holds exactly, so dil-core's semantics are unchanged.
     afforded: frozenset[str] | None = None
 

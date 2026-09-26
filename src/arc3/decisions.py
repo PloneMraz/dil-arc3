@@ -89,7 +89,7 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 # program that is right on most cells is still wrong, and the mismatch is what
 # the mind thinks from. The region's status fits when the region reports what it
 # reported last; its `context`, the action just taken, is the agent's own act and is
-# not expected back (`mind.standing_status`). Never against a correct answer:
+# not expected back (`mind.Mind.on_status`). Never against a correct answer:
 # none is revealed in a run.
 # The earlier declaration (equality of an effect signature, `effect.py`) and its
 # measurements are in LOG.md.

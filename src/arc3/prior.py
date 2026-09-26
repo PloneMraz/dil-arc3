@@ -1,10 +1,11 @@
-"""What the character may know before it has lived a single cycle.
+"""What the agent may know before it has lived a single cycle.
 
 A creature put in a box arrives with a very long history: what its genes carry
-and what others taught it. This character arrives with none. So what it is given
-beforehand is the least that lets it know what it is doing here: the directive,
-and the rules of the place it is in. Everything else is left for it to think
-through and interpret.
+and what others taught it. This agent arrives with none. So what its store holds
+beforehand is the least that lets it know what it is doing here: the rules of
+the place it is in, the competition's own words; what its mind is told its
+thinking is for (`task.py`); and what the mind does with any aim (`aim.py`).
+Everything else is left for it to think through and interpret.
 
 **Where it comes from.** Only public documents published by the competition,
 quoted verbatim, each with its source. Nothing here is about a particular game,
@@ -19,17 +20,20 @@ the host declares it as pre-existing memory, and the runtime admits each item
 through the tagging-gate, stamped `prior` with no cycle-mark (§9, "no side
 door"). An item that cannot be tagged honestly is refused, not smuggled in.
 
-**How it is recalled.** Not poured in. It waits in the store until something
-arrives that it is about. Each item's open tags say what that is, on the same
+**How it is recalled.** It waits in the store until something arrives that it
+is about. Each item's open tags say what that is, on the same
 dimensions the channels describe their arrivals with (`object`, and `sense` for
 the item about seeing), and T3 asks the store with those descriptions (§6.4
 query). A status report is about the region's status, its levels and what may be
-done next, so the first one brings the directive, the level structure and both
-items about actions to mind. The first thing seen brings the items about things
-and about seeing.
+done next, so the first one recalls the directive, the level structure and both
+items about actions; the first thing seen recalls the item about seeing. That
+recall is the protocol's, and the trace records it (`prior → running`).
 
-The directive is the one sentence the competition gives every model on its
-official leaderboard. The character is told no more than that.
+**What the model reads of it.** Only what the model asks for (Plone,
+2026-09-27). What T3 recalls is not shown to the model; until 2026-09-27 it was,
+and every prompt carried the competition's directive ("You are playing a game.
+Your goal is to win."), unasked. The task and the aim are recalled by the mind
+itself, at its first arrival, and every program names them in `built_from`.
 """
 
 from __future__ import annotations
@@ -228,9 +232,9 @@ RULES: Final[tuple[PreexistingItem, ...]] = (
     DIRECTIVE, LEVELS, COST, SEEING, ACTIONS_ITEM, WORLD,
 )
 
-# Everything the character has before it lives: the published rules, quoted, and
-# what its mind is told its thinking is for (`task.py`, this project's own words,
-# tagged as such).
+# Everything the agent has before it lives: the published rules, quoted; what its
+# mind is told its thinking is for (`task.py`); and what the mind does with any aim
+# (`aim.py`) — the last two this project's own words, tagged as such.
 PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK, MIND_AIM)
 
 

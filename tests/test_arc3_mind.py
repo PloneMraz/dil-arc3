@@ -600,3 +600,30 @@ def test_an_abandoned_block_before_a_whole_one_is_not_read():
     text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
             "```python\nGOAL = 1\ndef predict(grid, action):\n    return grid\n```\n")
     assert extract_code(text) == "GOAL = 1\ndef predict(grid, action):\n    return grid\n"
+
+
+CLICK_NOWHERE = PROPOSING.replace("return (1, None, None)", "return (6,)")
+
+
+def test_an_action6_with_no_cell_is_no_command_for_the_mind_as_for_the_body():
+    from arc3.command import carry_out
+
+    click_status = Signal(source_id=STATUS_CHANNEL, t=1, raw_payload={
+        "entity": "region", "status": {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED",
+                                       "levelsDelta": 0, "depthDelta": 0},
+        "context": "action:6", "affords": [6]})
+    model = Script(CLICK_NOWHERE, CLICK_NOWHERE, CLICK_NOWHERE)
+    wm, cycle, data, events = loop(model, respond=carry_out)
+    result = cycle.run(HostCycleInput(signals=(frame(lit(0), lit(1)), click_status)))
+    assert [t.on for t in wm.thoughts] == ["frame", "no command", "no command"], \
+        "the body would not carry it out, so the mind thinks again"
+    assert result.response.action.get("actionId") != 6, "no click without a cell reached the body"
+
+
+def test_a_program_the_model_asks_for_it_reads():
+    model = Script(RIGHT, RIGHT, asks={0: 'ASK {"kind": "program"}'})
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)))              # it writes RIGHT, and asks for programs
+    run(cycle, frame(lit(1), lit(2)))              # RIGHT holds; the store answers
+    run(cycle, frame(lit(2), lit(0), action=2))    # RIGHT fails: it thinks
+    assert "- a program (version 1):" in model.prompts[-1][0]["content"], "asked for, and so read"

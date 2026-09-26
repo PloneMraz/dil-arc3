@@ -55,6 +55,19 @@ def _command(ctx: RespondContext) -> Move | None:
     return None
 
 
+def can_carry_out(action_id: int, x: int | None, y: int | None, state: str | None,
+                  affords: tuple[int, ...]) -> bool:
+    """Whether the body can carry out this action: the body's one rule, which the
+    mind also asks before it counts a proposal as a command. Written once, so the
+    two cannot part: twice they did, when it was written in each (after
+    `GAME_OVER`, and for ACTION6 with no cell; LOG.md)."""
+    if action_id == RESET:
+        return True
+    if state in TERMINAL_STATES or action_id not in affords:
+        return False
+    return not (action_id == COMPLEX_ACTION and (x is None or y is None))
+
+
 def carry_out(ctx: RespondContext, standing: Callable[[], tuple[str, tuple[int, ...]]] | None = None) -> Any:
     """Commit what the mind commanded, if the body can; otherwise stand still.
 
@@ -73,11 +86,7 @@ def carry_out(ctx: RespondContext, standing: Callable[[], tuple[str, tuple[int, 
         state, affords = standing()
     else:
         state, affords = None, ()
-    if command.action_id == RESET:
-        return move_value(command)
-    if state in TERMINAL_STATES or command.action_id not in affords:
-        return dict(WAIT)
-    if command.action_id == COMPLEX_ACTION and (command.x is None or command.y is None):
+    if not can_carry_out(command.action_id, command.x, command.y, state, affords):
         return dict(WAIT)
     return move_value(command)
 
@@ -93,4 +102,4 @@ def is_wait(action: Any) -> bool:
     return isinstance(action, dict) and action.get("kind") == WAIT["kind"]
 
 
-__all__ = ["WAIT", "carry_out", "carrying_out", "is_wait"]
+__all__ = ["WAIT", "can_carry_out", "carry_out", "carrying_out", "is_wait"]

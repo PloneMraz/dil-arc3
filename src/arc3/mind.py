@@ -86,6 +86,8 @@ from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
 from .action import COMPLEX_ACTION
+from .command import can_carry_out
+from .decisions import OPEN_TAG_KEYS
 from .frame import TERMINAL_STATES
 from .observe import FRAME_CHANNEL, FRAME_KIND, ONLOOKER_CHANNEL, REMARK_KIND, STATUS_CHANNEL, STATUS_KIND
 from .aim import AIM_CUE, AIM_DOMAIN
@@ -109,7 +111,7 @@ THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 STATUS_FIELDS: Final = ("stateTo", "levelsDelta", "depthDelta")
 
 # The keys a cue may carry: the open-tag dimensions (tag F) and provenance.
-CUE_KEYS: Final = frozenset({"domain", "kind", "source", "object", "sense", "provenance"})
+CUE_KEYS: Final = frozenset(OPEN_TAG_KEYS) | {"provenance"}
 
 # DECLARED limits on what one act of thinking can hold, set by the model's
 # context, not by the loop: how many steps the prompt shows, how many of the
@@ -124,6 +126,7 @@ MAX_EVIDENCE_CHARS: Final = 60_000
 MAX_MISSES_SHOWN: Final = 3
 MAX_ASKS: Final = 4
 MAX_RECALLED_LINES: Final = 40
+MAX_RECALLED_LINE_CHARS: Final = 4000
 PROGRAM_SECONDS: Final = 2
 # How many more times the mind thinks, in the same cycle, when it has no command
 # the body can carry out — while the body waits. DECLARED, not measured: a model
@@ -690,8 +693,9 @@ class Mind:
         # Whether the region has spoken this cycle: in one it has not, the mind
         # commands after the onlooker.
         self._status_this_cycle = False
-        # Whether its last questions could be answered with its own answers.
-        self._asked_thoughts = False
+        # The questions the model put to memory, with when: answered the next
+        # cycle, and only what answers one is shown to it.
+        self._asks_open: list[tuple[int, dict[str, str]]] = []
         # The onlooker's current remark on its behaviour, as it last arrived.
         self._remark: dict[str, Any] | None = None
         self._thought_at: int | None = None
@@ -725,17 +729,22 @@ class Mind:
                 self.command(ask, write, test)
             return
         kind = open_tags.get("kind")
-        if kind == THOUGHT_TAGS["kind"] and open_tags.get("source") == THOUGHT_TAGS["source"] and not self._asked_thoughts:
-            return  # its own answer, written back: evidence only when it asked for it
-        if kind == PROGRAM_TAGS["kind"]:
-            if self.datum_id is None and isinstance(payload, dict) and payload.get("code") is not None:
-                self.datum_id = entity
-                if self._unwritten is not None and write is not None:
-                    payload, built_from = self._unwritten
-                    write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
-                    self._unwritten = None
+        if kind == PROGRAM_TAGS["kind"] and self.datum_id is None and isinstance(payload, dict) \
+                and payload.get("code") is not None:
+            # Its own program, back from being written: now it knows its datum.
+            self.datum_id = entity
+            if self._unwritten is not None and write is not None:
+                unwritten, built_from = self._unwritten
+                write(WriteRequest(payload=unwritten, datum_id=self.datum_id, built_from=built_from))
+                self._unwritten = None
+        # Only what the model asked for is evidence (Plone, 2026-09-27). T3 asks
+        # the store too, by the description of what arrives — the protocol's
+        # recall: what it brings moves `prior → running` in the trace — and the
+        # mind's own writes come back; none of that is poured into what the model
+        # reads. It had been: the competition's rules, "Your goal is to win"
+        # among them, reached every prompt unasked (LOG.md).
+        if not self._answers(open_tags, ret.get("fixed")):
             return
-        # Anything else it asked for is evidence for its next thought.
         if self._recalled_at != self.frame_calls:
             self._recalled, self._recalled_lines = {}, {}
             self._recalled_at = self.frame_calls
@@ -747,6 +756,14 @@ class Mind:
         line = _recalled_line(kind, open_tags, payload)
         if line:
             self._recalled_lines[entity] = line
+
+    def _answers(self, open_tags: dict[str, str], fixed: Any) -> bool:
+        """Whether a return answers a question the model put to memory."""
+        provenance = fixed.get("provenance") if isinstance(fixed, dict) else None
+        return any(
+            all((provenance == v) if k == "provenance" else (open_tags.get(k) == v) for k, v in cue.items())
+            for _, cue in self._asks_open
+        )
 
     def held_by(self) -> tuple[str, ...]:
         """The datum an expectation the program made is: the program's, once known."""
@@ -935,11 +952,10 @@ class Mind:
                 reason = "no goal"
             else:
                 proposal, want = self._proposal(grid, steps)
-                # What the body can carry out: RESET always; any other action the
-                # region offers, unless the game has ended — the body's own rule
-                # (`command.py`), so a command the body would not carry out is none.
-                if proposal is not None and (proposal[0] == 0 or (
-                        proposal[0] in self._affords and state not in TERMINAL_STATES)):
+                # What the body can carry out, by the body's own rule
+                # (`command.can_carry_out`): a command the body would not carry
+                # out is none.
+                if proposal is not None and can_carry_out(*proposal, state, self._affords):
                     self.commands.append((self.frame_calls, proposal))
                     self._wanted = (proposal, want) if want else None
                     if test is not None:
@@ -1047,7 +1063,8 @@ class Mind:
         reasoning = usage.pop("reasoning", None)
         # What it chose to read next: each question a store query from T5.
         asks = extract_asks(text)
-        self._asked_thoughts = any(_may_answer_with_thoughts(cue) for cue in asks)
+        self._asks_open = [(at, cue) for at, cue in self._asks_open if at >= self.frame_calls - 1]
+        self._asks_open += [(self.frame_calls, dict(cue)) for cue in asks]
         if ask is not None:
             for cue in asks:
                 ask(dict(cue))
@@ -1117,11 +1134,6 @@ class Mind:
         return "\n".join(out)
 
 
-def _may_answer_with_thoughts(cue: dict[str, str]) -> bool:
-    """Whether the store could answer this cue with the mind's own answers."""
-    return all(k == "provenance" or THOUGHT_TAGS.get(k) == v for k, v in cue.items())
-
-
 def _content_value(unit: InfoUnit) -> Any:
     content = unit.content
     return content.get("value") if isinstance(content, dict) else None
@@ -1137,27 +1149,18 @@ def _recalled_line(kind: str | None, open_tags: dict[str, str], payload: Any) ->
     if kind == REMARK_KIND:
         said = {k: v for k, v in payload.items() if k != "entity"}
         return f"- the onlooker said {json.dumps(said)}"
-    text = json.dumps(payload)
-    return f"- {open_tags.get('domain', 'datum')}/{kind}: {text[:600]}"
+    if kind == PROGRAM_TAGS["kind"] and isinstance(payload.get("code"), str):
+        return f"- a program (version {payload.get('version')}):\n{_cut(payload['code'])}"
+    if kind == THOUGHT_TAGS["kind"] and isinstance(payload.get("text"), str):
+        return f"- an answer you gave (on {payload.get('on')}, kept: {payload.get('kept')}):\n{_cut(payload['text'])}"
+    return f"- {open_tags.get('domain', 'datum')}/{kind}: {_cut(json.dumps(payload, ensure_ascii=False))}"
 
 
-def standing_status(held: InfoUnit, payload: dict[str, Any]) -> InfoUnit:
-    """What the region is expected to report: what it reported last, under this action.
-
-    The status payload carries the action just taken as its `context`, and that
-    is the agent's own act, not the region's word — T2 classifies it, and the
-    mind knows it before the region answers. Expecting last cycle's action back would
-    register every change of move as the region resisting: on the first Kaggle
-    run, 42 of 45 status scars were that and nothing else (LOG.md, 2026-09-24).
-    So the standing expectation holds what the region said, and takes the context
-    as it is.
-    """
-    value = _content_value(held)
-    if not isinstance(value, dict) or "context" not in payload or value.get("context") == payload["context"]:
-        return held
-    content = held.content if isinstance(held.content, dict) else {}
-    return InfoUnit(content={**content, "value": {**value, "context": payload["context"]}},
-                    ref_frame=held.ref_frame, t=held.t)
+def _cut(text: str) -> str:
+    """A recalled item, whole up to MAX_RECALLED_LINE_CHARS, and said to be cut when it is."""
+    if len(text) <= MAX_RECALLED_LINE_CHARS:
+        return text
+    return f"{text[:MAX_RECALLED_LINE_CHARS]} ... [cut at {MAX_RECALLED_LINE_CHARS} of {len(text)} characters]"
 
 
 def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
@@ -1170,7 +1173,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
         window = tuple(window or ())
 
         if channel == STORE_CHANNEL:
-            # Something the character asked its store for, arriving like any
+            # Something asked of the store — by the model, or by T3 — arriving like any
             # other return. The mind reads it; it is not an Other to predict.
             if isinstance(payload, dict):
                 mind.take_return(payload, write, ask, test)
@@ -1204,6 +1207,6 @@ __all__ = [
     "Mind", "ModelEndpoint", "ProgramError", "Proposal", "Thought", "Transition",
     "chat", "compile_all", "compile_functions", "compile_program", "goal_check", "goal_of", "create_mind", "expected_status", "extract_asks",
     "mind_rule", "render_evidence", "run_full", "run_program", "run_propose", "run_propose_full", "score",
-    "standing_status",
+
     "steps_of", "transition_of",
 ]

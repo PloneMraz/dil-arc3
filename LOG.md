@@ -2335,3 +2335,42 @@ Fixed (Plone approved the first two):
 - `run_game.py`'s summary lists the program's moves apart from the answers.
 
 259 tests.
+
+### A review of the repository against its own documents (Plone, 2026-09-27)
+
+Plone passed on a review. I checked each point against the repository, reproducing
+where it could be run. All held, but for two counts: the reproduction gave 3
+prompts, not 8; and 21 scripts import removed code, not 23 (the difference was
+not traced).
+
+- **The competition's rules reached every prompt unasked.** T3 asks the store by
+  each arrival's description (`{"sense":"vision"}`, `{"object":"region-status"}`,
+  `levels`, `actions`). The mind put every store return into "What you recalled
+  from memory" and into `built_from`. So each prompt carried `prior:directive`
+  ("You are playing a game. Your goal is to win."), the level rules, the cost,
+  and the actions ("semantically mapped to up"), cut at 600 characters. This
+  contradicted "the mind reads by asking" and the neutral task. **Plone chose:**
+  only what answers a cue the model asked reaches its prompt. T3's recall stays,
+  and is traced. Recalled items are cut at 4,000 characters now, and say so when
+  cut. Reproduced after the change: no recalled section, and `built_from` holds
+  only the frames, the task and the aim.
+- **ACTION6 with no cell**: `propose` returning `(6,)` was a command to the mind
+  and a wait to the body. The body's rule is now one function,
+  `command.can_carry_out`, which the mind asks. That is the second time the rule,
+  written twice, parted.
+- **A program asked for was swallowed**: `take_return` dropped every `program`
+  return. What the model asks for, program or its own earlier answer, it now
+  reads.
+- Documents brought to what holds:
+  - README: the status, what it is told, the roles (now CLAUDE's four, with the
+    world outside them), what the mind is, finding 7, the layout (`src/world/`).
+  - Docstrings: `prior.py`, `host.py`, `run_game.py`. "character" becomes
+    "agent"; it is not the protocol's word.
+  - Tag H's pointer to the dead `standing_status`, now removed.
+  - The affordance comment in `cycle.py`.
+  - `wm` becomes `mind` in `run_game.py`.
+  - `CUE_KEYS` is derived from `OPEN_TAG_KEYS`.
+  - `scripts/README.md` gains `run_competition.py`, `push_dil_run.py`,
+    `make_manifest.py` and the new arguments.
+
+262 tests.

@@ -1,12 +1,14 @@
 """A live game with the one mind in the loop: the model thinks, DIL runs.
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
-        [--max-tokens N] [--think] [--alone] [--out DIR]
+        [--max-tokens N] [--think] [--alone] [--offline-dir DIR] [--remote HOST:PORT] [--out DIR]
 
 The host carries the whole frame; the mind predicts it with the program the
-model wrote, thinks when the expectation fails (asking the store for the frames
-that collided), keeps the program as data (`nascent`, then revisions), and every
-cycle in which it wrote is committed. What is printed is read back from the run's
+model wrote, and thinks when an expectation meets a mismatch — the frame, the
+status, what a command or the aim was for, the onlooker — or while the body
+waits; the model asks its memory for what it wants to read. The program is kept
+as data (`nascent`, then revisions), each answer too, and every cycle in which
+the mind wrote is committed. What is printed is read back from the run's
 own `[event]` log, `[data]` and commits — the same ones a third party would read.
 
 The game is played in a world (`world/`) with an onlooker in it (tag E): an Other
@@ -78,10 +80,10 @@ host_source = source
 # What this served model needs beyond the standard request: Qwen3 thinks unless
 # told not to. The mind itself knows no model.
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
-wm = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
+mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-    t5=create_t5(predict=mind_rule(wm)), t6=create_t6(),
+    t5=create_t5(predict=mind_rule(mind)), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
@@ -97,9 +99,9 @@ t0 = time.time()
 n = 0
 while daemon.step():
     n += 1
-    last = wm.thoughts[-1] if wm.thoughts else None
-    print(f"cycle {n - 1:3d}  frame calls {wm.frame_calls}  program v{wm.version}  "
-          f"thoughts {len(wm.thoughts)}"
+    last = mind.thoughts[-1] if mind.thoughts else None
+    print(f"cycle {n - 1:3d}  frame calls {mind.frame_calls}  program v{mind.version}  "
+          f"thoughts {len(mind.thoughts)}"
           + (f" on {last.on}" if last else "")
           + (f"  last: held {last.held_score}/{last.evidence} cand {last.candidate_score} "
              f"adopted {last.adopted} {last.usage.get('completion_tokens')} tok "
@@ -133,12 +135,12 @@ print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) fo
 print(f"  answers kept          : {len(answers)}  not taken: {sum(1 for d in answers if d.payload.get('note'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
-print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in wm.thoughts]}")
-print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in wm.thoughts if t.asked]}")
-print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in wm.commands]}")
-print(f"  frame expectation held: {sum(wm.holds)} of {len(wm.holds)}")
+print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
+print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in mind.thoughts if t.asked]}")
+print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in mind.commands]}")
+print(f"  frame expectation held: {sum(mind.holds)} of {len(mind.holds)}")
 print(f"  the body stood still  : {source.waits} cycles")
-print(f"  the GOAL held         : {wm._goal and {k: v for k, v in wm._goal.items() if k != 'reached_when'}}")
+print(f"  the GOAL held         : {mind._goal and {k: v for k, v in mind._goal.items() if k != 'reached_when'}}")
 held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
 print(f"  scars by datum kind   : {dict(held_scars)}")
 print(f"  [event] records       : {len(recs)}")
@@ -148,5 +150,5 @@ for r in report.results:
         print(f"    C{r.id}: {r.detail}")
 print(f"  moves committed       : {dict(collections.Counter(m.action_id for m in source.delivered))}")
 print(f"  final state           : {source.frame.state}  levels={source.frame.levels_completed}")
-if wm.code:
-    print("\n--- the program the mind holds ---\n" + wm.code)
+if mind.code:
+    print("\n--- the program the mind holds ---\n" + mind.code)

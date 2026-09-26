@@ -3,8 +3,9 @@
 It no longer reaches behaviour through a formula — the signs a formula put on
 the region's answers were a want written in code, and want is the mind's, arising
 in its thinking (Plone, 2026-09-25). What is pinned: the directive reaches the
-mind by the protocol's road, not a side door, and when the mind thinks, the
-model is shown what it recalled.
+store by the protocol's road, not a side door; T3 recalls it on a cue, and the
+trace says so; and the model reads it only when it asks for it (Plone,
+2026-09-27: nothing is poured into what the model reads).
 """
 
 from __future__ import annotations
@@ -105,13 +106,15 @@ def test_the_first_status_report_brings_the_directive_to_mind_and_the_model_read
         "actions": "running", "seeing": "prior", "world": "prior",
     }
 
-    # When the mind next thinks, the model is shown what it recalled.
+    # When the mind next thinks, the model is not shown what T3 recalled: it did
+    # not ask for it.
     grid, moved = [[0, 0], [0, 0]], [[1, 0], [0, 0]]
     miss = Signal(source_id=FRAME_CHANNEL, raw_payload={
         "entity": "frame", "before": [grid], "grids": [moved],
         "move": {"kind": "move", "actionId": 1, "x": None, "y": None}, "context": "action:1"}, t=3)
     cycle.run(HostCycleInput(signals=(miss,)))
-    assert model.prompts and SAID in model.prompts[-1][0]["content"]
+    assert model.prompts and SAID not in model.prompts[-1][0]["content"]
+    assert "What you recalled from memory" not in model.prompts[-1][0]["content"]
 
     # The first frame seen brings what the character was told about seeing. What
     # it was told about the world's things has no arrival that is about things
@@ -125,3 +128,34 @@ def test_the_first_status_report_brings_the_directive_to_mind_and_the_model_read
     cycle.run(HostCycleInput(signals=(_status(5, NOTHING),)))
     assert provenance("seeing") == "running"
     assert provenance("world") == "prior"
+
+
+class Asker(Listener):
+    """A model that asks its memory for the rules once, and otherwise writes nothing."""
+
+    def __call__(self, endpoint, messages):
+        self.prompts.append(messages)
+        return ('ASK {"domain": "%s", "kind": "directive"}' % DIRECTIVE.open["domain"]) if len(self.prompts) == 1 else "", {}
+
+
+def test_what_the_model_asks_for_it_reads():
+    model = Asker()
+    mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload, aim=MIND_AIM.payload)
+    data, events = _store_with_rules(), create_event_log()
+    layers = Layers(
+        t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+        t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+    )
+    cycle = create_cycle(layers=layers, glob=create_glob_mod({}, 0), data=data,
+                         events=events, initial_emission=Emission(action=None))
+
+    def miss(t, a, b):
+        return Signal(source_id=FRAME_CHANNEL, raw_payload={
+            "entity": "frame", "before": [a], "grids": [b],
+            "move": {"kind": "move", "actionId": 1, "x": None, "y": None}, "context": "action:1"}, t=t)
+
+    cycle.run(HostCycleInput(signals=(miss(1, [[0, 0]], [[1, 0]]),)))   # it thinks, and asks
+    assert SAID not in model.prompts[0][0]["content"]
+    cycle.run(HostCycleInput(signals=(miss(2, [[1, 0]], [[0, 0]]),)))   # the answer comes this cycle
+    cycle.run(HostCycleInput(signals=(miss(3, [[0, 0]], [[1, 0]]),)))   # and is read at the next thought
+    assert SAID in model.prompts[-1][0]["content"], "asked for, and so read"

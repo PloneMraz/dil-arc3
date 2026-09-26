@@ -11,36 +11,38 @@ the agent leaves the loop to think.
 
 It runs, and it is being rebuilt around one mind. **It completes no levels.**
 
-**The mind is a language model** — Qwen3.6-35B-A3B, served offline — and the
-program it writes: `predict(grid, action, x, y)`, the next grid and what the
-region will report of itself, and `propose(grid, steps)`, the next action from
-where the game stands and the steps just seen — kept as data in the store, the
-prediction tested against the region every cycle. When an expectation meets a mismatch — the frame, the region's
-status, what the program said a command or its aim would bring about, or an
-onlooker's objection to how the agent behaves — the program is
-scarred with it, and the mind has the model write a better one from what it
-has, keeps it only if it explains that evidence better (or as well, when the
-body waits for a command, the onlooker objected, or a command did not bring
-about what the program said it was for), and writes it as a revision; the model
-also chooses what to ask its memory for next, and each answer it gives is kept
-whole in the store. Every step of
+**The mind is a language model** — served offline; Qwen3.8-Flash-Next NVFP4 in
+the latest runs, Qwen3.6-35B-A3B before — and the program it writes:
+`predict(grid, action, x, y)`, the next grid and what the region will report of
+itself; `propose(grid, steps)`, the next action from where the game stands and
+the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
+the store, the prediction tested against the region every cycle. When an
+expectation meets a mismatch — the frame, the region's status, what the program
+said a command or its aim would bring about, or an onlooker's objection to how
+the agent behaves — the program is scarred with it, and the mind has the model
+write a better one from what it has, keeps it only if it explains that evidence
+better (or as well, when the body waits for a command, the onlooker objected, or
+a command or the aim did not bring about what was said), and writes it as a
+revision; the model also chooses what to ask its memory for, and reads only
+that, and each answer it gives is kept whole in the store. Every step of
 that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in
 `[event]`, and a checker reads it back.
 
-**What is measured of the one mind so far**: nothing on a scored run yet. Of the
-model alone, outside the loop: it wrote an `ls20` program exact on 95% of held-out
-transitions in two runs of four. Inside the loop, 60 cycles of `ls20` on Kaggle:
-six versions of its program; the last, from cycle 35, held the frame on 16 of
-the 24 cycles after it, all of the final 9, while naming fixed blocks by
-coordinate rather than finding the object. No level (`LOG.md`, 2026-09-24).
+**What is measured of the one mind so far**: nothing on a scored run yet. In every
+offline run of four games (60 cycles each, on Kaggle), no level. The program
+predicts much of what the region returns — 55 of 60 frames in one `ls20` run —
+and the mind holds an aim it inferred and meets it when it falls due; what does
+not yet turn is behaviour, which keeps to one action. Every run is in `LOG.md`.
 
-**What it is told.** It arrives with no history, so the least it is given is a
-directive: the one sentence the competition gives every model on its official
-leaderboard, "You are playing a game. Your goal is to win.", with the published
-rules of the place. It enters as host data stamped `prior` and stays in the
-store until the character recalls it on a cue; how the region answers each action
-is read against it.
+**What it is told.** Its store holds, before it lives, three things, each as host
+data stamped `prior`: what its mind is told its thinking is for
+(`prior:mind-task`, this project's own words, neutral — the aim is to get
+through the levels, and no kind of game, mechanic or strategy is named); what the
+mind does with any aim (`prior:mind-aim`); and the competition's published
+rules, quoted. The mind recalls the first two itself, and the model reads them.
+The rules are recalled by T3 on a cue, as the protocol does, and the model reads
+them only if it asks.
 
 ## The four roles
 
@@ -48,11 +50,14 @@ Settled deliberately, with Plone.
 
 | role | what it is | in this repo |
 |---|---|---|
-| **DIL** | the operating mechanism of the whole — how information moves | `src/dil/` |
-| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py` |
-| **store** | memory: what the character recalls on a cue, including what it was told before it lived (`prior`) and the programs its mind wrote (`nascent`, then `running`) | `src/dil/store/`, `src/arc3/prior.py` |
-| **mind** | the thinking organ — **one**: the program the model writes, the model replaceable. Reads, expects, is curious and wants — in its thinking, not in a formula — and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/arc3/mind.py` |
+| **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
+| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `prior.py` |
+| **model** | the thinking organ's engine, replaceable. The **mind** is the design: **one**, the model and the program it writes. It reads, expects, is curious and wants — in its thinking, not in a formula — holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/arc3/mind.py`, `task.py`, `aim.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
+
+Outside all four is the **world** (`src/world/`): the region the agent acts on,
+and an onlooker, an Other who sees it act and says what it sees (tag E). The host
+touches the region and hears the onlooker; it holds neither.
 
 The line that matters: **the mind acts on nothing; it commands, and the body
 carries out.** The mind constructs the next action toward getting through the
@@ -81,9 +86,10 @@ like any expectation. Three constraints shape that, and each is met:
 - Kaggle's evaluation session has no network — the model is served offline, from
   a Kaggle Models mirror checked file by file against Hugging Face's hashes;
 - INV-5: "refeeding the whole game history into a context window each step is a
-  load, not an accrual" — the model is shown what the mind asked the store for
-  and what T5's window holds, bounded, never the whole history, and only when an
-  expectation failed.
+  load, not an accrual" — the model is shown what it asked the store for and
+  what T5's window holds, bounded, never the whole history; and it is asked to
+  think only when something comes from outside — a mismatch, the onlooker — or
+  while the body waits for a command.
 
 `dependencies = []` holds: the model is reached over HTTP with the
 standard library.
@@ -140,10 +146,11 @@ drew on.
 
 ### A gap in this agent
 
-7. **Want has nothing to seek**, as the status section says. The directive now
-   tells it what counts as reaching the goal, but not how to get there, and no
-   level has ever been completed to learn from. Local to this repository, not
-   upstream's.
+7. **An aim met by the region does not yet turn behaviour.** The mind holds an
+   aim (`GOAL`, inferred when the task names none) and meets it when it falls
+   due; the mismatch reaches the model, which rewrites its program — and in the
+   runs so far the rewritten program proposes the same action. No level has
+   been completed to learn from. Local to this repository, not upstream's.
 
 ## Running it
 
@@ -180,6 +187,8 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/arc3/         the body and the mind, kept apart.
+src/world/        what lies outside the agent: the region it acts on, served to
+                  a game's own process in a scored run, and the onlooker.
 spec/             the DIL protocol and the specification it derives from,
                   copied from dil-core with their provenance.
 scripts/          the measurement and run scripts behind every figure here.

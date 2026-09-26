@@ -227,8 +227,9 @@ def declaration(
     Every field is a claim about this deployment that the gate checks before the
     loop is allowed to run, so each is stated from what the code actually does.
 
-    `prior` is what the character may know before it has lived a cycle — by
-    default the directive and the published rules, `ArcRules`. It reaches the
+    `prior` is what the agent may know before it has lived a cycle — by default
+    `ArcRules`: the published rules (the directive among them), the mind's task
+    and the mind's aim. It reaches the
     store only through the runtime's tagging-gate, and only when the host
     declares a real substrate (`store_root`): the in-memory fixture a test runs
     on has no requisition step, so nothing is admitted there.

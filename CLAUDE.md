@@ -118,7 +118,15 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   in the store, and the model chooses what: `ASK {...}` lines in its answer, a
   cue by any tag key and `provenance` — frames, statuses, the onlooker's remarks,
   the rules it was told, scars or not. No cue is written into the code; until
-  the model asks, it thinks from what it has seen.
+  the model asks, it thinks from what it has seen. **What T3 recalls is not
+  shown to it** (Plone, 2026-09-27): T3 asks the store by the description of each
+  arrival — the protocol's recall, traced as `prior → running` — but only a
+  return that answers a cue the model asked reaches its prompt or `built_from`.
+  Until then the competition's rules, "Your goal is to win" among them, reached
+  every prompt unasked.
+- **What the body can carry out is one rule** (`command.can_carry_out`), which the
+  mind asks before it counts a proposal as a command. Written twice, it parted
+  twice: after `GAME_OVER`, and for ACTION6 with no cell.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
 - **Short-term perception is as long as T5's window** (`BASELINE_WINDOW = 16`):
