@@ -2374,3 +2374,17 @@ not traced).
     `make_manifest.py` and the new arguments.
 
 262 tests.
+
+### Rethought on how it acts, the same action is not kept (Plone, same day)
+
+In the aim run each rethought program predicted as well as the one it replaced,
+and was kept, and proposed the same action. For the reasons about how the agent
+acts (the onlooker, a want, an aim the region refuted), a candidate that only
+predicts as well is now kept only if its `propose`, from where the game stands,
+gives another action than the held program's. When it does not, the model is
+told: "it proposed ACTION1 again, the action the program you hold proposes now…".
+A candidate that predicts better is kept as before. Which other action is the
+model's.
+
+263 tests. Not in the notebook that runs tonight (built on `c7a2257`); it goes
+into the next one.

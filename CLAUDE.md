@@ -179,7 +179,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   explains as much and can command, when the body is waiting for a command, or
   when what set it thinking was how it acts — the onlooker's objection, or a
   command that did not bring about what it was for — which is met by acting
-  otherwise (Plone, 2026-09-25).
+  otherwise (Plone, 2026-09-25). For those reasons (onlooker, want, goal) such a
+  program must **act otherwise**: its `propose`, from where the game stands,
+  gives another action than the held program's. The same action again is not
+  kept, and the model is told so (Plone, 2026-09-27).
 - **There is no trigger for rewriting, and no constant to declare.** Rewriting is
   the consequence of mismatch: if the mind does not adjust, the mismatch recurs.
 - **Every written datum records what it was built from** (protocol v0.3.4): ids

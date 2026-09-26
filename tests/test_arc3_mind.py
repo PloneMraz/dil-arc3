@@ -627,3 +627,14 @@ def test_a_program_the_model_asks_for_it_reads():
     run(cycle, frame(lit(1), lit(2)))              # RIGHT holds; the store answers
     run(cycle, frame(lit(2), lit(0), action=2))    # RIGHT fails: it thinks
     assert "- a program (version 1):" in model.prompts[-1][0]["content"], "asked for, and so read"
+
+
+def test_when_how_it_acts_set_it_thinking_the_same_action_again_is_not_kept():
+    same = PROPOSING.replace('"aim": "the lit cell at the far end"', '"aim": "the same, again"')
+    model = Script(PROPOSING, same)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(2)), status())
+    wm.think("onlooker", None, None)
+    assert not wm.thoughts[-1].adopted and wm.code == PROPOSING, "it proposed ACTION1 again"
+    assert "it proposed ACTION1 again" in wm.thoughts[-1].note

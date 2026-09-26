@@ -967,6 +967,19 @@ class Mind:
                 self.think(reason, ask, write, again=True)
         self.commands.append((self.frame_calls, None))
 
+    def _proposals_now(self, candidate: Callable[..., Any]) -> tuple[Proposal | None, Proposal | None]:
+        """What the held program and a candidate propose from where the game stands."""
+        if not self._seen:
+            return None, None
+        grid = self._seen[-1][0].after
+        steps = steps_of([t for t, _ in self._seen])
+        held = self._proposal(grid, steps)[0]
+        try:
+            cand = run_propose_full(candidate, grid, steps)[0]
+        except ProgramError:
+            cand = None
+        return held, cand
+
     def _proposal(self, grid: Grid, steps: list[dict[str, Any]]) -> tuple[Proposal | None, Want | None]:
         if self._propose is None:
             return None, None
@@ -1089,8 +1102,21 @@ class Mind:
             # was for. Those are met by acting otherwise, not by predicting better
             # (Plone, 2026-09-25).
             acting = on in ("no command", "onlooker", "want", "goal", "no goal")
+            # When what set it thinking was how it acts — the onlooker, a want or
+            # an aim the region refuted — a program that predicts as well is kept
+            # only if it acts otherwise from where the game stands: the same
+            # action again is no answer to it (Plone, 2026-09-27; in the aim run
+            # every rethought program proposed the action it replaced).
+            otherwise = True
+            if on in ("onlooker", "want", "goal") and propose is not None and self._propose is not None:
+                now_held, now_cand = self._proposals_now(propose)
+                otherwise = now_cand is not None and now_cand != now_held
+                if not otherwise and not note:
+                    note = (f"it proposed {_act_name(now_held)} again, the action the program you hold "
+                            f"proposes now; what set you thinking was how you act, so a program that "
+                            f"only predicts as well must act otherwise")
             adopted = (self._fn is None or cand_ok > held_ok
-                       or (acting and cand_ok >= held_ok and propose is not None
+                       or (acting and cand_ok >= held_ok and propose is not None and otherwise
                            and (on != "no goal" or goal is not None))
                        or (self._goal is None and goal is not None and cand_ok >= held_ok))
         self._last_note = note or None
@@ -1132,6 +1158,14 @@ class Mind:
             mine = got if isinstance(got, str) else describe_change(t.before, got[0])
             out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
         return "\n".join(out)
+
+
+def _act_name(p: Proposal | None) -> str:
+    if p is None:
+        return "no action"
+    if p[0] == 0:
+        return "RESET"
+    return f"ACTION{p[0]}" + (f" at ({p[1]}, {p[2]})" if p[1] is not None else "")
 
 
 def _content_value(unit: InfoUnit) -> Any:
