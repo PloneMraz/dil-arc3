@@ -797,6 +797,23 @@ what it will need then is designed now and left unused, not forgotten.
   and nowhere else: not the store, `[event]`, a snapshot, a commit's config, a
   run's report or LOG (`tests/test_api_key.py` holds it to that). Every run so
   far leaves it `None`: there is no network at evaluation.
+- **A third party's model is the same language model.** With a key, it is
+  another `ModelEndpoint` (its `url`, `model`, `api_key_env`); the mind, the
+  program, the prompt and the rule for what is kept are unchanged. `chat()`
+  speaks the OpenAI-compatible `/chat/completions` protocol (as llama.cpp and
+  vLLM do): a provider that serves it plugs in as it is; one with its own API
+  needs a transport adapter in `chat()` — a way of sending, not a new model.
+  Which providers serve which protocol is not checked. What a model needs beyond
+  the standard request goes in `extra` (as `enable_thinking: False` does for
+  Qwen, set in `run_game.py`).
+- **The language model speaks of ARC-AGI-3 in its own words.** Its mechanism is
+  general; its task is a prior; but the text it writes to its model ("the game",
+  `ACTION{n}`, `RESET (0)`, hex grids of colours 0-15, "the game reported") and
+  its program's interface (`predict(grid, action, x, y)`, steps with `state` and
+  `levels`, want and `GOAL` as `cells` and `status`) are for a region whose
+  states are grids. Kept word for word so the prompts are those of the runs made
+  and the submission. For another region, that text and interface move into its
+  priors, read through the organs — which changes what the model reads.
 
 ## Still unverified
 
