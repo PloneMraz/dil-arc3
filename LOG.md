@@ -2693,7 +2693,7 @@ that writes, each snapshot holding the whole store. Plone chose to keep dil-core
 scar rhythm alone for this mind (option 1): it adds data rather than revising
 one, and every write is in `[event]` already. `Daemon(commit_on_write=False)`;
 `run_game.py` turns it off for `--mind learning`; the language mind keeps both.
-277 tests.
+276 tests.
 
 ls20, 400 cycles, alone: **level 1**, 197 s, 0.21 s a cycle at the start and
 0.96 s by the end; 67 snapshots; store 406 MB (363 MB snapshots, 36 MB `[event]`,
