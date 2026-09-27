@@ -2413,3 +2413,32 @@ run to the end, so two versions ran:
   and 306 s in v11. At 4 at once, ~110 games at v12's pace would not fit in 9 h;
   the deadline (9 h less 20 min) stops what runs and starts nothing more, so the
   notebook should end in time with fewer games played.
+
+#### v11 and v12, game by game (read from their reports and stores, 2026-09-27)
+
+| run | game | commands | frames held | thoughts (kept) | aim inferred | wall |
+|---|---|---|---|---|---|---|
+| v11 | ar25 | ACTION1 ×59 | 54/60 | 13 (8): frame 6, goal 5 | clear the grid to background, within 10 | 384 s |
+| v11 | ls20 | ACTION1 ×59 | 54/60 | 15 (7): frame 6, goal 5, status 2 | move the block pattern from bottom to top, within 10 | 306 s |
+| v11 | sk48 | ACTION6 ×59 | 60/60 | 16 (16): goal 8, onlooker 7 | put the keys into the doors, within 5 | 154 s |
+| v11 | vc33 | **RESET ×59** | 60/60 | 13 (13): goal 11 | trigger completion via the key blocks, within 5 | 90 s |
+| v12 | ls20 | RESET ×10, ACTION1 ×2, ACTION2 ×47 | 12/60 | 53 (3): frame 48, onlooker 3 | reach the exit, within 10 | 1,261 s |
+
+- v11 is before the "act otherwise" rule, and every game is one action. Each aim
+  that fell due was rethought and a program kept, and it proposed the same
+  action.
+- **vc33 in v11 commanded RESET 59 times.** Its `propose` returns
+  `(6, x, y)` when it finds the target it looks for, and `(0, None, None)`
+  otherwise. It never found it, and RESET is always carried out. A RESET
+  predicts itself, so no frame failed and only the aim fell due. Under v12's rule
+  those rethoughts would not keep the same RESET.
+- ar25 in v11 is the first run in which the model asked its memory:
+  `{"kind": "thought", "provenance": "scar"}`.
+- v12's ls20 predicted poorly (12/60), so 48 of 53 thoughts were on the frame.
+  The "act otherwise" rule applies only to the onlooker, want and goal. It acted
+  once, at cycle 5 (RESET again, not kept). At cycle 12 an aim that fell due was
+  met by a program that acted otherwise.
+- **Still there in v12**: 2 answers "unterminated triple-quoted string", after
+  the last-whole-block fix. They are single blocks whose docstring never closes:
+  the model's own. 2 answers ran to the 12,288-token cap with no code.
+- C7 passes in v12 (6 onlooker scars); it fails in every v11 game.
