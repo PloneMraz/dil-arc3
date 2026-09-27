@@ -3162,3 +3162,46 @@ model):
   language model, nothing in what is kept favours a program that reaches the
   aim; with the learning model, the onlooker is heard after the command and
   acted on narrowly (the review above).
+
+### The field in dil-core, checked and rebuilt; a mind for dil-core (Plone, same day)
+
+**dil-core had the same hole** (checked at `dbb1640`, read only): the field's
+values were read at T7 (`otherCount`, `strangeness`, `contextNovelty`,
+`attentionGain`), appraisal (`appraisalGain`) and the fit floor; T3, T4, T5, T6
+and T8 named their field parameter `_field`, T1 and T2 did not take one; six
+contributed keys were read by nothing. `a1914f3`'s CHANGELOG says T8 "closes
+back… from N+1"; its test checks only that the keys land in the field. Every
+scar's context anchor records the whole field (`fieldState`), so it was legible
+in `[event]`, and read back by nothing.
+
+Plone: a declared gap is honest and useless; design the field as the
+specification describes it, and give dil-core a mind with a slot for a model.
+Done in dil-core, in four steps, each tested and pushed:
+
+1. **`1e0a22a` — GLOB-MOD carries three axes** — `trust`, `alertness`,
+   `exploration`, the specification's own examples (DIL-en-v7 §2) — and every
+   layer reads one and votes from what it alone sees (`FIELD_WIRING`). The
+   facts are no longer in the field ("how to read, never what is read").
+   Found on the way, both by tests: a reading law of 2v annulled operations at
+   0 (no valence, no attention span, no evidence, a floor above every
+   confidence), so the gain is now ½–1½; and a field reaching
+   `SUFFICIENT_RECURRENCE` would fail §13.4's accumulation reading, so T5 reads
+   exploration instead, and its rule gets the field. Quick-start conformance
+   4/3/0 and a long run 6/1/0, as before. 389 tests.
+2. **`aa98da9` — the model is the mind's, not the host's.** AGENTS.md and
+   CONTEXT.md called it a host faculty; the host "carries no self and
+   contributes no self" (DIL-en-v7 §2). Host, mind, and DIL between them —
+   Plone's statement, CONTEXT.md §5a.
+3. **`8722def` — the mind** (`src/mind`), seated at T5's rule, on the model of
+   this repository's `mind.py`: expects without the answer, looks, thinks on
+   what failed as often as alertness allows, asks memory, writes with
+   `builtFrom`, commands as T5's test. `standingModel` is the reference law
+   exactly. 397 tests.
+4. **`4358977` — the model slot takes a language model**, local at an address
+   or hosted with `apiKeyEnv`; the request runs in a child Node process the
+   mind waits on (the loop is synchronous). The key reaches only the header.
+   Not yet run against a real model; a language model's expectation is not yet
+   tied to the datum it wrote. 405 tests.
+
+Not yet ported here: the field's axes (this port still has the facts), and
+dil-core's mind is its own; this repository's mind stays as it is.
