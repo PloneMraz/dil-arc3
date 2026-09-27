@@ -106,61 +106,70 @@ standard library.
 Porting DIL from [dil-core](https://github.com/PloneMraz/dil-core) and running it
 against a live environment turned up more about the protocol than about
 ARC-AGI-3. These are the substance of the work rather than a side effect of it,
-and they fall into three kinds — which is worth keeping straight.
+and they fall into three kinds — which is worth keeping straight. Each says what
+holds now; how it was found, and the measurements, are in `LOG.md`.
 
-### Gaps between the protocol and its reference implementation
+### Channels the protocol requires, which an implementation can leave undrawn
 
-Each was verified by measurement, then fixed in `dil-core` first and ported back.
-All five have the same shape: a channel present in the topology that nothing
-drew on.
+The topology has channels an implementation can build and never draw on, and
+nothing in running it shows one is dead until it is traced. Five are drawn on
+now, in dil-core first and then here; two of them only in part.
 
-1. **The store was write-only.** §9 says "the self accrues from scars" and defines
-   three provenance edges by which a scar returns. On a real run all three fired
-   **zero** times: the loop called `data.put` once per cycle and never read
-   anything back, so §10's resistance-retrieval channel was satisfied nowhere.
-2. **The modulatory field was inert downward.** INV-7 has it reaching every layer
-   as background — "same data plus a different field yields different meaning".
-   No layer read it. Two of the eight did not even declare the parameter, and its
-   only consumer was a single gain at the appraisal step.
-3. **And inert upward.** "Every layer contributes to it as one competing
-   parameter; contributions blend, never last-write-wins." No layer *could*
-   contribute; the only caller was the driver, once per cycle, with one
-   hard-coded key. With one contributor, blending is last-write.
-4. **The top layer was a sink.** Nothing read T8's output: its relative values
-   and its Other-to-Other interactions were produced every cycle and dropped.
-   INV-1 forbids dead branches, and §6.2 says in as many words that "T8 closes
-   back into the loop, not into a sink". The meaning-channel cannot carry T8's
-   output back down, so it now returns through the field.
-5. **Admitted, and never asked for.** Host data enters through the tagging-gate
-   stamped `prior`, and §9 has it move to `running` "once it has run". Nothing
-   ever asked for it, so it never ran. §6.4 already names the mechanism — "T3
-   emits a *query*: it opens or calls a channel to ingest actively" — and the
-   index is the open-tag layer §9 already requires to be consistent by key. T3
-   now asks the store with the description of what just arrived; the answer
-   comes back through T1 and runs every layer. Recalled on a cue, never poured
-   in.
+1. **The store is read back.** §9 has the self accrue from scars. A scar
+   returns to `running` when it is used again — an expectation it is, or a
+   recall — and `[event]` records each `scar → running`. §10's
+   resistance-retrieval channel exists and is off by default: as a predictor it
+   loses (6).
+2. **The field reaches every layer, and is read in few places.** INV-7 has it
+   reach every layer as background — "same data plus a different field yields
+   different meaning". Every layer receives it; its values are read at T7 (the
+   width of attention, from T4's `strangeness` and T6's `otherCount`), at
+   appraisal (its gain) and at the fit floor. The other layers read nothing from
+   it.
+3. **Contributions blend.** "Every layer contributes to it as one competing
+   parameter; contributions blend, never last-write-wins." T3 to T8 and the
+   driver each contribute what only they can see; each key is a convex blend of
+   its contributions, taking effect the next cycle. T1 and T2 contribute
+   nothing.
+4. **T8 closes back into the loop through the field.** §6.2: "T8 closes back
+   into the loop, not into a sink"; the meaning-channel cannot carry its output
+   down, so its `interactions` and `resistanceConcentration` enter the field.
+   Nothing reads them — nor T3's `channelActivity`, T5's `surprise`, T7's
+   `silence`, or the driver's `resistance`: they are carried in the field,
+   legible, and act on nothing yet.
+5. **What is admitted is asked for.** Host data enters through the tagging-gate
+   stamped `prior`, and §9 has it move to `running` "once it has run". T3 asks
+   the store, once, with the description of each kind of arrival on the
+   open-tag keys (§6.4: "T3 emits a *query*"); the answer comes back through T1,
+   runs every layer, and moves `prior → running`. Recalled on a cue, never
+   poured in.
 
 ### A property of the protocol's own design
 
-6. **The experience store is a biased sample, by construction.** §9 admits only
-   registered mismatches, so what it holds are the region's *surprises*. Asked to
-   predict, it lost 62 of 66 contests against the model — not because it is
-   wrong, but because an exception loses to a distribution. No verdict is
-   involved anywhere: §9 is explicit that a scar "carries no claim of
-   correctness". This is not a defect to fix; it is what an experience store of
-   collisions *is*, and it means the store is right for driving change and wrong
-   for answering what happens next.
+6. **The scars are a biased sample, by construction.** §9 moves to `scar` only
+   what met a mismatch, so the scars are the region's *surprises*. Asked to
+   predict, they lose to a model of what usually happens — an exception loses to
+   a distribution. No verdict is involved anywhere: §9 is explicit that a scar
+   "carries no claim of correctness". This is not a defect to fix; it is what a
+   record of collisions *is*: right for driving change, wrong for answering what
+   happens next.
 
-### A gap in this agent
+### Gaps in this agent
 
-7. **Behaviour turns, but reaches no level.** The mind holds an aim (`GOAL`,
-   inferred when the task names none) and meets it when it falls due; the
-   mismatch reaches the model, which rewrites its program. Until `3b31806` the
-   rewritten program proposed the same action. Since then, a rewrite made on
-   how the agent acts — the onlooker, a want, an aim — is kept only if it acts
-   otherwise, and in the offline runs since, every game changes action. No
-   level has been completed to learn from. Local to this repository, not
-   upstream's.
+7. **With the language model, what is kept is not what gets through a level.** A
+   rewritten program is kept for predicting better; or for predicting as well
+   and giving a command, when the body waits for one; or for predicting as well
+   and acting otherwise, when the onlooker objected or a command or the aim did
+   not bring about what it was for; or for stating an aim when the mind holds
+   none. A missed aim sets the mind thinking, but nothing in what is kept
+   favours a program whose acts reach the aim.
+8. **With the learning model, the onlooker is heard late and narrowly.** In a
+   cycle the mind commands on the region's status, before the onlooker's remark
+   is heard; it thinks on a remark only when its word changes; and what it makes
+   of one is a single objection to an act in the state it stands in, which its
+   path toward a state with an act not yet taken does not ask.
+
+Local to this repository, not upstream's.
 
 ## Running it
 

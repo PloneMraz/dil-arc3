@@ -1185,6 +1185,60 @@ C2 is unverifiable only because the gate result was not handed to the checker;
 the run itself qualified. C4's partial is §7: continuity is attributable only by
 a third party.
 
+### README's Findings as they were written this day, moved here on 2026-09-27
+
+README's Findings, from `054b63b`, `147aab3` and `cf81f63` (2026-09-23), as they
+stood when Plone had them rewritten to what holds now. Word for word; the
+headings one level down.
+
+Porting DIL from [dil-core](https://github.com/PloneMraz/dil-core) and running it
+against a live environment turned up more about the protocol than about
+ARC-AGI-3. These are the substance of the work rather than a side effect of it,
+and they fall into three kinds — which is worth keeping straight.
+
+##### Gaps between the protocol and its reference implementation
+
+Each was verified by measurement, then fixed in `dil-core` first and ported back.
+All five have the same shape: a channel present in the topology that nothing
+drew on.
+
+1. **The store was write-only.** §9 says "the self accrues from scars" and defines
+   three provenance edges by which a scar returns. On a real run all three fired
+   **zero** times: the loop called `data.put` once per cycle and never read
+   anything back, so §10's resistance-retrieval channel was satisfied nowhere.
+2. **The modulatory field was inert downward.** INV-7 has it reaching every layer
+   as background — "same data plus a different field yields different meaning".
+   No layer read it. Two of the eight did not even declare the parameter, and its
+   only consumer was a single gain at the appraisal step.
+3. **And inert upward.** "Every layer contributes to it as one competing
+   parameter; contributions blend, never last-write-wins." No layer *could*
+   contribute; the only caller was the driver, once per cycle, with one
+   hard-coded key. With one contributor, blending is last-write.
+4. **The top layer was a sink.** Nothing read T8's output: its relative values
+   and its Other-to-Other interactions were produced every cycle and dropped.
+   INV-1 forbids dead branches, and §6.2 says in as many words that "T8 closes
+   back into the loop, not into a sink". The meaning-channel cannot carry T8's
+   output back down, so it now returns through the field.
+5. **Admitted, and never asked for.** Host data enters through the tagging-gate
+   stamped `prior`, and §9 has it move to `running` "once it has run". Nothing
+   ever asked for it, so it never ran. §6.4 already names the mechanism — "T3
+   emits a *query*: it opens or calls a channel to ingest actively" — and the
+   index is the open-tag layer §9 already requires to be consistent by key. T3
+   now asks the store with the description of what just arrived; the answer
+   comes back through T1 and runs every layer. Recalled on a cue, never poured
+   in.
+
+##### A property of the protocol's own design
+
+6. **The experience store is a biased sample, by construction.** §9 admits only
+   registered mismatches, so what it holds are the region's *surprises*. Asked to
+   predict, it lost 62 of 66 contests against the model — not because it is
+   wrong, but because an exception loses to a distribution. No verdict is
+   involved anywhere: §9 is explicit that a scar "carries no claim of
+   correctness". This is not a defect to fix; it is what an experience store of
+   collisions *is*, and it means the store is right for driving change and wrong
+   for answering what happens next.
+
 ## 2026-09-24
 
 ### Direction C: can an open model write the world model? First measurements, 2026-09-24
@@ -3067,3 +3121,44 @@ Not done, open with Plone: README's Findings are written as history (gaps
 "verified by measurement, then fixed", "lost 62 of 66", "until `3b31806`"), and
 finding 7 says "No level has been completed", which the learning model's runs
 contradict.
+
+### README's Findings rewritten to what holds (Plone, same day)
+
+Plone: the Findings say what holds now about the protocol; the history stays in
+LOG, which the paper can cite. Findings 1-6 as they were written are under
+2026-09-23 above; finding 7, written in `331525c`, read:
+
+> 7. **Behaviour turns, but reaches no level.** The mind holds an aim (`GOAL`,
+>    inferred when the task names none) and meets it when it falls due; the
+>    mismatch reaches the model, which rewrites its program. Until `3b31806` the
+>    rewritten program proposed the same action. Since then, a rewrite made on
+>    how the agent acts — the onlooker, a want, an aim — is kept only if it acts
+>    otherwise, and in the offline runs since, every game changes action. No
+>    level has been completed to learn from. Local to this repository, not
+>    upstream's.
+
+Each finding was checked against the code and the stores before it was
+rewritten (the motion-trial stores and an 80-cycle ls20 run of the learning
+model):
+
+- 1 and 5 hold: `scar → running` 18 times in 80 cycles, 235 in 600;
+  `prior → running` 6 times; T3 asked the store four times, once per
+  description (`sense: vision`, and the status's three `object`s).
+- **2 and 4 hold only in part.** Every layer receives the field, but its values
+  are read in three places: T7's attention width (`strangeness`, `otherCount`,
+  `contextNovelty`, `attentionGain`), appraisal (`appraisalGain`) and the fit
+  floor (`fitFloor`). Of what is contributed, only T4's `strangeness` and T6's
+  `otherCount` are read. T3's `channelActivity`, T5's `surprise`, T7's
+  `silence`, T8's `interactions` and `resistanceConcentration`, and the
+  driver's `resistance` are blended and carried and read by nothing. Nothing
+  contributes `contextNovelty` since the counting mind went, nor `fitFloor`;
+  `appraisalGain` is only the value the run starts with. T1 and T2 receive the
+  field and a `contribute` and use neither. So T8 closes into the field, not
+  back into behaviour. The README now says so.
+- 3 holds (a convex blend per key, taking effect at N+1, T3-T8 and the driver).
+- 6 holds; its figure (62 of 66) is under 2026-09-23.
+- 7 was history ("until `3b31806`") and, in "No level has been completed",
+  contradicted by the learning model. It is now two gaps that hold: with the
+  language model, nothing in what is kept favours a program that reaches the
+  aim; with the learning model, the onlooker is heard after the command and
+  acted on narrowly (the review above).
