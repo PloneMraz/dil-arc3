@@ -2564,5 +2564,8 @@ PENDING at 05:24. The starter kit's random agent scored 0.02 (`56462757`).
 - It is below the random agent's. The random agent takes up to 80 actions a game
   and resets on `GAME_OVER`; the offline runs of this code kept to one or two
   actions over long runs. Not a measurement of the scored run.
-- Completing the run is itself the first check of the gateway path: one
-  scorecard driven from several processes through one arcade was accepted.
+- COMPLETE shows the notebook ended and a submission was made. It does not show
+  that the gateway recorded the games' actions: one scorecard driven from
+  several processes through one arcade is still not verified, and a broken
+  gateway path would also score 0.00. The two causes cannot be told apart from
+  the score.
