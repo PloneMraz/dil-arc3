@@ -76,7 +76,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
-        "_respond", "_recollection", "_admit",
+        "_respond", "_recollection", "_admit", "_commit_on_write",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -101,8 +101,12 @@ class Daemon:
         respond: RespondPolicy | None = None,
         recollection: Any = None,
         admit: AdmitPolicy | None = None,
+        commit_on_write: bool = True,
     ) -> None:
         self._recollection = recollection
+        # DEVIATION (COMMIT_CADENCE): whether a cycle in which the agent wrote is
+        # committed too. False keeps dil-core's scar rhythm alone.
+        self._commit_on_write = commit_on_write
         # How each return from the region enters `[data]` — see `AdmitPolicy`
         # in cycle.py. None keeps the reference admission, `admit_return`.
         self._admit = admit
@@ -261,13 +265,15 @@ class Daemon:
         self._scars_since_commit += result.scars
 
         # §9: the counter fires a commit after COMMIT_EVERY scars, at a cycle
-        # boundary. DEVIATION from dil-core, declared (COMMIT_CADENCE): it also
+        # boundary. DEVIATION from dil-core, declared (COMMIT_CADENCE): unless the
+        # host turns it off (`commit_on_write`), it also
         # fires at the close of every cycle in which the agent wrote a datum, so
         # each version of what it wrote is in a snapshot the marker ties to its
         # place in `[event]` (v0.3.3 §9: a revision's content is read from the
         # snapshot; how finely is the cadence, DECIDE@IMPL).
         if self._commits is not None and (
-            self._scars_since_commit >= self._commit_every or result.written > 0
+            self._scars_since_commit >= self._commit_every
+            or (self._commit_on_write and result.written > 0)
         ):
             self._write_marker()
         return True

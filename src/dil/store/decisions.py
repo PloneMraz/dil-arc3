@@ -214,10 +214,14 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 # what it wrote — the mind's program above all — is in a snapshot, tied by
 # its marker to its place in `[event]`. dil-core keeps the scar rhythm alone:
 # for an agent that writes often, a snapshot per write is too heavy a cost.
+# The learning mind writes every cycle, and adds data rather than revising one:
+# a snapshot per write made each cycle slower than the last and a 400-cycle
+# store 2 GB (LOG.md), so a run with it keeps the scar rhythm alone (Plone,
+# 2026-09-27; `Daemon(commit_on_write=False)`).
 COMMIT_CADENCE: Final = (
-    "every COMMIT_EVERY scars, at a cycle boundary; and at the close of every "
-    "cycle in which the agent wrote a datum (dil-arc3); manual commit() and a "
-    "fork marker at recovery"
+    "every COMMIT_EVERY scars, at a cycle boundary; and, unless the host turns it "
+    "off, at the close of every cycle in which the agent wrote a datum (dil-arc3; "
+    "off for the learning mind); manual commit() and a fork marker at recovery"
 )
 
 # DECIDE@IMPL tag H — the building of situations in `simulated` (§6.2, §9).

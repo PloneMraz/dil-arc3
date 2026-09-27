@@ -2682,3 +2682,24 @@ Offline, here, on the two games the starter kit ships:
   cells a row); RESET looped when nothing was left to try (now only after
   something new was learned).
 - Not yet: README; a run on Kaggle (ar25, sk48); the time 110 games would take.
+
+### The learning mind keeps the scar rhythm alone (Plone, same day)
+
+Measured on the two 400-cycle runs above: each cycle was slower than the last
+(0.45 s at the start, 3.02 s by the end, two games at once) and each store was
+2 GB, 2.1 GB of it snapshots — one at the close of every cycle, because the
+learning mind writes every cycle and the declared cadence commits every cycle
+that writes, each snapshot holding the whole store. Plone chose to keep dil-core's
+scar rhythm alone for this mind (option 1): it adds data rather than revising
+one, and every write is in `[event]` already. `Daemon(commit_on_write=False)`;
+`run_game.py` turns it off for `--mind learning`; the language mind keeps both.
+277 tests.
+
+ls20, 400 cycles, alone: **level 1**, 197 s, 0.21 s a cycle at the start and
+0.96 s by the end; 67 snapshots; store 406 MB (363 MB snapshots, 36 MB `[event]`,
+9 MB `[data]`). The frame is scarred almost every cycle (483 frame scars in 400):
+the mind does not predict the clock, and a transition it holds carries the clock
+as it was. So the scar rhythm still snapshots often.
+
+Kaggle keeps up to 20 GiB in /kaggle/working (its notebook documentation); at
+~0.4 GB a game, 110 games would not fit.

@@ -92,6 +92,32 @@ def test_every_cycle_that_writes_is_committed_and_each_version_is_in_its_snapsho
     assert held == {2: "v1", 4: "v2"}, "each version of what was written is in a snapshot"
 
 
+def test_a_host_may_keep_the_scar_rhythm_alone(tmp_path):
+    """The learning mind writes every cycle: a run with it commits on scars only
+    (Plone, 2026-09-27; decisions.COMMIT_CADENCE)."""
+    cycle_no = [0]
+
+    def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
+        if write is not None:
+            write(WriteRequest(built_from=(), payload={"cycle": cycle_no[0]}, open=TAGS))
+        return persistence(entity_id, window, observed, contribute, ask, write)
+
+    layers = Layers(
+        t1=create_t1(), t2=create_t2(), t3=create_t3({}), t4=create_t4(),
+        t5=create_t5(predict=rule), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+    )
+    daemon = Daemon(
+        host=declaration("ls20", store_root=str(tmp_path)), source=Script(5), layers=layers,
+        glob=create_glob_mod(), initial_emission=Emission(action=None),
+        commit_every=10_000, commit_on_write=False,
+    )
+    daemon.start()
+    for c in range(5):
+        cycle_no[0] = c
+        assert daemon.step()
+    assert daemon._commits.list() == [], "every cycle wrote, and none was committed for it"
+
+
 def test_a_recovery_keeps_what_was_on_its_way_to_t1(tmp_path):
     """The snapshot carries the driver's whole state, as dil-core's does: a
     datum written in the cycle before the commit still arrives after recovery."""

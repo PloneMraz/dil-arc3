@@ -102,6 +102,9 @@ daemon = Daemon(
     host=declaration(a.game, store_root=store_root, onlooker=not a.alone), source=host_source, layers=layers,
     glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carrying_out(source),
     admit=admit,
+    # The learning mind writes every cycle and adds data rather than revising
+    # one: the scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE).
+    commit_on_write=not LEARNING,
 )
 gate = daemon.start()
 print("gate:", type(gate).__name__, " store:", store_root, flush=True)
