@@ -607,7 +607,8 @@ at 2026-09-26 20:42:04 UTC, ref `56588469`, serving Qwen3.8-Flash-Next NVFP4.
 agent scored 0.02. What the run did is in LOG.md. A second submission,
 `56600038` (2026-09-27), is not the agent: the starter kit's random agent on the
 same road (`scripts/random_game.py`), to tell whether the road or the agent gave
-the 0.00 (LOG.md). The paper must name the
+the 0.00: it scored **0.06**, so the road holds and the 0.00 is the agent's
+(LOG.md). The paper must name the
 submission it describes, and describe that notebook: a later version is a later
 submission.
 
@@ -633,10 +634,11 @@ notebook's start: no game starts after it, and a game still running is stopped.
 The wait for the model's server stops at once when its log says the engine
 failed to start, rather than at the end of the wait.
 
-Not verified, because only a scored rerun has a gateway: that the gateway takes
-one scorecard driven from several processes' requests through one arcade; that
-4 games at once finish ~110 games inside the deadline; and whether a rerun's GPU
-time counts against the weekly quota.
+**Verified by a scored rerun** (the gateway probe, `56600038`, 0.06): the gateway
+takes one scorecard driven from several processes' requests through one arcade,
+and scores the levels completed on it. Not verified: that 4 games at once finish
+~110 games inside the deadline; and whether a rerun's GPU time counts against
+the weekly quota.
 
 **Time per game, measured offline** (60 cycles; LOG.md): v11, four at once,
 90–384 s a game, 388 s for all four; v12 (the submitted code), `ls20` alone,

@@ -2631,3 +2631,20 @@ submission. The four games took 2,204 s (v14: 946 s). No level.
   run.
 - Still there: 8 answers with an unterminated string (ls20 2, vc33 6), 4 without
   a code block, 1 with no `predict`.
+
+### The gateway probe scored 0.06: the road holds (2026-09-27)
+
+Submission `56600038` (the starter kit's random agent on dil-arc3's road) is
+COMPLETE with a public score of **0.06**, seen at 06:22 UTC, ten minutes after it
+was submitted.
+
+- **The road holds.** One scorecard, driven from a process per game through
+  `world/remote.py`, was taken by the gateway and scored the levels the random
+  agent completed. v12's 0.00 is the agent's own: it completed no level worth
+  0.005, or too few games were played for it to show. Which of the two is not
+  known.
+- 0.06 against the starter's own 0.02 on the same rule: the difference is the
+  random agent's draws (it seeds from the clock), not the road. Two draws; the
+  random agent's score is somewhere around a few hundredths.
+- The random agent completed no level on any of the four offline games, so
+  those four cannot show whether an agent beats it.
