@@ -59,8 +59,8 @@ Settled deliberately, with Plone.
 | role | what it is | in this repo |
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
-| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `prior.py` |
-| **model** | the thinking organ's engine, replaceable. The **mind** is the design: **one**, the model and the program it writes. It reads, expects, is curious and wants — in its thinking, not in a formula — holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/arc3/mind.py`, `task.py`, `aim.py` |
+| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: a language model and the program it writes, or a model that learns from nothing. The **mind** is **one** and neutral about its region: it reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `models/`), seated by `src/arc3/mind.py`; `task.py`, `aim.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -81,6 +81,15 @@ what it was built from.
 the engine returns it; working out what is in it is the mind's program.
 
 ## What the mind is
+
+One mind, neutral about its region (`src/mind/mind.py`), thinking with a model:
+the part of it that computes (Plone, 2026-09-27). Two models have sat there. The
+first, below, is the one the submitted run used. The second learns from nothing
+(`src/mind/models/learning.py`): no weights, no text; it learns each transition
+it takes as data, expects from what it learned, finds the clock a region keeps
+whatever is done, and chooses by curiosity — what it knows least — and by the
+paths it knows. Offline it completed level 1 of ls20 (400 cycles) and vc33; on
+Kaggle, four games at once in about seven minutes, vc33's level 1 (LOG.md).
 
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the game: what it knows of a game is
@@ -197,7 +206,10 @@ records what this host declares for the protocol's deferred constants.
 src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
-src/arc3/         the body and the mind, kept apart.
+src/mind/         the one mind, neutral about its region, and the models it
+                  thinks with (language, learning). Imports nothing from arc3.
+src/arc3/         the body, its declared organs, what the mind is told, and
+                  where this host seats the mind.
 src/world/        what lies outside the agent: the region it acts on, served to
                   a game's own process in a scored run, and the onlooker.
 spec/             the DIL protocol and the specification it derives from,

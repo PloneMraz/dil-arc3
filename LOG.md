@@ -2832,3 +2832,6 @@ Now:
   A test sends real requests to a local server: the header carries the key, and
   nothing written, logged or kept holds it; a missing key is named, not shown.
   CLAUDE.md gains "Kept for after the competition". 284 tests.
+- **Step 6**: CLAUDE.md and README to the new layout — where the mind, its
+  models and the organs are; the body's rule declared with the organs; the
+  learning model in "What the mind is".

@@ -115,7 +115,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   model as the mind: **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4`
   at `7b71922`; Qwen3.6-35B-A3B before 2026-09-25) and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
-  (`src/arc3/mind.py`).
+  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`). A second model
+  learns from nothing (`src/mind/models/learning.py`, 2026-09-27; LOG.md).
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams
@@ -124,7 +125,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   revises. A model can be replaced (a language model, one that learns from
   nothing); the mind stays one. The mind's code is to be neutral about the
   environment: what is particular to one region is data the mind reads (its
-  priors), not code.
+  priors), not code. In the code: `src/mind/` imports nothing from `arc3` —
+  `mind.py` (the seams), `organs.py` (what a host declares of its eye and body),
+  `models/`; `src/arc3/organs.py` is this host's declaration, every value read
+  from its own code. The task's aim reaches a model that reads no text as data
+  (`prior:mind-task`'s `aim`). The language model's prompt still speaks of the
+  game in its own words, kept word for word (LOG.md, 2026-09-27).
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
   and computes nothing from it: two signals a cycle, the frame (both grid stacks
   and the move, as the engine returned them) and the region's status. Never name
@@ -167,7 +173,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Until then the competition's rules, "Your goal is to win" among them, reached
   every prompt unasked.
 - **What the body can carry out is one rule** (`command.can_carry_out`), which the
-  mind asks before it counts a proposal as a command. Written twice, it parted
+  host declares to the mind with its organs and the mind asks before it counts a
+  proposal as a command. Written twice, it parted
   twice: after `GAME_OVER`, and for ACTION6 with no cell.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
