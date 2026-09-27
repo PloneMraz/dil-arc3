@@ -9,9 +9,13 @@ party reads says so.
 
 from __future__ import annotations
 
-from arc3.learning_mind import (
-    CHOICE_TAGS, CLOCK_WINDOW, LEARNED_TAGS, create_learning_mind, grid_key, learning_rule, things,
+from arc3.organs import ARC_ORGANS
+from arc3.task import MIND_TASK, TASK_CUE
+from mind.mind import Mind, mind_rule
+from mind.models.learning import (
+    CHOICE_TAGS, CLOCK_WINDOW, LEARNED_TAGS, LearningModel, grid_key, things,
 )
+from mind.organs import Step
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
@@ -48,13 +52,20 @@ def status(state="NOT_FINISHED", levels=0, action=1, affords=(1, 2)) -> Signal:
     })
 
 
+def create_mind() -> Mind:
+    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    # What it reads, handed in as if recalled: the in-memory store admits no prior.
+    mind.receive("task", MIND_TASK.payload, None)
+    return mind
+
+
 def loop():
-    mind = create_learning_mind()
+    mind = create_mind()
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=learning_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
@@ -128,15 +139,13 @@ def test_the_game_ended_is_met_with_reset():
 
 
 def test_a_row_that_changes_whatever_is_done_is_the_clock_and_not_where_the_game_stands():
-    mind = create_learning_mind()
+    model = LearningModel(ARC_ORGANS, priors={"task": TASK_CUE})
     grids = [lit(0, clock=i) for i in range(CLOCK_WINDOW + 1)]
     for i in range(CLOCK_WINDOW):
-        mind.frame_calls = i
-        from arc3.mind import Transition
-        t = Transition(before=grids[i], action=[1, 2, 3][i % 3], x=None, y=None, after=grids[i + 1])
-        mind._learn_clock(t, ("act", t.action), None, None)
-    assert mind.clock == frozenset({2})
-    assert grid_key(lit(0, 0), mind.clock) == grid_key(lit(0, 1), mind.clock)
+        a = [1, 2, 3][i % 3]
+        model._learn_clock(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a), None)
+    assert model.clock == frozenset({2})
+    assert grid_key(lit(0, 0), model.clock) == grid_key(lit(0, 1), model.clock)
 
 
 def test_things_are_regions_of_one_colour_and_the_ground_is_left_out():
@@ -153,7 +162,7 @@ def test_clicking_that_never_did_anything_is_wanted_less_whatever_is_left_to_cli
     # thing to click was a new kind, so clicking went on (LOG.md). The action is
     # chosen first, over every kind of it.
     mind, cycle, data, events = loop()
-    mind._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
-    mind._kinds = {("act", 1): [5, 5, 0]}
+    mind.model._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
+    mind.model._kinds = {("act", 1): [5, 5, 0]}
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 6)))
     assert mind.commands[-1][1][0] == 1, "the action that changes things, not an untried click"

@@ -32,7 +32,10 @@ from arcengine import GameAction
 from arc3 import transducers
 from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
-from arc3.learning_mind import create_learning_mind, learning_rule
+from arc3.organs import ARC_ORGANS
+from arc3.task import TASK_CUE
+from mind.mind import Mind, mind_rule as seat_rule
+from mind.models.learning import LearningModel
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
@@ -58,7 +61,7 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--mind", choices=("language", "learning"), default="language",
                 help="which mind sits in the one seat: the language model's (mind.py), or the one that "
-                     "learns from nothing (learning_mind.py)")
+                     "learns from nothing (mind/models/learning.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -87,8 +90,10 @@ host_source = source
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
 LEARNING = a.mind == "learning"
 if LEARNING:
-    mind = create_learning_mind()
-    seat = learning_rule(mind)
+    # The one mind, neutral, thinking with a model that learns from nothing; the
+    # host declares its organs, and the model reads the task for its aim.
+    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    seat = seat_rule(mind)
 else:
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
     seat = mind_rule(mind)
@@ -158,11 +163,11 @@ if LEARNING:
     learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "transition"]
     why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
     print(f"  transitions learned   : {len(learned)}  no longer holding: {sum(1 for d in learned if not d.payload.get('holds'))}")
-    print(f"  states met            : {len(mind._grid_of)} (grids {len(mind._raw)}; clock rows {sorted(mind.clock)})")
-    print(f"  held off the clock    : {sum(mind.holds_off_clock)} of {len(mind.holds_off_clock)}")
+    print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.clock)})")
+    print(f"  held off the clock    : {sum(mind.model.holds_off_clock)} of {len(mind.model.holds_off_clock)}")
     print(f"  why it chose          : {dict(why)}")
-    print(f"  kinds of act          : {len(mind._kinds)}  (tried, changed, levels) most tried "
-          f"{sorted(mind._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
+    print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, changed, levels) most tried "
+          f"{sorted(mind.model._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
 else:
     print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
     print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in mind.thoughts if t.asked]}")

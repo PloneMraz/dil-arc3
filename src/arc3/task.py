@@ -59,9 +59,14 @@ Some it got wrong (expected vs yours, as changed cells relative to the grid befo
 
 Revise your program — predict, propose and GOAL — so it explains all the evidence. Return one ```python code block."""
 
+# The task's aim, stated in the form a mind that reads no text can hold itself to:
+# what will come back when it is reached, in the fields of the region's report
+# (Plone, 2026-09-27: what is particular to the region is data the mind reads).
+TASK_AIM: Final = {"aim": "get through the levels", "reached_when": {"fields": {"levelsDelta": 1}}}
+
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
-    payload={"task": TASK, "feedback": FEEDBACK},
+    payload={"task": TASK, "feedback": FEEDBACK, "aim": TASK_AIM},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 
@@ -69,4 +74,4 @@ MIND_TASK: Final = PreexistingItem(
 # what it is for from its own memory, as it reads anything else.
 TASK_CUE: Final = {"domain": TASK_DOMAIN}
 
-__all__ = ["FEEDBACK", "MIND_TASK", "TASK", "TASK_CUE", "TASK_DOMAIN", "TASK_SOURCE"]
+__all__ = ["FEEDBACK", "MIND_TASK", "TASK", "TASK_AIM", "TASK_CUE", "TASK_DOMAIN", "TASK_SOURCE"]

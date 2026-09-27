@@ -2784,3 +2784,33 @@ the state reads back equal. A put of the last snapshot: 1.38 s (was 3.45 s).
 ls20, 400 cycles, alone, end to end: **227 s** (whole snapshots 197 s; the first
 tree 292 s), store **116 MB** (whole: 406 MB), level 1. A port-side
 optimization: dil-core's format and names are unchanged. 282 tests.
+
+### The one mind, neutral; the model is its computing (Plone, same day)
+
+Plone: a model is the part of the one mind that computes — not a second mind,
+not a second brain — and the mind's code is to be neutral about its region.
+Checked first: `arc3/mind.py` was not. Beside the language model's own parts, it
+named the region's report fields (`stateTo`, `levelsDelta`, `depthDelta`), its
+ended states, ACTION6's cell, the frame payload's keys, the host's channels, and
+imported the body's rule directly.
+
+Now:
+
+- `src/mind/` imports nothing from `arc3`. `mind.py`: the seams, when it thinks,
+  want and aim, writes by handle, questions to memory, the onlooker, commands.
+  `organs.py`: what a host declares of its eye and body. `models/base.py`: what a
+  model is to the mind (it writes and asks nothing itself; it says what to).
+- `src/arc3/organs.py`: this host's organs, every value read from its own code.
+- `prior:mind-task` carries the task's aim in a form a mind that reads no text
+  can hold: `{"aim": "get through the levels", "reached_when": {"fields":
+  {"levelsDelta": 1}}}`. The words of the task are unchanged.
+- **Step 3, the learning model** (`mind/models/learning.py`, from
+  `arc3/learning_mind.py`, removed): the same algorithm, through the model
+  interface. Checked against its moves recorded before the change: ls20 400
+  cycles and vc33 150 cycles — after the start-up, every move is the same (398
+  and 148 compared), and both complete level 1. What differs is the start: the
+  mind commands nothing while it holds no aim, and the aim now comes from the
+  task prior, answered the cycle after it is asked; so the body makes the host's
+  start-up RESET at cycle 0 and waits at cycle 1.
+
+282 tests.

@@ -116,6 +116,15 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   at `7b71922`; Qwen3.6-35B-A3B before 2026-09-25) and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
   (`src/arc3/mind.py`).
+- **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
+  thinks with a model; the model is not a second mind beside it, nor a second
+  brain: it is the part of the one mind that computes. The mind holds the seams
+  with the loop — what it expects and which datum that is, when it thinks, what
+  it commands, what it writes — and the model is how it predicts, proposes and
+  revises. A model can be replaced (a language model, one that learns from
+  nothing); the mind stays one. The mind's code is to be neutral about the
+  environment: what is particular to one region is data the mind reads (its
+  priors), not code.
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
   and computes nothing from it: two signals a cycle, the frame (both grid stacks
   and the move, as the engine returned them) and the region's status. Never name
