@@ -626,12 +626,23 @@ process, and each game's process reaches its game through `world/remote.py`, as
 plain data both ways; `GameAction` does not survive a pickle. `CONCURRENCY`
 games at once (4) share one model server. A deadline at 9 h less 20 min from the
 notebook's start: no game starts after it, and a game still running is stopped.
+The wait for the model's server stops at once when its log says the engine
+failed to start, rather than at the end of the wait.
 
 Not verified, because only a scored rerun has a gateway: that the gateway takes
 one scorecard driven from several processes' requests through one arcade; that
-4 games at once finish ~110 games inside the deadline (from v9, one game of 60
-cycles took 201–750 s alone); and whether a rerun's GPU time counts against the
-weekly quota.
+4 games at once finish ~110 games inside the deadline; and whether a rerun's GPU
+time counts against the weekly quota.
+
+**Time per game, measured offline** (60 cycles; LOG.md): v11, four at once,
+90–384 s a game, 388 s for all four; v12 (the submitted code), `ls20` alone,
+1,261 s; v14, four at once, 292–941 s a game, 946 s for all four. At v14's pace
+~110 games take about 7 h against a deadline of 9 h less 20 min, less the ~15
+min the server takes to start; at the pace of v12's `ls20`, 110 × 1,261 s / 4 is
+about 9.6 h. So **only part of the games may be played**. The deadline then
+stops the run, and the submission stands with the games played; a game not
+played gains no level. Which pace the scored run had is not known from its score
+alone.
 
 ## How scoring works — settled
 

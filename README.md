@@ -29,11 +29,16 @@ that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in
 `[event]`, and a checker reads it back.
 
-**What is measured of the one mind so far**: nothing on a scored run yet. In every
-offline run of four games (60 cycles each, on Kaggle), no level. The program
-predicts much of what the region returns — 55 of 60 frames in one `ls20` run —
-and the mind holds an aim it inferred and meets it when it falls due; what does
-not yet turn is behaviour, which keeps to one action. Every run is in `LOG.md`.
+**What is measured of the one mind so far**: one scored run submitted (notebook
+version 12, code `3b31806`), its score not yet returned. In every offline run of
+four games (60 cycles each, on Kaggle), no level. The program predicts much of
+what the region returns — 55 of 60 frames in one `ls20` run — and the mind holds
+an aim it inferred and meets it when it falls due. Behaviour turns, but reaches
+no level. Before `3b31806` each game kept to one action. The submitted code
+changed action in the one game its notebook played offline (`ls20`: RESET,
+ACTION1, then ACTION2). The code after it (`af72f78`, offline run v14, not
+submitted) changed action in every game, and refused 26 rewritten programs that
+proposed the same action again. Every run is in `LOG.md`.
 
 **What it is told.** Its store holds, before it lives, three things, each as host
 data stamped `prior`: what its mind is told its thinking is for
@@ -148,11 +153,14 @@ drew on.
 
 ### A gap in this agent
 
-7. **An aim met by the region does not yet turn behaviour.** The mind holds an
-   aim (`GOAL`, inferred when the task names none) and meets it when it falls
-   due; the mismatch reaches the model, which rewrites its program — and in the
-   runs so far the rewritten program proposes the same action. No level has
-   been completed to learn from. Local to this repository, not upstream's.
+7. **Behaviour turns, but reaches no level.** The mind holds an aim (`GOAL`,
+   inferred when the task names none) and meets it when it falls due; the
+   mismatch reaches the model, which rewrites its program. Until `3b31806` the
+   rewritten program proposed the same action. Since then, a rewrite made on
+   how the agent acts — the onlooker, a want, an aim — is kept only if it acts
+   otherwise, and in the offline runs since, every game changes action. No
+   level has been completed to learn from. Local to this repository, not
+   upstream's.
 
 ## Running it
 

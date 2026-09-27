@@ -2508,3 +2508,40 @@ it. Save & Run on four games offline, 60 cycles, 4 at once. Not a submission.
   ar25's aim said `within: 150`, longer than the run, so it never fell due: the
   declared limit on `within`.
 - C7 passes on ar25, ls20 and vc33, and fails on sk48.
+
+### The onlooker says a repetition again; propose may look ahead (Plone, same day)
+
+Plone approved two of three directions after v14 (the third, thinking on, was not
+chosen). `1710630`:
+
+- **The onlooker says "repeating" again each `REPEAT_AT` more acts** while a run
+  lasts, with `at_least` 4, 8, 12… Said once and then held, it let ar25 repeat
+  ACTION1 52 times in v14 with 10 thoughts in all. Between nudges it holds what
+  it said, so a run kept on purpose is not stopped at every act. The cadence is
+  declared, not measured. "back-and-forth" is unchanged.
+- **The model is told `propose` may call its own `predict`** to look ahead toward
+  what `GOAL` says will come back, and that each run of either must end within
+  `PROGRAM_SECONDS` (2). They share one namespace, so this was possible before
+  and never said. Plone: a capability of the program, not a strategy for a kind
+  of game.
+
+268 tests. Offline run v15 (four games, 60 cycles, 4 at once) pushed at 05:01 UTC.
+
+### Documents set to the runs; the server wait fails fast (Plone, same day)
+
+Plone passed on a review; each point checked against the repository and held.
+
+- README's status said behaviour "keeps to one action", and finding 7 that the
+  rewritten program "proposes the same action". Both predate `3b31806`: v12's
+  offline ls20 went RESET, ACTION1, ACTION2, and v14 changed action in every
+  game. Both now say what holds, and keep apart what the submitted code did and
+  what the code after it did. One figure in the review was corrected: v14's
+  games took 292–941 s, not 851–941 s (ar25 took 292 s).
+- CLAUDE.md timed games from v9 (201–750 s alone). It now gives v11, v12 and
+  v14, and what they mean for ~110 games: about 7 h at v14's pace, about 9.6 h at
+  v12's ls20 pace, so only part of the games may be played before the deadline.
+- **The server wait fails fast.** In v13 the API server raised "Engine core
+  initialization failed" at 00:53:32 and did not exit, so `server.poll()` stayed
+  None and the cell waited its 1,800 s. The wait now reads the log each round and
+  stops on that line or "EngineCore failed to start". Checked on the logs kept:
+  it matches v13's and not v14's. v15, already running, has the old wait.

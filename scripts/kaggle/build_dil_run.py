@@ -139,6 +139,7 @@ print(subprocess.run([sys.executable, "-c", "import vllm, torch; print(vllm.__ve
     # ── 5 ──
     '''# The model's server. Its PID is kept, and only that PID is stopped at the end.
 LOG = W / "vllm-server.log"
+ENGINE_FAILED = ("Engine core initialization failed", "EngineCore failed to start")
 server = subprocess.Popen(
     [sys.executable, "-m", "vllm.entrypoints.openai.api_server", "--model", str(MODEL_DIR),
      "--served-model-name", "SERVED", "--host", "127.0.0.1", "--port", "8000",
@@ -150,6 +151,8 @@ t = time.time()
 while time.time() - t < 1200:
     if server.poll() is not None:
         print(LOG.read_text()[-4000:]); raise RuntimeError("vLLM exited")
+    if any(m in LOG.read_text(errors="replace") for m in ENGINE_FAILED):
+        print(LOG.read_text()[-4000:]); raise RuntimeError("vLLM's engine failed to start")
     try:
         urllib.request.urlopen(BASE + "/models", timeout=5); break
     except Exception:
@@ -312,6 +315,7 @@ assert probe.stdout.split()[-1] == "Qwen3_8FlashNextPLEFp8EmbeddingMethod", "the
 # of the 2.37 GiB one 64K request needs (kernel v8). The KV cache is set outright instead,
 # at the 5 GiB the public notebook served this model with on this machine.
 LOG = W / "vllm-server.log"
+ENGINE_FAILED = ("Engine core initialization failed", "EngineCore failed to start")
 server = subprocess.Popen(
     [sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", str(MODEL_DIR),
      "--served-model-name", "SERVED", "--host", "127.0.0.1", "--port", "8000",
@@ -329,6 +333,11 @@ t = time.time()
 while time.time() - t < 1800:
     if server.poll() is not None:
         print(LOG.read_text()[-6000:]); raise RuntimeError("vLLM exited")
+    # The engine can die while the API server lives on: in kernel v13 an ECC fault
+    # killed it at load, the server raised and did not exit, and this loop waited
+    # its full 1800 s. The log says so at once.
+    if any(m in LOG.read_text(errors="replace") for m in ENGINE_FAILED):
+        print(LOG.read_text()[-6000:]); raise RuntimeError("vLLM's engine failed to start")
     try:
         urllib.request.urlopen(BASE + "/models", timeout=5); break
     except Exception:
