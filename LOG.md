@@ -2858,3 +2858,23 @@ and 2. The four games took 414 s (version 2: 413 s).
   cycle while the mind waited for its aim, and made one more RESET (the host's
   start-up). Levels the same (vc33 1, the others 0); states met the same or
   within two (ar25 252, was 254); the counts of each act differ by one or two.
+
+### Learning notebook version 4: 600 cycles, to find the ceiling (Plone, same day)
+
+Same code as version 3, 600 cycles, four games at once. The four took 1,061 s of
+`run_competition`; download 18 s (52 MB archive; stores 157-293 MB unpacked).
+
+| game | level | states met | wall | s/cycle by 100-cycle block |
+|---|---|---|---|---|
+| ar25 | 0 | 497 | 670 s | 0.89, 0.93, 1.05, 1.14, 1.21, 1.29 |
+| ls20 | **1** | 127 | 825 s | 0.92, 1.05, 1.17, 1.57, 1.91, 1.50 |
+| sk48 | 0 | 378 | 1,050 s | 1.13, 1.49, 1.48, 2.12, 2.08, 2.08 |
+| vc33 | 1 | 54 | 701 s | 0.90, 0.94, 1.01, 1.19, 1.32, 1.51 |
+
+- ls20 completed level 1 on Kaggle, which it did not in 300 cycles.
+- Toward the end fewer than four games ran at once, so the last blocks are
+  faster than they would be with the queue full.
+- What it means for ~110 games at four at once, the deadline at 9 h less 20 min
+  (~31,000 s after start-up): at these four games' mean (811 s a game) about
+  22,300 s (6.2 h); were every game as slow as sk48, about 28,900 s (8.0 h). A
+  game that does not fit is not started, and scores nothing.
