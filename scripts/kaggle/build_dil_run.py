@@ -381,16 +381,21 @@ def find(marker, kind="file"):
         return p.parent if kind == "file" else p
     raise FileNotFoundError(marker)
 
-DATA_DIR = find("dil-arc3.tar")
+# Kaggle unpacks the archive into the dataset: find the script, not the tar.
+SCRIPTS_DIR = find("random_game.py")
 ARC_WHEELS = find("arc_agi_3_wheels", kind="dir")
 ENVS = ARC_WHEELS.parent / "environment_files"
-print("dil-arc3 data:", DATA_DIR, " arc wheels:", ARC_WHEELS)
+print("dil-arc3 scripts:", SCRIPTS_DIR, " arc wheels:", ARC_WHEELS)
 print("games:", sorted(p.name for p in ENVS.iterdir()))''',
     CELLS[2],
     '''REPO = W / "dil-arc3"
 shutil.rmtree(REPO, ignore_errors=True)
-with tarfile.open(DATA_DIR / "dil-arc3.tar") as tf:
-    tf.extractall(W)
+tar = SCRIPTS_DIR / "dil-arc3.tar"
+if tar.exists():
+    with tarfile.open(tar) as tf:
+        tf.extractall(W)
+else:  # unpacked: scripts/ is found, its parent is the repository
+    shutil.copytree(SCRIPTS_DIR.parent, REPO)
 print(sorted(p.name for p in (REPO / "scripts").iterdir()))''',
     '''# As the agent's run cell, with the random agent as the player and no model.
 RERUN = bool(os.environ.get("KAGGLE_IS_COMPETITION_RERUN"))

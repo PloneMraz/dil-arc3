@@ -2592,3 +2592,7 @@ spend a submission on telling them apart.
   tests.
 - Reading it: about 0.02 means the road holds and v12's 0.00 is the agent's;
   0.00 points at the road. The random agent's own 0.02 is one draw.
+- Probe version 1 failed in its first cell: Kaggle unpacks `dil-arc3.tar` into
+  the dataset, so the probe's search for the tar found nothing. It now finds
+  `random_game.py` and copies the repository around it, as the main notebook
+  does. Checked by running its cells here against the unpacked layout.
