@@ -2674,6 +2674,8 @@ Offline, here, on the two games the starter kit ships:
 - vc33, 150 cycles: **level 1 completed** — the first level dil-arc3 has
   completed. 400 cycles: level 1, no more (609 s, two games at once).
 - ls20, 150 cycles: no level; 43 states, the four acts spread; clock rows 61-62.
+  400 cycles: **level 1 completed** (ACTION1 gained it); 103 states; 698 s, two
+  games at once.
 - Fixed on the way, each general: the clock was found late while one act
   repeated (curiosity now favours the least known kind); a looser clock rule
   took the rows a moving piece crossed (now three kinds of act and at most two
