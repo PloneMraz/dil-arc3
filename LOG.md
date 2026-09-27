@@ -2545,3 +2545,7 @@ Plone passed on a review; each point checked against the repository and held.
   None and the cell waited its 1,800 s. The wait now reads the log each round and
   stops on that line or "EngineCore failed to start". Checked on the logs kept:
   it matches v13's and not v14's. v15, already running, has the old wait.
+- Two more from Plone. The old models' server wait (`< 1200`) had no `else`:
+  when time ran out it printed "server ready" and went on. It now fails, as the
+  flash-next wait does; both variants build and parse. A line of CLAUDE.md that
+  the onlooker edit left at 95 characters is rewrapped.

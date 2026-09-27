@@ -157,6 +157,8 @@ while time.time() - t < 1200:
         urllib.request.urlopen(BASE + "/models", timeout=5); break
     except Exception:
         time.sleep(5)
+else:
+    print(LOG.read_text()[-4000:]); raise RuntimeError("vLLM not ready in 1200s")
 print(f"server ready in {time.time() - t:.0f}s")''',
     # ── 6 ──
     '''# dil-arc3 itself, copied where it can write (its scripts keep their data beside them).

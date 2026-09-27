@@ -323,8 +323,8 @@ are below.
     "repeating" (the same act `REPEAT_AT = 4` times running — **not measured**,
     declared as chosen — `at_least` how many, said again each `REPEAT_AT` more
     while it lasts: Plone, 2026-09-27) and "back-and-forth" (x y x y). Each
-    points at the moment it began. It has no claim of being right: a repetition that is getting
-    somewhere is remarked on too.
+    points at the moment it began. It has no claim of being right: a
+    repetition that is getting somewhere is remarked on too.
   - **The mismatch is between the agent and the onlooker.** The agent's standing
     expectation is that the onlooker says what it said; a change of stance
     collides, and the scar is on the remark's datum (`domain: reflection`,
