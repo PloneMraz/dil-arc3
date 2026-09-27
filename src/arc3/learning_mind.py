@@ -43,11 +43,13 @@ from. What it does next, in this order:
 
   1. toward a level: if a path it knows leads to an act that gained a level
      before, the next step of that path;
-  2. curiosity: an act not yet taken from here — first the kind that most often
-     gained a level; then the kind whose odds of changing where the game stands
-     (one untried and one tried in its favour: Laplace), raised by how little it
-     has been tried (UCB1), are highest. What it knows least, it is most curious
-     about; a kind that changes nothing falls behind as it is tried;
+  2. curiosity: an act not yet taken from here, chosen in two steps — first the
+     action, over every kind of it, then (for ACTION6) which thing to click.
+     At each step, first what most often gained a level; then what has the
+     highest odds of changing where the game stands (one untried and one tried
+     in its favour: Laplace), raised by how little it has been tried (UCB1).
+     What it knows least, it is most curious about; what changes nothing falls
+     behind as it is tried — clicking as a whole, when no click did anything;
   3. the next step of the shortest path it knows to a grid with an act not yet
      taken — never through an act that ended the game or no longer holds;
   4. RESET, when nothing is left to try from anywhere it can reach and it has
@@ -222,6 +224,7 @@ class LearningMind:
         self._edges: dict[tuple[str, Act], Edge] = {}
         self._out: dict[str, dict[Act, Edge]] = {}
         self._kinds: dict[tuple, list[int]] = {}   # kind -> [tried, changed, levels]
+        self._actions: dict[int, list[int]] = {}   # action -> [tried, changed, levels], every kind of it
         self._kind_of: dict[tuple[str, Act], tuple] = {}
         self._by_mark: dict[str, Edge] = {}
         self._echoes: list[str] = []
@@ -352,9 +355,9 @@ class LearningMind:
         to = self._state_of[to_raw]
         changed = to != source
         if act[0] != RESET:
-            counts = self._kinds.setdefault(kind, [0, 0, 0])
-            counts[0] += 1
-            counts[1] += int(changed)
+            for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0])):
+                counts[0] += 1
+                counts[1] += int(changed)
         self._last_new = known is None
         if known is None:
             edge = Edge(source_raw, act, to_raw, kind, changed)
@@ -414,6 +417,7 @@ class LearningMind:
                 edge.ended += 1
             if self._last_new and (said.get("levelsDelta") or 0) > 0 and edge.act[0] != RESET:
                 self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
+                self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
             if self._last_new and not edge.written and write is not None:
                 self._write_edge(edge, write, built)
         self.command(ask, write, test)
@@ -449,8 +453,23 @@ class LearningMind:
 
     def _odds(self, kind: tuple) -> tuple[float, float]:
         """The odds it gives a kind of act: of a level, and of the state changing."""
-        tried, changed, levels = self._kinds.get(kind, (0, 0, 0))
+        return self._odds_of(self._kinds.get(kind, (0, 0, 0)))
+
+    @staticmethod
+    def _odds_of(counts) -> tuple[float, float]:
+        tried, changed, levels = counts
         return (levels + 1) / (tried + 2) if levels else 0.0, (changed + 1) / (tried + 2)
+
+    def _action_curiosity(self, action: int) -> tuple[float, float]:
+        """How much it wants to try an action at all, over every kind of it: the
+        first of the two choices (then, for ACTION6, which thing to click). A
+        click that never did anything anywhere makes clicking itself less
+        wanted, however many things are left unclicked (LOG.md: ar25 and sk48
+        spent two steps in three on clicks that changed nothing)."""
+        level, change = self._odds_of(self._actions.get(action, (0, 0, 0)))
+        tried = self._actions.get(action, (0, 0, 0))[0]
+        total = sum(a[0] for a in self._actions.values())
+        return level, change + math.sqrt(2 * math.log(total + 1) / (tried + 1))
 
     def _curiosity(self, kind: tuple) -> tuple[float, float]:
         """How much it wants to try a kind of act: the odds of a level first; then
@@ -522,7 +541,9 @@ class LearningMind:
             elif path:
                 act, why, through = path[0].act, f"toward a level gained before ({len(path)} steps)", path
             elif opened:
-                best = max(opened, key=lambda ak: self._curiosity(ak[1]))
+                # First which action, over every kind of it; then which of its kinds.
+                action = max({a for (a, _, _), _ in opened}, key=lambda a: (self._action_curiosity(a), -a))
+                best = max((ak for ak in opened if ak[0][0] == action), key=lambda ak: self._curiosity(ak[1]))
                 act, odds = best[0], self._odds(best[1])[1]
                 self._kind_of[(here, act)] = best[1]
                 why = "not yet taken from here"

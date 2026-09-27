@@ -146,3 +146,14 @@ def test_things_are_regions_of_one_colour_and_the_ground_is_left_out():
     found = things(grid)
     assert [(c, n) for c, n, _, _ in found] == [(4, 1), (3, 2)], "smallest first; the ground (0) is too large"
     assert found[0][2:] == (5, 5)
+
+
+def test_clicking_that_never_did_anything_is_wanted_less_whatever_is_left_to_click():
+    # ar25 and sk48 on Kaggle: 0 of ~200 clicks changed anything, and each new
+    # thing to click was a new kind, so clicking went on (LOG.md). The action is
+    # chosen first, over every kind of it.
+    mind, cycle, data, events = loop()
+    mind._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
+    mind._kinds = {("act", 1): [5, 5, 0]}
+    run(cycle, frame(lit(0), lit(1)), status(affords=(1, 6)))
+    assert mind.commands[-1][1][0] == 1, "the action that changes things, not an untried click"

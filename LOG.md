@@ -2744,3 +2744,29 @@ light (~420 bytes); the payload was one JSON of the whole state per commit
   `DECIDE@IMPL`.
 - Ported: `src/dil/store/commit_store.py`, and five tests to match dil-core's.
   281 tests.
+
+### The tree measured; ar25 and sk48 read; curiosity in two steps (Plone, same day)
+
+**ls20, 400 cycles, alone, with the tree** (code before the curiosity change
+below): level 1; 67 snapshots as before; store **116 MB** (was 406 MB):
+snapshots 72 MB in 1,052 objects and 67 roots of ~4 KB (was 363 MB), `[event]`
+36 MB, `[data]` 9 MB. **Slower**: 292 s (was 197 s), 0.25 s a cycle at the start
+and 1.26 s by the end (was 0.21 and 0.96). Each commit still walks and hashes the
+whole state to find what changed, and tries to write each object it meets.
+One run each; not repeated.
+
+**ar25 and sk48 on Kaggle** (read from their stores):
+
+- ar25 offers ACTION1-7, sk48 ACTION1-4, 6, 7. **No click did anything**: 0 of
+  202 in ar25, 0 of 197 in sk48; 206 and 202 of their 300 steps changed no cell.
+  Each thing on a grid is a kind of its own (colour and size), so each new thing
+  was an untried kind, and curiosity kept clicking.
+- ar25 keeps a counter in column 63 (rows 0, 1, 2, … turn 11 → 5), but not on
+  every step that did something, so no clock was found; no grid repeated anyway
+  (92 grids, 92 states).
+
+**Curiosity in two steps** (general, as the rule for the mind's own
+computation allows): first which action, over every kind of it (UCB1 on the
+action's counts); then, for ACTION6, which thing to click (UCB1 on the kinds).
+Clicking that never did anything anywhere is wanted less, however many things
+are left unclicked. Test added: 282 tests.
