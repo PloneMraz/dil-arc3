@@ -367,9 +367,13 @@ print("server stopped; outputs:", sorted(p.name for p in W.iterdir()))'''
 # game in its own process through world/remote.py — and plays the starter kit's
 # random agent in it (scripts/random_game.py). No model, no GPU (Plone, 2026-09-27).
 PROBE_KERNEL_SLUG = "dil-arc3-gateway-probe"
+# The same CPU notebook seats the learning mind (`--mind learning`): no model to
+# serve, so no GPU (Plone, 2026-09-27).
+LEARNING_KERNEL_SLUG = "dil-arc3-learning"
 PROBE_CELLS = [
-    '''# dil-arc3 — the gateway probe: the starter kit's random agent, played through the
-# path dil-arc3's agent is played (run_competition.py, world/remote.py). No model.
+    '''# dil-arc3 on CPU, no model: RUN_ARGS seat the learning mind, or — the gateway probe —
+# the starter kit's random agent, on the road dil-arc3 is played (run_competition.py,
+# world/remote.py).
 import os, shutil, subprocess, sys, tarfile, time, urllib.request
 from pathlib import Path
 
@@ -397,10 +401,11 @@ if tar.exists():
 else:  # unpacked: scripts/ is found, its parent is the repository
     shutil.copytree(SCRIPTS_DIR.parent, REPO)
 print(sorted(p.name for p in (REPO / "scripts").iterdir()))''',
-    '''# As the agent's run cell, with the random agent as the player and no model.
+    '''# As the agent's run cell, with no model: RUN_ARGS seat the random agent (the
+# probe) or the learning mind.
 RERUN = bool(os.environ.get("KAGGLE_IS_COMPETITION_RERUN"))
 DEADLINE = T0 + 9 * 3600 - 20 * 60
-cmd = [sys.executable, "-u", str(REPO / "scripts" / "run_competition.py"), "--player", "random_game.py",
+cmd = [sys.executable, "-u", str(REPO / "scripts" / "run_competition.py"), *RUN_ARGS,
        "--cycles", str(CYCLES), "--concurrency", str(CONCURRENCY), "--deadline", str(DEADLINE), "--out", str(W)]
 if RERUN:
     os.environ.setdefault("ARC_API_KEY", "test-key-123")
@@ -450,6 +455,8 @@ def main() -> None:
     ap.add_argument("--concurrency", type=int, default=4, help="games played at once, on one model server")
     ap.add_argument("--probe", action="store_true",
                     help="the gateway probe: the random agent through the same path, no model, no GPU")
+    ap.add_argument("--mind", choices=("language", "learning"), default="language",
+                    help="learning: the mind that learns from nothing, on CPU, no model")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -486,20 +493,24 @@ def main() -> None:
         "cells": [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                    "outputs": [], "source": src} for i, src in enumerate(cells)],
     }
-    if a.probe:
-        cells = [params + PROBE_CELLS[0], *PROBE_CELLS[1:]]
+    cpu = a.probe or a.mind == "learning"
+    if cpu:
+        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning"]
+        cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]
     (kernel / "run.ipynb").write_text(json.dumps(nb, indent=1))
-    if a.probe:
+    if cpu:
+        slug, title = ((PROBE_KERNEL_SLUG, "dil-arc3 gateway probe") if a.probe
+                       else (LEARNING_KERNEL_SLUG, "dil-arc3 learning"))
         (kernel / "kernel-metadata.json").write_text(json.dumps({
-            "id": f"{OWNER}/{PROBE_KERNEL_SLUG}", "title": "dil-arc3 gateway probe",
+            "id": f"{OWNER}/{slug}", "title": title,
             "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
             "is_private": True, "enable_gpu": False, "enable_tpu": False, "enable_internet": False,
             "keywords": [], "dataset_sources": [f"{OWNER}/{DATASET_SLUG}"],
             "competition_sources": [COMPETITION], "kernel_sources": [], "model_sources": [],
         }, indent=1))
-        print(f"dataset -> {dataset}\nkernel  -> {kernel}\nthe gateway probe: random agent, game {a.game}")
+        print(f"dataset -> {dataset}\nkernel  -> {kernel}\n{title}: {run_args}, game {a.game}, cycles {a.cycles}")
         return
     (kernel / "kernel-metadata.json").write_text(json.dumps({
         "id": f"{OWNER}/{KERNEL_SLUG}", "title": "dil-arc3 run",

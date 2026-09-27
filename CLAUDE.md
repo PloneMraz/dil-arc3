@@ -107,14 +107,15 @@ and a far better fit for the compute ceiling of a Kaggle session with no network
 What the one mind is and how its work reaches `[event]`. Each rule below was
 settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 
-- **One mind, and it is the model.** The thinking organ is the served model —
-  **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at `7b71922`),
-  the one the submitted notebook serves — and the program it writes:
+- **One mind** (Plone, 2026-09-27: his rule stops there). Whatever thinks is one:
+  nothing else computes over the grid — a second computation is a second mind,
+  and the self would have no one mind to crystallize from. Plone: "Dùng Qwen thì
+  dùng Qwen, đừng nhập nhằng" — one mind at a time, not two mixed. Which mind
+  that is can change. The runs so far, and the submitted one, had a language
+  model as the mind: **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4`
+  at `7b71922`; Qwen3.6-35B-A3B before 2026-09-25) and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
-  (`src/arc3/mind.py`). Qwen3.6-35B-A3B served the runs before 2026-09-25 (LOG.md).
-  Nothing else computes over the grid: a second computation is a second mind, and
-  the self would have no one mind to crystallize from. Plone: "Dùng Qwen thì
-  dùng Qwen, đừng nhập nhằng."
+  (`src/arc3/mind.py`).
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
   and computes nothing from it: two signals a cycle, the frame (both grid stacks
   and the move, as the engine returned them) and the region's status. Never name
@@ -132,10 +133,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   the mind's place (Plone: "Cơ thể có thể đơ để đợi"). Cycle 0's RESET is the
   host's start-up (§4). What else the mind sends out is a question to its own
   memory: `ask(cue)`, a store query, traced to T5 with register ↔.
-- **Curiosity, want and expectation are the mind's, arising in its thinking.**
-  Nothing in code computes or weighs them: the per-action `resolved`,
-  `progress` and `valence` readings and the formula that composed them are gone
-  (Plone, 2026-09-25).
+- **Curiosity, want and expectation are the mind's own computation.** Nothing
+  computes them on the mind's behalf — not the host, not the body, not code
+  standing beside the mind (Plone, 2026-09-27: "cấm tính hộ, không phải cấm
+  code"). A mind that is itself code computes them in itself. The per-action
+  `resolved`, `progress` and `valence` readings, once computed for the language
+  model outside its thinking, are gone (2026-09-25).
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
   through the levels; no kind of game, mechanic or strategy is named. It says

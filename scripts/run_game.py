@@ -1,7 +1,8 @@
-"""A live game with the one mind in the loop: the model thinks, DIL runs.
+"""A live game with the one mind in the loop: the mind thinks, DIL runs.
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
         [--max-tokens N] [--think] [--alone] [--offline-dir DIR] [--remote HOST:PORT] [--out DIR]
+    $PY scripts/run_game.py GAME CYCLES --mind learning [...]      (the mind that learns from nothing)
 
 The host carries the whole frame; the mind predicts it with the program the
 model wrote, and thinks when an expectation meets a mismatch — the frame, the
@@ -31,6 +32,7 @@ from arcengine import GameAction
 from arc3 import transducers
 from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
+from arc3.learning_mind import create_learning_mind, learning_rule
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
@@ -54,6 +56,9 @@ ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
+ap.add_argument("--mind", choices=("language", "learning"), default="language",
+                help="which mind sits in the one seat: the language model's (mind.py), or the one that "
+                     "learns from nothing (learning_mind.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -80,10 +85,16 @@ host_source = source
 # What this served model needs beyond the standard request: Qwen3 thinks unless
 # told not to. The mind itself knows no model.
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
-mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
+LEARNING = a.mind == "learning"
+if LEARNING:
+    mind = create_learning_mind()
+    seat = learning_rule(mind)
+else:
+    mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
+    seat = mind_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-    t5=create_t5(predict=mind_rule(mind)), t6=create_t6(),
+    t5=create_t5(predict=seat), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
@@ -100,6 +111,11 @@ n = 0
 while daemon.step():
     n += 1
     last = mind.thoughts[-1] if mind.thoughts else None
+    if LEARNING:
+        print(f"cycle {n - 1:3d}  learned {mind.version}  "
+              + (f"chose {last.act} — {last.why}" + (f" (odds {last.odds:.2f})" if last.odds is not None else "")
+                 if last else ""), flush=True)
+        continue
     print(f"cycle {n - 1:3d}  frame calls {mind.frame_calls}  program v{mind.version}  "
           f"thoughts {len(mind.thoughts)}"
           + (f" on {last.on}" if last else "")
@@ -135,8 +151,18 @@ print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) fo
 print(f"  answers kept          : {len(answers)}  program not taken: {sum(1 for d in answers if not d.payload.get('kept'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
-print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
-print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in mind.thoughts if t.asked]}")
+if LEARNING:
+    learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "transition"]
+    why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
+    print(f"  transitions learned   : {len(learned)}  no longer holding: {sum(1 for d in learned if not d.payload.get('holds'))}")
+    print(f"  states met            : {len(mind._grid_of)} (grids {len(mind._raw)}; clock rows {sorted(mind.clock)})")
+    print(f"  held off the clock    : {sum(mind.holds_off_clock)} of {len(mind.holds_off_clock)}")
+    print(f"  why it chose          : {dict(why)}")
+    print(f"  kinds of act          : {len(mind._kinds)}  (tried, changed, levels) most tried "
+          f"{sorted(mind._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
+else:
+    print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
+    print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in mind.thoughts if t.asked]}")
 print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in mind.commands]}")
 print(f"  frame expectation held: {sum(mind.holds)} of {len(mind.holds)}")
 print(f"  the body stood still  : {source.waits} cycles")

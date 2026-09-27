@@ -2648,3 +2648,35 @@ was submitted.
   random agent's score is somewhere around a few hundredths.
 - The random agent completed no level on any of the four offline games, so
   those four cannot show whether an agent beats it.
+
+### A mind that learns from nothing, in the one seat (Plone, 2026-09-27)
+
+Plone: build a mind with no trained weights, whose thinking is an algorithm —
+the loop, the store and the host unchanged. Two rules in CLAUDE.md were set to
+his meaning first: "one mind" (which mind sits there can change); and nothing
+computes curiosity, want or expectation on the mind's behalf ("cấm tính hộ,
+không phải cấm code").
+
+`src/arc3/learning_mind.py`: each transition it takes is learned and written
+(`kind: transition`, built from the frame and report); an act taken again from
+the same state is expected as learned, the expectation the datum's; a refuted
+one is scarred and revised as no longer holding. It finds the region's clock —
+rows that change whatever is done — and reads states without it (`kind: clock`).
+It chooses: a path to a level gained before; an act not yet taken here, the
+least known kind first (UCB1); a path to a state with one; RESET, or the state
+visited least. ACTION6 clicks the things on the grid. Each choice is written
+(`kind: choice`) with why and what it was built from. `run_game.py --mind
+learning`; `run_competition.py --mind`; `build_dil_run.py --mind learning`
+builds a CPU notebook (`dil-arc3-learning`). 275 tests.
+
+Offline, here, on the two games the starter kit ships:
+
+- vc33, 150 cycles: **level 1 completed** — the first level dil-arc3 has
+  completed. 400 cycles: level 1, no more (609 s, two games at once).
+- ls20, 150 cycles: no level; 43 states, the four acts spread; clock rows 61-62.
+- Fixed on the way, each general: the clock was found late while one act
+  repeated (curiosity now favours the least known kind); a looser clock rule
+  took the rows a moving piece crossed (now three kinds of act and at most two
+  cells a row); RESET looped when nothing was left to try (now only after
+  something new was learned).
+- Not yet: README; a run on Kaggle (ar25, sk48); the time 110 games would take.
