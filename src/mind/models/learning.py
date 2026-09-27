@@ -464,16 +464,16 @@ class LearningModel:
         odds: float | None = None
         act: Act | None = None
         if context.ended is not None:
-            act, why = self.organs.reset, f"the game has ended ({context.ended})"
+            act, why = self.organs.reset, f"the region has ended ({context.ended})"
         else:
             gained = {self._state_of[e.source] for e in self._edges.values() if e.holds and self._reached(e.status)}
             aim_here = [e for e in self._out.get(here, {}).values() if e.holds and self._reached(e.status)]
             path = None if aim_here or not gained else self._path(here, lambda n: n in gained)
             opened = self._open_here(here, offers)
             if aim_here:
-                act, why, through = aim_here[0].act, "an act that gained a level before", [aim_here[0]]
+                act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0]]
             elif path:
-                act, why, through = path[0].act, f"toward a level gained before ({len(path)} steps)", path
+                act, why, through = path[0].act, f"toward the aim reached before ({len(path)} steps)", path
             elif opened:
                 # First which act, over every kind of it; then which of its kinds.
                 chosen = max({a for (a, _, _), _ in opened}, key=lambda a: (self._action_curiosity(a), -a))

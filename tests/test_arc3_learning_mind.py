@@ -135,7 +135,7 @@ def test_the_game_ended_is_met_with_reset():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(state="GAME_OVER"))
     assert mind.commands[-1] == (1, (0, None, None))
-    assert mind.thoughts[-1].why.startswith("the game has ended")
+    assert mind.thoughts[-1].why.startswith("the region has ended")
 
 
 def test_a_row_that_changes_whatever_is_done_is_the_clock_and_not_where_the_game_stands():
