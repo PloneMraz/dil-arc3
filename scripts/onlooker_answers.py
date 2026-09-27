@@ -47,7 +47,7 @@ def main(run: Path) -> None:
     thoughts.sort(key=lambda x: x[0])
     choices.sort(key=lambda x: x[0])
 
-    moves: dict[int, int] = {}
+    moves: dict[int, tuple] = {}
     tests_per_cycle: Counter = Counter()
     moved: dict[str, list[tuple[str, str]]] = defaultdict(list)
     onlooker_scars = 0
@@ -58,7 +58,7 @@ def main(run: Path) -> None:
             if form == "emission":
                 a = r.get("action") or {}
                 if r.get("issuingLayer") == 8 and a.get("kind") == "move":
-                    moves[r["cycleMark"]] = a.get("actionId")
+                    moves[r["cycleMark"]] = (a.get("actionId"), a.get("x"), a.get("y"))
                 if r.get("issuingLayer") == 5 and a.get("kind") == "test":
                     tests_per_cycle[r["cycleMark"]] += 1
             elif form == "provenance":
@@ -66,13 +66,15 @@ def main(run: Path) -> None:
             elif form == "scar" and (r.get("open") or {}).get("source") == "onlooker":
                 onlooker_scars += 1
 
-    def pairs(p: dict) -> list[tuple[str, int]]:
+    def pairs(p: dict) -> list[tuple[str, tuple]]:
+        """Each objection as (state, act) — the act whole: an act that takes a
+        place is objected to at that place, not everywhere."""
         out = []
         for item in p.get("objected") or []:
             if len(item) == 2 and isinstance(item[0], str):
-                out.append((item[0], item[1][0]))          # [state, act]
+                out.append((item[0], tuple(item[1])))      # [state, act]
             elif p.get("here") is not None:
-                out.append((p["here"], item[0]))           # act, at here (before)
+                out.append((p["here"], tuple(item)))       # act, at here (before)
         return out
 
     # A
@@ -85,7 +87,7 @@ def main(run: Path) -> None:
         a_same += int(moves[cycle] in objected_here)
 
     # B: replay objections against choices, cycle by cycle
-    live: dict[tuple, set[tuple[str, int]]] = {}
+    live: dict[tuple, set[tuple[str, tuple]]] = {}
     lifting = any("lifted" in p for _, _, p in thoughts + choices) or any(
         len(i) == 2 and isinstance(i[0], str) for _, _, p in thoughts for i in p.get("objected") or [])
     ti = 0
@@ -107,7 +109,7 @@ def main(run: Path) -> None:
         if not at_here or not c.get("chose"):
             continue
         b_at += 1
-        if c["chose"][0] in at_here:
+        if tuple(c["chose"]) in at_here:
             b_took += 1
             b_no_other += int("no other way" in (c.get("why") or "") or "objected" in (c.get("why") or ""))
 

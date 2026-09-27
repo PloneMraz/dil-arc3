@@ -3310,3 +3310,36 @@ expectation, planning and `_stuck`, `run_game.py --motion`, and five tests are
 gone; git keeps them (last at `f111572`). A learning model with motion off
 behaved exactly as this one, so no run changes. ls20, 60 cycles, runs as
 before. 322 tests.
+
+### Learning notebook version 5: 600 cycles, four games at once (2026-09-28)
+
+`dil-arc3-learning` version 5, code `f76ff5f` (the field's axes, the onlooker's
+word striking the mind, no motion), Save & Run on CPU, ar25, ls20, sk48 and vc33
+at once, 600 cycles each, as version 4 (`b928f28`). Not a submission. 1,115 s of
+`run_competition`; download 18 s (52 MB archive). All four exited 0.
+
+| game | level | actions to level 1 (v4) | states met (v4) | wall (v4) | s/cycle by 100-cycle block |
+|---|---|---|---|---|---|
+| ar25 | 0 | — | 497 (497) | 690 s (670) | 0.91, 0.99, 1.01, 1.27, 1.21, 1.30 |
+| ls20 | **1** | 377 (330) | 145 (127) | 859 s (825) | 0.95, 1.13, 1.27, 1.66, 2.04, 1.44 |
+| sk48 | 0 | — | 366 (378) | 1,106 s (1,050) | 1.18, 1.53, 1.64, 2.26, 2.17, 2.21 |
+| vc33 | **1** | 83 (81) | 54 (54) | 731 s (701) | 0.94, 1.02, 1.05, 1.25, 1.43, 1.52 |
+
+- **The same levels as version 4, at a slightly higher cost**: ls20 377 actions
+  to level 1 where version 4, whose learning model the onlooker did not reach,
+  took 330; vc33 83 against 81. Between them, the code that first heard the
+  onlooker took 515 on ls20 (m3-ls20-plain, here). One run each; not attributed.
+- **ls20 on Kaggle is the local run of 2026-09-28 exactly** — 145 states, 542
+  grids, the same scars by source (onlooker 102, frame 750, region 117): the
+  learning mind is deterministic across machines.
+- **The onlooker** (`scripts/onlooker_answers.py`): the body never carried out an
+  act objected to in the cycle the objection came (ls20 0/32, sk48 0/5, vc33
+  0/2), nor chose one at a state an objection held for (0/6, 0/3, 0/2); the mind
+  commanded twice in 52, 11 and 2 cycles; answers scarred 2/52, 5/11, 0/2. ar25
+  drew one remark in 600 cycles — every step reached a new state, so nothing
+  was ever repeated for the onlooker to see.
+- The script first compared act ids only, and counted vc33's click at (4, 0),
+  commanded in place of the objected (61, 33), as the objected act; it now
+  compares the act whole.
+- For ~110 games four at once, at these four games' mean (847 s) about
+  23,300 s (6.5 h) of the 9 h less 20 min.
