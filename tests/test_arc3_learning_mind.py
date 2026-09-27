@@ -220,7 +220,21 @@ def test_an_act_that_moved_nothing_from_a_place_is_not_imagined_from_there_again
     run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
     model = mind.model
     run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # nothing moved, nothing to blame
-    assert ((1, 2), 1) in model._stuck, "the place and the act, whatever the colours say"
+    assert ((1, 2), 1) in model._stuck[model._scene(after, (1, 2))], "the place and the act, whatever the colours say"
+
+
+def test_what_stopped_it_in_one_scene_does_not_stop_it_in_another():
+    before = [[3, 3, 3, 3], [3, 9, 3, 3], [3, 3, 3, 3]]
+    after = [[3, 3, 3, 3], [3, 3, 9, 3], [3, 3, 3, 3]]
+    opened = [[3, 3, 3, 5], [3, 3, 9, 3], [3, 3, 3, 3]]   # something else in the grid changed
+    mind, cycle, data, events = loop()
+    run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
+    model = mind.model
+    run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # stuck here, in this scene
+    assert ((1, 2), 1) in model._stuck[model._scene(after, (1, 2))]
+    assert ((1, 2), 1) not in model._stuck.get(model._scene(opened, (1, 2)), set()), \
+        "the same place in a changed scene is not held stuck"
+    assert model._scene(after, (1, 2)) == model._scene(before, (1, 1)), "the thing itself is not the scene"
 
 
 def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
@@ -236,3 +250,22 @@ def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
     assert (mind.model._here, (2, None, None)) in mind.model._objected
     thought = [d for _, d in of_kind(data, "thought")]
     assert thought and thought[-1].payload["objected"] == [[2, None, None]], "what was objected to is written"
+
+
+def test_what_the_onlooker_said_is_named_in_what_was_built_from_it():
+    from arc3.observe import ONLOOKER_CHANNEL
+    def remark(said):
+        return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+    mind, cycle, data, events = loop(motion=False)
+    run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
+    said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), remark(said))   # heard in cycle 1
+    run(cycle, frame(lit(0), lit(1)), status(), remark(said))                     # quoted by the choice
+    written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
+               for w in r.activity.written}
+    thought_id = [k for k, _ in of_kind(data, "thought")][-1]
+    assert "signal-1-2" in written[thought_id], "the thought names the remark it objected on"
+    quoting = [k for k, d in of_kind(data, "choice") if d.payload.get("onlooker")]
+    assert quoting and all(any(s.endswith("-2") and s.startswith("signal-") for s in written[k]) for k in quoting), \
+        "a choice that quotes the onlooker names its remark"

@@ -90,6 +90,8 @@ class Context:
     offers: tuple[int, ...]
     ended: str | None
     remark: dict[str, Any] | None
+    # The unit the remark came in: what a datum built from the remark names.
+    remark_unit: Any
     # What did not come, when an expectation of a want or an aim failed:
     # {"what": ..., and the part or fields wanted and what came}.
     missed: dict[str, Any] | None

@@ -2936,3 +2936,61 @@ its first level here, where it had completed it within 400 cycles before. One
 run each; not attributed.
 
 289 tests.
+
+### A review of the onlooker's road, and three of its points done (Plone, same day)
+
+Plone passed on five points. Each was checked against the code and the stores
+of `scripts/data/motion-trial/` (code `8febb84`, 600 cycles).
+
+**1. The onlooker's objection, as the learning model hears it** — checked, not
+changed; Plone put the question on how the agent hears a remark and what it
+does with it, not on the onlooker.
+
+- In a cycle the remark arrives third (`signal-N-2`, after the frame and the
+  status), and the mind commands on the status: in cycle 12 of m3-ls20-motion
+  `[event]` has T5's test (ACTION1) at seq 855 and the remark's scar at 869.
+  The command in the cycle an objection was heard was the act objected to in
+  15 of 19 thoughts (m3-ls20-motion), 16 of 40 (m3-ls20-plain), 1 of 2
+  (m3-vc33-motion).
+- The objection is `(state, act)`, for the state it stands in when it hears.
+  It stood there again the very next cycle after 1 of 19, 6 of 40 and 1 of 2,
+  but came back later: in m3-ls20-motion 1,514 choices were made at an
+  objected state and 1,456 took an act objected to there, every one "toward a
+  state with an act not yet taken" — the branch whose path does not ask
+  `_objected`. Also: "back-and-forth" objects both acts at one of the two
+  states the alternation runs through; "all known" falls back to the objected
+  acts when all are objected; `_plan`'s `unlearned` does not ask `_objected`.
+- The review's example, ar25's ACTION1 ×52, was v14's and the language model's
+  (said once, then held; fixed by `1710630`), not the learning model's.
+
+**2. The remark in `built_from`.** The model was shown what the onlooker said,
+and nothing named it. `Context.remark_unit` is the unit the remark came in: the
+language model's answer names it whenever the prompt carries the remark, the
+learning model's thought names what it objected on, and each choice that quotes
+the onlooker names it. On ls20, 80 cycles, learning model: every choice that
+quoted the onlooker (10; with motion 22) and every thought (4; 7) names a remark
+datum in `[event]`.
+
+**3. What the learning model does not write.** CLAUDE.md said all it holds is in
+the store. Not so: its counts, how often a transition was taken and ended the
+region (`seen`, `ended`, which the path reads), the states it visited, whether
+it learned since its last RESET, and with motion where the thing has been, what
+it touched, the colours that brought the aim and where it stuck. CLAUDE.md and
+the docstring now say those are derivable only by replaying the observations
+through the model, in order; no replay has been run.
+
+**4. Where it stuck is held in its scene.** `_stuck` was keyed by place alone
+and never cleared, so a place stuck before a door opened, or a level before,
+stayed stuck. It is now keyed by the scene — the grid with the thing lifted
+off, off the clock (`motion.lift`) — and a place stuck in one scene is free in
+another. Not measured on a run (motion is off by default). A scene key made
+before the clock grows is not read again under it, so what stuck then is
+forgotten.
+
+Found, not changed: `_reindex` re-reads `_edges` and `_here` under a grown
+clock but not `_visits`, `_objected` or `_kind_of`, which are keyed by state.
+In the three runs the clock grew once, at cycle 8, before any objection.
+
+Point 5 (README) is open with Plone.
+
+292 tests.

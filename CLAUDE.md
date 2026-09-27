@@ -185,11 +185,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   onlooker says now — bounded, never the whole history.
 - **The learning model keeps what it learned** (Plone, 2026-09-27, in place of the
   two rules above for it). It is shown every step as it comes (`observe`) and
-  holds all it learned — its transitions, the clock, how things move, its counts —
-  as it learned it, one step at a time (INV-5: accrued, never loaded). All of it
-  is in the store and `[event]`, written as it was learned; it does not read back
-  what it holds. The mind's right to read the store is the same for it: whatever
-  it asks, the mind asks, and the answer reaches it.
+  holds all it learned, one step at a time (INV-5: accrued, never loaded). What
+  it learns as data — its transitions, the clock, each version of how things
+  move, what the onlooker made it object to, each choice — is in the store and
+  `[event]`, written as it was learned. The rest of what it holds is not
+  written: its counts, how often a transition was taken and ended the region,
+  the states it visited, where it has been and been stuck. That is derivable
+  from the store only by replaying its observations through the model, in
+  order (not yet done). It does not read back what it holds. The mind's right to
+  read the store is the same for it: whatever it asks, the mind asks, and the
+  answer reaches it.
 - **The program predicts what the region returns**: the next grid and, when it
   says so, the region's status (`{"grid": ..., "status": {...}}`); status fields
   it leaves out stay as they were. Where it says nothing, the standing

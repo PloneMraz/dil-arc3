@@ -498,6 +498,24 @@ def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_i
     assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE
 
 
+def test_what_the_onlooker_says_is_shown_and_named_in_what_the_answer_was_built_from():
+    from arc3.observe import ONLOOKER_CHANNEL
+
+    def remark(said):
+        return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+    model = Script(PROPOSING, PROPOSING, SAME_PREDICT_OTHER_MOVE)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
+    run(cycle, frame(lit(1), lit(1)), status(), remark({"remark": "repeating", "act": {"act": 1}, "since": 0}))
+    assert any("An onlooker watching your moves says" in m["content"] for m in model.prompts[-1])
+    written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
+    answers = sorted(k for k, d in data.entries() if d.open.get("kind") == "thought")
+    assert "signal-1-2" in written[answers[-1]], "the remark it was shown is what it was built from"
+    assert not any(s.startswith("signal-0-") and s.endswith("-2") for s in written[answers[0]]), \
+        "a remark that said nothing was not shown, and is not named"
+
+
 def test_a_repetition_said_again_sets_the_mind_thinking_again():
     from arc3.observe import ONLOOKER_CHANNEL
 

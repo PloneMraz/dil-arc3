@@ -105,6 +105,7 @@ class Mind:
         self._missed: dict[str, Any] | None = None
         self._status_this_cycle = False
         self._remark: dict[str, Any] | None = None
+        self._remark_unit: InfoUnit | None = None
         self._thought_at: int | None = None
         # Questions put to memory, with when; answers arrive the next cycle.
         self._asks_open: list[tuple[int, dict[str, str]]] = []
@@ -359,6 +360,7 @@ class Mind:
         that comes, and the mind commands after it."""
         predicted = persistence(entity_id, window, observed, contribute, ask, write)
         self._remark = {k: v for k, v in payload.items() if k != "entity"}
+        self._remark_unit = observed
         if _content_value(predicted) != payload:
             self.think("onlooker", ask, write, again=True)
         if not self._status_this_cycle:
@@ -375,7 +377,7 @@ class Mind:
             on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r in self._seen],
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
-            remark=self._remark, missed=self._missed, aim=self._goal,
+            remark=self._remark, remark_unit=self._remark_unit, missed=self._missed, aim=self._goal,
             priors=dict(self._priors),
         )
 

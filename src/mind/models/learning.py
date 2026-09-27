@@ -16,8 +16,10 @@ and the region reported this of itself — written (`kind: transition`) built fr
 the step and the report it came in. It keeps, per kind of act, how often it was
 tried, how often it changed where the region stands, and how often the aim came
 of it: a kind of act is an act, or for an act that takes a place the colour and
-size of the thing it was put on. Those counts are read from what it learned;
-they are not written again.
+size of the thing it was put on. Those counts are held, not written, as are how
+often a transition was taken and ended the region, the states it visited, and
+(reading motion) where the thing has been and been stuck: they follow from the
+observations in the store only when those are replayed through it, in order.
 
 HOW IT READS A GRID — its own perception, declared, not measured, naming no game:
 
@@ -83,7 +85,7 @@ from typing import Any, Callable, Final
 
 from ..organs import Act, Organs, Step
 from .base import Context, Expectation, Proposal, Thinking, Write
-from .motion import blocked_by, changed, find_shift, imagine, locate, search
+from .motion import blocked_by, changed, find_shift, imagine, lift, locate, search
 
 Grid = list[list[int]]
 
@@ -219,7 +221,9 @@ class LearningModel:
         self._rule = MotionRule()
         self._now: Grid | None = None                          # the latest grid
         self._now_raw: str | None = None                       # its own key
-        self._stuck: set[tuple[tuple[int, int], int]] = set()  # (place, act) that moved nothing there
+        # By scene, (place, act) that moved nothing there: what stopped it is in the
+        # scene, so a scene changed — a door opened, a level passed — forgets it.
+        self._stuck: dict[str, set[tuple[tuple[int, int], int]]] = {}
         self._objected: set[tuple[str, Act]] = set()           # (state, act) the onlooker objected to
         self._cues = dict(priors)        # it reads the task, for its aim
         self.thoughts: list[Choice] = []
@@ -305,6 +309,8 @@ class LearningModel:
             return None
         payload = {"on": "onlooker", "remark": remark, "here": self._here, "objected": [list(a) for a in objected]}
         built = (context.seen[-1][1],) if context.seen else ()
+        if context.remark_unit is not None:
+            built = (*built, context.remark_unit)   # what it objected on
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
 
     # ── where the region stands ──
@@ -322,6 +328,10 @@ class LearningModel:
             self._state_of[raw] = state
             self._grid_of.setdefault(state, raw)
         return raw
+
+    def _scene(self, grid: Grid, at: tuple[int, int]) -> str:
+        """The scene the thing moves in: the grid with it lifted off, off the clock."""
+        return grid_key(lift(grid, self._pattern, at, self._ground), self.clock)
 
     def _state_key(self, raw: str) -> str:
         return self._state_of[raw]
@@ -488,8 +498,8 @@ class LearningModel:
             # It did not move from here: whatever the colours say, this act does not
             # take it anywhere from this place (LOG.md: on ls20, a colour it had
             # moved onto once stood ahead, nothing new was learned, and it asked the
-            # same act 306 times).
-            self._stuck.add((place, act[0]))
+            # same act 306 times). Only in this scene.
+            self._stuck.setdefault(self._scene(after, place), set()).add((place, act[0]))
         if not learned or self._pattern is None:
             return []
         before_rule = self._rule
@@ -621,15 +631,16 @@ class LearningModel:
         if self._pattern is None or self._at is None or self._ground is None or self._now is None:
             return None
         here = self._here
+        stuck = self._stuck.setdefault(self._scene(self._now, self._at), set())
         for a in list(self._moves):
             e = self._out.get(here, {}).get((a, None, None)) if here is not None else None
             if e is not None and e.holds and not e.changed:
-                self._stuck.add((self._at, a))   # what it saw here outranks what it imagines
+                stuck.add((self._at, a))   # what it saw here outranks what it imagines
         moves = {a: d for a, d in self._moves.items() if a in offers
                  and (here, (a, None, None)) not in self._objected}
         if self._goal_colours and moves:
             path = search(self._now, self._pattern, self._at, moves, self._ground, self._blocks,
-                          lambda p, onto: bool(onto & self._goal_colours), self._stuck)
+                          lambda p, onto: bool(onto & self._goal_colours), stuck)
             if path:
                 return (path[0], None, None), f"toward a colour that brought the aim before ({len(path)} steps)"
         unlearned = [a for a in offers if a != o.reset[0] and a not in o.placed and a not in self._moves
@@ -640,7 +651,7 @@ class LearningModel:
         if moves:
             path = search(self._now, self._pattern, self._at, moves, self._ground, self._blocks,
                           lambda p, onto: p not in self._places or bool(onto - self._touched - self._blocks),
-                          self._stuck)
+                          stuck)
             if path:
                 return (path[0], None, None), f"toward a place or a colour not yet reached ({len(path)} steps)"
         return None
@@ -699,9 +710,11 @@ class LearningModel:
                                   "why": why, "aim": (self._aim or {}).get("aim")}
         if odds is not None:
             choice["odds_of_change"] = round(odds, 3)
+        built: list[object] = [self._unit] if self._unit is not None else []
         if context.remark and context.remark.get("remark"):
             choice["onlooker"] = context.remark
-        built: list[object] = [self._unit] if self._unit is not None else []
+            if context.remark_unit is not None:
+                built.append(context.remark_unit)   # what it quotes, it was built from
         built += [("handle", e) for e in through if not isinstance(e, MotionRule) or e.written]
         built.append(("prior", "task"))
         return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]

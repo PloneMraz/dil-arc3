@@ -689,7 +689,10 @@ class LanguageModel:
         evidence = [dataclasses.replace(t, status=None) for t in shown]
         lines = [(k, _recalled_line(t.get("kind"), t, p, self._kinds)) for k, t, p in recalled_other]
         lines = [(k, line) for k, line in lines if line][-MAX_RECALLED_LINES:]
-        built_from = (tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines)
+        # What the onlooker says, when it says something, is shown: it is built from.
+        remarked = bool(context.remark and context.remark.get("remark"))
+        heard = (context.remark_unit,) if remarked and context.remark_unit is not None else ()
+        built_from = (tuple(src for _, src in chosen) + tuple(datum_id for datum_id, _ in lines) + heard
                       + (("prior", "task"), ("prior", "aim")))
         held_ok, held_misses = score(self._fn, evidence, o.report_fields, o.unchanged)
         also = ""
@@ -704,7 +707,7 @@ class LanguageModel:
             also += f"\nThe game now offers: {offered} (and RESET, 0).\n"
         if lines:
             also += "\nWhat you recalled from memory:\n" + "\n".join(line for _, line in lines) + "\n"
-        if context.remark and context.remark.get("remark"):
+        if remarked:
             also += f"\nAn onlooker watching your moves says: {json.dumps(context.remark)}\n"
         missed = _missed_text(context.missed, o.missed)
         if on == "no command":

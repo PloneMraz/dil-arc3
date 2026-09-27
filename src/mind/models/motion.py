@@ -126,6 +126,16 @@ def blocked_by(grid: Grid, pattern, at: Cell, by: tuple[int, int], ground: int) 
     return False, onto
 
 
+def lift(grid: Grid, pattern, at: Cell, ground: int) -> Grid:
+    """The grid with the thing lifted off it: the ground where it was — the scene
+    it moves in."""
+    out = [row[:] for row in grid]
+    for (r, c) in cells_at(pattern, at):
+        if 0 <= r < len(out) and 0 <= c < len(out[r]):
+            out[r][c] = ground
+    return out
+
+
 def imagine(grid: Grid, pattern, at: Cell, by: tuple[int, int], ground: int) -> Grid:
     """The grid with the thing moved: the ground where it was, the thing where it goes."""
     out = [row[:] for row in grid]
@@ -146,9 +156,7 @@ def search(grid: Grid, pattern, start: Cell, moves: dict[int, tuple[int, int]], 
     `stuck` says moved nothing from that place, is not taken. None when no place
     it can imagine reaching will do."""
     rows, cols = len(grid), len(grid[0]) if grid else 0
-    base = [row[:] for row in grid]
-    for (r, c) in cells_at(pattern, start):
-        base[r][c] = ground
+    base = lift(grid, pattern, start, ground)
     prev: dict[Cell, tuple[Cell, int] | None] = {start: None}
     queue = deque([start])
     while queue and len(prev) < MAX_PLACES:
@@ -181,4 +189,4 @@ def search(grid: Grid, pattern, start: Cell, moves: dict[int, tuple[int, int]], 
 
 
 __all__ = ["MAX_CHANGED", "MAX_PLACES", "MAX_SHIFT", "MIN_COVER", "Shift", "blocked_by", "cells_at", "changed",
-           "find_shift", "imagine", "locate", "search"]
+           "find_shift", "imagine", "lift", "locate", "search"]
