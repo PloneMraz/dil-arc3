@@ -2835,3 +2835,13 @@ Now:
 - **Step 6**: CLAUDE.md and README to the new layout — where the mind, its
   models and the organs are; the body's rule declared with the organs; the
   learning model in "What the mind is".
+
+### A Save & Run packs its stores into one file (Plone, same day)
+
+Since snapshots became a tree, a store is thousands of small files, and Kaggle
+hands a notebook's outputs back one file at a time: learning notebook version 2's
+download stopped at 1,439 files and 94 MB, with only one store complete. Now,
+in a Save & Run, either notebook packs every `store-*` into `stores.tar.gz` and
+removes the folders; the reports stay beside it. A scored rerun has no stores to
+pack. Run here through the CPU notebook's cells on two games: five outputs, the
+archive 409 KB, and both stores unpacked read every snapshot back.

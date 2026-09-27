@@ -202,7 +202,19 @@ print(f"run_competition exit {done.returncode} after {time.time() - T0:.0f}s of 
 if not RERUN:
     import pandas as pd
     pd.DataFrame([["1_0", "1", True, 1]], columns=["row_id", "game_id", "end_of_game", "score"]) \
-        .to_parquet(W / "submission.parquet", index=False)''',
+        .to_parquet(W / "submission.parquet", index=False)
+    # The stores, packed into one file: a store is thousands of small objects
+    # since snapshots became a tree, and Kaggle hands outputs back one file at a
+    # time (LOG.md, 2026-09-27). A scored rerun keeps none to pack.
+    stores = sorted(p for p in W.iterdir() if p.is_dir() and p.name.startswith("store-"))
+    if stores:
+        with tarfile.open(W / "stores.tar.gz", "w:gz") as tf:
+            for p in stores:
+                tf.add(p, arcname=p.name)
+        for p in stores:
+            shutil.rmtree(p)
+        print(f"stores packed: {len(stores)} into stores.tar.gz, {(W / 'stores.tar.gz').stat().st_size:,} bytes",
+              flush=True)''',
     # ── 8 ──
     '''print("==== vLLM throughput lines (last 5)")
 print("\\n".join([l for l in LOG.read_text().splitlines() if "throughput" in l][-5:]))
@@ -434,6 +446,18 @@ if not RERUN:
     import pandas as pd
     pd.DataFrame([["1_0", "1", True, 1]], columns=["row_id", "game_id", "end_of_game", "score"]) \\
         .to_parquet(W / "submission.parquet", index=False)
+    # The stores, packed into one file: a store is thousands of small objects
+    # since snapshots became a tree, and Kaggle hands outputs back one file at a
+    # time (LOG.md, 2026-09-27). A scored rerun keeps none to pack.
+    stores = sorted(p for p in W.iterdir() if p.is_dir() and p.name.startswith("store-"))
+    if stores:
+        with tarfile.open(W / "stores.tar.gz", "w:gz") as tf:
+            for p in stores:
+                tf.add(p, arcname=p.name)
+        for p in stores:
+            shutil.rmtree(p)
+        print(f"stores packed: {len(stores)} into stores.tar.gz, {(W / 'stores.tar.gz').stat().st_size:,} bytes",
+              flush=True)
 shutil.rmtree(REPO, ignore_errors=True)
 print("outputs:", sorted(p.name for p in W.iterdir()))''',
 ]
