@@ -419,7 +419,13 @@ if RERUN:
                 raise RuntimeError(f"the gateway did not answer in 900s: {exc!r}")
             time.sleep(5)
     print(f"gateway ready in {time.time() - t:.0f}s", flush=True)
-    cmd += ["--mode", "competition", "--base-url", os.environ["ARC_BASE_URL"]]
+    # A scored rerun's outputs cannot be read back, and 110 stores do not fit the
+    # 20 GiB of /kaggle/working: each game's store goes to scratch space and is
+    # removed once the game has played (Plone, 2026-09-27).
+    SCRATCH = Path("/kaggle/tmp/stores")
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    cmd += ["--mode", "competition", "--base-url", os.environ["ARC_BASE_URL"],
+            "--stores", str(SCRATCH), "--drop-stores"]
 else:
     cmd += ["--mode", "offline", "--offline-dir", str(ENVS), "--games", ",".join(GAMES)]
 done = subprocess.run(cmd, cwd=str(REPO), env=dict(os.environ))

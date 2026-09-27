@@ -2703,3 +2703,8 @@ as it was. So the scar rhythm still snapshots often.
 
 Kaggle keeps up to 20 GiB in /kaggle/working (its notebook documentation); at
 ~0.4 GB a game, 110 games would not fit.
+- Plone approved: in a scored rerun each game's store goes to /kaggle/tmp and is
+  removed once the game has played (`run_competition.py --stores DIR
+  --drop-stores`); the reports stay. A scored rerun's outputs cannot be read
+  back, so nothing readable is lost; a Save & Run keeps every store. Checked
+  here on two games.

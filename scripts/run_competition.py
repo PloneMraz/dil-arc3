@@ -14,6 +14,11 @@ the programs it runs with SIGALRM, which needs a main thread), reaching its game
 through `world/remote.py`. Each game keeps its own store — its `[event]` log —
 and its report, `run-<game>.txt`.
 
+With `--drop-stores` a game's store is removed once it has played (`--stores`
+says where they go): a scored rerun's outputs cannot be read back, and a store
+of the learning mind is ~0.4 GB a game against Kaggle's 20 GiB. A Save & Run
+keeps every store.
+
 The deadline is a wall-clock instant: no game starts after it, and a game still
 playing at it is stopped (its process, by the PID this script started). The
 scorecard is closed either way.
@@ -21,7 +26,7 @@ scorecard is closed either way.
 Nothing here decides a move, and nothing here reads a game.
 """
 from _paths import SRC, STARTER  # noqa: E402 — see scripts/_paths.py
-import argparse, json, os, secrets, subprocess, sys, threading, time
+import argparse, json, os, secrets, shutil, subprocess, sys, threading, time
 from pathlib import Path
 
 sys.path.insert(0, str(STARTER)); sys.path.insert(0, str(SRC))
@@ -51,9 +56,15 @@ ap.add_argument("--player", default="run_game.py",
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--out", required=True)
+ap.add_argument("--stores", default=None, help="where each game's store goes (default: --out)")
+ap.add_argument("--drop-stores", action="store_true",
+                help="remove a game's store once it has played: a scored rerun's outputs cannot be read, "
+                     "and 110 stores do not fit Kaggle's 20 GiB (LOG.md, 2026-09-27)")
 a = ap.parse_args()
 out = Path(a.out)
 out.mkdir(parents=True, exist_ok=True)
+stores = Path(a.stores) if a.stores else out
+stores.mkdir(parents=True, exist_ok=True)
 t0 = time.time()
 
 
@@ -104,6 +115,8 @@ while queue or running:
         if proc.poll() is not None:
             done[g] = proc.returncode
             del running[g]
+            if a.drop_stores:
+                shutil.rmtree(stores / f"store-{g}", ignore_errors=True)
             say(f"{g}: exit {proc.returncode}; {len(done)} done, {len(queue)} waiting")
     late = a.deadline is not None and time.time() >= a.deadline
     if late:
@@ -113,8 +126,10 @@ while queue or running:
         for g in queue:
             done[g] = "not started: the deadline"
         say(f"deadline: {len(running)} stopped, {len(queue)} not started")
-        for proc, _ in running.values():
+        for g, (proc, _) in running.items():
             proc.wait(timeout=60)
+            if a.drop_stores:
+                shutil.rmtree(stores / f"store-{g}", ignore_errors=True)
         running.clear()
         queue.clear()
         break
@@ -123,7 +138,7 @@ while queue or running:
         proc = subprocess.Popen(
             [sys.executable, "-u", str(HERE / a.player), g, str(a.cycles),
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
-             "--remote", f"{host}:{port}", "--out", str(out / f"store-{g}"), "--mind", a.mind],
+             "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"), "--mind", a.mind],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()
