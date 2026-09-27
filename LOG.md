@@ -2814,3 +2814,15 @@ Now:
   start-up RESET at cycle 0 and waits at cycle 1.
 
 282 tests.
+- **Step 4, the language model** (`mind/models/language.py`): the program, the
+  prompt, scoring and its rule for what it keeps of a revision (Plone: in the
+  model, for now). `arc3/mind.py` now only seats it: the one mind, this model,
+  this host's organs, and the helpers its tests reach for, bound to them. The
+  region's values the model uses come from the organs; the words it writes to
+  its model still speak of the game (ACTION{n}, RESET (0), hex grids), kept word
+  for word. Checked: all 282 tests pass with no check changed (one test patched
+  a module that moved), and one scripted run through the old code and the new —
+  questions to memory, the onlooker's change, a level, another act, `GAME_OVER` —
+  gave the same 10 prompts and the same 31 data, byte for byte.
+- The flag stays `--mind language|learning`: `--model` is already the served
+  model's name.

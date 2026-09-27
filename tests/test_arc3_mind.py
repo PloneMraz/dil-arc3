@@ -208,7 +208,7 @@ def test_a_worse_program_is_not_kept():
 
 
 def test_evidence_that_would_not_fit_the_context_is_dropped_oldest_first(monkeypatch):
-    import arc3.mind as wmod
+    import mind.models.language as wmod
 
     monkeypatch.setattr(wmod, "MAX_EVIDENCE_CHARS", 200)  # room for one small chain only
     model = Script(STILL, STILL)
