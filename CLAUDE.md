@@ -16,7 +16,10 @@ replaced, the corrections — is in [LOG.md](LOG.md).
   a correction — anything that says what happened — is written in `LOG.md`,
   under its date. `README.md` and `CLAUDE.md` say only what holds now: when
   something changes, they are edited to the new state, and how it changed is
-  logged.
+  logged. A fact about the world that still holds (the engine, the environment,
+  the competition's rules) stays, stated as a fact, with where it was
+  established in `LOG.md`; a result of this agent's runs, a design replaced or a
+  correction never does (Plone, 2026-09-27).
 - **MIT-0 from the first commit.** ARC Prize requires every file authored by the
   submitter to carry a permissive public-domain licence. Nothing enters this repo
   under a licence that keeps an attribution clause.
@@ -111,12 +114,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   nothing else computes over the grid — a second computation is a second mind,
   and the self would have no one mind to crystallize from. Plone: "Dùng Qwen thì
   dùng Qwen, đừng nhập nhằng" — one mind at a time, not two mixed. Which mind
-  that is can change. The runs so far, and the submitted one, had a language
-  model as the mind: **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4`
-  at `7b71922`; Qwen3.6-35B-A3B before 2026-09-25) and the program it writes,
+  that is can change. Its model is either a language model —
+  **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
+  `7b71922`), the one the submitted run used — and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
-  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`). A second model
-  learns from nothing (`src/mind/models/learning.py`, 2026-09-27; LOG.md).
+  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`); or a model
+  that learns from nothing (`src/mind/models/learning.py`).
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams
@@ -132,28 +135,29 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   (`prior:mind-task`'s `aim`). The language model's prompt still speaks of the
   game in its own words, kept word for word (LOG.md, 2026-09-27).
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
-  and computes nothing from it: two signals a cycle, the frame (both grid stacks
-  and the move, as the engine returned them) and the region's status. Never name
-  a computation of the mind with a verb of the senses.
+  and computes nothing from it: the frame (both grid stacks and the move, as the
+  engine returned them) and the region's status each cycle, and — when the world
+  has an onlooker — what it says of the agent, after them. Never name a
+  computation of the mind with a verb of the senses.
 - **The mind commands; the body carries out.** From its program's
   `propose(grid, steps)`, run on where the game stands and the steps it has
   just seen (short-term perception, each with the state and levels the region
-  reported) once the region has said all it says in a cycle, the mind pushes
-  the next action as T5's `test` — if the body can carry it out: RESET always,
-  any other action the region offers unless the game has ended.
-  `src/arc3/command.py` carries it out and weighs nothing. With no such
-  command the mind thinks again while the body waits (`MAX_WAIT_THOUGHTS = 2`,
-  declared, not measured); then the body stands
-  still, and in an informational region the run ends — no action is made up in
-  the mind's place (Plone: "Cơ thể có thể đơ để đợi"). Cycle 0's RESET is the
-  host's start-up (§4). What else the mind sends out is a question to its own
-  memory: `ask(cue)`, a store query, traced to T5 with register ↔.
+  reported) once the region has said all it says in a cycle — on its status,
+  before the onlooker's remark of the cycle is heard, which reaches the next
+  command; in a cycle the body stood still in, after the remark — the mind
+  pushes the next action as T5's `test`, if the body can carry it out: RESET
+  always, any other action the region offers unless the game has ended.
+  `src/arc3/command.py` carries it out and weighs nothing. With no such command
+  the mind thinks again while the body waits (`MAX_WAIT_THOUGHTS = 2`, declared,
+  not measured); then the body stands still, and in an informational region the
+  run ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
+  để đợi"). Cycle 0's RESET is the host's start-up (§4). What else the mind
+  sends out is a question to its own memory: `ask(cue)`, a store query, traced
+  to T5 with register ↔.
 - **Curiosity, want and expectation are the mind's own computation.** Nothing
   computes them on the mind's behalf — not the host, not the body, not code
   standing beside the mind (Plone, 2026-09-27: "cấm tính hộ, không phải cấm
-  code"). A mind that is itself code computes them in itself. The per-action
-  `resolved`, `progress` and `valence` readings, once computed for the language
-  model outside its thinking, are gone (2026-09-25).
+  code"). A mind that is itself code computes them in itself.
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
   through the levels; no kind of game, mechanic or strategy is named. It says
@@ -171,12 +175,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   shown to it** (Plone, 2026-09-27): T3 asks the store by the description of each
   arrival — the protocol's recall, traced as `prior → running` — but only a
   return that answers a cue the model asked reaches its prompt or `built_from`.
-  Until then the competition's rules, "Your goal is to win" among them, reached
-  every prompt unasked.
 - **What the body can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
-  proposal as a command. Written twice, it parted
-  twice: after `GAME_OVER`, and for ACTION6 with no cell.
+  proposal as a command.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
 - **Short-term perception is as long as T5's window** (`BASELINE_WINDOW = 16`):
@@ -277,12 +278,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **A scar of the learning model is almost always the clock's.** It does not
   predict the clock, so where a region keeps one, an expectation from a
   transition fails on the clock's rows alone, and the transition's datum is
-  scarred for it (Kaggle, 300 cycles: ls20 held 4 of 299 whole and 125 off the
-  clock; vc33 3 and 203). Where there is no clock, most scars fall on steps it had
-  no expectation of its own for. So in `[event]` its scars do not read as
-  refutations; a refutation is a datum of its own (a transition that no longer
-  holds). Open: learning how the clock runs, and predicting it. The paper is to
-  say so.
+  scarred for it (measured: LOG.md, 2026-09-27). Where there is no clock, most
+  scars fall on steps it had no expectation of its own for. So in `[event]` its
+  scars do not read as refutations; a refutation is a datum of its own (a
+  transition that no longer holds). Open: learning how the clock runs, and
+  predicting it. The paper is to say so.
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
@@ -300,9 +300,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **The onlooker's remark reaches behaviour only through the mind.** A change of
   its stance sets the mind thinking and the model is shown what it says. The
   language model: a program that acts otherwise and predicts as well is kept. The
-  learning model: the act the onlooker names — repeating, back and forth — is put
-  behind every other where the region stands, and the thought is written
-  (Plone, 2026-09-27; until then it had no effect on it). It scars only when
+  learning model: the act the onlooker names — repeating, back and forth — is
+  objected to in the state it stands in when it hears, and the thought is
+  written (Plone, 2026-09-27). The objection is asked where it chooses an act
+  not yet taken, imagines a path, or falls back on the acts it knows; a path
+  toward a state with an act not yet taken does not ask it (LOG.md,
+  2026-09-27). It scars only when
   what it says changes, not at every repeat, so it sets the mind thinking only
   then — standing still it says anew each moment; a repetition, anew each
   `REPEAT_AT` more acts.
@@ -329,8 +332,8 @@ host. The store's (F, G, H) are carried over in `store/decisions.py`; this host'
 are below.
 
 - **Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment.**
-  **Declared** in `src/arc3/decisions.py`, from measured frames — and it was not
-  straightforward. See "The environment" below: an observation is a *stack* of
+  **Declared** in `src/arc3/decisions.py`, from measured frames. See "The
+  environment" below: an observation is a *stack* of
   grids, not one grid. Note 0–15, sixteen values — 0–9 is ARC-AGI-1/2, a
   different benchmark.
 - **Tag B — numeric thresholds** (matching window, stability, recurrence).
@@ -379,9 +382,9 @@ are below.
   - It returns and does not write; it holds no handle on the agent.
   - `scripts/run_game.py` puts it in the world; `--alone` leaves it out.
 
-  **Not the peer.** A peer agent relaying this agent's recorded collisions only
-  retells what the agent already wrote — a compliant source, re-authorable by the
-  agent (§8.3, §8.4) — and two peers echo each other. It was removed.
+  **A peer is not a reader.** A peer agent relaying this agent's recorded
+  collisions only retells what the agent already wrote — a compliant source,
+  re-authorable by the agent (§8.3, §8.4) — and two peers echo each other.
 
   `src/dil/runtime/reflection.py` is **kept as ported from dil-core (`3a186b4`)
   and not used here**: it points a reader's view at a cycle of the trace, and to
@@ -401,8 +404,8 @@ are below.
 ### Declared deviations from dil-core
 
 Each is marked `DEVIATION` in the code, additive and defaulted, so dil-core's
-behaviour holds when a host declares none. dil-core has since taken the first
-two in its own form (a `present` set, a `predict` rule for T5).
+behaviour holds when a host declares none. dil-core has the first two in its
+own form (a `present` set, a `predict` rule for T5).
 
 1. **`HostCycleInput.afforded` → `T7Input.present`.** T7 registers an absence
    only against entities the region says are there.
@@ -452,18 +455,17 @@ fewest moves.
 ## The environment
 
 - Observation: a **stack of grids** — `FrameData.frame` is
-  `list[list[list[int]]]`, three levels deep. Measured on 42 real frames
-  (2026-09-22): shapes `(1, 64, 64)` and `(6, 64, 64)`. So a frame is 1..N grids,
-  each 64 rows × 64 columns; both games observed used the full 64×64 every time,
-  though the docs say "maximum". Cells are integers **0–15** (values actually
-  seen across those frames: 0,1,3,4,5,7,8,9,11,12 — ten of sixteen). Origin
-  `(0,0)` top-left, `(x, y)` order. It is numbers, not an image.
+  `list[list[list[int]]]`, three levels deep: 1..N grids, each 64 rows × 64
+  columns (shapes `(1, 64, 64)` and `(6, 64, 64)`; the docs say 64 is a
+  maximum, and the games observed use the full 64×64). Cells are integers
+  **0–15**. Origin `(0,0)` top-left, `(x, y)` order. It is numbers, not an image
+  (LOG.md, 2026-09-22).
 - Game state is one of `NOT_PLAYED`, `NOT_FINISHED`, `WIN`, `GAME_OVER`.
 - Actions: `RESET`; `ACTION1`–`ACTION4` (up/down/left/right); `ACTION5` (varies by
   game); `ACTION6` taking `x, y` in 0–63; `ACTION7` (undo). Each response carries
   `available_actions`, and only that subset may be used.
-- **`available_actions` varies by game, and can be a single action.** Measured:
-  `ls20` offered `(1,2,3,4)`; `vc33` offered only `(6,)`. An agent that emits
+- **`available_actions` varies by game, and can be a single action**: `ls20`
+  offers `(1,2,3,4)`; `vc33` only `(6,)` (LOG.md, 2026-09-22). An agent that emits
   only the simple actions does literally nothing in `vc33`. Whatever produces a
   move must read `available_actions` off the frame it is answering.
 - Agent surface: `is_done(frames, latest_frame) -> bool` and
@@ -479,7 +481,7 @@ fewest moves.
 - `reset()` returns a populated frame for `ls20` and an **empty** one for
   `vc33`, which needs RESET sent as an action before the game starts. The
   boundary gate (`frame.py`) refuses a frame outside the declaration rather
-  than coercing it; that is how this surfaced.
+  than coercing it.
 - `vc33` reaches `GAME_OVER` and **keeps reporting `available_actions == (6,)`**.
   Stepping that action in a terminal state returns an empty frame. So the
   policy reads the state, not the afforded list, and commits RESET from a
@@ -517,23 +519,20 @@ equations."
 
 ## Dates — the entry deadline is the one that bites
 
-- **2026-10-26 — ARC-AGI-3 entry deadline. DONE.** Plone accepted those rules on
-  2026-09-22; `kaggle competitions list` reports `userHasEntered True` for
-  arc-prize-2026-arc-agi-3, so the submission the paper must link to can exist.
-- **Paper Track entry. DONE**, 2026-09-22. It is a separate Kaggle competition,
-  `arc-prize-2026-paper-track`, with its own rules: entering ARC-AGI-3 did not
-  enter it, and before Plone accepted them the listing reported
-  `userHasEntered False` and even its 150-byte NOTE.md returned 403. Worth
-  remembering that nothing in the ARC-AGI-3 work would have revealed this.
-- **The paper is submitted as a Kaggle Writeup**, not as an uploaded file. The
-  competition page says "You haven't created a writeup yet." A Writeup is the
-  Kaggle object that links to the notebooks, datasets and models behind it —
-  which is almost certainly the mechanism behind the rule that a paper "must be
-  linked to a Kaggle code submission". None exists yet.
+- **2026-10-26 — ARC-AGI-3 entry deadline. Entered**: Plone accepted the rules,
+  so the submission the paper must link to can exist.
+- **Paper Track entry. Entered.** It is a separate Kaggle competition,
+  `arc-prize-2026-paper-track`, with its own rules: entering ARC-AGI-3 does not
+  enter it, and its data is closed to one who has not accepted them (LOG.md,
+  2026-09-22).
+- **The paper is submitted as a Kaggle Writeup**, not as an uploaded file. A
+  Writeup is the Kaggle object that links to the notebooks, datasets and models
+  behind it — which is almost certainly the mechanism behind the rule that a
+  paper "must be linked to a Kaggle code submission". None exists yet.
 - 2026-09-30 — Milestone 2. Optional, skipped deliberately: it is judged on
-  leaderboard score at that date, there is no running agent, and RHAE squares the
-  action ratio, so a barely-working agent would score near zero. Missing it costs
-  nothing downstream.
+  leaderboard score at that date, and RHAE squares the action ratio, so an agent
+  that completes few levels scores near zero. Missing it costs nothing
+  downstream.
 - 2026-10-26 — team merger deadline.
 - 2026-11-02 — final submission (ARC-AGI-3).
 - **2026-11-09 23:59 UTC — paper.** Settled: the competition page states
@@ -541,8 +540,8 @@ equations."
   instant. arcprize.org's 2026-11-08 is the one that is wrong.
 - 2026-12-04 — results.
 
-Field sizes, read from the Kaggle listing on 2026-09-22: ARC-AGI-3 has **3,230
-teams**, the Paper Track **198**. The track this plan aims at is the far less
+The Paper Track's field is a small fraction of ARC-AGI-3's (the counts read from
+the listing: LOG.md, 2026-09-22). The track this plan aims at is the far less
 crowded one, which is a reason the aim is sound — not a reason to relax.
 
 All deadlines are 23:59 UTC.
@@ -564,9 +563,8 @@ All deadlines are 23:59 UTC.
   "a permissive public domain license (eg. CC0 or MIT-0)"; the Kaggle rules (§1.6,
   §2.5) name **CC-BY 4.0**, which keeps an attribution condition and is not a
   public-domain licence. MIT-0 grants strictly more than CC-BY 4.0 does, so it
-  satisfies either reading and nothing needs changing — but the relicence was
-  argued from arcprize.org alone, and under the Kaggle rules plain MIT would
-  likely have sufficed. Read both sites before relying on either.
+  satisfies either reading and nothing needs changing. Read both sites before
+  relying on either.
 - **The model constraint, resolved by reading the two paragraphs together.**
   §2.5.a requires "open source system, open source model, and open source
   weights/parameters, as defined in the checklist from the Open Source AI
@@ -601,9 +599,9 @@ All deadlines are 23:59 UTC.
 - Entry itself constitutes acceptance of the rules, which are a binding agreement
   under California law (§2.9). Plone accepts them; the agent does not.
 
-## The submission pipeline, verified end to end on 2026-09-22
+## The submission pipeline
 
-Run against the starter kit's baseline random agent, well before the deadline,
+Verified end to end with the starter kit's random agent (LOG.md, 2026-09-22),
 because a code competition allows **one submission per day**: a pipeline fault
 found on 1 November leaves one attempt to fix it.
 
@@ -614,48 +612,40 @@ kaggle competitions submit arc-prize-2026-arc-agi-3 \
     -k <user>/<kernel> -v <version> -f submission.parquet -m "<message>"
 ```
 
-What the run proved: the notebook executes on Kaggle with **internet disabled**,
-installing `arc-agi` from wheels the competition ships offline at
+The notebook executes on Kaggle with **internet disabled**, installing `arc-agi`
+from wheels the competition ships offline at
 `/kaggle/input/competitions/arc-prize-2026-arc-agi-3/arc_agi_3_wheels`, and emits
 `submission.parquet` with columns `row_id, game_id, end_of_game, score`.
 
-Three traps, each of which would have cost a day at the deadline:
+Three traps, each of which would cost a day at the deadline:
 
-1. **Pushing a kernel is not submitting.** After a successful push and a COMPLETE
-   run, `competitions submissions` still said "No submissions found" and the
-   daily quota was untouched. The submit call is separate.
+1. **Pushing a kernel is not submitting.** A successful push and a COMPLETE run
+   leave the daily quota untouched and no submission made. The submit call is
+   separate.
 2. **`submit` needs `-f` as well as `-k` and `-v`.** Without the output file name
    it returns `400 Bad Request` with no explanation.
-3. **Kaggle runs Python 3.12**, and the starter kit asks for 3.12. This machine
-   has 3.13 and 3.14. Nothing has broken yet, but the local run and the graded
-   run are not on the same interpreter.
+3. **Kaggle runs Python 3.12**, and the starter kit asks for 3.12. A local run on
+   another interpreter is not the graded one; this machine's `python3` and the
+   starter kit's venv are 3.12.3.
 
-**The submission scored 0.02, and that number matters more than its size.**
-Grading runs in two phases. Phase A is the commit run, which emits a dummy
-parquet — "1 row: row_id=1_0, game_id=1, score=1", exactly what appeared in our
-kernel output, so it is not a fault. Phase B is the real evaluation: a sidecar
-resolves `gateway:8001` and the agent plays the hidden games server-side.
+**Grading runs in two phases.** Phase A is the commit run, which emits a dummy
+parquet — "1 row: row_id=1_0, game_id=1, score=1" — and that is not a fault.
+Phase B is the real evaluation: a sidecar resolves `gateway:8001` and the agent
+plays the hidden games server-side. A submission that never reaches Phase B
+finishes in about 30 seconds and scores 0.00 (competitors' reports, LOG.md,
+2026-09-22); a score above zero shows Phase B ran.
 
-Several competitors report submissions that finish in ~30 seconds, never reach
-Phase B, and score 0.00 — including one who submitted an exact copy of the
-official random-agent sample. Ours scored 0.02, so Phase B ran and the agent
-played. The pipeline clears the step that is currently blocking other people.
+**The floor is the random agent's score** on the same road: any DIL agent has to
+beat it for Accuracy to mean anything. What it scored is in LOG.md.
 
-**Baseline calibration: a uniformly random agent scores 0.02.** That is the floor
-any DIL agent has to beat for Accuracy to mean anything.
-
-## dil-arc3's scored run — built 2026-09-25, submitted 2026-09-26
+## dil-arc3's scored run
 
 **Submitted:** notebook `plonemraz/dil-arc3-run` **version 12**, code `3b31806`,
-at 2026-09-26 20:42:04 UTC, ref `56588469`, serving Qwen3.8-Flash-Next NVFP4.
-**Public score 0.00** (COMPLETE 2026-09-27, seen at 05:34 UTC); the random
-agent scored 0.02. What the run did is in LOG.md. A second submission,
-`56600038` (2026-09-27), is not the agent: the starter kit's random agent on the
-same road (`scripts/random_game.py`), to tell whether the road or the agent gave
-the 0.00: it scored **0.06**, so the road holds and the 0.00 is the agent's
-(LOG.md). The paper must name the
-submission it describes, and describe that notebook: a later version is a later
-submission.
+ref `56588469`, serving Qwen3.8-Flash-Next NVFP4. A second submission,
+`56600038`, is not the agent: the starter kit's random agent on the same road
+(`scripts/random_game.py`). What each scored, and what the run did, is in
+LOG.md. The paper must name the submission it describes, and describe that
+notebook: a later version is a later submission.
 
 The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
 
@@ -679,21 +669,15 @@ notebook's start: no game starts after it, and a game still running is stopped.
 The wait for the model's server stops at once when its log says the engine
 failed to start, rather than at the end of the wait.
 
-**Verified by a scored rerun** (the gateway probe, `56600038`, 0.06): the gateway
-takes one scorecard driven from several processes' requests through one arcade,
-and scores the levels completed on it. Not verified: that 4 games at once finish
-~110 games inside the deadline; and whether a rerun's GPU time counts against
-the weekly quota.
+The gateway takes one scorecard driven from several processes' requests through
+one arcade, and scores the levels completed on it (established by the gateway
+probe, `56600038`: LOG.md, 2026-09-27). Not verified: whether a rerun's GPU time
+counts against the weekly quota.
 
-**Time per game, measured offline** (60 cycles; LOG.md): v11, four at once,
-90–384 s a game, 388 s for all four; v12 (the submitted code), `ls20` alone,
-1,261 s; v14, four at once, 292–941 s a game, 946 s for all four. At v14's pace
-~110 games take about 7 h against a deadline of 9 h less 20 min, less the ~15
-min the server takes to start; at the pace of v12's `ls20`, 110 × 1,261 s / 4 is
-about 9.6 h. So **only part of the games may be played**. The deadline then
-stops the run, and the submission stands with the games played; a game not
-played gains no level. Which pace the scored run had is not known from its score
-alone.
+**Whether ~110 games fit inside the deadline is not settled**: it depends on
+the mind and on each game's pace, and the times measured offline (LOG.md) put
+some runs inside it and some outside. The deadline stops the run, and the
+submission stands with the games played; a game not played gains no level.
 
 ## How scoring works — settled
 
@@ -707,12 +691,11 @@ games in test data", which does not sum. 55 + 55 = 110 and the staff figure is
 at end of competition. Your final score is already computed but will stay hidden
 till end of competition." With one submission a day and two selectable finals, a
 submission is a commitment: there is no submitting something rough on 2 November
-and improving on it afterwards. This is the strongest argument for having tested
-the pipeline six weeks early.
+and improving on it afterwards.
 
 Environment seeds are stable per task (Greg Kamradt), with one noted exception —
 the black-noise animation in `lf52-271a04aa`. Whether seeds are identical across
-two scored runs of the same notebook was asked and never answered.
+two scored runs of the same notebook is not known.
 
 ## What the Paper Track forum gives
 
@@ -770,8 +753,8 @@ The Overview page settles the aggregation as the mean of the six criteria
 and makes it unreachable; an Accuracy of 2 requires a perfect 5 on all five
 remaining criteria.
 
-**So aim at the Top Paper prizes.** They are ranked, not gated, against a field
-of 198. Accuracy then contributes to a ranking rather than standing as a gate
+**So aim at the Top Paper prizes.** They are ranked, not gated, against a small
+field. Accuracy then contributes to a ranking rather than standing as a gate
 that forecloses everything, and the paper's quality is what decides the outcome.
 Treat the pool as upside, never as the plan.
 
@@ -821,8 +804,8 @@ what it will need then is designed now and left unused, not forgotten.
   environment variable that holds the key — never the key itself; `chat()` reads
   it when a request is sent and puts it in the `Authorization: Bearer` header,
   and nowhere else: not the store, `[event]`, a snapshot, a commit's config, a
-  run's report or LOG (`tests/test_api_key.py` holds it to that). Every run so
-  far leaves it `None`: there is no network at evaluation.
+  run's report or LOG (`tests/test_api_key.py` holds it to that). It is `None`
+  in every run: there is no network at evaluation.
 - **A third party's model is the same language model.** With a key, it is
   another `ModelEndpoint` (its `url`, `model`, `api_key_env`); the mind, the
   program, the prompt and the rule for what is kept are unchanged. `chat()`

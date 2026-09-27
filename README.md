@@ -9,10 +9,13 @@ the agent leaves the loop to think.
 
 ## Status, plainly
 
-It runs, and it is being rebuilt around one mind. **It completes no levels.**
+It runs, with one mind, which thinks with one of two models: a language model,
+or one that learns from nothing (below). What it has done — the scored
+submission, and every run — is in `LOG.md`, with the code each ran; this file
+says only what the agent is.
 
-**The mind is a language model** — served offline; Qwen3.8-Flash-Next NVFP4 in
-the latest runs, Qwen3.6-35B-A3B before — and the program it writes:
+**With the language model** — served offline; Qwen3.8-Flash-Next NVFP4, the one
+the submitted run used — the mind has the model write a program:
 `predict(grid, action, x, y)`, the next grid and what the region will report of
 itself; `propose(grid, steps)`, the next action from where the game stands and
 the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
@@ -28,18 +31,6 @@ that, and each answer it gives is kept whole in the store. Every step of
 that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in
 `[event]`, and a checker reads it back.
-
-**What is measured of the one mind so far**: one scored run (notebook version
-12, code `3b31806`): public score **0.00**, against 0.02 for the starter kit's
-random agent. In every offline run of
-four games (60 cycles each, on Kaggle), no level. The program predicts much of
-what the region returns — 55 of 60 frames in one `ls20` run — and the mind holds
-an aim it inferred and meets it when it falls due. Behaviour turns, but reaches
-no level. Before `3b31806` each game kept to one action. The submitted code
-changed action in the one game its notebook played offline (`ls20`: RESET,
-ACTION1, then ACTION2). The code after it (`af72f78`, offline run v14, not
-submitted) changed action in every game, and refused 26 rewritten programs that
-proposed the same action again. Every run is in `LOG.md`.
 
 **What it is told.** Its store holds, before it lives, three things, each as host
 data stamped `prior`: what its mind is told its thinking is for
@@ -83,14 +74,12 @@ the engine returns it; working out what is in it is the mind's program.
 ## What the mind is
 
 One mind, neutral about its region (`src/mind/mind.py`), thinking with a model:
-the part of it that computes (Plone, 2026-09-27). Two models have sat there. The
-first, below, is the one the submitted run used. The second learns from nothing
-(`src/mind/models/learning.py`): no weights, no text; it learns each transition
-it takes as data, expects from what it learned, finds the clock a region keeps
-whatever is done, and chooses by curiosity — what it knows least — and by the
-paths it knows. Offline it completed level 1 of ls20 (400 cycles) and vc33; on
-Kaggle, four games at once: vc33's level 1 in 300 cycles, and ls20's too in 600
-(LOG.md).
+the part of it that computes (Plone, 2026-09-27). It can think with two models.
+The first, below, is the one the submitted run used. The second learns from
+nothing (`src/mind/models/learning.py`): no weights, no text; it learns each
+transition it takes as data, expects from what it learned, finds the clock a
+region keeps whatever is done, and chooses by curiosity — what it knows least —
+and by the paths it knows.
 
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the game: what it knows of a game is

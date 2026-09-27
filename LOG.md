@@ -146,6 +146,50 @@ transition counts and keeping only displacements gave a tidier 5 signatures for
 `ls20` but went blind on any game whose effect is a colour change rather than a
 movement, which is the `vc33` case.
 
+### What CLAUDE.md said of this day, moved here on 2026-09-27
+
+Left in `CLAUDE.md` when the history moved out on 2026-09-24; moved at Plone's
+direction. Its own words, joined into paragraphs; what is in brackets was added
+on moving. `CLAUDE.md` keeps each fact that still holds and points here.
+
+**The frames.** `FrameData.frame` is `list[list[list[int]]]`, three levels
+deep. Measured on 42 real frames (2026-09-22): shapes `(1, 64, 64)` and
+`(6, 64, 64)`. So a frame is 1..N grids, each 64 rows × 64 columns; both games
+observed used the full 64×64 every time, though the docs say "maximum". Cells
+are integers **0–15** (values actually seen across those frames:
+0,1,3,4,5,7,8,9,11,12 — ten of sixteen). Tag A was declared from them — "and it
+was not straightforward". **`available_actions`**, measured: `ls20` offered
+`(1,2,3,4)`; `vc33` offered only `(6,)`. The boundary gate refused `vc33`'s
+empty opening frame; "that is how this surfaced".
+
+**Entry.** Plone accepted the ARC-AGI-3 rules on 2026-09-22;
+`kaggle competitions list` reports `userHasEntered True` for
+arc-prize-2026-arc-agi-3. The Paper Track is a separate competition: entering
+ARC-AGI-3 did not enter it, and before Plone accepted its rules the listing
+reported `userHasEntered False` and even its 150-byte NOTE.md returned 403.
+"Worth remembering that nothing in the ARC-AGI-3 work would have revealed
+this." The competition page said "You haven't created a writeup yet."
+
+**Field sizes**, read from the Kaggle listing on 2026-09-22: ARC-AGI-3 has
+**3,230 teams**, the Paper Track **198**.
+
+**Licence.** The relicence to MIT-0 was argued from arcprize.org alone, and
+under the Kaggle rules plain MIT would likely have sufficed.
+
+**The submission pipeline, verified end to end on 2026-09-22**, run against the
+starter kit's baseline random agent, well before the deadline. After a
+successful push and a COMPLETE run, `competitions submissions` still said "No
+submissions found" and the daily quota was untouched. This machine had Python
+3.13 and 3.14, the starter kit and Kaggle 3.12. Phase A's dummy parquet — "1
+row: row_id=1_0, game_id=1, score=1" — was exactly what appeared in our kernel
+output. **The submission scored 0.02.** Several competitors reported
+submissions that finish in ~30 seconds, never reach Phase B, and score 0.00 —
+including one who submitted an exact copy of the official random-agent sample.
+Ours scored 0.02, so Phase B ran and the agent played. **Baseline calibration: a
+uniformly random agent scores 0.02.** [The random agent on the scored run's
+road later scored 0.06: 2026-09-27, the gateway probe.] Milestone 2 was skipped
+because, among other reasons, "there is no running agent".
+
 ## 2026-09-23
 
 ### The bridge, and what running the real loop found
@@ -2994,3 +3038,32 @@ In the three runs the clock grew once, at cycle 8, before any objection.
 Point 5 (README) is open with Plone.
 
 292 tests.
+
+### The rule for history, kept; a line added to it (Plone, same day)
+
+Asked whether `CLAUDE.md` lacked the rule or broke it: it broke it. The rule —
+history goes in LOG; README and CLAUDE say only what holds now — has been a
+hard constraint since `3612987` (2026-09-24), and eight passages were added
+after it: run results (`8febb84`, `331525c`, `e9b74ea`), designs replaced
+(`4583fad`, `683552c`) and corrections (`c7a2257`, `8febb84` — the last written
+in this project's sessions by Claude). Others from 2026-09-22 had stayed when
+the history moved out, three of them wrong now: Milestone 2's "there is no
+running agent", "two signals a cycle" (the onlooker is a third), and that the
+mind commands "once the region has said all it says" (it commands on the
+status, before the remark).
+
+The rule had a gap: it did not say what becomes of a fact about the world that
+was established by a measurement and still holds. Plone added: such a fact stays,
+stated as a fact, with where it was established in LOG; a result of this agent's
+runs, a design replaced or a correction never does.
+
+Done: the passages from 2026-09-22 are under that date above; the later ones
+were in LOG already. `CLAUDE.md` keeps the facts and points to LOG; the three
+wrong lines say what holds, and the learning model's objection says where it is
+asked and where not. README's status and "What is measured…" paragraph, and its
+learning model's levels, are out: what the agent has done is in LOG.
+
+Not done, open with Plone: README's Findings are written as history (gaps
+"verified by measurement, then fixed", "lost 62 of 66", "until `3b31806`"), and
+finding 7 says "No level has been completed", which the learning model's runs
+contradict.
