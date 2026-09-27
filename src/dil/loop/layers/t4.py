@@ -5,21 +5,26 @@ attributed to a known entity is bound to it; one that cannot is bound to
 STRANGER — a positional unknown, not an error. The resolver is pluggable with a
 declared default.
 
-Ported from dil-core against DIL protocol v0.3.3.
+THE FIELD (INV-7). T4 reads `trust`: how many sightings a named entity takes
+before it is bound by its name rather than STRANGER (T4_RECOGNITION) — one at
+NEUTRAL, the reference; more with less trust. The arrival is registered either
+way. It votes `trust` from what only it sees: the share of this cycle's
+arrivals it could bind to a known entity.
+
+Ported from dil-core against DIL protocol v0.3.3; the field from dil-core 1e0a22a.
 """
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final
 
+from ..decisions import T4_RECOGNITION
+from ..field import TRUST, axis, cast_votes, falling, share, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField
 
 # The positional "unknown entity" binding.
 STRANGER: Final = "STRANGER"
-
-# The share of arriving units that bound to STRANGER (INV-7, up-channel).
-STRANGENESS: Final = "strangeness"
 
 # Resolves which entity an InfoUnit concerns, or STRANGER (DECIDE@IMPL).
 ContextResolver = Callable[[InfoUnit], str]
@@ -61,6 +66,14 @@ class T4(BaseLayer):
 
     def __init__(self, resolve: ContextResolver | None = None) -> None:
         self._resolve = resolve if resolve is not None else default_resolver
+        # How often each named entity has been sighted (INV-5: accrued, never loaded).
+        self._sightings: dict[str, int] = {}
+
+    def snapshot(self) -> dict[str, Any]:
+        return {"sightings": sorted(self._sightings.items())}
+
+    def restore(self, state: Any) -> None:
+        self._sightings = {k: v for k, v in (state or {}).get("sightings", [])}
 
     def process(  # noqa: A002
         self,
@@ -69,15 +82,19 @@ class T4(BaseLayer):
         emit: EmitFn,
         contribute: ContributeFn,
     ) -> T4Output:
-        bound = tuple(
-            BoundInfo(unit=unit, entity_id=self._resolve(unit))
-            for unit in input.units
-        )
-        # A FACT T4 can see and no other layer can: how much of what arrived
-        # could not be attributed to a known entity. Context novelty, reported
-        # and not interpreted.
-        strangers = sum(1 for b in bound if b.entity_id == STRANGER)
-        contribute({STRANGENESS: strangers / len(bound) if bound else 0.0})
+        recognition = shifted_count(T4_RECOGNITION, falling(axis(field, TRUST)))
+        bound_list: list[BoundInfo] = []
+        for unit in input.units:
+            named = self._resolve(unit)
+            if named == STRANGER:
+                bound_list.append(BoundInfo(unit=unit, entity_id=STRANGER))
+                continue
+            seen = self._sightings.get(named, 0) + 1
+            self._sightings[named] = seen
+            bound_list.append(BoundInfo(unit=unit, entity_id=named if seen >= recognition else STRANGER))
+        bound = tuple(bound_list)
+        known = sum(1 for b in bound if b.entity_id != STRANGER)
+        cast_votes(contribute, {TRUST: share(known, len(bound))})
         return T4Output(bound=bound)
 
     def info_units(self, output: T4Output) -> Sequence[InfoUnit]:

@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final
 
+from ..field import EXPLORATION, TRUST, axis, cast_votes, rising, share
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ModField, OtherModel
 from .t5 import T5Result
@@ -23,10 +24,11 @@ from .t5 import T5Result
 class IndependenceEvidence:
     """Concrete shape of OtherModel.independence_evidence (shared with T8)."""
 
-    # Mismatches the agent met but could not author (resistance).
-    resistances: int
-    # Changes classified ENV_PUSHED for this entity (from T2).
-    env_pushed: int
+    # Mismatches the agent met but could not author (resistance), each weighed
+    # by trust (one at NEUTRAL).
+    resistances: float
+    # Changes classified ENV_PUSHED for this entity (from T2), weighed the same.
+    env_pushed: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,14 +43,12 @@ class T6Output:
     others: tuple[OtherModel, ...] = dc_field(default_factory=tuple)
 
 
-# How many Others the loop is holding (INV-7, up-channel).
-OTHER_COUNT: Final = "otherCount"
-
-
 @dataclass(slots=True)
 class _EntityState:
-    resistances: int = 0
-    env_pushed: int = 0
+    # Counted as evidence: one each at NEUTRAL trust, more or less as the field
+    # leans (dil-core 1e0a22a).
+    resistances: float = 0
+    env_pushed: float = 0
     observations: int = 0
 
 
@@ -91,15 +91,21 @@ class T6(BaseLayer):
         contribute: ContributeFn,
     ) -> T6Output:
         others: list[OtherModel] = []
+        # THE FIELD (INV-7): trust weighs how much one resistance, or one change
+        # the region pushed, counts as evidence of an independent Other.
+        weight = rising(axis(field, TRUST))
+        first_met = 0
 
         for result in input.results:
             entity_id = result.entity_id
+            if entity_id not in self._state:
+                first_met += 1
             st = self._state.setdefault(entity_id, _EntityState())
             st.observations += 1
             if result.pred_err.delta > 0:
-                st.resistances += 1  # resistance met
+                st.resistances += weight  # resistance met
             if entity_id in input.env_pushed:
-                st.env_pushed += 1
+                st.env_pushed += weight
 
             evidence = IndependenceEvidence(
                 resistances=st.resistances, env_pushed=st.env_pushed
@@ -116,14 +122,8 @@ class T6(BaseLayer):
                 )
             )
 
-        # A FACT T6 can see and no other layer can: how many Others the loop is
-        # HOLDING — not how many happened to return this cycle, which is all T8
-        # could see and is why the width never moved when T8 had this job.
-        #
-        # It contributes the COUNT and not a width. A layer reports what it
-        # sees; a lone layer computing a policy number was the mistake this
-        # replaces: attention is a composition of what the whole field holds.
-        contribute({OTHER_COUNT: float(len(self._state))})
+        # Its vote: how much of this cycle's Others it met for the first time.
+        cast_votes(contribute, {EXPLORATION: share(first_met, len(others))})
 
         return T6Output(others=tuple(others))
 

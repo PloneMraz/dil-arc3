@@ -7,7 +7,7 @@ Other, T7 registers absence, and T8 abstracts across entities and closes the
 loop back to T1.
 """
 
-from .t1 import ROOT_FRAME, T1, create_t1
+from .t1 import ROOT_FRAME, T1, create_t1, grace_of
 from .t2 import (
     Emission,
     ObservedChange,
@@ -41,6 +41,7 @@ from .t7 import (
 from .t8 import ObservedInteraction, T8, T8Input, T8Output, create_t8
 
 __all__ = [
+    "grace_of",
     "ROOT_FRAME",
     "STRANGER",
     "AbsenceReading",

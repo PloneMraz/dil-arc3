@@ -19,6 +19,7 @@ from dataclasses import dataclass, field as dc_field
 from ..invariants.guards import assert_appraisal_independence
 from ..invariants.types import AppraisalCriteria
 from .decisions import APPRAISAL_ANCHOR_ID
+from .field import ALERTNESS, axis, rising
 from .types import Appraisal, InfoUnit, ModField, PredErr
 
 
@@ -57,7 +58,9 @@ def appraise(input: AppraisalInput) -> Appraisal:  # noqa: A002 — mirrors the 
     )
 
     # §8.5: read the current field as the conditioning context.
-    gain = input.field.params.get("appraisalGain", 1.0)
+    # The loop's alertness to mismatch weighs the resistance it met (1 at
+    # NEUTRAL), under any gain the host seeded (dil-core 1e0a22a).
+    gain = input.field.params.get("appraisalGain", 1.0) * rising(axis(input.field, ALERTNESS))
     resistance = sum(e.delta for e in input.pred_errs)
 
     # Forward-cast outcomes are not-yet-collided: they carry no resistance, so

@@ -23,10 +23,13 @@ Ported from dil-core against DIL protocol v0.3.3.
 """
 
 import json
+import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final
 
+from ..decisions import T3_REASK_AFTER
+from ..field import EXPLORATION, NEUTRAL, axis, cast_votes, falling, share, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField, RefFrame, Signal
 
@@ -40,8 +43,6 @@ ChannelTransducer = Callable[[Signal], tuple[Any, ...]]
 # The open-tag description of an arrival: registry key → value (§9, tag F).
 Description = Mapping[str, str]
 
-# How many signals the region delivered this cycle (INV-7, up-channel).
-CHANNEL_ACTIVITY: Final = "channelActivity"
 
 # The internal channel a query to the agent's own store opens, and on which its
 # return arrives. A return is an answer, not a new cue: T3 never asks about what
@@ -84,20 +85,37 @@ class T3Output:
 
 
 class T3(BaseLayer):
+    """THE FIELD (INV-7). T3 reads `exploration`: leaning to explore, it asks again
+    a cue it asked long enough ago (T3_REASK_AFTER), since the store may hold more
+    under it by now; at NEUTRAL or below it never asks again, the reference
+    behaviour. It votes `exploration` from what only it sees: the share of this
+    cycle's cues it had never asked before (dil-core 1e0a22a)."""
+
     index = 3
     consumes: tuple[int, ...] = (1,)
 
     def __init__(self, transducers: dict[str, ChannelTransducer] | None = None) -> None:
         self._transducers = dict(transducers or {})
-        # Every cue T3 has asked the store about (INV-5: accrued, never reloaded).
-        self._asked: set[str] = set()
+        # Every cue T3 has asked the store about, and the cycle it last asked
+        # (INV-5: accrued, never reloaded). T3 runs once a cycle: its call count
+        # is its clock.
+        self._asked: dict[str, int] = {}
+        self._tick = 0
 
     # §9 snapshot surface (recovery-only restore).
     def snapshot(self) -> dict[str, Any]:
-        return {"asked": sorted(self._asked)}
+        return {"asked": [[k, v] for k, v in sorted(self._asked.items())], "tick": self._tick}
 
     def restore(self, state: Any) -> None:
-        self._asked = set(state["asked"])
+        # A snapshot from before the field was read keeps only the cues: each
+        # restores as asked at cycle 0.
+        self._asked = {}
+        for k in state["asked"]:
+            if isinstance(k, str):
+                self._asked[k] = 0
+            else:
+                self._asked[k[0]] = k[1]
+        self._tick = state.get("tick", 0)
 
     def process(  # noqa: A002
         self,
@@ -106,9 +124,15 @@ class T3(BaseLayer):
         emit: EmitFn,
         contribute: ContributeFn,
     ) -> T3Output:
-        # A FACT T3 can see and no other layer can: how much the region said this
-        # cycle. Not a policy number — T3 does not decide what follows from it.
-        contribute({CHANNEL_ACTIVITY: float(len(input.signals))})
+        self._tick += 1
+        # How long ago a cue must have been asked for T3 to ask it again: never
+        # at NEUTRAL or below.
+        exploration = axis(field, EXPLORATION)
+        reask_after = (
+            shifted_count(T3_REASK_AFTER, falling(exploration)) if exploration > NEUTRAL else math.inf
+        )
+        cue_count = 0
+        fresh = 0
 
         units: list[InfoUnit] = []
         for signal in input.signals:
@@ -123,9 +147,13 @@ class T3(BaseLayer):
                     if not cue:
                         continue
                     key = _cue_key(cue)
-                    if key in self._asked:
+                    cue_count += 1
+                    last = self._asked.get(key)
+                    if last is None:
+                        fresh += 1
+                    elif self._tick - last < reask_after:
                         continue
-                    self._asked.add(key)
+                    self._asked[key] = self._tick
                     emit(store_query(cue))
 
             units.append(
@@ -141,6 +169,7 @@ class T3(BaseLayer):
                     t=signal.t,
                 )
             )
+        cast_votes(contribute, {EXPLORATION: share(fresh, cue_count)})
         return T3Output(units=tuple(units))
 
     def info_units(self, output: T3Output) -> Sequence[InfoUnit]:

@@ -41,6 +41,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Final, Literal
 
+from ..field import ALERTNESS, axis, cast_votes, rising, share
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import InfoUnit, ModField
 
@@ -95,45 +96,19 @@ class T7Output:
 # The field parameter that scales the attention span (INV-7, down-channel).
 ATTENTION_GAIN: Final = "attentionGain"
 
-# How many expected entities stayed silent this cycle (INV-7, up-channel).
-SILENCE: Final = "silence"
+def attention_width(field: ModField | None) -> float:
+    """How wide attention is, read off the field (INV-7, down-channel):
+    `alertness`, the loop's disposition toward mismatch. The more alert, the
+    longer an entity stays demanded back after it was last seen; at NEUTRAL, the
+    declared span.
 
-# Read-only names for the facts other layers report. Local string constants
-# rather than imports, so T7 takes no meaning-channel dependency on T4 or T6
-# (INV-3): the field is the down-channel and carries no such tie.
-_OTHER_COUNT: Final = "otherCount"
-_STRANGENESS: Final = "strangeness"
-_CONTEXT_NOVELTY: Final = "contextNovelty"
-
-
-def attention_width(params: dict[str, float]) -> float:
-    """How wide attention is, read off the field (DECIDE@IMPL, tunable).
-
-    ATTENTION IS A COMPOSITION, NOT A FORMULA IN ONE LAYER. An earlier version
-    had T6 compute `1/N` and contribute the answer, which made attention a lone
-    layer's constant. It is not: it is what the whole field holds. This reads the
-    facts each layer reported from its own vantage and composes them —
-
-        otherCount     (T6, accrued)  how many Others the loop is holding
-        strangeness    (T4, context)  arrivals that bound to no known entity
-        contextNovelty (T5's rule)    whether this SITUATION has been met before
-
-    — so attention narrows as the loop holds more and widens again when either
-    what arrives stops being attributable or the situation itself is new. A
-    strange or unfamiliar moment earns a longer look; a crowded familiar one does
-    not. Every input is a fact from context or environment, not a tuning knob.
-
-    `strangeness` is ENTITY novelty and `contextNovelty` is SITUATION novelty. A
-    host can have plenty of the second and none of the first, and this one does:
-    it always knows which affordance it used, so `strangeness` is 0 for ever.
-
-    An empty field composes to 1, so a host that reports nothing keeps the
-    reference behaviour exactly.
+    It reads a disposition, not facts. An earlier version composed the width
+    from what other layers reported — how many Others the loop held, how much of
+    what arrived was strange — which put what is read into the field, where only
+    how to read belongs (DIL-en-v7 §2). Those layers now vote on the disposition
+    itself (decisions.FIELD_WIRING; dil-core 1e0a22a).
     """
-    others = params.get(_OTHER_COUNT, 0.0)
-    strangeness = params.get(_STRANGENESS, 0.0)
-    novelty = params.get(_CONTEXT_NOVELTY, 0.0)
-    return (1.0 + strangeness + novelty) / max(1.0, others)
+    return rising(axis(field, ALERTNESS))
 
 
 @dataclass(slots=True)
@@ -213,37 +188,45 @@ class T7(BaseLayer):
         # has set. INV-7 down-channel — read as background, never written.
         span = (
             self._base_span
-            * attention_width(field.params)
-            * field.params.get(ATTENTION_GAIN, 1.0)
+            * attention_width(field)
+            * (field.params.get(ATTENTION_GAIN, 1.0) if field is not None else 1.0)
         )
 
         # Register absence for expected entities that did not return, naming
         # which entity fell silent and how many times it had been expected, so
         # the absent source's resistance is readable per-source in the trace.
-        absences = tuple(
-            AbsenceReading(
-                entity_id=entity_id,
-                recurrence=st.seen,
-                predicted=st.predicted,
-                delta=1.0,
-            )
-            for entity_id, st in self._expected.items()
-            if st.seen >= self._min_seen
-            and entity_id not in input.observed
+        absences_list: list[AbsenceReading] = []
+        attended = 0
+        for entity_id, st in self._expected.items():
+            if st.seen < self._min_seen:
+                continue
             # Silence presupposes the chance to speak: an entity the region says
             # is not present this cycle is not silent, it is simply not there.
-            and (input.present is None or entity_id in input.present)
+            if input.present is not None and entity_id not in input.present:
+                continue
             # Recalled from the store and not asked for again: it had no chance
             # to speak, so its not-returning is no mismatch.
-            and entity_id not in input.unasked
+            if entity_id in input.unasked:
+                continue
             # Out of attention: the loop is no longer demanding this one back,
             # so its not-returning is not a mismatch. The return itself, if it
             # comes, is registered as it always was.
-            and self._tick - st.last_seen <= span
-        )
-        # A FACT T7 can see: how much of what the loop was waiting for did not
-        # arrive. Reported, not interpreted.
-        contribute({SILENCE: float(len(absences))})
+            if self._tick - st.last_seen > span:
+                continue
+            attended += 1
+            if entity_id in input.observed:
+                continue
+            absences_list.append(
+                AbsenceReading(
+                    entity_id=entity_id,
+                    recurrence=st.seen,
+                    predicted=st.predicted,
+                    delta=1.0,
+                )
+            )
+        absences = tuple(absences_list)
+        # Its vote: how much of what the loop was attending to fell silent.
+        cast_votes(contribute, {ALERTNESS: share(len(absences), attended)})
         return T7Output(absences=absences)
 
     def info_units(self, output: T7Output) -> Sequence[InfoUnit]:

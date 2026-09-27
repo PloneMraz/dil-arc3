@@ -25,6 +25,10 @@ from .gathers import (
     gather_t7,
     gather_t8,
 )
+from .field import (
+    ALERTNESS, AXES, EXPLORATION, NEUTRAL, TRUST,
+    axis, cast_votes, falling, rising, round_half_up, share, shifted_count, votes,
+)
 from .glob_mod import Contribution, GlobMod, GlobModError, create_glob_mod
 from .layer import (
     BaseLayer,
@@ -69,6 +73,8 @@ from .types import (
 )
 
 __all__ = [
+    "ALERTNESS", "AXES", "EXPLORATION", "NEUTRAL", "TRUST",
+    "axis", "cast_votes", "falling", "rising", "round_half_up", "share", "shifted_count", "votes",
     "ActivityEnvironment",
     "Appraisal",
     "AppraisalInput",

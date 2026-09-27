@@ -3205,3 +3205,28 @@ Done in dil-core, in four steps, each tested and pushed:
 
 Not yet ported here: the field's axes (this port still has the facts), and
 dil-core's mind is its own; this repository's mind stays as it is.
+
+### The field's axes, ported (Plone, same day)
+
+Port of dil-core `1e0a22a`. `dil/loop/field.py` (the axes, the reading law ½–1½,
+votes); every layer, appraisal and forward-building read an axis; every layer
+votes; the driver adds nothing; T5 hands the field to a rule that takes it
+(`field` by name, or an eighth argument — a rule written before keeps its call).
+Declarations in `dil/loop/decisions.py` as dil-core's. Two things only the port
+needed: rounding half up, as JavaScript's `Math.round` does (Python's `round`
+rounds half to even, and `shifted_count(3, 1.5)` would be 4, not 5); and T8's
+reading of the evidence as a number — it took only an `int`, so T6's weighed
+evidence (1.5) would have read as 0 without a sound.
+
+- 316 tests (24 new, `tests/test_field.py`, ported from dil-core's); one test
+  set to T3's new snapshot (`asked` with the cycle each cue was last asked).
+- ls20, 80 cycles, learning model, against the same command before the port:
+  the same scars by source (onlooker 20, frame 88, region 12), 2 of 79 frames
+  held, the same conformance, no level. The field moved — alertness near
+  0.15, exploration near 0.13, trust near 0.75 by cycle 10, read from the
+  scars' `fieldState` — and changed nothing this run could show: the learning
+  model decides what is done, and what the field reaches here (T7's span, how
+  many situations are built, the fit floor) changed no scar.
+- `scripts/field_trace.py` is pinned to `321d9e0` and left as it is.
+- README Findings 2–4 say what holds now; a ninth gap: this repository's mind
+  does not take the field.

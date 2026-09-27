@@ -27,6 +27,7 @@ from typing import Any
 from ...invariants.guards import assert_agency_classified
 from ...invariants.types import AgencyTag, Change
 from ..decisions import MATCHING_WINDOW, STABILITY_THRESHOLD
+from ..field import ALERTNESS, TRUST, axis, cast_votes, rising, share, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ActivityEnvironment, ModField
 
@@ -133,11 +134,16 @@ class T2(BaseLayer):
         # crystallized in the line being resumed.
         crystallized = self._cycles_run == 0
 
-        # Accrue this cycle's emission into the bounded matching window.
+        # Accrue this cycle's emission into the bounded matching window. What is
+        # accrued is kept whole; the field (trust) only shifts how far back it is
+        # read — not the stability threshold, which a field could move back past
+        # and put T2 into UNDECIDED again (INV-6).
         self._recent_emissions.append(input.emitted.action)
         self._recent_emissions.extend(input.lateral)
-        while len(self._recent_emissions) > self._window:
+        while len(self._recent_emissions) > self._window * 2:
             self._recent_emissions.pop(0)
+        reach = int(shifted_count(self._window, rising(axis(field, TRUST))))
+        matchable = self._recent_emissions[-reach:]
         self._cycles_run += 1
 
         stable = self._cycles_run >= self._stability
@@ -147,12 +153,16 @@ class T2(BaseLayer):
             if not stable:
                 # The self/environment line is not yet trusted.
                 agency: AgencyTag = "UNDECIDED"
-            elif any(self._matches(a, change.value) for a in self._recent_emissions):
+            elif any(self._matches(a, change.value) for a in matchable):
                 agency = "SELF_WRITTEN"
             else:
                 agency = "ENV_PUSHED"
             tagged.append(TaggedChange(change=change, agency=agency))
 
+        # Its vote: how much of what it classified the region pushed.
+        classified = [t for t in tagged if t.agency != "UNDECIDED"]
+        pushed = sum(1 for t in classified if t.agency == "ENV_PUSHED")
+        cast_votes(contribute, {ALERTNESS: share(pushed, len(classified))})
         return T2Output(tagged=tuple(tagged), crystallized=crystallized)
 
     def post(self, output: T2Output) -> None:

@@ -131,3 +131,88 @@ GLOB_MOD_UPDATE_LAW: Final = (
 # construction. A convex average of the current cycle's contributions keeps that
 # exact: the result is always within the range of the contributions, so the field
 # cannot amplify itself from within. No gain cap is needed.
+
+# DECIDE@IMPL — the field's axes (§12, INV-7; DIL-en-v7 §2 "What it carries": "the
+# exact axes and their number are DECIDE@IMPL; what is fixed is their kind" —
+# scalar interpretive biases on the gain or threshold of a layer operation).
+# Implemented in field.py. Ported from dil-core 1e0a22a.
+GLOB_MOD_AXES: Final = (
+    "trust (how readily a source is trusted), alertness (how alert the loop is to "
+    "mismatch), exploration (how far it leans toward exploring rather than "
+    "consolidating); each in [0, 1], NEUTRAL = 0.5"
+)
+# Rationale: the three the specification itself names as examples, and no
+# others. Bounded to [0, 1] so the convex blend keeps every axis in range with no
+# cap. NEUTRAL is the midpoint: the disposition of a field no layer has leaned.
+# Seed: the host passes its bias as the field's initial params; an axis it does
+# not seed reads NEUTRAL.
+
+# DECIDE@IMPL — how a layer reads an axis (field.rising, field.falling, field.shifted_count).
+FIELD_READING_LAW: Final = (
+    "an axis v shifts a declared threshold or gain by (1/2 + v) when the operation "
+    "grows with the axis, by (3/2 - v) when it shrinks: the declared value at "
+    "NEUTRAL, half of it at one end, one and a half at the other; a count threshold "
+    "never below 1; a floor is raised toward its ceiling, never to it"
+)
+# Rationale: centred on the declared value, so a field that has not leaned
+# leaves every operation as declared, and the field biases an operation and
+# never annuls or inverts it (DIL-en-v7 §2: a field that determined every
+# layer's reading would be a halted loop, not a worse one). A gain of 0 was
+# exactly that in dil-core's first version: no valence, no attention span, no
+# evidence accruing, a fit floor above every confidence. Tunable, NOT derived.
+
+# DECIDE@IMPL — what each layer reads and what it votes (field.cast_votes).
+FIELD_WIRING: Final = (
+    "T1 reads trust, votes trust; T2 reads trust, votes alertness; T3 reads "
+    "exploration, votes exploration; T4 reads trust, votes trust; T5 reads "
+    "exploration, votes alertness, and hands the field to its rule; T6 reads trust, "
+    "votes exploration; T7 reads alertness, votes alertness; T8 reads exploration, "
+    "votes trust and exploration; appraisal reads alertness; forward-building "
+    "reads exploration"
+)
+# Rationale, layer by layer — each reads the axis that bears on its own
+# operation, and votes from what it alone sees:
+#   T1  reads trust: how many silent cycles it holds the environment confirmed
+#       (T1_GRACE_MAX). Votes trust: 1 when the region said anything, 0 if not.
+#   T2  reads trust: how far back an emission is still matched as the cause of a
+#       change (MATCHING_WINDOW) — not STABILITY_THRESHOLD, which the field
+#       could move back past and put T2 into UNDECIDED again (INV-6). Votes
+#       alertness: the share of classified changes the region pushed.
+#   T3  reads exploration: whether a cue already asked is asked again
+#       (T3_REASK_AFTER). Votes exploration: the share of cues never asked before.
+#   T4  reads trust: sightings before a named entity is bound by its name rather
+#       than STRANGER (T4_RECOGNITION). Votes trust: the share bound to a known one.
+#   T5  reads exploration: how long a baseline it keeps (BASELINE_WINDOW). Not
+#       alertness into SUFFICIENT_RECURRENCE: a confidence the field slowed would
+#       fail §13.4's accumulation reading. Its rule — where the mind sits —
+#       receives the field whole. Votes alertness: the share that mismatched.
+#   T6  reads trust: how much one resistance or pushed change counts as evidence
+#       of an independent Other. Votes exploration: the share met for the first time.
+#   T7  reads alertness: how long an entity stays demanded back (attention span).
+#       Votes alertness: the share of attended entities that fell silent.
+#   T8  reads exploration: how deep it compares Others (T8_COMPARISON). Votes
+#       trust: 1 − the share of resistance held by the most-resisting Other;
+#       exploration: Other↔Other interactions per Other. DIL-en-v7 §7 routes T8's
+#       feedback "by content… to T4… to T6": both read trust.
+#   appraisal reads alertness: the gain on the resistance met.
+#   forward-building reads exploration: situations built (H_COUNT), fit floor.
+# Every axis is read by at least two operations and fed by at least two layers.
+
+# DECIDE@IMPL tag B — the longest run of silent cycles T1 holds the environment through.
+T1_GRACE_MAX: Final = 2
+# None at NEUTRAL or below (the reference), up to T1_GRACE_MAX at full trust.
+
+# DECIDE@IMPL tag B — the span after which a cue asked before is asked again, leaning to explore.
+T3_REASK_AFTER: Final = 16
+# Never at NEUTRAL or below (the reference); exploring, after
+# T3_REASK_AFTER · (3/2 − exploration) cycles. The length of BASELINE_WINDOW.
+
+# DECIDE@IMPL tag B — sightings before a named entity is bound by its name, at NEUTRAL.
+T4_RECOGNITION: Final = 1
+# With less trust, T4_RECOGNITION · (3/2 − trust), rounded, never below 1.
+
+# DECIDE@IMPL — how deep T8 compares Others, by exploration.
+T8_COMPARISON: Final = (
+    "by resistance; leaning to explore (exploration > NEUTRAL), by resistance and "
+    "then by pushed changes"
+)

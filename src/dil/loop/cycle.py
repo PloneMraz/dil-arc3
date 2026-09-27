@@ -75,6 +75,7 @@ from ..store.tagging_gate import (
 from ..store.tags import invalid_open_tag_reason
 from ..store.tags import TaggedDatum
 from .appraisal import AppraisalInput, appraise
+from .field import EXPLORATION, NEUTRAL, axis, rising, shifted_count
 from .gathers import (
     gather_t2,
     gather_t3,
@@ -1028,7 +1029,14 @@ class Cycle:
         # floor is 0, which is what the loop always did. Nothing here skips an
         # expectation or alters a recorded confidence — see FIT_FLOOR for why
         # both of those are unsafe.
-        fit_floor = field.params.get(FIT_FLOOR_PARAM, FIT_FLOOR)
+        # Leaning to consolidate (exploration below NEUTRAL) raises the floor
+        # toward full confidence, never to it — a floor no confidence can clear
+        # would end building from the store, not bias it — and exploring builds
+        # more situations; at NEUTRAL both are the declared ones (dil-core 1e0a22a).
+        exploration = axis(field, EXPLORATION)
+        floor_base = field.params.get(FIT_FLOOR_PARAM, FIT_FLOOR)
+        fit_floor = floor_base + (1 - floor_base) * max(0.0, NEUTRAL - exploration)
+        situations_now = int(shifted_count(H_COUNT, rising(exploration)))
         material = [
             r for r in pass_.t5.results if r.expectation.confidence > fit_floor
         ]
@@ -1050,7 +1058,7 @@ class Cycle:
             # closer-fitting outcomes carry, never a hard scored winner.
             situations = sorted(
                 material, key=lambda r: r.expectation.confidence, reverse=True
-            )[:H_COUNT]
+            )[:situations_now]
             # simulated → projected: each situation yields the outcome cast from it.
             datum = to_projected(datum)
             self._events.append(
@@ -1267,17 +1275,14 @@ class Cycle:
         # Persist the cycle datum in [data] (mutable working memory).
         self._data.put(f"cycle-{self._cycle}", datum)
 
-        # ── GLOB-MOD: contribute this cycle's resistance, advance to N+1 ──
-        total_resistance = sum(e.delta for e in pred_errs)
+        # ── GLOB-MOD: the cycle's votes blend, and take effect at N+1 ──
         # INV-7: "Every layer contributes to it as one competing parameter;
         # contributions blend, re-weighted each cycle, never last-write-wins."
-        # Each layer's own contributions go in first, bound to its index by
-        # `run_layer`; the driver adds the cycle's total resistance last, as it
-        # always did. With more than one contributor the blend finally does what
-        # its name says.
+        # Each layer's votes, bound to its index by `run_layer`. The driver adds
+        # none: it is not a layer, and what it sees (the cycle's total
+        # resistance) the layers that met it already voted on.
         for c in pass_.contributions:
             self._glob.contribute(c.layer, c.params, c.weight)
-        self._glob.contribute(5, {"resistance": total_resistance}, 1.0)
         self._glob.advance(self._cycle + 1)
 
         # Feedback and accrual: the response becomes the next cycle's emission,

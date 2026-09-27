@@ -192,7 +192,7 @@ def test_what_was_asked_and_what_is_in_flight_survive_a_snapshot():
     )
     run(resumed, 2)
     assert len(moves(events, DIRECTIVE)) == 1, "the answer in flight still arrived"
-    assert t3.snapshot() == {"asked": ['[["object", "region-status"]]']}
+    assert t3.snapshot() == {"asked": [['[["object", "region-status"]]', 1]], "tick": 2}
 
 
 # ── agency closure (§6.4 rule 3) ──

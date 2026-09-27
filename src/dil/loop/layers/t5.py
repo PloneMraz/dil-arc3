@@ -27,6 +27,7 @@ from typing import Any, Final
 from collections.abc import Callable
 
 from ..decisions import BASELINE_WINDOW, SUFFICIENT_RECURRENCE
+from ..field import ALERTNESS, EXPLORATION, axis, cast_votes, falling, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import Expectation, HistoryWindow, InfoUnit, ModField, PredErr
 from .t3 import Description, store_query
@@ -118,8 +119,6 @@ def persistence(
     return window[-1] if window else observed
 
 
-# Mean prediction error over this cycle's entities (INV-7, up-channel).
-SURPRISE: Final = "surprise"
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,6 +165,23 @@ def _takes_test(rule: Callable[..., Any]) -> bool:
         sum(p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) for p in params) >= 7
 
 
+def _takes_field(rule: Callable[..., Any]) -> str | None:
+    """How a rule receives the field, if it does: by name, or as its eighth argument.
+
+    The rule — where the mind sits — receives the cycle's field as every layer
+    does (INV-7): how alert to mismatch, how far to explore. A rule written
+    before the field reached it does not take it (dil-core 1e0a22a)."""
+    try:
+        params = list(inspect.signature(rule).parameters.values())
+    except (TypeError, ValueError):
+        return None
+    if any(p.name == "field" for p in params) or any(p.kind is p.VAR_KEYWORD for p in params):
+        return "keyword"
+    if sum(p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) for p in params) >= 8:
+        return "positional"
+    return None
+
+
 def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
     return json.dumps(a.content, sort_keys=True, default=str) == json.dumps(
         b.content, sort_keys=True, default=str
@@ -184,6 +200,7 @@ class T5(BaseLayer):
     ) -> None:
         self._predict = predict if predict is not None else persistence
         self._predict_tests = _takes_test(self._predict)
+        self._predict_field = _takes_field(self._predict)
         self._window_size = (
             baseline_window if baseline_window is not None else BASELINE_WINDOW
         )
@@ -216,6 +233,12 @@ class T5(BaseLayer):
         contribute: ContributeFn,
     ) -> T5Output:
         results: list[T5Result] = []
+        # The field's reading (INV-7): how long a baseline it keeps — exploring
+        # keeps less, consolidating more. Never into confidence: §13.4 reads a
+        # confidence that fails to rise with recurrence as the reloading
+        # signature. What is accrued is kept whole; the field shifts how much of
+        # it is read.
+        window_now = int(shifted_count(self._window_size, falling(axis(field, EXPLORATION))))
 
         # The rule's road outward: a query to the store, issued from T5.
         def ask(cue: Description) -> None:
@@ -237,7 +260,7 @@ class T5(BaseLayer):
         for b in input.bound:
             entity_id = b.entity_id
             observed = b.unit
-            window = self._windows.get(entity_id, [])
+            window = self._windows.get(entity_id, [])[-window_now:]
             count = self._counts.get(entity_id, 0)
 
             # The declared prediction rule. dil-core's default is persistence;
@@ -246,11 +269,15 @@ class T5(BaseLayer):
             # The rule may report upward into the field; the contribution is
             # bound to T5, since it is T5's declared rule that made it. It may
             # also ask the store; the query is traced to T5 for the same reason.
-            out = (
-                self._predict(entity_id, tuple(window), observed, contribute, ask, write, test)
-                if self._predict_tests
-                else self._predict(entity_id, tuple(window), observed, contribute, ask, write)
-            )
+            args: tuple[Any, ...] = (entity_id, tuple(window), observed, contribute, ask, write)
+            if self._predict_field == "keyword":
+                out = self._predict(*args, test, field=field)
+            elif self._predict_field == "positional":
+                out = self._predict(*args, test, field)
+            elif self._predict_tests:
+                out = self._predict(*args, test)
+            else:
+                out = self._predict(*args)
             declared = isinstance(out, Expecting)
             predicted = out.predicted if declared else out
             confidence = min(1.0, count / self._recurrence)
@@ -276,9 +303,11 @@ class T5(BaseLayer):
                 held_by_declared=declared,
             )
 
-            # Accrue this observation into the bounded window.
-            next_window = [*window, observed]
-            while len(next_window) > self._window_size:
+            # Accrue this observation into the bounded window: kept up to the
+            # longest baseline the field can ask for, read up to the one it asks
+            # for now.
+            next_window = [*self._windows.get(entity_id, []), observed]
+            while len(next_window) > self._window_size * 2:
                 next_window.pop(0)
             self._windows[entity_id] = next_window
             self._counts[entity_id] = count + 1
@@ -287,16 +316,10 @@ class T5(BaseLayer):
                 T5Result(entity_id=entity_id, expectation=expectation, pred_err=pred_err)
             )
 
-        # A FACT T5 can see: how far the region fell from expectation, right
-        # now. Reported as it is; what follows from it is not T5's to say.
-        contribute(
-            {
-                SURPRISE: (
-                    sum(r.pred_err.delta for r in results) / len(results)
-                    if results
-                    else 0.0
-                )
-            }
+        # Its vote: how much of what returned did not match what it expected.
+        cast_votes(
+            contribute,
+            {ALERTNESS: sum(r.pred_err.delta for r in results) / len(results) if results else None},
         )
         return T5Output(results=tuple(results), writes=tuple(writes), tests=tuple(tests))
 

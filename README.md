@@ -113,30 +113,35 @@ holds now; how it was found, and the measurements, are in `LOG.md`.
 
 The topology has channels an implementation can build and never draw on, and
 nothing in running it shows one is dead until it is traced. Five are drawn on
-now, in dil-core first and then here; two of them only in part.
+now, in dil-core first and then here.
 
 1. **The store is read back.** §9 has the self accrue from scars. A scar
    returns to `running` when it is used again — an expectation it is, or a
    recall — and `[event]` records each `scar → running`. §10's
    resistance-retrieval channel exists and is off by default: as a predictor it
    loses (6).
-2. **The field reaches every layer, and is read in few places.** INV-7 has it
+2. **The field reaches every layer, and every layer reads it.** INV-7 has it
    reach every layer as background — "same data plus a different field yields
-   different meaning". Every layer receives it; its values are read at T7 (the
-   width of attention, from T4's `strangeness` and T6's `otherCount`), at
-   appraisal (its gain) and at the fit floor. The other layers read nothing from
-   it.
+   different meaning". It carries dispositions, never what was read (DIL-en-v7
+   §2: "how to read, never what is read"): three axes, the specification's own
+   examples — `trust`, `alertness`, `exploration`. Each layer reads the one that
+   bears on its operation and shifts a declared threshold or gain by ½ to 1½:
+   the declared value when the field has not leaned, never nothing, so the
+   field biases and never annuls. Appraisal and forward-building read it too.
+   Confidence it never touches, since §13.4 reads a confidence that fails to
+   rise as a reloaded self. Which layer reads what is declared
+   (`dil/loop/decisions.py`, `FIELD_WIRING`).
 3. **Contributions blend.** "Every layer contributes to it as one competing
-   parameter; contributions blend, never last-write-wins." T3 to T8 and the
-   driver each contribute what only they can see; each key is a convex blend of
-   its contributions, taking effect the next cycle. T1 and T2 contribute
-   nothing.
+   parameter; contributions blend, never last-write-wins." Every layer votes on
+   an axis from what it alone sees — whether the region spoke, how much it
+   pushed, how much was new, how much mismatched or fell silent; each axis is a
+   convex blend of the cycle's votes, taking effect the next cycle, and one no
+   layer voted on carries over.
 4. **T8 closes back into the loop through the field.** §6.2: "T8 closes back
    into the loop, not into a sink"; the meaning-channel cannot carry its output
-   down, so its `interactions` and `resistanceConcentration` enter the field.
-   Nothing reads them — nor T3's `channelActivity`, T5's `surprise`, T7's
-   `silence`, or the driver's `resistance`: they are carried in the field,
-   legible, and act on nothing yet.
+   down, so T8 votes on the dispositions the layers below it read — `trust`,
+   which T4 and T6 read, as the parent specification routes its feedback, and
+   `exploration`. Every scar's context anchor records the field it was met under.
 5. **What is admitted is asked for.** Host data enters through the tagging-gate
    stamped `prior`, and §9 has it move to `running` "once it has run". T3 asks
    the store, once, with the description of each kind of arrival on the
@@ -168,6 +173,10 @@ now, in dil-core first and then here; two of them only in part.
    is heard; it thinks on a remark only when its word changes; and what it makes
    of one is a single objection to an act in the state it stands in, which its
    path toward a state with an act not yet taken does not ask.
+9. **The field does not reach this agent's mind.** T5 hands the field to a rule
+   that takes it, as it does every layer; this repository's mind was seated
+   before it could, and does not take it — its thinking is not conditioned by
+   the loop's disposition, as every layer's reading is.
 
 Local to this repository, not upstream's.
 
