@@ -2845,3 +2845,16 @@ in a Save & Run, either notebook packs every `store-*` into `stores.tar.gz` and
 removes the folders; the reports stay beside it. A scored rerun has no stores to
 pack. Run here through the CPU notebook's cells on two games: five outputs, the
 archive 409 KB, and both stores unpacked read every snapshot back.
+
+### Learning notebook version 3 on Kaggle: the neutral mind, packed stores (2026-09-27)
+
+Code `b928f28`, Save & Run on CPU, four games at once, 300 cycles, as versions 1
+and 2. The four games took 414 s (version 2: 413 s).
+
+- **The download took 13 s**: eight files, the stores in one 16.8 MB archive.
+  Unpacked: 56-87 MB a store; every snapshot of all four read back in full (34,
+  48, 68 and 39), each object checked against its name.
+- **The same play as version 2**, but for the start: each game stood still one
+  cycle while the mind waited for its aim, and made one more RESET (the host's
+  start-up). Levels the same (vc33 1, the others 0); states met the same or
+  within two (ar25 252, was 254); the counts of each act differ by one or two.
