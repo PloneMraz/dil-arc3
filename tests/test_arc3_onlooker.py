@@ -49,9 +49,22 @@ def test_it_says_nothing_until_an_act_repeats_and_then_points_where_it_began():
     assert o.remark() == {"remark": None}
     o.saw(4, a(1))
     assert REPEAT_AT == 4
-    assert o.remark() == {"remark": "repeating", "act": a(1), "since": 1}
+    assert o.remark() == {"remark": "repeating", "act": a(1), "since": 1, "at_least": 4}
     o.saw(5, a(1))
     assert o.remark()["since"] == 1, "the same view, however long it runs"
+
+
+def test_a_repetition_that_lasts_is_said_again_every_repeat_at_more():
+    o = Onlooker()
+    saw(o, a(1), a(1), a(1), a(1))
+    said = [o.remark()]
+    for moment in range(4, 13):
+        o.saw(moment, a(1))
+        said.append(o.remark())
+    assert [r["at_least"] for r in said] == [4, 4, 4, 4, 8, 8, 8, 8, 12, 12]
+    changes = sum(1 for before, now in zip(said, said[1:]) if before != now)
+    assert changes == 2, "between nudges it holds what it said: a run kept on purpose is not stopped at every act"
+    assert {r["since"] for r in said} == {0}
 
 
 def test_it_reads_an_alternation_as_going_back_and_forth():

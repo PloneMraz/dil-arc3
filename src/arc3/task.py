@@ -14,10 +14,13 @@ unseen, so nothing here names a kind of game, a mechanic or a strategy. They
 give the aim — to get through the levels — and the task that serves it: work the
 rules out as a program that says what the game returns, and give the next action
 toward the aim. The mind commands it as T5's test (§6.4) and the body carries it
-out; the mind acts on nothing. Curiosity, want and expectation are left to the
+out; the mind acts on nothing. It is told what its program can do with its own
+parts: `propose` may run `predict` ahead toward the `GOAL`'s `reached_when` — a
+capability of the program, not a strategy for a kind of game (Plone,
+2026-09-27) — and the time each run has. Curiosity, want and expectation are left to the
 thinking: nothing here names them.
 
-`{rows}`, `{cols}`, `{evidence}` and `{also}` are filled when the mind thinks.
+`{rows}`, `{cols}`, `{evidence}`, `{also}` and `{seconds}` are filled when the mind thinks.
 """
 
 from __future__ import annotations
@@ -45,6 +48,8 @@ Write two Python functions, using only the standard library:
         # return if it does it — {{"cells": {{"row,col": colour}}, "status": {{"levelsDelta": 1}}}}
         # steps: the steps you have just seen, oldest first, each a dict with
         # before, action, x, y, after, and the game's state and levels gained when it said them
+
+propose may call your own predict to look ahead, several actions on, for actions whose predicted returns come to what your GOAL (below) says will come back when the aim is reached. Each run of predict or of propose must end within {seconds} seconds.
 
 State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program, thought; provenance: scar or running)."""
 

@@ -38,7 +38,9 @@ not yet turn is behaviour, which keeps to one action. Every run is in `LOG.md`.
 **What it is told.** Its store holds, before it lives, three things, each as host
 data stamped `prior`: what its mind is told its thinking is for
 (`prior:mind-task`, this project's own words, neutral — the aim is to get
-through the levels, and no kind of game, mechanic or strategy is named); what the
+through the levels, and no kind of game, mechanic or strategy is named; it is told
+that its `propose` may run its own `predict` ahead toward its aim, and the seconds
+each run has); what the
 mind does with any aim (`prior:mind-aim`); and the competition's published
 rules, quoted. The mind recalls the first two itself, and the model reads them.
 The rules are recalled by T3 on a cue, as the protocol does, and the model reads

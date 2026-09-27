@@ -1070,7 +1070,8 @@ class Mind:
             notes += f"\n{self._last_note}\n"
         grid = shown[-1].after if shown else [[]]
         first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
-                                          evidence=render_evidence(shown, report=True), also=also)
+                                          evidence=render_evidence(shown, report=True), also=also,
+                                          seconds=PROGRAM_SECONDS)
         first += "\n\n" + self._aim["aim"]
         # What was wrong goes where the model reads what to do: the last message.
         if self.code is None:

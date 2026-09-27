@@ -498,6 +498,35 @@ def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_i
     assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE
 
 
+def test_a_repetition_said_again_sets_the_mind_thinking_again():
+    from arc3.observe import ONLOOKER_CHANNEL
+
+    def remark(said):
+        return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+    said = {"remark": "repeating", "act": {"act": 1}, "since": 0}
+    model = Script(PROPOSING, PROPOSING, PROPOSING, PROPOSING)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
+    run(cycle, frame(lit(1), lit(1)), status(), remark({**said, "at_least": 4}))
+    run(cycle, frame(lit(1), lit(1)), status(), remark({**said, "at_least": 4}))
+    assert [t.on for t in wm.thoughts].count("onlooker") == 1, "held, it collides no more"
+    run(cycle, frame(lit(1), lit(1)), status(), remark({**said, "at_least": 8}))
+    assert [t.on for t in wm.thoughts].count("onlooker") == 2, "said again, it is thought on again"
+
+
+def test_the_model_is_told_propose_may_look_ahead_with_predict_and_the_time_it_has():
+    from arc3.mind import PROGRAM_SECONDS
+
+    model = Script(PROPOSING)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())
+    first = model.prompts[0][0]["content"]
+    assert "propose may call your own predict to look ahead" in first
+    assert f"must end within {PROGRAM_SECONDS} seconds" in first
+    assert "{seconds}" not in first
+
+
 def test_a_fence_inside_a_docstring_does_not_close_the_block():
     from arc3.mind import extract_code
 

@@ -138,7 +138,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   (Plone, 2026-09-25).
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
-  through the levels; no kind of game, mechanic or strategy is named. It enters
+  through the levels; no kind of game, mechanic or strategy is named. It says
+  what the program can do with its own parts: `propose` may run `predict` ahead,
+  toward what the `GOAL` says will come back, each run within `PROGRAM_SECONDS`
+  (Plone, 2026-09-27: a capability of the program, not a strategy). It enters
   through the tagging-gate, the mind recalls it at its first arrival (a thought
   before it waits for it), and every program names it in `built_from`.
 - **The mind reads by asking; nothing is poured into it.** It may read anything
@@ -255,8 +258,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **The onlooker's remark reaches behaviour only through the mind.** A change of
   its stance sets the mind thinking and the model is shown what it says; a
   program that acts otherwise and predicts as well is kept. It scars only when
-  its stance changes, not at every repeat, so it sets the mind thinking only
-  then — except standing still, which it says anew each moment.
+  what it says changes, not at every repeat, so it sets the mind thinking only
+  then — standing still it says anew each moment; a repetition, anew each
+  `REPEAT_AT` more acts.
 - **A cycle the body stood still in is a cycle.** The region returns nothing, the
   host reports only what it hears, and T7 counts no absence of the region
   (nothing was done to it). The mind commands after the onlooker; the body goes
@@ -317,14 +321,16 @@ are below.
   - **Its stance**, neutral about any environment: "standing still" (no act since
     a moment, `for` how many — said again each moment it lasts, a new nudge),
     "repeating" (the same act `REPEAT_AT = 4` times running — **not measured**,
-    declared as chosen) and "back-and-forth" (x y x y). Each points at the moment
-    it began. It has no claim of being right: a repetition that is getting
+    declared as chosen — `at_least` how many, said again each `REPEAT_AT` more
+    while it lasts: Plone, 2026-09-27) and "back-and-forth" (x y x y). Each
+    points at the moment it began. It has no claim of being right: a repetition that is getting
     somewhere is remarked on too.
   - **The mismatch is between the agent and the onlooker.** The agent's standing
     expectation is that the onlooker says what it said; a change of stance
     collides, and the scar is on the remark's datum (`domain: reflection`,
     `kind: remark`). While it keeps its stance, nothing collides — except that
-    standing still is said anew each moment.
+    standing still is said anew each moment, and a repetition each `REPEAT_AT`
+    more acts.
   - It returns and does not write; it holds no handle on the agent.
   - `scripts/run_game.py` puts it in the world; `--alone` leaves it out.
 

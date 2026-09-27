@@ -23,7 +23,11 @@ moment it points at (DECIDE@IMPL tag E, declared, not measured):
   - "standing still": the agent has not acted since a moment, and `for` how
     many. It says so again each moment the agent stays still: the same fact,
     longer, as a person who nudges again.
-  - "repeating": the same act `REPEAT_AT` times running;
+  - "repeating": the same act `REPEAT_AT` times running, and `at_least` how
+    many: it says so again each `REPEAT_AT` more, while the run lasts — 4, 8,
+    12 (Plone, 2026-09-27: said once, then held, it let ar25 repeat one act 52
+    times with no more thought). Between, it holds what it said, so a run the
+    agent keeps on purpose is not stopped at every act;
   - "back-and-forth": two acts alternating, x y x y.
 
 Otherwise nothing. A remark is its view, with no claim of being right: a
@@ -39,7 +43,8 @@ import json
 from typing import Any, Final
 
 # How many identical acts running before the onlooker says the agent is
-# repeating itself. NOT MEASURED: declared as chosen.
+# repeating itself, and how many more before it says so again. NOT MEASURED:
+# declared as chosen.
 REPEAT_AT: Final = 4
 # An alternation is read over the last four acts: x y x y.
 ALTERNATION: Final = 4
@@ -72,7 +77,8 @@ class Onlooker:
         acts = _trailing(self._seen, lambda e: e[1] is not None)
         run = _repeat_run(acts)
         if len(run) >= REPEAT_AT:
-            return {"remark": "repeating", "act": run[0][1], "since": run[0][0]}
+            return {"remark": "repeating", "act": run[0][1], "since": run[0][0],
+                    "at_least": len(run) // REPEAT_AT * REPEAT_AT}
         alt = _alternation_run(acts)
         if len(alt) >= ALTERNATION:
             return {"remark": "back-and-forth", "acts": [alt[0][1], alt[1][1]], "since": alt[0][0]}
