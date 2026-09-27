@@ -4,6 +4,7 @@
         --endpoint URL --model NAME --out /kaggle/working [--concurrency 4] [--cycles 60]
         [--deadline EPOCH] [--games a,b]
     $PY scripts/run_competition.py --mode offline --offline-dir DIR ... --games ls20,vc33
+    $PY scripts/run_competition.py ... --player random_game.py     (the path, with the random agent)
 
 The official harness opens one scorecard, makes every game on it once, plays them
 in threads of one process, and closes the scorecard at the end; the gateway
@@ -41,8 +42,11 @@ ap.add_argument("--games", default=None, help="comma list; default: every game t
 ap.add_argument("--cycles", type=int, default=60)
 ap.add_argument("--concurrency", type=int, default=4)
 ap.add_argument("--deadline", type=float, default=None, help="epoch seconds: start nothing after, stop what runs")
-ap.add_argument("--endpoint", required=True)
-ap.add_argument("--model", required=True)
+ap.add_argument("--endpoint", default="")
+ap.add_argument("--model", default="")
+ap.add_argument("--player", default="run_game.py",
+                help="the script that plays each game, in scripts/: run_game.py, the agent; "
+                     "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--out", required=True)
 a = ap.parse_args()
@@ -115,7 +119,7 @@ while queue or running:
     while queue and len(running) < a.concurrency:
         g = queue.pop(0)
         proc = subprocess.Popen(
-            [sys.executable, "-u", str(HERE / "run_game.py"), g, str(a.cycles),
+            [sys.executable, "-u", str(HERE / a.player), g, str(a.cycles),
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
              "--remote", f"{host}:{port}", "--out", str(out / f"store-{g}")],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)

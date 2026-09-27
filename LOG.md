@@ -2569,3 +2569,26 @@ PENDING at 05:24. The starter kit's random agent scored 0.02 (`56462757`).
   several processes through one arcade is still not verified, and a broken
   gateway path would also score 0.00. The two causes cannot be told apart from
   the score.
+
+### A probe of the road the games go through (Plone, same day)
+
+v12's 0.00 has two readings the score cannot tell apart: the agent played and
+got nowhere, or the road its games go through lost their actions. Plone chose to
+spend a submission on telling them apart.
+
+- `scripts/random_game.py` plays the starter kit's random agent, as its
+  `my_agent.py` and the harness write it: RESET when not played or over; else
+  ACTION1..7 at random, not read from what the game offers, ACTION4 twice as
+  likely in ls20, ACTION6 at a random cell; up to 81 actions; stop at WIN.
+- `run_competition.py --player random_game.py` runs it on the same road as the
+  agent: one arcade, one scorecard, each game in its own process through
+  `world/remote.py`. `build_dil_run.py --probe` builds a notebook of it
+  (`dil-arc3-gateway-probe`), CPU, no model.
+- Already seen, before any submission: the offline scorecards record the actions
+  made from the game processes. Locally, two games of the probe: 162 actions
+  sent, `total_actions` 160 (RESET not counted). The kept Kaggle runs: v12's ls20
+  49 (ACTION1 ×2 + ACTION2 ×47), v14 228. So the arcade-to-scorecard part of the
+  road holds offline; the gateway, over HTTP in a scored rerun, is what the probe
+  tests.
+- Reading it: about 0.02 means the road holds and v12's 0.00 is the agent's;
+  0.00 points at the road. The random agent's own 0.02 is one draw.
