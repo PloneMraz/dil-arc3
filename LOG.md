@@ -2596,3 +2596,8 @@ spend a submission on telling them apart.
   the dataset, so the probe's search for the tar found nothing. It now finds
   `random_game.py` and copies the repository around it, as the main notebook
   does. Checked by running its cells here against the unpacked layout.
+- **Submitted: probe version 2**, code `a86dbff`, at 2026-09-27 06:12:00 UTC, ref
+  `56600038`. Its Save & Run played the four offline games through the road:
+  81 actions each (RESET once, ACTION1..7 in between), no level, scorecard
+  `total_actions` 320 (324 less the four RESETs). Not the agent: a submission
+  the paper does not describe.

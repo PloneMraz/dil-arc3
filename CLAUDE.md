@@ -604,7 +604,10 @@ any DIL agent has to beat for Accuracy to mean anything.
 **Submitted:** notebook `plonemraz/dil-arc3-run` **version 12**, code `3b31806`,
 at 2026-09-26 20:42:04 UTC, ref `56588469`, serving Qwen3.8-Flash-Next NVFP4.
 **Public score 0.00** (COMPLETE 2026-09-27, seen at 05:34 UTC); the random
-agent scored 0.02. What the run did is in LOG.md. The paper must name the
+agent scored 0.02. What the run did is in LOG.md. A second submission,
+`56600038` (2026-09-27), is not the agent: the starter kit's random agent on the
+same road (`scripts/random_game.py`), to tell whether the road or the agent gave
+the 0.00 (LOG.md). The paper must name the
 submission it describes, and describe that notebook: a later version is a later
 submission.
 
