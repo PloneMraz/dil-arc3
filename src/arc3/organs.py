@@ -69,6 +69,11 @@ def _unchanged(status: dict[str, Any]) -> dict[str, Any]:
     return {**status, "stateTo": status.get("stateFrom"), "levelsDelta": 0, "depthDelta": 0}
 
 
+def _quiet(said: dict[str, Any]) -> dict[str, Any]:
+    """The onlooker with nothing to say (world/onlooker.py: `{"remark": None}`)."""
+    return {"entity": said.get("entity"), "remark": None}
+
+
 def _command(act: Act) -> dict[str, Any]:
     return {"kind": "move", "actionId": act[0], "x": act[1], "y": act[2]}
 
@@ -93,6 +98,7 @@ ARC_ORGANS: Final = Organs(
     tag_keys=frozenset(OPEN_TAG_KEYS),
     channels={"frame": FRAME_CHANNEL, "report": STATUS_CHANNEL, "others": ONLOOKER_CHANNEL},
     own_keys=("context",),
+    quiet=_quiet,
 )
 
 __all__ = ["ARC_ORGANS", "REPORT_FIELDS"]

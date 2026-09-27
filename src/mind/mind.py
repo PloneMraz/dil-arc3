@@ -44,6 +44,7 @@ import json
 from typing import Any, Callable, Final
 
 from dil.loop.decisions import BASELINE_WINDOW
+from dil.loop.field import ALERTNESS, axis, rising, shifted_count
 from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
@@ -54,6 +55,10 @@ from .organs import Act, Organs, Step
 # How many more times the mind thinks, in the same cycle, when it has no command
 # the body can carry out — while the body waits. DECLARED, not measured.
 MAX_WAIT_THOUGHTS: Final = 2
+# How many times a cycle the mind thinks on a failed expectation, at NEUTRAL
+# alertness; the field's alertness shifts it (½–1½, rounded: 1 to 2). DECLARED,
+# not measured — dil-core's MIND_THOUGHTS_PER_CYCLE.
+MIND_THOUGHTS_PER_CYCLE: Final = 1
 
 
 def _content_value(unit: InfoUnit) -> Any:
@@ -106,7 +111,13 @@ class Mind:
         self._status_this_cycle = False
         self._remark: dict[str, Any] | None = None
         self._remark_unit: InfoUnit | None = None
+        # Its answer to what an Other said, while it stands: the data it is. The
+        # mind expects the Other to stop saying it (`Organs.quiet`).
+        self._answer: tuple[object, ...] = ()
         self._thought_at: int | None = None
+        self._thoughts_this_cycle = 0
+        # The cycle's field, as it reached the mind at T5 (INV-7).
+        self._field: Any = None
         # Questions put to memory, with when; answers arrive the next cycle.
         self._asks_open: list[tuple[int, dict[str, str]]] = []
         self._recalled: dict[str, tuple[Step | None, dict[str, str], Any]] = {}
@@ -353,20 +364,45 @@ class Mind:
         return Expecting(predicted=predicted, held_by=held)
 
     def on_remark(self, entity_id: str, observed: InfoUnit, payload: dict[str, Any], window, contribute, ask,
-                  write, test=None) -> InfoUnit:
-        """What an Other says of the agent's behaviour. The standing expectation
-        holds — it says what it said — and a change of it is a mismatch the mind
-        thinks on. In a cycle the region said nothing in, what is said is all
-        that comes, and the mind commands after it."""
-        predicted = persistence(entity_id, window, observed, contribute, ask, write)
+                  write, test=None) -> InfoUnit | Expecting:
+        """What an Other says of the agent's behaviour reaches the mind at once, as a
+        mismatch (§8.4: a collision read into coordinates by a third party).
+
+        What the mind expects of it: that it says what it said — or, once the mind
+        has answered it, that it stops (`Organs.quiet`), and that expectation is
+        the answer's data. A remark that does not come as expected collides: a
+        ResistEvent, the scar on the remark and on what the expectation was — the
+        answer, when it was said again after it. The mind thinks on the collision
+        there and then and, if it thought, commands again: the body has not yet
+        moved this cycle and carries out the last command (Plone, 2026-09-27: a
+        remark strikes the mind directly; the mind does not wait for it). In a
+        cycle the region said nothing in, what is said is all that comes, and
+        the mind commands after it."""
+        standing = persistence(entity_id, window, observed, contribute, ask, write)
+        said_before = _content_value(standing)
+        answered = bool(self._answer) and self.organs.quiet is not None and isinstance(said_before, dict)
+        if answered:
+            content = observed.content if isinstance(observed.content, dict) else {}
+            quiet = InfoUnit(content={**content, "value": self.organs.quiet(said_before)},
+                             ref_frame=observed.ref_frame, t=observed.t)
+            held = self._resolve(self._answer)
+            expected: InfoUnit | Expecting = Expecting(predicted=quiet, held_by=held) if held else quiet
+            predicted = quiet
+        else:
+            expected = predicted = standing
         self._remark = {k: v for k, v in payload.items() if k != "entity"}
         self._remark_unit = observed
-        if _content_value(predicted) != payload:
-            self.think("onlooker", ask, write, again=True)
+        if _content_value(predicted) == payload:
+            if answered:
+                self._answer = ()  # it stopped: the answer did what it was for
+        else:
+            self._answer = ()
+            if self.think("onlooker", ask, write, again=True) and self._status_this_cycle:
+                self.command(ask, write, test)  # again, before the body moves
         if not self._status_this_cycle:
             self.command(ask, write, test)
         self._status_this_cycle = False
-        return predicted
+        return expected
 
     # ── commanding ──
 
@@ -378,7 +414,7 @@ class Mind:
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
             remark=self._remark, remark_unit=self._remark_unit, missed=self._missed, aim=self._goal,
-            priors=dict(self._priors),
+            priors=dict(self._priors), field=self._field,
         )
 
     def command(self, ask, write, test) -> None:
@@ -416,13 +452,18 @@ class Mind:
         """An expectation met a mismatch, or no command came: have the model think.
         Once a cycle for a mismatch; `again` is the body waiting. False when the
         model does not think on this."""
-        if self._thought_at == self.frame_calls and not again:
+        if self._thought_at != self.frame_calls:
+            self._thoughts_this_cycle = 0
+        allowed = shifted_count(MIND_THOUGHTS_PER_CYCLE, rising(axis(self._field, ALERTNESS)))
+        if self._thought_at == self.frame_calls and not again and self._thoughts_this_cycle >= allowed:
             return True
         if not self._ready():
             self._pending = on  # what it reads has not come back from memory yet
             return True
         self._pending = None
         self._thought_at = self.frame_calls
+        if not again:
+            self._thoughts_this_cycle += 1
         result = self.model.think(self._context(on))
         if result is None:
             return False
@@ -433,6 +474,8 @@ class Mind:
                 for cue in result.asks:
                     ask(dict(cue))
         self._write(write, list(result.writes))
+        if on == "onlooker":
+            self._answer = tuple(result.answer)
         if result.aim is not None:
             # The aim is the mind's: one stated replaces it; none leaves it held.
             self._hold_aim(result.aim)
@@ -443,7 +486,10 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     """The mind at T5's seam (`PredictRule`): one rule, one mind, every arrival."""
     channels = mind.organs.channels
 
-    def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None):
+    def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None,
+             field=None):
+        # The cycle's field reaches the mind as it reaches every layer (INV-7).
+        mind._field = field
         content = observed.content if isinstance(observed.content, dict) else {}
         channel = content.get("channel")
         payload = _content_value(observed)
@@ -465,4 +511,4 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     return rule
 
 
-__all__ = ["MAX_WAIT_THOUGHTS", "Mind", "expected_report", "mind_rule"]
+__all__ = ["MAX_WAIT_THOUGHTS", "MIND_THOUGHTS_PER_CYCLE", "Mind", "expected_report", "mind_rule"]

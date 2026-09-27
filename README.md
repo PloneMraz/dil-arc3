@@ -168,15 +168,17 @@ now, in dil-core first and then here.
    not bring about what it was for; or for stating an aim when the mind holds
    none. A missed aim sets the mind thinking, but nothing in what is kept
    favours a program whose acts reach the aim.
-8. **With the learning model, the onlooker is heard late and narrowly.** In a
-   cycle the mind commands on the region's status, before the onlooker's remark
-   is heard; it thinks on a remark only when its word changes; and what it makes
-   of one is a single objection to an act in the state it stands in, which its
-   path toward a state with an act not yet taken does not ask.
-9. **The field does not reach this agent's mind.** T5 hands the field to a rule
-   that takes it, as it does every layer; this repository's mind was seated
-   before it could, and does not take it — its thinking is not conditioned by
-   the loop's disposition, as every layer's reading is.
+8. **What the onlooker says reaches no further than the acts it names.** It
+   strikes the mind as a collision, and the mind answers there and then — it
+   objects to the named acts where they were taken and commands again before
+   the body moves. It learns nothing wider from being told: an objection is
+   held while the onlooker says it and lifted when it stops. With motion on,
+   breaking a loop this way can lead the learning model to where its
+   imagination runs out, and from there to a loop of standing still and
+   RESET.
+9. **The language model does not read the field.** The field reaches the mind
+   at T5, and the learning model reads it; the language model's prompt does
+   not show it, so its thinking is not conditioned by the loop's disposition.
 
 Local to this repository, not upstream's.
 

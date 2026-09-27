@@ -818,7 +818,11 @@ class LanguageModel:
                                         "fields": goal["reached_when"].get("status")},
                        "within": goal["within"], "shown": _goal_shown(goal)}
         writes.append(Write(payload=answer, tags=dict(THOUGHT_TAGS), built_from=built_from))
-        return Thinking(writes=writes, asks=asks, aim=aim)
+        # Thought on what the onlooker said and kept a program that acts
+        # otherwise: that program is its answer, and is what the mind's
+        # expectation that the onlooker stops is.
+        answered = (("handle", "program"),) if adopted and on == "onlooker" else ()
+        return Thinking(writes=writes, asks=asks, aim=aim, answer=answered)
 
     def _keep(self, code, fn, propose, built_from) -> list[Write]:
         """The program kept: written anew the first time, a revision after."""

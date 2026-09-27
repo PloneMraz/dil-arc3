@@ -83,6 +83,8 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Any, Callable, Final
 
+from dil.loop.field import ALERTNESS, axis, rising, shifted_count
+
 from ..organs import Act, Organs, Step
 from .base import Context, Expectation, Proposal, Thinking, Write
 from .motion import blocked_by, changed, find_shift, imagine, lift, locate, search
@@ -189,6 +191,12 @@ class MotionRule:
                 "ground": ground, "blocks": sorted(blocks), "thing_cells": size}
 
 
+class Answer:
+    """What it answered an Other's word with — the thought it wrote — as its own
+    handle: the mind's expectation that the Other stops saying it is this datum,
+    and said again, it is scarred."""
+
+
 @dataclass
 class Choice:
     """One command, for the run's report (the trace is `[event]` and the store)."""
@@ -224,7 +232,14 @@ class LearningModel:
         # By scene, (place, act) that moved nothing there: what stopped it is in the
         # scene, so a scene changed — a door opened, a level passed — forgets it.
         self._stuck: dict[str, set[tuple[tuple[int, int], int]]] = {}
-        self._objected: set[tuple[str, Act]] = set()           # (state, act) the onlooker objected to
+        # What the onlooker's word made it object to, by what the word was: (the
+        # grid as it came, act). Held while the onlooker says it; lifted when it
+        # says something else (Plone, 2026-09-27); read under the clock it holds.
+        self._objected: dict[tuple, set[tuple[str, Act]]] = {}
+        # Its answers to each word, while the word stands: the mind's expectation
+        # that the onlooker stops is all of them — the first is the one whose datum
+        # is known by the time the word comes back again.
+        self._answers: dict[tuple, list[Answer]] = {}
         self._cues = dict(priors)        # it reads the task, for its aim
         self.thoughts: list[Choice] = []
         self.holds_off_clock: list[int] = []
@@ -287,31 +302,105 @@ class LearningModel:
 
     def think(self, context: Context) -> Thinking | None:
         """It learns from every return, so a mismatch sets it thinking no further.
-        The onlooker's word does (Plone, 2026-09-27): when it says the agent is
-        repeating itself or going back and forth, the act or acts it names are
-        objected to where the region stands now, and put behind every other while
-        it stands there. What was objected to, and why, is written."""
-        remark = context.remark or {}
-        if context.on != "onlooker" or remark.get("remark") not in ("repeating", "back-and-forth"):
+        The onlooker's word does (Plone, 2026-09-27) — it reaches the mind as a
+        collision, and the mind commands again once it has thought:
+
+          - "repeating" an act, or going "back-and-forth" between two: the acts it
+            names are objected to — where the region stands now, and, for a
+            back-and-forth, at the states the alternation ran through. Said again
+            after it was answered, the objection reaches back over the run the
+            onlooker points at, as far as the field's alertness says (½–1½ of
+            it, within short-term perception);
+          - "standing still": it will act; with nothing else to do, RESET;
+          - anything else, or nothing: what it objected to on an earlier word is
+            lifted.
+
+        An objection puts an act behind every other where it holds; it is taken
+        only when nothing else can be, and never over a way it knows to the aim
+        (H5 (i): the onlooker does not claim to be right). What it objected to,
+        and why, is written; that thought is its answer."""
+        if context.on != "onlooker":
             return None
+        remark = context.remark or {}
+        said = self._said(remark)
+        lifted = self._lift(said)
+        built = (context.seen[-1][1],) if context.seen else ()
+        if context.remark_unit is not None:
+            built = (*built, context.remark_unit)   # what it objected on
+        if said is None or said[0] not in ("repeating", "back-and-forth", "standing still"):
+            if not lifted:
+                return None
+            payload = {"on": "onlooker", "remark": remark, "lifted": lifted}
+            return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
+        again = said in self._objected
+        pairs = self._objecting(remark, context, again)
+        self._objected.setdefault(said, set()).update(pairs)
+        answer = Answer()
+        answers = self._answers.setdefault(said, [])
+        answers.append(answer)
+        payload = {"on": "onlooker", "remark": remark, "here": self._here, "again": again,
+                   "objected": sorted([self._state_of.get(raw, raw), list(act)] for raw, act in pairs)}
+        if lifted:
+            payload["lifted"] = lifted
+        return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=answer, built_from=built)],
+                        answer=tuple(("handle", a) for a in answers))
+
+    # ── what the onlooker's word is, and what it objects to ──
+
+    def _named(self, remark: dict[str, Any]) -> list[Act]:
+        """The acts an onlooker's word names, as the body takes them."""
         named = [remark.get("act")] if remark.get("act") else list(remark.get("acts") or [])
         ids = {name.upper(): a for a, name in self.organs.acts.items()}
-        objected: list[Act] = []
+        out: list[Act] = []
         for said in named:
             if not isinstance(said, dict) or str(said.get("act", "")).upper() not in ids:
                 continue
             a = ids[str(said["act"]).upper()]
-            act = (a, said.get("x"), said.get("y")) if a in self.organs.placed else (a, None, None)
-            if self._here is not None:
-                self._objected.add((self._here, act))
-                objected.append(act)
-        if not objected:
+            out.append((a, said.get("x"), said.get("y")) if a in self.organs.placed else (a, None, None))
+        return out
+
+    def _said(self, remark: dict[str, Any]) -> tuple | None:
+        """What the onlooker says, as one word: its stance and the acts it names —
+        not how long it has said it (a word said again is the same word)."""
+        stance = remark.get("remark")
+        if not stance:
             return None
-        payload = {"on": "onlooker", "remark": remark, "here": self._here, "objected": [list(a) for a in objected]}
-        built = (context.seen[-1][1],) if context.seen else ()
-        if context.remark_unit is not None:
-            built = (*built, context.remark_unit)   # what it objected on
-        return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
+        return (stance, *sorted(self._named(remark)))
+
+    def _lift(self, said: tuple | None) -> list[list[Any]]:
+        """Lift what it objected to on any word the onlooker no longer says (H7 (ii))."""
+        lifted = [list(k) for k in self._objected if k != said]
+        self._objected = {k: v for k, v in self._objected.items() if k == said}
+        self._answers = {k: v for k, v in self._answers.items() if k == said}
+        return lifted
+
+    def _objecting(self, remark: dict[str, Any], context: Context, again: bool) -> set[tuple[str, Act]]:
+        """The (grid as it came, act) pairs a word objects to: the named acts where
+        the region stands now, for a repetition; the steps of the alternation, for
+        a back-and-forth; and, said again, the steps of the run it points at, as
+        far as alertness reaches."""
+        named = set(self._named(remark))
+        pairs: set[tuple[str, Act]] = set()
+        if self._now_raw is not None and remark.get("remark") == "repeating":
+            pairs |= {(self._now_raw, act) for act in named}
+        run = int(remark.get("at_least") or 0)
+        steps = [s for s, _, _ in context.seen]
+        if remark.get("remark") == "back-and-forth":
+            reach = min(run, len(steps)) if run else 0
+        else:
+            reach = 0
+        if again and run:
+            reach = min(len(steps), int(shifted_count(run, rising(axis(context.field, ALERTNESS)))))
+        for step in steps[len(steps) - reach:] if reach else []:
+            act = step.act if step.act[0] in self.organs.placed else (step.act[0], None, None)
+            if act in named:
+                pairs.add((grid_key(step.before), act))
+        return pairs
+
+    def objections(self) -> set[tuple[str, Act]]:
+        """What it objects to now, as (where the region stands, act) under the clock it holds."""
+        return {(self._state_of[raw], act) for held in self._objected.values() for raw, act in held
+                if raw in self._state_of}
 
     # ── where the region stands ──
 
@@ -596,13 +685,17 @@ class LearningModel:
                 out.append(((a, None, None), ("act", a)))
         return out
 
-    def _open_here(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
+    def _open_here(self, here: str, offers: tuple[int, ...],
+                   objected: set[tuple[str, Act]] | None = None) -> list[tuple[Act, tuple]]:
+        objected = self.objections() if objected is None else objected
         return [(act, kind) for act, kind in self._candidates(here, offers)
-                if (here, act) not in self._edges and (here, act) not in self._objected]
+                if (here, act) not in self._edges and (here, act) not in objected]
 
-    def _path(self, start: str, goal: Callable[[str], bool]) -> list[Edge] | None:
+    def _path(self, start: str, goal: Callable[[str], bool],
+              avoid: set[tuple[str, Act]] | frozenset = frozenset()) -> list[Edge] | None:
         """The shortest path it knows from `start` to a state `goal` holds of, by
-        transitions that hold and did not end the region every time; None if none."""
+        transitions that hold and did not end the region every time, and whose
+        first act is none of `avoid` there; None if none."""
         prev: dict[str, Edge | None] = {start: None}
         queue = deque([start])
         while queue and len(prev) < MAX_PATH_NODES:
@@ -617,12 +710,13 @@ class LearningModel:
             for edge in self._out.get(node, {}).values():
                 to = self._state_of[edge.to]
                 if edge.holds and edge.ended < edge.seen and edge.act[0] != self.organs.reset[0] \
-                        and to not in prev:
+                        and to not in prev and not (node == start and (start, edge.act) in avoid):
                     prev[to] = edge
                     queue.append(to)
         return None
 
-    def _plan(self, offers: tuple[int, ...]) -> tuple[Act, str] | None:
+    def _plan(self, offers: tuple[int, ...],
+              objected: set[tuple[str, Act]] | frozenset = frozenset()) -> tuple[Act, str] | None:
         """What its imagination proposes, once it has seen something move: first
         toward what brought the aim before; then an act it has not seen move
         anything, to learn it; then toward a place the thing has not been, or a
@@ -637,14 +731,14 @@ class LearningModel:
             if e is not None and e.holds and not e.changed:
                 stuck.add((self._at, a))   # what it saw here outranks what it imagines
         moves = {a: d for a, d in self._moves.items() if a in offers
-                 and (here, (a, None, None)) not in self._objected}
+                 and (here, (a, None, None)) not in objected}
         if self._goal_colours and moves:
             path = search(self._now, self._pattern, self._at, moves, self._ground, self._blocks,
                           lambda p, onto: bool(onto & self._goal_colours), stuck)
             if path:
                 return (path[0], None, None), f"toward a colour that brought the aim before ({len(path)} steps)"
         unlearned = [a for a in offers if a != o.reset[0] and a not in o.placed and a not in self._moves
-                     and self._actions.get(a, (0, 0, 0))[0] < 3]
+                     and self._actions.get(a, (0, 0, 0))[0] < 3 and (here, (a, None, None)) not in objected]
         if unlearned:
             a = max(unlearned, key=lambda a: (self._action_curiosity(a), -a))
             return (a, None, None), "an act whose effect it has not learned"
@@ -664,14 +758,19 @@ class LearningModel:
         through: list[Edge] = []
         odds: float | None = None
         act: Act | None = None
+        # What the onlooker no longer says is lifted; what it says stands.
+        said = self._said(context.remark or {})
+        lifted = self._lift(said)
+        objected = self.objections()
         if context.ended is not None:
             act, why = self.organs.reset, f"the region has ended ({context.ended})"
         else:
+            # Toward the aim it takes no objection (H5 (i)).
             gained = {self._state_of[e.source] for e in self._edges.values() if e.holds and self._reached(e.status)}
             aim_here = [e for e in self._out.get(here, {}).values() if e.holds and self._reached(e.status)]
             path = None if aim_here or not gained else self._path(here, lambda n: n in gained)
-            opened = self._open_here(here, offers)
-            planned = self._plan(offers) if self.motion else None
+            opened = self._open_here(here, offers, objected)
+            planned = self._plan(offers, objected) if self.motion else None
             if planned is None and self.motion and self._pattern is not None:
                 # What it can foresee it need not try: acts whose motion it knows.
                 opened = [ak for ak in opened if ak[0][0] not in self._moves]
@@ -690,19 +789,38 @@ class LearningModel:
                 self._kind_of[(here, act)] = best[1]
                 why = "not yet taken from here"
             else:
-                path = self._path(here, lambda n: n in self._grid_of and bool(self._open_here(n, offers)))
+                def open_at(n: str) -> bool:
+                    return n in self._grid_of and bool(self._open_here(n, offers, objected))
+
+                # A way whose first act is not objected to here; only if there is
+                # none, one that is (H1).
+                path = self._path(here, open_at, avoid=objected)
+                over = False
+                if not path:
+                    path = self._path(here, open_at)
+                    over = bool(path)
                 if path:
-                    act, why, through = path[0].act, f"toward a state with an act not yet taken ({len(path)} steps)", path
+                    act, through = path[0].act, path
+                    why = f"toward a state with an act not yet taken ({len(path)} steps)" + \
+                        ("; objected to, and no other way" if over else "")
                 elif self._learned_since_reset:
                     act, why = self.organs.reset, "nothing left to try from anywhere it can reach"
                 else:
                     known = [e for e in self._out.get(here, {}).values()
                              if e.act[0] in offers and e.act[0] != self.organs.reset[0]]
-                    known = [e for e in known if (here, e.act) not in self._objected] or known
-                    if known:
-                        least = min(known, key=lambda e: (self._visits.get(self._state_of[e.to], 0), e.seen,
-                                                          e.act[0], e.act[1] or 0, e.act[2] or 0))
+                    free = [e for e in known if (here, e.act) not in objected]
+                    if free:
+                        least = min(free, key=lambda e: (self._visits.get(self._state_of[e.to], 0), e.seen,
+                                                         e.act[0], e.act[1] or 0, e.act[2] or 0))
                         act, why, through = least.act, "all known; toward the state visited least", [least]
+                    elif known:
+                        # Every act it knows here was objected to: the act that is
+                        # always open, before one objected to (H3).
+                        act, why = self.organs.reset, "every act known here was objected to"
+                    elif said is not None and said[0] == "standing still":
+                        # Told it stands still, with nothing to do here: the act that
+                        # is always open, rather than standing on (H6).
+                        act, why = self.organs.reset, "standing still, and nothing else it can do here"
                     else:
                         why = "nothing it can do here"
         self.thoughts.append(Choice(self.frame_calls, act, why, odds))
@@ -711,6 +829,8 @@ class LearningModel:
         if odds is not None:
             choice["odds_of_change"] = round(odds, 3)
         built: list[object] = [self._unit] if self._unit is not None else []
+        if lifted:
+            choice["lifted"] = lifted
         if context.remark and context.remark.get("remark"):
             choice["onlooker"] = context.remark
             if context.remark_unit is not None:
@@ -722,4 +842,4 @@ class LearningModel:
 
 __all__ = ["RULE_TAGS", "MotionRule", "BIG_CHANGE", "CHOICE_TAGS", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW",
            "LEARNED_TAGS", "MAX_CLICK_TARGETS", "MAX_PATH_NODES", "MAX_THING_SHARE",
-           "Choice", "Edge", "LearningModel", "grid_key", "things"]
+           "Answer", "Choice", "Edge", "LearningModel", "grid_key", "things"]

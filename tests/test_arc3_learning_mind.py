@@ -247,9 +247,10 @@ def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
     run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), remark(said))   # its word changed
-    assert (mind.model._here, (2, None, None)) in mind.model._objected
+    assert (mind.model._here, (2, None, None)) in mind.model.objections()
     thought = [d for _, d in of_kind(data, "thought")]
-    assert thought and thought[-1].payload["objected"] == [[2, None, None]], "what was objected to is written"
+    assert thought and thought[-1].payload["objected"] == [[mind.model._here, [2, None, None]]], \
+        "what was objected to, and where, is written"
 
 
 def test_what_the_onlooker_said_is_named_in_what_was_built_from_it():
@@ -264,8 +265,162 @@ def test_what_the_onlooker_said_is_named_in_what_was_built_from_it():
     run(cycle, frame(lit(0), lit(1)), status(), remark(said))                     # quoted by the choice
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
-    thought_id = [k for k, _ in of_kind(data, "thought")][-1]
+    thought_id = sorted(k for k, _ in of_kind(data, "thought"))[0]
     assert "signal-1-2" in written[thought_id], "the thought names the remark it objected on"
     quoting = [k for k, d in of_kind(data, "choice") if d.payload.get("onlooker")]
     assert quoting and all(any(s.endswith("-2") and s.startswith("signal-") for s in written[k]) for k in quoting), \
         "a choice that quotes the onlooker names its remark"
+
+
+# ── the onlooker's word strikes the mind (Plone, 2026-09-27) ──
+
+def _remark(said):
+    from arc3.observe import ONLOOKER_CHANNEL
+    from dil.loop.types import Signal
+    return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
+
+
+QUIET = {"remark": None}
+
+
+def test_the_word_strikes_before_the_body_moves_and_the_mind_commands_again():
+    # From lit(1) the untried act the mind would take is ACTION2 (it tried 1).
+    # The onlooker objects to ACTION2 in the same cycle: the mind thinks and
+    # commands again before the body moves, and the body carries out the last.
+    mind, cycle, data, events = loop(motion=False)
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
+    result = run(cycle, frame(lit(0), lit(1)), status(), _remark(said))
+    moves = [t for t in result.tests]
+    assert len(moves) == 2, "the command it gave on the status, and the one after the word"
+    assert moves[0]["actionId"] == 2 and moves[1]["actionId"] != 2
+    from arc3.command import carry_out
+    from dil.loop.cycle import RespondContext
+    from dil.loop.types import ModField
+    assert carry_out(RespondContext(cycle=1, appraisal=result.appraisal, expectations=(), host=HostCycleInput(
+        signals=(status(affords=(1, 2)),)), field=ModField(), tests=result.tests))["actionId"] == moves[1]["actionId"], \
+        "the body carries out the last"
+
+
+def test_said_again_after_it_was_answered_the_answer_is_scarred():
+    mind, cycle, data, events = loop(motion=False)
+    said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))   # answered here
+    answer_id = sorted(k for k, _ in of_kind(data, "thought"))[0]
+    run(cycle, frame(lit(0), lit(1)), status(), _remark({**said, "at_least": 8}))  # the answer came back
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark({**said, "at_least": 8}))
+    moved = [(r.from_, r.to) for r in events.all() if getattr(r, "activity_kind", None) == "provenance"
+             and r.datum_id == answer_id]
+    assert ("running", "scar") in moved, f"the answer was what the expectation was, and it failed: {moved}"
+
+
+def test_quiet_after_an_answer_is_the_answer_holding_and_lifts_the_objection():
+    mind, cycle, data, events = loop(motion=False)
+    said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    r = run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
+    assert mind.model.objections()
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
+    assert mind.model.objections() == set(), "the onlooker stopped saying it: lifted (H7 (ii))"
+    choices = [d.payload for _, d in of_kind(data, "choice") if d.payload.get("lifted")]
+    assert choices, "what was lifted is written"
+
+
+def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
+    mind, cycle, data, events = loop(motion=False)
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    said = {"remark": "back-and-forth", "acts": [{"act": "ACTION1"}, {"act": "ACTION2"}], "since": 0,
+            "at_least": 4}
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
+    model = mind.model
+    s0, s1 = grid_key(lit(0), model.clock), grid_key(lit(1), model.clock)
+    got = model.objections()
+    assert (s0, (1, None, None)) in got and (s1, (2, None, None)) in got, "each act where it was taken"
+    assert (s0, (2, None, None)) not in got, "not the act that leaves the loop from here"
+
+
+def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
+    from mind.models.learning import Edge
+    mind, cycle, data, events = loop(motion=False)
+    model = mind.model
+    # A known state a with two known ways out, 1 and 2, both to states with an
+    # act not yet taken; 1 objected to at a.
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    here = model._here
+    model._objected[("repeating", (1, None, None))] = {(model._now_raw, (1, None, None))}
+    assert (here, (1, None, None)) in model.objections()
+    first = [e for e in model._out.get(here, {}).values()]
+    path = model._path(here, lambda n: n != here, avoid=model.objections())
+    assert path is None or path[0].act != (1, None, None)
+
+
+def test_every_known_act_objected_to_the_act_that_is_always_open():
+    # Every act at every state known: lit(0) and lit(1), ACTION1 and ACTION2 each.
+    mind, cycle, data, events = loop(motion=False)
+    model = mind.model
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(1), action=1), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
+    run(cycle, frame(lit(0), lit(0), action=2), status(action=2), _remark(QUIET))
+    model._learned_since_reset = False
+    here_raw = model._now_raw
+    said = ("repeating", (1, None, None))
+    model._objected[said] = {(here_raw, (1, None, None)), (here_raw, (2, None, None))}
+    ctx = mind._context("command")
+    ctx.remark = {"remark": "repeating", "act": {"act": "ACTION1"}}
+    proposal, _ = model.propose(ctx)
+    assert proposal.act == model.organs.reset and "objected" in proposal.why, proposal
+
+
+def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_and_it_says_so():
+    mind, cycle, data, events = loop(motion=False)
+    model = mind.model
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
+    # At lit(0): ACTION1 known (to lit(1), where ACTION1 is untried); ACTION2 untried.
+    said = ("repeating", (1, None, None))
+    model._objected[said] = {(model._now_raw, (1, None, None)), (model._now_raw, (2, None, None))}
+    ctx = mind._context("command")
+    ctx.remark = {"remark": "repeating", "act": {"act": "ACTION1"}}
+    proposal, _ = model.propose(ctx)
+    assert proposal.act == (1, None, None) and "no other way" in proposal.why, proposal
+
+
+def test_told_it_stands_still_with_nothing_to_do_it_resets():
+    mind, cycle, data, events = loop(motion=False)
+    model = mind.model
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    model._learned_since_reset = False
+    ctx = mind._context("command")
+    ctx.remark = {"remark": "standing still", "since": 1, "for": 1}
+    ctx.offers = ()
+    proposal, _ = model.propose(ctx)
+    assert proposal.act == model.organs.reset and "standing still" in proposal.why
+
+
+def test_an_objection_survives_the_clock_growing():
+    mind, cycle, data, events = loop(motion=False)
+    model = mind.model
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
+    before = model.objections()
+    model.clock = frozenset({2})
+    model._reindex(())
+    assert {a for _, a in model.objections()} == {a for _, a in before}
+    assert all(state in model._state_of.values() for state, _ in model.objections()), "read under the new clock"
+
+
+def test_the_field_reaches_the_mind_and_alertness_lets_it_think_more_in_a_cycle():
+    from dil.loop.types import ModField
+    from mind.mind import mind_rule
+    mind, cycle, data, events = loop(motion=False)
+    rule = mind_rule(mind)
+    f = ModField(params={"alertness": 1.0}, t=0)
+    rule("x", (), __import__("dil.loop.types", fromlist=["InfoUnit"]).InfoUnit(
+        content={"channel": "none", "value": 1}, ref_frame=__import__("dil.loop.types", fromlist=["RefFrame"]).RefFrame(bound_layer=3, ref="x"), t=0), field=f)
+    assert mind._field is f and mind._context("x").field is f

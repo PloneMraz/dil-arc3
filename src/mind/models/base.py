@@ -71,6 +71,11 @@ class Thinking:
     # "fields"}, "within"} (and anything the model keeps with it). None: it
     # states none, and the mind keeps the aim it held.
     aim: dict[str, Any] | None = None
+    # When it thought on what an Other said: the data that are its answer (its
+    # handles, as in `Write.built_from`). The mind then expects the Other to
+    # stop saying it, and that expectation is these data: said again, they are
+    # scarred. Empty: no answer, and the Other is expected to say what it said.
+    answer: tuple[object, ...] = ()
 
 
 @dataclass
@@ -97,6 +102,9 @@ class Context:
     missed: dict[str, Any] | None
     aim: dict[str, Any] | None
     priors: dict[str, tuple[Any, str | None]]
+    # The cycle's field (INV-7), as every layer reads it: how readily a source is
+    # trusted, how alert to mismatch, how far to explore. None: none reached it.
+    field: Any = None
 
 
 class Model(Protocol):

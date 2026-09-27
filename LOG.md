@@ -3230,3 +3230,63 @@ evidence (1.5) would have read as 0 without a sound.
 - `scripts/field_trace.py` is pinned to `321d9e0` and left as it is.
 - README Findings 2–4 say what holds now; a ninth gap: this repository's mind
   does not take the field.
+
+## 2026-09-28
+
+### The onlooker's word strikes the mind (Plone, 2026-09-27/28)
+
+Plone: the design read like a turn-based game — the remark travelling a long
+way and landing a turn late. A word from outside, once the senses have it,
+strikes the mind directly; the mind takes it in, thinks, and chooses to act
+otherwise then, not by waiting for the word before it acts. And it arrives as a
+mismatch, a ResistEvent, not plain data. A word said again and again must raise
+the mind's attention, not fall silent. Settled with Plone: H5 (i), a known way
+to the aim takes no objection; H7 (ii), an objection is lifted when the onlooker
+says something else. Done:
+
+- **The mind commands again before the body moves.** The body carries out the
+  last test of the cycle; the remark comes after the status the mind first
+  commanded on, and when it collides and the mind thinks, the mind commands
+  again (`mind.on_remark`).
+- **An answer is an expectation.** Having answered a remark, the mind expects
+  the onlooker to stop (`Organs.quiet`), and that expectation is its answer's
+  data (`Thinking.answer`; the learning model's objection thoughts, the language
+  model's program kept on the remark). Said again, or held while the agent keeps
+  doing it, the expectation fails: a ResistEvent, the scar on the remark and on
+  the answers. The learning model keeps every answer to a word while it stands,
+  so from the second collision on the first answer, whose id is known by then,
+  is scarred; the first comes back before its id does, and is not attributed.
+- **Attention.** The field reaches the mind (`mind_rule(..., field=)`); it thinks
+  on failed expectations as often a cycle as alertness allows
+  (`MIND_THOUGHTS_PER_CYCLE`), and the learning model reaches an objection said
+  again over the run the onlooker points at, as far as alertness says.
+- **The onlooker says a back-and-forth again** each `ALTERNATION` more steps,
+  with `at_least`; held, it had let m3-ls20-motion alternate for hundreds of
+  cycles on 13 remarks.
+- **The learning model**: an objection puts an act behind every other at every
+  point of choice (H1: a way whose first act is objected to only when there is
+  no other, and it says so; H3: every known act objected to → RESET; H4: the
+  imagined path's unlearned acts too); a back-and-forth is objected to at the
+  states it ran through (H2); told it stands still with nothing to do, it resets
+  (H6); objections are held by what the onlooker said, lifted when it says
+  otherwise, keyed by the grid as it came and read under the clock (H7). Toward
+  the aim it takes none (H5).
+
+Measured, ls20, 600 cycles, against the m3 stores of 2026-09-27
+(`scripts/onlooker_answers.py`; one run each, not attributed):
+
+| | m3-plain | now | m3-motion | now |
+|---|---|---|---|---|
+| A: body's move in an objection's cycle was the act objected to | 16/40 | 0/32 | 15/19 | 0/57 |
+| B: choices at an objected state that took the objected act | 34/85 | 0/6 | 232/264 | 0/0 |
+| cycles the mind commanded twice | 0 | 52 | 0 | 57 |
+| onlooker collisions | 164 | 99 | 78 | 168 |
+| answers scarred | — | 2/52 | — | 0/57 |
+| level 1 | 515 actions | 377 actions | no | no |
+
+B is counted once per choice; the 1,456 of 1,514 said on 2026-09-27 counted a
+choice once per objection covering it. With motion, the back-and-forth is gone
+and the run reaches where the imagination runs out ("nothing it can do here",
+26 times): standing still, told so, RESET, the same 20 cycles again — the
+motion limit already logged, now reached instead of the loop. Stores in
+`scripts/data/onlooker-strike/` (git-ignored). 327 tests.

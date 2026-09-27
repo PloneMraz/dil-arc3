@@ -142,9 +142,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **The mind commands; the body carries out.** From its program's
   `propose(grid, steps)`, run on where the game stands and the steps it has
   just seen (short-term perception, each with the state and levels the region
-  reported) once the region has said all it says in a cycle — on its status,
-  before the onlooker's remark of the cycle is heard, which reaches the next
-  command; in a cycle the body stood still in, after the remark — the mind
+  reported) once the region has said all it says in a cycle — on its status;
+  in a cycle the body stood still in, after the onlooker's remark — the mind
   pushes the next action as T5's `test`, if the body can carry it out: RESET
   always, any other action the region offers unless the game has ended.
   `src/arc3/command.py` carries it out and weighs nothing. With no such command
@@ -201,8 +200,24 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   it leaves out stay as they were. Where it says nothing, the standing
   expectation holds: the region reports what it reported last.
 - **A mismatch on any channel sets the mind thinking** — the frame, the status,
-  or the onlooker's change of stance — at most once a cycle; a change of the
-  onlooker's stance is thought on even in a cycle already thought in.
+  or what the onlooker says — as many times a cycle as the field's alertness
+  allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full); what the onlooker
+  says is thought on even in a cycle already thought in. The field reaches the
+  mind at T5 as it reaches every layer (INV-7); the learning model reads it (how
+  far an objection reaches), the language model's prompt does not show it.
+- **What an Other says strikes the mind as a mismatch** (Plone, 2026-09-27/28):
+  a ResistEvent, not plain data (§8.4, "a collision read into coordinates by a
+  third party"). The mind expects the Other to say what it said — or, once it
+  has answered a remark, to stop (`Organs.quiet`), and that expectation is its
+  answer's data (`Thinking.answer`). A remark that does not come as expected
+  collides: the scar is on the remark's datum and on what the expectation was
+  — the answer, when the remark is said again after it, or held while the
+  agent keeps doing what it names: the answer did not do what it was for. The
+  mind thinks on the collision there and then and, if it thought, commands
+  again before the body moves; the body carries out the last command of the
+  cycle. The mind does not wait for the Other. The first time a remark comes
+  back, in the cycle right after the answer, the answer's datum id is not yet
+  known, and that one collision is not attributed to it.
 - **The mind always holds an expectation of reaching an aim** (Plone,
   2026-09-25): whatever aim the task it receives has — stated, or worked out and
   said to be its inference. The words are the mind's own prior
@@ -297,18 +312,21 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   meets one resistance source, the frame, and C7 establishes diversity-loss.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
-- **The onlooker's remark reaches behaviour only through the mind.** A change of
-  its stance sets the mind thinking and the model is shown what it says. The
-  language model: a program that acts otherwise and predicts as well is kept. The
-  learning model: the act the onlooker names — repeating, back and forth — is
-  objected to in the state it stands in when it hears, and the thought is
-  written (Plone, 2026-09-27). The objection is asked where it chooses an act
-  not yet taken, imagines a path, or falls back on the acts it knows; a path
-  toward a state with an act not yet taken does not ask it (LOG.md,
-  2026-09-27). It scars only when
-  what it says changes, not at every repeat, so it sets the mind thinking only
-  then — standing still it says anew each moment; a repetition, anew each
-  `REPEAT_AT` more acts.
+- **The onlooker's remark reaches behaviour only through the mind.** It strikes
+  the mind as a collision, and the model is shown what it says. The language
+  model: a program that acts otherwise and predicts as well is kept, and is its
+  answer. The learning model (Plone, 2026-09-27/28): the acts the onlooker names
+  are objected to — for "repeating", where the region stands now; for
+  "back-and-forth", at the states the alternation ran through; said again after
+  it was answered, over the run the onlooker points at, as far as the field's
+  alertness reaches (½–1½ of it, within short-term perception). An objection
+  puts an act behind every other at every point of choice: a way whose first
+  act is objected to is taken only when there is no other, every act known here
+  objected to gives the act that is always open (RESET), and it is said so in
+  the choice. A known way to the aim takes no objection (the onlooker does not
+  claim to be right). Told it stands still with nothing to do, it resets. What
+  it objected to is held while the onlooker says it, and lifted when it says
+  something else or nothing; it is read under the clock it holds.
 - **A cycle the body stood still in is a cycle.** The region returns nothing, the
   host reports only what it hears, and T7 counts no absence of the region
   (nothing was done to it). The mind commands after the onlooker; the body goes
@@ -370,15 +388,18 @@ are below.
     a moment, `for` how many — said again each moment it lasts, a new nudge),
     "repeating" (the same act `REPEAT_AT = 4` times running — **not measured**,
     declared as chosen — `at_least` how many, said again each `REPEAT_AT` more
-    while it lasts: Plone, 2026-09-27) and "back-and-forth" (x y x y). Each
+    while it lasts: Plone, 2026-09-27) and "back-and-forth" (x y x y, `at_least`
+    how many steps, said again each `ALTERNATION = 4` more — declared as
+    chosen: Plone, 2026-09-28). Each
     points at the moment it began. It has no claim of being right: a
     repetition that is getting somewhere is remarked on too.
-  - **The mismatch is between the agent and the onlooker.** The agent's standing
-    expectation is that the onlooker says what it said; a change of stance
-    collides, and the scar is on the remark's datum (`domain: reflection`,
-    `kind: remark`). While it keeps its stance, nothing collides — except that
-    standing still is said anew each moment, and a repetition each `REPEAT_AT`
-    more acts.
+  - **The mismatch is between the agent and the onlooker.** The agent expects
+    the onlooker to say what it said, or, having answered it, to stop; a remark
+    that comes otherwise collides, and the scar is on the remark's datum
+    (`domain: reflection`, `kind: remark`) and on what the expectation was — the
+    answer, when the onlooker keeps saying what was answered. Standing still is
+    said anew each moment, a repetition each `REPEAT_AT` more acts, a
+    back-and-forth each `ALTERNATION` more steps.
   - It returns and does not write; it holds no handle on the agent.
   - `scripts/run_game.py` puts it in the world; `--alone` leaves it out.
 

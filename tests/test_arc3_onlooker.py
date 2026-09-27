@@ -70,7 +70,20 @@ def test_a_repetition_that_lasts_is_said_again_every_repeat_at_more():
 def test_it_reads_an_alternation_as_going_back_and_forth():
     o = Onlooker()
     saw(o, a(3), a(1), a(2), a(1), a(2))
-    assert o.remark() == {"remark": "back-and-forth", "acts": [a(1), a(2)], "since": 1}
+    assert o.remark() == {"remark": "back-and-forth", "acts": [a(1), a(2)], "since": 1, "at_least": 4}
+
+
+def test_a_back_and_forth_that_lasts_is_said_again_each_alternation_more():
+    # Held and never said again, it let the agent go back and forth for hundreds
+    # of cycles with one remark (LOG.md, 2026-09-27).
+    o = Onlooker()
+    saw(o, a(3), a(1), a(2), a(1), a(2))
+    said = [o.remark()]
+    for moment in range(5, 13):
+        o.saw(moment, a(1) if moment % 2 else a(2))
+        said.append(o.remark())
+    assert [r["at_least"] for r in said] == [4, 4, 4, 4, 8, 8, 8, 8, 12]
+    assert {r["since"] for r in said} == {1}
 
 
 def test_standing_still_is_said_again_each_moment_it_lasts():

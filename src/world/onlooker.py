@@ -28,7 +28,9 @@ moment it points at (DECIDE@IMPL tag E, declared, not measured):
     12 (Plone, 2026-09-27: said once, then held, it let ar25 repeat one act 52
     times with no more thought). Between, it holds what it said, so a run the
     agent keeps on purpose is not stopped at every act;
-  - "back-and-forth": two acts alternating, x y x y.
+  - "back-and-forth": two acts alternating, x y x y, and `at_least` how many
+    steps of it: said again each ALTERNATION more, as a repetition is (Plone,
+    2026-09-27: a nudge held and repeated must reach the agent, not fall silent).
 
 Otherwise nothing. A remark is its view, with no claim of being right: a
 repetition that is getting somewhere is remarked on too, and what to make of it
@@ -46,7 +48,8 @@ from typing import Any, Final
 # repeating itself, and how many more before it says so again. NOT MEASURED:
 # declared as chosen.
 REPEAT_AT: Final = 4
-# An alternation is read over the last four acts: x y x y.
+# An alternation is read over the last four acts: x y x y; said again each
+# ALTERNATION more steps while it lasts. NOT MEASURED: declared as chosen.
 ALTERNATION: Final = 4
 
 Act = Any  # whatever the world shows of an act; None for a moment with none
@@ -81,7 +84,8 @@ class Onlooker:
                     "at_least": len(run) // REPEAT_AT * REPEAT_AT}
         alt = _alternation_run(acts)
         if len(alt) >= ALTERNATION:
-            return {"remark": "back-and-forth", "acts": [alt[0][1], alt[1][1]], "since": alt[0][0]}
+            return {"remark": "back-and-forth", "acts": [alt[0][1], alt[1][1]], "since": alt[0][0],
+                    "at_least": len(alt) // ALTERNATION * ALTERNATION}
         return {"remark": None}
 
 

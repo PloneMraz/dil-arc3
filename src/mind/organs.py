@@ -77,6 +77,10 @@ class Organs:
     # Keys of a report's payload that carry the agent's own act, not the region's
     # word: not expected back (tag H).
     own_keys: tuple[str, ...] = ()
+    # What an Other's word is when it has nothing to say, from what it last said:
+    # what the mind expects once it has answered a remark (it should stop). None:
+    # the host does not say, and the mind expects the Other to say what it said.
+    quiet: "Callable[[dict[str, Any]], dict[str, Any]] | None" = None
 
     def name(self, act: Act | None) -> str:
         """An act as a model reads it."""
