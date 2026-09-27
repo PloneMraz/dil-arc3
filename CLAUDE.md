@@ -162,7 +162,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   (Plone, 2026-09-27: a capability of the program, not a strategy). It enters
   through the tagging-gate, the mind recalls it at its first arrival (a thought
   before it waits for it), and every program names it in `built_from`.
-- **The mind reads by asking; nothing is poured into it.** It may read anything
+- **The mind reads by asking; nothing is poured into it** — the language model
+  (Plone, 2026-09-27: this rule and the next are for it). It may read anything
   in the store, and the model chooses what: `ASK {...}` lines in its answer, a
   cue by any tag key and `provenance` — frames, statuses, the onlooker's remarks,
   the rules it was told, scars or not. No cue is written into the code; until
@@ -182,6 +183,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   the steps just seen, each with what the region reported of itself that cycle.
   The mind thinks from what the store answered, those steps, and what the
   onlooker says now — bounded, never the whole history.
+- **The learning model keeps what it learned** (Plone, 2026-09-27, in place of the
+  two rules above for it). It is shown every step as it comes (`observe`) and
+  holds all it learned — its transitions, the clock, how things move, its counts —
+  as it learned it, one step at a time (INV-5: accrued, never loaded). All of it
+  is in the store and `[event]`, written as it was learned; it does not read back
+  what it holds. The mind's right to read the store is the same for it: whatever
+  it asks, the mind asks, and the answer reaches it.
 - **The program predicts what the region returns**: the next grid and, when it
   says so, the region's status (`{"grid": ..., "status": {...}}`); status fields
   it leaves out stay as they were. Where it says nothing, the standing
@@ -261,6 +269,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 
 ### Open in the current design
 
+- **A scar of the learning model is almost always the clock's.** It does not
+  predict the clock, so where a region keeps one, an expectation from a
+  transition fails on the clock's rows alone, and the transition's datum is
+  scarred for it (Kaggle, 300 cycles: ls20 held 4 of 299 whole and 125 off the
+  clock; vc33 3 and 203). Where there is no clock, most scars fall on steps it had
+  no expectation of its own for. So in `[event]` its scars do not read as
+  refutations; a refutation is a datum of its own (a transition that no longer
+  holds). Open: learning how the clock runs, and predicting it. The paper is to
+  say so.
+
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
   arise here. Open in dil-core too.
@@ -275,8 +293,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
 - **The onlooker's remark reaches behaviour only through the mind.** A change of
-  its stance sets the mind thinking and the model is shown what it says; a
-  program that acts otherwise and predicts as well is kept. It scars only when
+  its stance sets the mind thinking and the model is shown what it says. The
+  language model: a program that acts otherwise and predicts as well is kept. The
+  learning model: the act the onlooker names — repeating, back and forth — is put
+  behind every other where the region stands, and the thought is written
+  (Plone, 2026-09-27; until then it had no effect on it). It scars only when
   what it says changes, not at every repeat, so it sets the mind thinking only
   then — standing still it says anew each moment; a repetition, anew each
   `REPEAT_AT` more acts.

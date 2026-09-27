@@ -90,7 +90,9 @@ class Context:
     offers: tuple[int, ...]
     ended: str | None
     remark: dict[str, Any] | None
-    missed: str | None
+    # What did not come, when an expectation of a want or an aim failed:
+    # {"what": ..., and the part or fields wanted and what came}.
+    missed: dict[str, Any] | None
     aim: dict[str, Any] | None
     priors: dict[str, tuple[Any, str | None]]
 

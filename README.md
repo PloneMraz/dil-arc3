@@ -89,7 +89,8 @@ first, below, is the one the submitted run used. The second learns from nothing
 it takes as data, expects from what it learned, finds the clock a region keeps
 whatever is done, and chooses by curiosity — what it knows least — and by the
 paths it knows. Offline it completed level 1 of ls20 (400 cycles) and vc33; on
-Kaggle, four games at once in about seven minutes, vc33's level 1 (LOG.md).
+Kaggle, four games at once: vc33's level 1 in 300 cycles, and ls20's too in 600
+(LOG.md).
 
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the game: what it knows of a game is

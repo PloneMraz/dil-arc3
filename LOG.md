@@ -2878,3 +2878,61 @@ Same code as version 3, 600 cycles, four games at once. The four took 1,061 s of
   (~31,000 s after start-up): at these four games' mean (811 s a game) about
   22,300 s (6.2 h); were every game as slow as sk48, about 28,900 s (8.0 h). A
   game that does not fit is not started, and scores nothing.
+
+### Reading motion — tried, worse on ls20 so far; a review's seven points (Plone, same day)
+
+Plone asked for the learning model to compute more. The diagnosis: it keeps
+what an act did in one exact state and nothing carries over, so almost every
+step reaches a new state (ar25 497 states in 600 steps). A first step toward
+generalising, `mind/models/motion.py`: a thing that moves is the cells that turn
+up a fixed displacement away (read from one step; ls20's piece is two colours
+and moves five cells); from that, what each act does to it, what it moves on,
+what stops it; and a search, in imagination, for a place it has not been.
+
+Measured here, 600 cycles:
+
+| run | level | actions to level 1 |
+|---|---|---|
+| ls20, without motion | 1 | 515 |
+| ls20, with motion | 0 | — |
+| vc33, with motion (it only clicks) | 1 | 81 |
+
+- A first version asked ACTION1 306 times in a row: what it would move onto was a
+  colour it had once moved onto and its own colour, so nothing new counted as a
+  stop, and the imagined place stayed "not reached". Now an act that moved
+  nothing from a place is not imagined from there again, and the transition
+  learned there outranks what is imagined (Plone's review, point 1).
+- Still worse: its imagination runs out after 49 steps. Counted in both ls20
+  runs: without motion it met 48 places of the piece in 12 scenes (the grid with
+  the piece lifted and the clock off), 123 pairs; with motion 36 places in 4
+  scenes. Touching things changes the scene, and "a place not yet reached"
+  ignores it; it also stops before any colour it does not know.
+- So `motion` is off by default (`run_game.py --motion` turns it on).
+
+Plone's review, and what was done:
+
+1. The loop above (fixed as said).
+2. The onlooker had no effect on the learning model. Now an act it says is
+   repeated, or gone back and forth with, is put behind every other where the
+   region stands, and the thought is written.
+3. Its scars are almost always the clock's (Kaggle, 300 cycles: ls20 held 4 of
+   299 whole, 125 off the clock; vc33 3 and 203; "no longer holding" 0 but for
+   one in ls20 at 600). Said in the docstring, in CLAUDE.md's open items, and to
+   be said in the paper.
+4. "Reads by asking" and "short-term perception, never the whole history" are
+   the language model's; the learning model keeps what it learned, all of it in
+   the store (Plone chose this). The mind's right to read the store is the same
+   for both.
+5. Nothing is revised in place any more: a transition that no longer holds, and
+   each version of what it learned of motion, is a new datum built from the one
+   before (Plone chose this), so the scar rhythm alone keeps every version.
+6. README: ls20 completed level 1 on Kaggle too, at 600 cycles.
+7. Where it stands after the clock grows is read from the latest grid, not from
+   the edge just taken; the aim is counted each time it comes, as tries are;
+   `Context.missed` is typed as the dict it is.
+
+Also seen: with the onlooker now heard, ls20 without motion took 515 actions to
+its first level here, where it had completed it within 400 cycles before. One
+run each; not attributed.
+
+289 tests.
