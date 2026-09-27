@@ -2549,3 +2549,20 @@ Plone passed on a review; each point checked against the repository and held.
   when time ran out it printed "server ready" and went on. It now fails, as the
   flash-next wait does; both variants build and parse. A line of CLAUDE.md that
   the onlooker edit left at 95 characters is rewrapped.
+
+### v12 scored: 0.00 (2026-09-27)
+
+Submission `56588469` (notebook version 12, code `3b31806`, submitted 2026-09-26
+20:42:04 UTC) is COMPLETE, public score **0.00**, first seen at 05:34 UTC; it was
+PENDING at 05:24. The starter kit's random agent scored 0.02 (`56462757`).
+
+- What the scored rerun did cannot be read: Kaggle shows no log of it. How many
+  of the games it reached before the deadline, and whether any stood still, is
+  not known.
+- 0.00 is shown to two decimals, so it does not by itself show that no level was
+  completed; it shows the score is below 0.005.
+- It is below the random agent's. The random agent takes up to 80 actions a game
+  and resets on `GAME_OVER`; the offline runs of this code kept to one or two
+  actions over long runs. Not a measurement of the scored run.
+- Completing the run is itself the first check of the gateway path: one
+  scorecard driven from several processes through one arcade was accepted.

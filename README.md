@@ -29,8 +29,9 @@ that — each question, the program entering at `nascent`, each revision, what
 each version was built from, each scar it met and each return to use — is in
 `[event]`, and a checker reads it back.
 
-**What is measured of the one mind so far**: one scored run submitted (notebook
-version 12, code `3b31806`), its score not yet returned. In every offline run of
+**What is measured of the one mind so far**: one scored run (notebook version
+12, code `3b31806`): public score **0.00**, against 0.02 for the starter kit's
+random agent. In every offline run of
 four games (60 cycles each, on Kaggle), no level. The program predicts much of
 what the region returns — 55 of 60 frames in one `ls20` run — and the mind holds
 an aim it inferred and meets it when it falls due. Behaviour turns, but reaches
