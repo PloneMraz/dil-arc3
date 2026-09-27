@@ -59,8 +59,6 @@ ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
-ap.add_argument("--motion", action="store_true",
-                help="the learning model reading motion (mind/models/motion.py): off by default, worse on ls20 so far")
 ap.add_argument("--mind", choices=("language", "learning"), default="language",
                 help="which mind sits in the one seat: the language model's (mind.py), or the one that "
                      "learns from nothing (mind/models/learning.py)")
@@ -94,7 +92,7 @@ LEARNING = a.mind == "learning"
 if LEARNING:
     # The one mind, neutral, thinking with a model that learns from nothing; the
     # host declares its organs, and the model reads the task for its aim.
-    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}, motion=a.motion), ARC_ORGANS)
+    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
     seat = seat_rule(mind)
 else:
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))

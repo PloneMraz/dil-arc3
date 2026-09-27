@@ -3290,3 +3290,23 @@ and the run reaches where the imagination runs out ("nothing it can do here",
 26 times): standing still, told so, RESET, the same 20 cycles again — the
 motion limit already logged, now reached instead of the loop. Stores in
 `scripts/data/onlooker-strike/` (git-ignored). 327 tests.
+
+### Motion removed (Plone, same day)
+
+Every ls20 run with motion, 600 cycles, ended at level 0 (motion-ls20,
+m3-ls20-motion, onlooker-strike/motion); every one without it passed level 1
+(515 and 377 actions here, and the 600-cycle Kaggle run). vc33 passed with it,
+but motion read only acts without a place and vc33 has only ACTION6, so it never
+ran there. Why it did not help, as measured: its imagination took the scene as
+fixed while touching things changes it (36 places in 4 scenes against 48 in 12
+without it); it stopped before any colour it did not know; it put aside the
+acts whose motion it could foresee, the very branch that got the run without it
+through; and where the imagination ran out it had no way on — a back-and-forth
+before the onlooker struck, a loop of standing still and RESET after.
+
+Plone chose to remove it rather than keep an unused branch the paper would have
+to explain. `mind/models/motion.py`, the learning model's motion state, rule,
+expectation, planning and `_stuck`, `run_game.py --motion`, and five tests are
+gone; git keeps them (last at `f111572`). A learning model with motion off
+behaved exactly as this one, so no run changes. ls20, 60 cycles, runs as
+before. 322 tests.

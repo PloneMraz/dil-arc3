@@ -52,15 +52,15 @@ def status(state="NOT_FINISHED", levels=0, action=1, affords=(1, 2)) -> Signal:
     })
 
 
-def create_mind(motion: bool = True) -> Mind:  # the tests read motion unless told not to
-    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}, motion=motion), ARC_ORGANS)
+def create_mind() -> Mind:
+    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
     # What it reads, handed in as if recalled: the in-memory store admits no prior.
     mind.receive("task", MIND_TASK.payload, None)
     return mind
 
 
-def loop(motion: bool = True):
-    mind = create_mind(motion)
+def loop():
+    mind = create_mind()
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
@@ -96,7 +96,7 @@ def test_what_it_takes_it_learns_as_data_built_from_the_frame_and_report():
 
 
 def test_it_commands_an_act_not_yet_taken_and_says_why():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     result = run(cycle, frame(lit(0), lit(1)), status())
     # From lit(1) nothing is known: both acts are untried; ACTION1 changed the
     # state once, ACTION2 never tried — the less known is the more wanted.
@@ -120,7 +120,7 @@ def test_an_act_taken_again_is_expected_as_learned_and_the_expectation_is_the_da
 
 
 def test_the_same_act_giving_something_else_scars_the_datum_and_it_no_longer_holds():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(2)), status())          # the same act, from the same state, elsewhere
@@ -168,73 +168,11 @@ def test_clicking_that_never_did_anything_is_wanted_less_whatever_is_left_to_cli
     # ar25 and sk48 on Kaggle: 0 of ~200 clicks changed anything, and each new
     # thing to click was a new kind, so clicking went on (LOG.md). The action is
     # chosen first, over every kind of it.
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     mind.model._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
     mind.model._kinds = {("act", 1): [5, 5, 0]}
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 6)))
     assert mind.commands[-1][1][0] == 1, "the action that changes things, not an untried click"
-
-
-# ── motion ──
-
-
-def test_it_reads_a_thing_moving_and_what_stops_it():
-    from mind.models.motion import find_shift
-    before = [[3, 3, 3, 4], [3, 9, 3, 4], [3, 3, 3, 4]]
-    after = [[3, 3, 3, 4], [3, 3, 9, 4], [3, 3, 3, 4]]
-    shift = find_shift(before, after, frozenset())
-    assert shift.by == (0, 1) and shift.pattern == ((0, 0, 9),) and shift.at == (1, 2) and shift.ground == 3
-    mind, cycle, data, events = loop()
-    run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
-    assert mind.model._moves == {1: (0, 1)}
-    rule = [d for _, d in of_kind(data, "rule")]
-    assert rule and rule[0].payload["moves"] == {"1": [0, 1]}, "what it learned of motion is written"
-    run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # the wall: nothing moved
-    assert mind.model._blocks == {4}, "what it would have moved onto stops it"
-
-
-def test_it_imagines_its_way_to_a_place_it_has_not_been():
-    from mind.models.motion import search
-    grid = [[3, 3, 3], [3, 9, 3], [3, 3, 3]]
-    moves = {1: (0, 1), 2: (0, -1), 3: (-1, 0), 4: (1, 0)}
-    seen = {(1, 1), (1, 2), (1, 0), (0, 1)}
-    path = search(grid, ((0, 0, 9),), (1, 1), moves, 3, set(), lambda p, onto: p not in seen)
-    assert path == [4], "down is the one way to somewhere new"
-
-
-def test_what_it_learns_of_motion_is_added_version_by_version_never_revised():
-    before = [[3, 3, 3, 4], [3, 9, 3, 4], [3, 3, 3, 4]]
-    after = [[3, 3, 3, 4], [3, 3, 9, 4], [3, 3, 3, 4]]
-    mind, cycle, data, events = loop()
-    run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
-    run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # the wall: a second version
-    rules = sorted((d.payload["version"], d.payload["blocks"]) for _, d in of_kind(data, "rule"))
-    assert rules == [(1, []), (2, [4])], "each version a datum of its own"
-    assert [r for r in events.all() if getattr(r, "activity_kind", None) == "revision"] == []
-
-
-def test_an_act_that_moved_nothing_from_a_place_is_not_imagined_from_there_again():
-    before = [[3, 3, 3, 3], [3, 9, 3, 3], [3, 3, 3, 3]]
-    after = [[3, 3, 3, 3], [3, 3, 9, 3], [3, 3, 3, 3]]
-    mind, cycle, data, events = loop()
-    run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
-    model = mind.model
-    run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # nothing moved, nothing to blame
-    assert ((1, 2), 1) in model._stuck[model._scene(after, (1, 2))], "the place and the act, whatever the colours say"
-
-
-def test_what_stopped_it_in_one_scene_does_not_stop_it_in_another():
-    before = [[3, 3, 3, 3], [3, 9, 3, 3], [3, 3, 3, 3]]
-    after = [[3, 3, 3, 3], [3, 3, 9, 3], [3, 3, 3, 3]]
-    opened = [[3, 3, 3, 5], [3, 3, 9, 3], [3, 3, 3, 3]]   # something else in the grid changed
-    mind, cycle, data, events = loop()
-    run(cycle, frame(before, after, action=1), status(affords=(1, 2)))
-    model = mind.model
-    run(cycle, frame(after, after, action=1), status(affords=(1, 2)))   # stuck here, in this scene
-    assert ((1, 2), 1) in model._stuck[model._scene(after, (1, 2))]
-    assert ((1, 2), 1) not in model._stuck.get(model._scene(opened, (1, 2)), set()), \
-        "the same place in a changed scene is not held stuck"
-    assert model._scene(after, (1, 2)) == model._scene(before, (1, 1)), "the thing itself is not the scene"
 
 
 def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
@@ -243,7 +181,7 @@ def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
     def remark(said):
         return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
 
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), remark(said))   # its word changed
@@ -258,7 +196,7 @@ def test_what_the_onlooker_said_is_named_in_what_was_built_from_it():
     def remark(said):
         return Signal(source_id=ONLOOKER_CHANNEL, t=1, raw_payload={"entity": "onlooker", **said})
 
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), remark(said))   # heard in cycle 1
@@ -287,7 +225,7 @@ def test_the_word_strikes_before_the_body_moves_and_the_mind_commands_again():
     # From lit(1) the untried act the mind would take is ACTION2 (it tried 1).
     # The onlooker objects to ACTION2 in the same cycle: the mind thinks and
     # commands again before the body moves, and the body carries out the last.
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     result = run(cycle, frame(lit(0), lit(1)), status(), _remark(said))
@@ -303,7 +241,7 @@ def test_the_word_strikes_before_the_body_moves_and_the_mind_commands_again():
 
 
 def test_said_again_after_it_was_answered_the_answer_is_scarred():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))   # answered here
@@ -316,7 +254,7 @@ def test_said_again_after_it_was_answered_the_answer_is_scarred():
 
 
 def test_quiet_after_an_answer_is_the_answer_holding_and_lifts_the_objection():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     r = run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
@@ -329,7 +267,7 @@ def test_quiet_after_an_answer_is_the_answer_holding_and_lifts_the_objection():
 
 
 def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
@@ -345,7 +283,7 @@ def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
 
 def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
     from mind.models.learning import Edge
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     model = mind.model
     # A known state a with two known ways out, 1 and 2, both to states with an
     # act not yet taken; 1 objected to at a.
@@ -360,7 +298,7 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
 
 def test_every_known_act_objected_to_the_act_that_is_always_open():
     # Every act at every state known: lit(0) and lit(1), ACTION1 and ACTION2 each.
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     model = mind.model
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(1), action=1), status(), _remark(QUIET))
@@ -377,7 +315,7 @@ def test_every_known_act_objected_to_the_act_that_is_always_open():
 
 
 def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_and_it_says_so():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     model = mind.model
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
@@ -391,7 +329,7 @@ def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_
 
 
 def test_told_it_stands_still_with_nothing_to_do_it_resets():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     model = mind.model
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     model._learned_since_reset = False
@@ -403,7 +341,7 @@ def test_told_it_stands_still_with_nothing_to_do_it_resets():
 
 
 def test_an_objection_survives_the_clock_growing():
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     model = mind.model
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
@@ -418,7 +356,7 @@ def test_an_objection_survives_the_clock_growing():
 def test_the_field_reaches_the_mind_and_alertness_lets_it_think_more_in_a_cycle():
     from dil.loop.types import ModField
     from mind.mind import mind_rule
-    mind, cycle, data, events = loop(motion=False)
+    mind, cycle, data, events = loop()
     rule = mind_rule(mind)
     f = ModField(params={"alertness": 1.0}, t=0)
     rule("x", (), __import__("dil.loop.types", fromlist=["InfoUnit"]).InfoUnit(

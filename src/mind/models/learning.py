@@ -17,9 +17,9 @@ the step and the report it came in. It keeps, per kind of act, how often it was
 tried, how often it changed where the region stands, and how often the aim came
 of it: a kind of act is an act, or for an act that takes a place the colour and
 size of the thing it was put on. Those counts are held, not written, as are how
-often a transition was taken and ended the region, the states it visited, and
-(reading motion) where the thing has been and been stuck: they follow from the
-observations in the store only when those are replayed through it, in order.
+often a transition was taken and ended the region, and the states it visited:
+they follow from the observations in the store only when those are replayed
+through it, in order.
 
 HOW IT READS A GRID — its own perception, declared, not measured, naming no game:
 
@@ -43,8 +43,8 @@ alone, and the datum is scarred for that: in `[event]` a scar of this model is,
 almost always, the clock, not a refutation (Kaggle, 300 cycles: ls20 held 4 of
 299 whole, 125 off the clock). Only when the same act from the same state gives
 another state off the clock is the transition refuted: said in a new datum. For
-an act not taken from here, it makes no expectation of its own, unless it has
-seen something move (below): the standing one holds, held by no datum of its.
+an act not taken from here, it makes no expectation of its own: the standing one
+holds, held by no datum of its.
 
 WHAT IT DOES NEXT, in this order:
 
@@ -65,9 +65,10 @@ WHAT IT DOES NEXT, in this order:
      otherwise the known act toward the state it has visited least.
 
 THE ONLOOKER. It does not think on a mismatch — it learns from every return —
-but it thinks on the onlooker's word: an act the onlooker says it keeps
-repeating, or goes back and forth with, is objected to where it stands, and put
-behind every other act there; the thought is written (`kind: thought`).
+but it thinks on the onlooker's word, which strikes the mind as a collision: the
+acts it names are objected to (see `think`), put behind every other at every
+point of choice, never over a known way to the aim, and lifted when the onlooker
+says something else; the thought is written (`kind: thought`), and is its answer.
 
 When the region has ended, the act that is always open. Each choice is written
 (`kind: choice`): what it chose, why, the odds it gave a change, and what it was
@@ -87,14 +88,12 @@ from dil.loop.field import ALERTNESS, axis, rising, shifted_count
 
 from ..organs import Act, Organs, Step
 from .base import Context, Expectation, Proposal, Thinking, Write
-from .motion import blocked_by, changed, find_shift, imagine, lift, locate, search
 
 Grid = list[list[int]]
 
 LEARNED_TAGS: Final = {"domain": "mind", "kind": "transition", "object": "frame", "source": "mind"}
 CHOICE_TAGS: Final = {"domain": "mind", "kind": "choice", "source": "mind"}
 CLOCK_TAGS: Final = {"domain": "mind", "kind": "clock", "object": "frame", "source": "mind"}
-RULE_TAGS: Final = {"domain": "mind", "kind": "rule", "object": "frame", "source": "mind"}
 THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
 # What an act that takes a place may be put on. DECLARED, not measured.
@@ -173,24 +172,6 @@ class Edge:
                 "changed": self.changed, "status": self.status, "holds": self.holds}
 
 
-class MotionRule:
-    """What it learned of how things move — by how much each act moves the thing
-    that moves, the ground it moves on, the colours that stop it. Each time it
-    learns more, a new version is written as a datum of its own, built from the
-    version before: nothing is revised in place, so every version is in the store
-    and `[event]`, not only in a snapshot (Plone, 2026-09-27). Each version is its
-    own handle; the expectations it makes are the latest."""
-
-    def __init__(self, version: int = 0) -> None:
-        self.version = version
-        self.written = False
-
-    def payload(self, moves: dict[int, tuple[int, int]], ground: int | None, blocks: set[int],
-                size: int) -> dict[str, Any]:
-        return {"version": self.version, "moves": {str(a): list(d) for a, d in sorted(moves.items())},
-                "ground": ground, "blocks": sorted(blocks), "thing_cells": size}
-
-
 class Answer:
     """What it answered an Other's word with — the thought it wrote — as its own
     handle: the mind's expectation that the Other stops saying it is this datum,
@@ -211,27 +192,9 @@ class LearningModel:
     """The one mind's computing, learning: it expects from what it learned, is
     curious about what it has not, and proposes the body's next act."""
 
-    def __init__(self, organs: Organs, priors: dict[str, dict[str, str]], motion: bool = False) -> None:
+    def __init__(self, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
         self.organs = organs
-        # Whether it reads motion (`motion.py`). Off by default: on ls20 it did
-        # worse than without (LOG.md, 2026-09-27); kept to work on.
-        self.motion = motion
-        self._moves: dict[int, tuple[int, int]] = {}         # act -> how far it moves the thing
-        self._move_counts: dict[int, dict[tuple[int, int], int]] = {}
-        self._pattern: tuple | None = None                     # the thing that moves, as it looks
-        self._at: tuple[int, int] | None = None                # its top-left, in the latest grid
-        self._ground: int | None = None
-        self._blocks: set[int] = set()
-        self._touched: set[int] = set()
-        self._goal_colours: set[int] = set()
-        self._places: set[tuple[int, int]] = set()             # where the thing has been, this level
-        self._onto: set[int] = set()                           # what the last act moved it onto
-        self._rule = MotionRule()
-        self._now: Grid | None = None                          # the latest grid
-        self._now_raw: str | None = None                       # its own key
-        # By scene, (place, act) that moved nothing there: what stopped it is in the
-        # scene, so a scene changed — a door opened, a level passed — forgets it.
-        self._stuck: dict[str, set[tuple[tuple[int, int], int]]] = {}
+        self._now_raw: str | None = None                       # the latest grid's own key
         # What the onlooker's word made it object to, by what the word was: (the
         # grid as it came, act). Held while the onlooker says it; lifted when it
         # says something else (Plone, 2026-09-27); read under the clock it holds.
@@ -418,10 +381,6 @@ class LearningModel:
             self._grid_of.setdefault(state, raw)
         return raw
 
-    def _scene(self, grid: Grid, at: tuple[int, int]) -> str:
-        """The scene the thing moves in: the grid with it lifted off, off the clock."""
-        return grid_key(lift(grid, self._pattern, at, self._ground), self.clock)
-
     def _state_key(self, raw: str) -> str:
         return self._state_of[raw]
 
@@ -477,16 +436,6 @@ class LearningModel:
             self._expected = state
             return Expectation(state=state, fields=dict(known.status) if known.status else None,
                                held=(("handle", known),), by_model=True)
-        by = self._moves.get(step.act[0]) if self.motion else None
-        if by is not None and self._pattern is not None and self._at is not None and self._ground is not None:
-            out, onto = blocked_by(step.before, self._pattern, self._at, by, self._ground)
-            if out or onto & self._blocks:
-                state = [row[:] for row in step.before]
-            else:
-                state = imagine(step.before, self._pattern, self._at, by, self._ground)
-            self._expected = state
-            held = (("handle", self._rule),) if self._rule.written else ()
-            return Expectation(state=state, held=held, by_model=True)
         self._expected = [row[:] for row in step.before]
         return Expectation(state=self._expected, by_model=False)
 
@@ -533,70 +482,7 @@ class LearningModel:
         elif known is None:
             self._learned_since_reset = True
         writes += self._learn_clock(step, kind, unit)
-        if self.motion:
-            writes += self._learn_motion(step, act, unit)
-        self._now = step.after
         return writes
-
-    def _learn_motion(self, step: Step, act: Act, unit: Any) -> list[Write]:
-        """What the act did to the thing that moves (`motion.py`)."""
-        o = self.organs
-        before, after = step.before, step.after
-        known = self._moves.get(act[0])
-        self._onto = set()
-        if known is not None and self._pattern is not None and self._at is not None and self._ground is not None:
-            _, self._onto = blocked_by(before, self._pattern, self._at, known, self._ground)
-        if act[0] == o.reset[0] or act[0] in o.placed:
-            if self._pattern is not None:
-                self._at = locate(after, self._pattern, near=self._at)
-            return []
-        learned = False
-        place = self._at
-        shift = find_shift(before, after, self.clock)
-        if shift is not None:
-            counts = self._move_counts.setdefault(act[0], {})
-            counts[shift.by] = counts.get(shift.by, 0) + 1
-            most = max(counts.items(), key=lambda kv: (kv[1], kv[0]))[0]
-            if self._moves.get(act[0]) != most:
-                self._moves[act[0]] = most
-                learned = True
-            if self._ground != shift.ground:
-                learned = learned or self._ground is not None
-            self._touched |= self._onto
-            if self._blocks & self._onto:
-                self._blocks -= self._onto  # it moved onto it: it does not stop it
-                learned = True
-            self._pattern, self._at, self._ground = shift.pattern, shift.at, shift.ground
-            self._places.add(shift.at)
-        elif known is not None and self._pattern is not None and self._at is not None \
-                and not changed(before, after, self.clock):
-            # It did not move: what it would have moved onto stops it — unless a
-            # colour already known to stop it was there, which says why; never
-            # its own colours, nor one it has moved onto (LOG.md: on ls20 a wall
-            # beside two other colours made all three walls, and it shut itself in).
-            own = {v for _, _, v in self._pattern}
-            new = set() if self._onto & self._blocks else self._onto - self._touched - own
-            if new:
-                self._blocks |= new
-                learned = True
-        elif self._pattern is not None:
-            self._at = locate(after, self._pattern, near=self._at)
-            if self._at is not None:
-                self._places.add(self._at)
-        if shift is None and known is not None and place is not None and self._at == place:
-            # It did not move from here: whatever the colours say, this act does not
-            # take it anywhere from this place (LOG.md: on ls20, a colour it had
-            # moved onto once stood ahead, nothing new was learned, and it asked the
-            # same act 306 times). Only in this scene.
-            self._stuck.setdefault(self._scene(after, place), set()).add((place, act[0]))
-        if not learned or self._pattern is None:
-            return []
-        before_rule = self._rule
-        self._rule = MotionRule(before_rule.version + 1)
-        self._rule.written = True
-        payload = self._rule.payload(self._moves, self._ground, self._blocks, len(self._pattern))
-        built = (unit, ("handle", before_rule)) if before_rule.written else (unit,)
-        return [Write(payload=payload, tags=dict(RULE_TAGS), handle=self._rule, built_from=built)]
 
     def _learn_report(self, report: dict[str, Any] | None, units: tuple[Any, ...]) -> list[Write]:
         edge = self._last
@@ -618,12 +504,6 @@ class LearningModel:
             # Counted each time, as tries are (it was counted only on a new edge).
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
             self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
-        if self.motion and self._reached(said) and edge.act[0] != self.organs.reset[0]:
-            # What the thing was moved onto when the aim came: what to seek next.
-            self._goal_colours |= self._onto
-            self._places = set()
-            if self._pattern is not None and self._now is not None:
-                self._at = locate(self._now, self._pattern, near=self._at)
         if self._last_new and not edge.written:
             writes += self._write_edge(edge, units)
         return writes
@@ -715,41 +595,6 @@ class LearningModel:
                     queue.append(to)
         return None
 
-    def _plan(self, offers: tuple[int, ...],
-              objected: set[tuple[str, Act]] | frozenset = frozenset()) -> tuple[Act, str] | None:
-        """What its imagination proposes, once it has seen something move: first
-        toward what brought the aim before; then an act it has not seen move
-        anything, to learn it; then toward a place the thing has not been, or a
-        colour it has not touched. None: nothing imagined to go for."""
-        o = self.organs
-        if self._pattern is None or self._at is None or self._ground is None or self._now is None:
-            return None
-        here = self._here
-        stuck = self._stuck.setdefault(self._scene(self._now, self._at), set())
-        for a in list(self._moves):
-            e = self._out.get(here, {}).get((a, None, None)) if here is not None else None
-            if e is not None and e.holds and not e.changed:
-                stuck.add((self._at, a))   # what it saw here outranks what it imagines
-        moves = {a: d for a, d in self._moves.items() if a in offers
-                 and (here, (a, None, None)) not in objected}
-        if self._goal_colours and moves:
-            path = search(self._now, self._pattern, self._at, moves, self._ground, self._blocks,
-                          lambda p, onto: bool(onto & self._goal_colours), stuck)
-            if path:
-                return (path[0], None, None), f"toward a colour that brought the aim before ({len(path)} steps)"
-        unlearned = [a for a in offers if a != o.reset[0] and a not in o.placed and a not in self._moves
-                     and self._actions.get(a, (0, 0, 0))[0] < 3 and (here, (a, None, None)) not in objected]
-        if unlearned:
-            a = max(unlearned, key=lambda a: (self._action_curiosity(a), -a))
-            return (a, None, None), "an act whose effect it has not learned"
-        if moves:
-            path = search(self._now, self._pattern, self._at, moves, self._ground, self._blocks,
-                          lambda p, onto: p not in self._places or bool(onto - self._touched - self._blocks),
-                          stuck)
-            if path:
-                return (path[0], None, None), f"toward a place or a colour not yet reached ({len(path)} steps)"
-        return None
-
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
         here = self._here
         if here is None:
@@ -770,17 +615,10 @@ class LearningModel:
             aim_here = [e for e in self._out.get(here, {}).values() if e.holds and self._reached(e.status)]
             path = None if aim_here or not gained else self._path(here, lambda n: n in gained)
             opened = self._open_here(here, offers, objected)
-            planned = self._plan(offers, objected) if self.motion else None
-            if planned is None and self.motion and self._pattern is not None:
-                # What it can foresee it need not try: acts whose motion it knows.
-                opened = [ak for ak in opened if ak[0][0] not in self._moves]
             if aim_here:
                 act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0]]
             elif path:
                 act, why, through = path[0].act, f"toward the aim reached before ({len(path)} steps)", path
-            elif planned is not None:
-                act, why = planned
-                through = [self._rule]
             elif opened:
                 # First which act, over every kind of it; then which of its kinds.
                 chosen = max({a for (a, _, _), _ in opened}, key=lambda a: (self._action_curiosity(a), -a))
@@ -835,11 +673,11 @@ class LearningModel:
             choice["onlooker"] = context.remark
             if context.remark_unit is not None:
                 built.append(context.remark_unit)   # what it quotes, it was built from
-        built += [("handle", e) for e in through if not isinstance(e, MotionRule) or e.written]
+        built += [("handle", e) for e in through]
         built.append(("prior", "task"))
         return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]
 
 
-__all__ = ["RULE_TAGS", "MotionRule", "BIG_CHANGE", "CHOICE_TAGS", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW",
+__all__ = ["BIG_CHANGE", "CHOICE_TAGS", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW",
            "LEARNED_TAGS", "MAX_CLICK_TARGETS", "MAX_PATH_NODES", "MAX_THING_SHARE",
            "Answer", "Choice", "Edge", "LearningModel", "grid_key", "things"]

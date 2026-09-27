@@ -172,10 +172,7 @@ now, in dil-core first and then here.
    strikes the mind as a collision, and the mind answers there and then — it
    objects to the named acts where they were taken and commands again before
    the body moves. It learns nothing wider from being told: an objection is
-   held while the onlooker says it and lifted when it stops. With motion on,
-   breaking a loop this way can lead the learning model to where its
-   imagination runs out, and from there to a loop of standing still and
-   RESET.
+   held while the onlooker says it and lifted when it stops.
 9. **The language model does not read the field.** The field reaches the mind
    at T5, and the learning model reads it; the language model's prompt does
    not show it, so its thinking is not conditioned by the loop's disposition.

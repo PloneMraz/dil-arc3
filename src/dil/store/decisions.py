@@ -215,8 +215,7 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 # its marker to its place in `[event]`. dil-core keeps the scar rhythm alone:
 # for an agent that writes often, a snapshot per write is too heavy a cost.
 # The learning mind writes every cycle, and adds data rather than revising one —
-# what no longer holds, and each version of what it learned of motion, is a new
-# datum (Plone, 2026-09-27), so every version is in `[data]`, not only in a snapshot:
+# a transition that no longer holds is a new datum (Plone, 2026-09-27), so every version is in `[data]`, not only in a snapshot:
 # a snapshot per write made each cycle slower than the last and a 400-cycle
 # store 2 GB (LOG.md), so a run with it keeps the scar rhythm alone (Plone,
 # 2026-09-27; `Daemon(commit_on_write=False)`).
