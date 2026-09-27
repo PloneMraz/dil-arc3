@@ -125,6 +125,8 @@ MIN_OBJECT_BYTES: Final = 1024
 
 # The key of a reference to an object, and of an escaped value that has it.
 _REF: Final = "#dil-ref"
+# What a subtree is made of beyond single values (read by type, in C, per row).
+_CONTAINERS: Final = frozenset({list, tuple, dict})
 _ESC: Final = "#dil-esc"
 
 
@@ -141,27 +143,32 @@ class DirCommitStore:
         self._object_dir.mkdir(parents=True, exist_ok=True)
         self._head_file = self._dir / "HEAD"
 
-    def _children(self, value: Any) -> Any:
-        """A value whose large subtrees are stored and replaced by their references."""
-        if isinstance(value, list):
-            return [self._store(v) for v in value]
-        if isinstance(value, dict):
-            out = {k: self._store(v) for k, v in value.items()}
-            # A value that looks like a reference is escaped, so it reads back as itself.
-            return {_ESC: out} if _REF in out or _ESC in out else out
-        return value
-
-    def _store(self, value: Any) -> Any:
-        """A value stored as an object of its own if it is large enough, else inline."""
-        if not isinstance(value, (list, dict)):
-            return value
-        node = self._children(value)
-        text = _canonical(node)
-        if len(text) < MIN_OBJECT_BYTES:
+    def _text(self, value: Any) -> str:
+        """The canonical text of `value` as it stands in its parent: inline, or,
+        when it is at least MIN_OBJECT_BYTES long, the reference to the object it
+        is stored as. Built bottom-up, each node's text from its children's, so
+        no part is serialized twice — the same text `_canonical` would give the
+        node with its large subtrees replaced (the names do not change)."""
+        node = self._node_text(value)
+        if not isinstance(value, (list, tuple, dict)) or len(node) < MIN_OBJECT_BYTES:
             return node
-        h = _sha256(text)
-        _put_object(self._object_dir / f"{h}.json", text)
-        return {_REF: h}
+        h = _sha256(node)
+        _put_object(self._object_dir / f"{h}.json", node)
+        return '{"' + _REF + '":"' + h + '"}'
+
+    def _node_text(self, value: Any) -> str:
+        """The canonical text of a node, its large subtrees replaced by references."""
+        if isinstance(value, (list, tuple)):
+            if _CONTAINERS.isdisjoint(set(map(type, value))):
+                return _canonical(value)  # a row of values: one call, nothing to store in it
+            return "[" + ",".join(self._text(v) for v in value) + "]"
+        if isinstance(value, dict):
+            if not all(isinstance(k, str) for k in value):
+                return self._node_text(json.loads(_canonical(value)))  # keys as JSON writes them
+            body = "{" + ",".join(_canonical(k) + ":" + self._text(v) for k, v in value.items()) + "}"
+            # A value that looks like a reference is escaped, so it reads back as itself.
+            return '{"' + _ESC + '":' + body + "}" if _REF in value or _ESC in value else body
+        return _canonical(value)
 
     def _load(self, value: Any) -> Any:
         """A value with every reference read back (and checked) and every escape undone."""
@@ -178,9 +185,7 @@ class DirCommitStore:
 
     def put_state(self, state: Any) -> str:
         """Store a snapshot payload; returns its content address (idempotent)."""
-        # Plain JSON first: what a snapshot is, not how it is held in memory.
-        plain = json.loads(_canonical(state))
-        text = _canonical(self._children(plain))
+        text = self._node_text(state)
         h = _sha256(text)
         _put_object(self._state_dir / f"{h}.json", text)
         return h

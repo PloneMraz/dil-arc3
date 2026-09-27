@@ -2770,3 +2770,17 @@ computation allows): first which action, over every kind of it (UCB1 on the
 action's counts); then, for ACTION6, which thing to click (UCB1 on the kinds).
 Clicking that never did anything anywhere is wanted less, however many things
 are left unclicked. Test added: 282 tests.
+
+### The tree, faster (Plone, same day)
+
+Profiled on the last snapshot of that run (10.4 MB as one JSON): a put took
+3.4 s, against 0.43 s to write it whole — the code visited every cell of every
+grid (4.3 million calls) and serialized every row twice. Now each node's text
+is built from its children's, bottom-up, and a row of plain values is written
+in one call, found by its elements' types (checked in C). Same format: on two
+real snapshots the root hashes and the objects are identical to before, and
+the state reads back equal. A put of the last snapshot: 1.38 s (was 3.45 s).
+
+ls20, 400 cycles, alone, end to end: **227 s** (whole snapshots 197 s; the first
+tree 292 s), store **116 MB** (whole: 406 MB), level 1. A port-side
+optimization: dil-core's format and names are unchanged. 282 tests.
