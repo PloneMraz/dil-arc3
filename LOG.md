@@ -2474,3 +2474,37 @@ Plone passed on two more findings. I reproduced both before changing anything.
 - These fixes are not in the submitted v12. That notebook is as `3b31806` has it.
 
 265 tests.
+
+### v13 and v14: the patched notebook on four games (2026-09-27)
+
+Code `af72f78`: own writes are echoes, truthful kept notes, and the rules before
+it. Save & Run on four games offline, 60 cycles, 4 at once. Not a submission.
+
+- **v13 failed on Kaggle's hardware**: `CUDA error: uncorrectable ECC error
+  encountered` while loading weights. Everything before it was sound (419 files
+  checked, runtime extracted, all shards loaded). The engine died, but cell 5
+  waited its full 1,800 s before failing: it should fail on "Engine core
+  initialization failed" in the log. Not yet changed.
+- **v14**, the same notebook pushed again: server ready in 930 s, the four games
+  in 946 s, 2,241 s of notebook. No level.
+
+| game | commands | frames held | thoughts (kept) | not taken as "the same again" | wall |
+|---|---|---|---|---|---|
+| ar25 | ACTION6 ×7, ACTION1 ×52 | 54/60 | 10 (4) | 1 | 292 s |
+| ls20 | ACTION1 ×12, ACTION2 ×36, ACTION1 ×11 | 37/60 | 36 (6) | 6 | 851 s |
+| sk48 | ACTION6 ×12, ACTION1 ×25, ACTION6 ×9, ACTION7, ACTION6 ×12 | 48/60 | 35 (11) | 10 | 941 s |
+| vc33 | ACTION6 ×50, none ×4, RESET ×5 | 38/56 | 42 (26) | 9 | 853 s |
+
+- **Behaviour turns in every game now.** Before `3b31806` each game kept one
+  action; here each changes action at least once. The rule refused 26
+  candidates that proposed the same action again.
+- **vc33 got out of `GAME_OVER` by itself**: 4 cycles standing, then RESET. The
+  prompt no longer names the stale list of actions.
+- **No write was built from the mind's own echoes**: 0 of 165 written data name
+  a `written-` datum in `built_from`. ls20 and sk48 asked
+  `{"kind":"thought","provenance":"running"}`, and read only what the store held
+  before the question.
+- Still there: 4 answers with an unterminated docstring, 2 at the token cap.
+  ar25's aim said `within: 150`, longer than the run, so it never fell due: the
+  declared limit on `within`.
+- C7 passes on ar25, ls20 and vc33, and fails on sk48.
