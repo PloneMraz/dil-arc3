@@ -2708,3 +2708,39 @@ Kaggle keeps up to 20 GiB in /kaggle/working (its notebook documentation); at
   --drop-stores`); the reports stay. A scored rerun's outputs cannot be read
   back, so nothing readable is lost; a Save & Run keeps every store. Checked
   here on two games.
+
+### The learning mind on Kaggle: four games at once, 300 cycles (2026-09-27)
+
+Notebook `dil-arc3-learning` version 1, code `b6836a0`, Save & Run on CPU, four
+games at once, 300 cycles each. Not a submission. The games took 376 s of
+notebook; 670 MB of output (snapshots still whole: it ran before the tree below).
+
+| game | level | states met | clock rows | why it chose | wall |
+|---|---|---|---|---|---|
+| ar25 | 0 | 92 (92 grids) | none | not yet taken 299 | 290 s |
+| ls20 | 0 | 77 (292 grids) | 61, 62 | not yet taken 239, path 59 | 353 s |
+| sk48 | 0 | 74 (74 grids) | none | not yet taken 300 | 358 s |
+| vc33 | **1** | 33 (283 grids) | 0 | not yet taken 261, path 21 | 333 s |
+
+- vc33 completed level 1 on Kaggle too. ls20 did not in 300 cycles (here it
+  took more than 150 and at most 400).
+- ar25 and sk48: every grid a new state and every choice an untried act — each
+  step reached somewhere new, so nothing was ever retried.
+- At this pace ~110 games at four at once take about 110 / 4 × 367 s ≈ 2.8 h.
+
+### Snapshots as a tree of objects, as git stores a commit (Plone, same day)
+
+Plone asked why snapshots are heavy when a git commit is light. The marker is
+light (~420 bytes); the payload was one JSON of the whole state per commit
+(dil-core's choice 2-(a)), rewritten whole each time: 67 snapshots, the last
+10.4 MB, in one 400-cycle run. Plone directed the fix in dil-core, then the port.
+
+- dil-core `1096476`: every object or array of at least `MIN_OBJECT_BYTES` (1024,
+  declared) is stored once under `objects/` by its sha256 and referenced from
+  its parent; the root under `state/` is the snapshot's address. Unchanged
+  subtrees are shared; each object is checked on read (a Merkle tree); a
+  whole-JSON snapshot still reads. The protocol is unchanged: §9 asks for the
+  entire system in an immutable, content-addressed marker; how it is stored is
+  `DECIDE@IMPL`.
+- Ported: `src/dil/store/commit_store.py`, and five tests to match dil-core's.
+  281 tests.

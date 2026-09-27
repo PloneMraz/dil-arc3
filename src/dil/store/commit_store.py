@@ -2,8 +2,16 @@
 
 A COMMIT MARKER is the tiny commit-object: parent-linked (the DAG), it points
 INTO the [event] log via the hash-chain head and at its snapshot payload via a
-content address. The PAYLOAD is the whole-system state: one content-addressed
-JSON per snapshot, under `state/`.
+content address. The PAYLOAD is the whole-system state, stored as a tree of
+content-addressed objects, as git stores a commit's tree (choice 2-(b); Plone,
+2026-09-27; dil-core `1096476`): every object or array in it whose JSON is at
+least MIN_OBJECT_BYTES long is stored once, under `objects/`, by the sha256 of
+its text, and stands in its parent as `{"#dil-ref": <hash>}`; the root is stored
+under `state/`, and its hash is the snapshot's address. A subtree that did not
+change since the last snapshot is the same object, stored once: a snapshot costs
+what changed, not the whole store. Every object read is checked against its
+name, so the root's hash still covers the whole state. A snapshot written whole
+before the tree (choice 2-(a)) has no reference in it, and reads as it was.
 
 Immutability is self-enforcing, like git objects: every file's NAME is the sha256
 of its content — written once, exclusively (fail-if-exists; identical content is
@@ -12,7 +20,7 @@ name. `HEAD` is the one movable pointer (a git ref): rollback moves it by writin
 a NEW fork marker — no marker is ever deleted. Payload retention governs `state/`
 files only and is a deployment concern; no pruning exists here.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core against DIL protocol v0.3.3; the tree from dil-core `1096476`.
 """
 
 from __future__ import annotations
@@ -110,20 +118,69 @@ def _get_object(file: Path, expected_hash: str, kind: str) -> str:
     return text
 
 
+# DECIDE@IMPL (declared, not measured): how large a subtree must be to be an
+# object of its own. Smaller ones stay inline in their parent; a row of a grid
+# does, a grid does not. A bound on the number of files, not on what is kept.
+MIN_OBJECT_BYTES: Final = 1024
+
+# The key of a reference to an object, and of an escaped value that has it.
+_REF: Final = "#dil-ref"
+_ESC: Final = "#dil-esc"
+
+
 class DirCommitStore:
     """A commit repo backed by a directory."""
 
-    __slots__ = ("_dir", "_state_dir", "_head_file")
+    __slots__ = ("_dir", "_state_dir", "_object_dir", "_head_file")
 
     def __init__(self, dir_: str | os.PathLike[str]) -> None:
         self._dir = Path(dir_)
         self._state_dir = self._dir / "state"
+        self._object_dir = self._dir / "objects"
         self._state_dir.mkdir(parents=True, exist_ok=True)
+        self._object_dir.mkdir(parents=True, exist_ok=True)
         self._head_file = self._dir / "HEAD"
+
+    def _children(self, value: Any) -> Any:
+        """A value whose large subtrees are stored and replaced by their references."""
+        if isinstance(value, list):
+            return [self._store(v) for v in value]
+        if isinstance(value, dict):
+            out = {k: self._store(v) for k, v in value.items()}
+            # A value that looks like a reference is escaped, so it reads back as itself.
+            return {_ESC: out} if _REF in out or _ESC in out else out
+        return value
+
+    def _store(self, value: Any) -> Any:
+        """A value stored as an object of its own if it is large enough, else inline."""
+        if not isinstance(value, (list, dict)):
+            return value
+        node = self._children(value)
+        text = _canonical(node)
+        if len(text) < MIN_OBJECT_BYTES:
+            return node
+        h = _sha256(text)
+        _put_object(self._object_dir / f"{h}.json", text)
+        return {_REF: h}
+
+    def _load(self, value: Any) -> Any:
+        """A value with every reference read back (and checked) and every escape undone."""
+        if isinstance(value, list):
+            return [self._load(v) for v in value]
+        if not isinstance(value, dict):
+            return value
+        if len(value) == 1 and _REF in value and isinstance(value[_REF], str):
+            h = value[_REF]
+            return self._load(json.loads(_get_object(self._object_dir / f"{h}.json", h, "object")))
+        if len(value) == 1 and _ESC in value:
+            return {k: self._load(v) for k, v in value[_ESC].items()}
+        return {k: self._load(v) for k, v in value.items()}
 
     def put_state(self, state: Any) -> str:
         """Store a snapshot payload; returns its content address (idempotent)."""
-        text = _canonical(state)
+        # Plain JSON first: what a snapshot is, not how it is held in memory.
+        plain = json.loads(_canonical(state))
+        text = _canonical(self._children(plain))
         h = _sha256(text)
         _put_object(self._state_dir / f"{h}.json", text)
         return h
@@ -145,7 +202,7 @@ class DirCommitStore:
     def get_state(self, state_hash: str) -> Any:
         """Read a snapshot payload; raises if the content does not match its address."""
         text = _get_object(self._state_dir / f"{state_hash}.json", state_hash, "state payload")
-        return json.loads(text)
+        return self._load(json.loads(text))
 
     def head(self) -> str | None:
         """The movable pointer to the current branch tip, or None before any commit."""
