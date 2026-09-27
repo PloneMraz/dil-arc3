@@ -83,8 +83,11 @@ and a far better fit for the compute ceiling of a Kaggle session with no network
 What the one mind is and how its work reaches `[event]`. Each rule below was
 settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 
-- **One mind, and it is the model.** The thinking organ is Qwen3.6-35B-A3B and
-  the program it writes, `predict(grid, action, x, y)` (`src/arc3/mind.py`).
+- **One mind, and it is the model.** The thinking organ is the served model —
+  **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at `7b71922`),
+  the one the submitted notebook serves — and the program it writes:
+  `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
+  (`src/arc3/mind.py`). Qwen3.6-35B-A3B served the runs before 2026-09-25 (LOG.md).
   Nothing else computes over the grid: a second computation is a second mind, and
   the self would have no one mind to crystallize from. Plone: "Dùng Qwen thì
   dùng Qwen, đừng nhập nhằng."
@@ -566,7 +569,13 @@ played. The pipeline clears the step that is currently blocking other people.
 **Baseline calibration: a uniformly random agent scores 0.02.** That is the floor
 any DIL agent has to beat for Accuracy to mean anything.
 
-## dil-arc3's scored run — built 2026-09-25, not yet submitted
+## dil-arc3's scored run — built 2026-09-25, submitted 2026-09-26
+
+**Submitted:** notebook `plonemraz/dil-arc3-run` **version 12**, code `3b31806`,
+at 2026-09-26 20:42:04 UTC, ref `56588469`, serving Qwen3.8-Flash-Next NVFP4.
+Its score is recorded in LOG.md when it comes. The paper must name the
+submission it describes, and describe that notebook: a later version is a later
+submission.
 
 The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
 

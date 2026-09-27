@@ -696,6 +696,10 @@ class Mind:
         # The questions the model put to memory, with when: answered the next
         # cycle, and only what answers one is shown to it.
         self._asks_open: list[tuple[int, dict[str, str]]] = []
+        # What it wrote, by fingerprint, until each comes back: a write returns
+        # through the store's channel in the same form as an answer, and is not
+        # one — memory is what the store held before the cycle that asks.
+        self._echoes: list[str] = []
         # The onlooker's current remark on its behaviour, as it last arrived.
         self._remark: dict[str, Any] | None = None
         self._thought_at: int | None = None
@@ -735,7 +739,7 @@ class Mind:
             self.datum_id = entity
             if self._unwritten is not None and write is not None:
                 unwritten, built_from = self._unwritten
-                write(WriteRequest(payload=unwritten, datum_id=self.datum_id, built_from=built_from))
+                self._write(write, WriteRequest(payload=unwritten, datum_id=self.datum_id, built_from=built_from))
                 self._unwritten = None
         # Only what the model asked for is evidence (Plone, 2026-09-27). T3 asks
         # the store too, by the description of what arrives — the protocol's
@@ -743,6 +747,11 @@ class Mind:
         # mind's own writes come back; none of that is poured into what the model
         # reads. It had been: the competition's rules, "Your goal is to win"
         # among them, reached every prompt unasked (LOG.md).
+        mark = _fingerprint(payload)
+        if mark in self._echoes:
+            # Its own write, come back: not an answer, however its tags match.
+            self._echoes.remove(mark)
+            return
         if not self._answers(open_tags, ret.get("fixed")):
             return
         if self._recalled_at != self.frame_calls:
@@ -756,6 +765,10 @@ class Mind:
         line = _recalled_line(kind, open_tags, payload)
         if line:
             self._recalled_lines[entity] = line
+
+    def _write(self, write: Callable[[WriteRequest], None], request: WriteRequest) -> None:
+        self._echoes.append(_fingerprint(request.payload))
+        write(request)
 
     def _answers(self, open_tags: dict[str, str], fixed: Any) -> bool:
         """Whether a return answers a question the model put to memory."""
@@ -1054,7 +1067,7 @@ class Mind:
         if on == "no goal":
             notes += "\nYour program holds no GOAL that what comes back could show reached.\n"
         if self._last_note:
-            notes += f"\nYour last answer was not taken: {self._last_note}.\n"
+            notes += f"\n{self._last_note}\n"
         grid = shown[-1].after if shown else [[]]
         first = self._task["task"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
                                           evidence=render_evidence(shown, report=True), also=also)
@@ -1083,14 +1096,13 @@ class Mind:
                 ask(dict(cue))
         code = extract_code(text)
         note, cand_ok, adopted, fn, propose, goal = "", None, False, None, None, None
+        goal_note: str | None = None
         if code is None:
             note = "no code block"
         else:
             try:
                 fn, propose, goal_raw = compile_all(code)
                 goal, goal_note = goal_check(goal_raw, grid)
-                if goal_note:
-                    note = goal_note
             except ProgramError as exc:
                 note = str(exc)
         if fn is not None:
@@ -1111,7 +1123,9 @@ class Mind:
             if on in ("onlooker", "want", "goal") and propose is not None and self._propose is not None:
                 now_held, now_cand = self._proposals_now(propose)
                 otherwise = now_cand is not None and now_cand != now_held
-                if not otherwise and not note:
+                if now_cand is None:
+                    note = "its propose gave no action from where the game stands now"
+                elif not otherwise:
                     note = (f"it proposed {_act_name(now_held)} again, the action the program you hold "
                             f"proposes now; what set you thinking was how you act, so a program that "
                             f"only predicts as well must act otherwise")
@@ -1119,7 +1133,18 @@ class Mind:
                        or (acting and cand_ok >= held_ok and propose is not None and otherwise
                            and (on != "no goal" or goal is not None))
                        or (self._goal is None and goal is not None and cand_ok >= held_ok))
-        self._last_note = note or None
+        # Said to the model next time as what happened: not taken and why; or
+        # kept, with its GOAL not taken and why.
+        if not adopted:
+            reason = note or goal_note or (
+                "it did not explain the evidence better than the program you hold")
+            self._last_note = f"Your last answer was not taken: {reason}."
+            note = note or goal_note or ""
+        elif goal_note and goal is None:
+            self._last_note = f"Your last answer's program was kept; its GOAL was not taken: {goal_note}."
+            note = f"kept; GOAL not taken: {goal_note}"
+        else:
+            self._last_note = None
         self.thoughts.append(Thought(self.frame_calls, len(evidence), held_ok, cand_ok, adopted, usage, note, on, asks))
         # The answer, whole, as the mind's own datum, built from what it was shown;
         # written after the program it kept, if it kept one.
@@ -1135,7 +1160,7 @@ class Mind:
                 self._goal = goal
                 self._goal_due = self.frame_calls + goal["within"]
         if write is not None:
-            write(WriteRequest(payload=answer, open=dict(THOUGHT_TAGS), built_from=built_from))
+            self._write(write, WriteRequest(payload=answer, open=dict(THOUGHT_TAGS), built_from=built_from))
 
     def _keep(self, code, fn, propose, write, built_from) -> None:
         """The program kept: written anew the first time, a revision after."""
@@ -1145,9 +1170,9 @@ class Mind:
         if write is None:
             return
         if self.version == 1:
-            write(WriteRequest(payload=payload, open=dict(PROGRAM_TAGS), built_from=built_from))
+            self._write(write, WriteRequest(payload=payload, open=dict(PROGRAM_TAGS), built_from=built_from))
         elif self.datum_id is not None:
-            write(WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
+            self._write(write, WriteRequest(payload=payload, datum_id=self.datum_id, built_from=built_from))
         else:
             # Written as a revision once the datum's id is known.
             self._unwritten = (payload, built_from)
@@ -1158,6 +1183,10 @@ class Mind:
             mine = got if isinstance(got, str) else describe_change(t.before, got[0])
             out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
         return "\n".join(out)
+
+
+def _fingerprint(payload: Any) -> str:
+    return json.dumps(payload, sort_keys=True, default=str)
 
 
 def _act_name(p: Proposal | None) -> str:

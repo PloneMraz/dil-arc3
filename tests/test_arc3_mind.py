@@ -375,7 +375,8 @@ def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
     assert [t.on for t in wm.thoughts] == ["frame", "no goal"], "it holds no aim: it commands nothing yet"
     last = model.prompts[1][-1]["content"]
     assert "Your program holds no GOAL" in last, "said where the model reads what to do: the last message"
-    assert "Your last answer was not taken: the program defines no GOAL." in last
+    assert "Your last answer's program was kept; its GOAL was not taken: the program defines no GOAL." in last, \
+        "kept, and told so: not told it was not taken"
     assert result.response.action["actionId"] == 1, "the second thought gave a command, and it was carried out"
 
 
@@ -621,12 +622,27 @@ def test_an_action6_with_no_cell_is_no_command_for_the_mind_as_for_the_body():
 
 
 def test_a_program_the_model_asks_for_it_reads():
-    model = Script(RIGHT, RIGHT, asks={0: 'ASK {"kind": "program"}'})
+    model = Script(RIGHT, RIGHT, RIGHT, RIGHT, asks={1: 'ASK {"kind": "program"}'})
     wm, cycle, data, events = loop(model)
-    run(cycle, frame(lit(0), lit(1)))              # it writes RIGHT, and asks for programs
-    run(cycle, frame(lit(1), lit(2)))              # RIGHT holds; the store answers
-    run(cycle, frame(lit(2), lit(0), action=2))    # RIGHT fails: it thinks
+    run(cycle, frame(lit(0), lit(1)))              # it writes RIGHT
+    run(cycle, frame(lit(1), lit(2)))              # RIGHT holds
+    run(cycle, frame(lit(2), lit(0), action=2))    # RIGHT fails: it thinks, and asks for programs
+    run(cycle, frame(lit(0), lit(2), action=2))    # the store answers with the program it held before
+    run(cycle, frame(lit(2), lit(1), action=2))    # read at the thought after
     assert "- a program (version 1):" in model.prompts[-1][0]["content"], "asked for, and so read"
+
+
+def test_what_the_mind_just_wrote_is_no_answer_to_what_it_asked():
+    model = Script(PROPOSING, PROPOSING, asks={0: 'ASK {"kind": "thought"}\nASK {"kind": "program"}'})
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())            # it asks; the store holds no thought, no program
+    run(cycle, frame(lit(1), lit(2)), status())            # its own writes come back
+    run(cycle, frame(lit(2), lit(0), action=2), status())  # it thinks again
+    last = model.prompts[-1][0]["content"]
+    assert "an answer you gave" not in last and "a program (version" not in last, \
+        "memory is what the store held before the cycle that asked"
+    written = {t.datum_id: t.built_from for r in of_kind(events, "cycle-seal") for t in r.activity.written}
+    assert not any(b.startswith("written-") for bf in written.values() for b in bf)
 
 
 def test_when_how_it_acts_set_it_thinking_the_same_action_again_is_not_kept():
@@ -638,3 +654,17 @@ def test_when_how_it_acts_set_it_thinking_the_same_action_again_is_not_kept():
     wm.think("onlooker", None, None)
     assert not wm.thoughts[-1].adopted and wm.code == PROPOSING, "it proposed ACTION1 again"
     assert "it proposed ACTION1 again" in wm.thoughts[-1].note
+
+
+PROPOSES_NOTHING = PROPOSING.replace("return (1, None, None)", "return None")
+
+
+def test_a_candidate_that_proposes_nothing_is_not_said_to_have_proposed_the_same():
+    model = Script(PROPOSING, PROPOSES_NOTHING)
+    wm, cycle, data, events = loop(model)
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(2)), status())
+    wm.think("onlooker", None, None)
+    assert not wm.thoughts[-1].adopted
+    assert wm.thoughts[-1].note == "its propose gave no action from where the game stands now"
+    assert wm._last_note.startswith("Your last answer was not taken: its propose gave no action")

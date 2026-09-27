@@ -363,7 +363,8 @@ def _pack(dest: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", choices=sorted(MODELS), default="35b-a3b")
+    ap.add_argument("--model", choices=sorted(MODELS), default="flash-next",
+                    help="flash-next is what the submitted notebook serves (LOG.md, 2026-09-26)")
     ap.add_argument("--game", default="ls20", help="one game, or several separated by commas, played in turn")
     ap.add_argument("--cycles", type=int, default=60)
     ap.add_argument("--max-tokens", type=int, default=12288)

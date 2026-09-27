@@ -2442,3 +2442,35 @@ run to the end, so two versions ran:
   the last-whole-block fix. They are single blocks whose docstring never closes:
   the model's own. 2 answers ran to the 12,288-token cap with no code.
 - C7 passes in v12 (6 onlooker scars); it fails in every v11 game.
+
+### Two bugs in what the mind is told, and the documents set to the submission (2026-09-27)
+
+Plone passed on two more findings. I reproduced both before changing anything.
+
+- **The mind read its own writes as memory.** A datum the mind writes comes back
+  through the store's channel in the same form as a store answer. `_answers`
+  matched it to the model's `ASK` by tags alone. Asked at cycle 0 for
+  `{"kind":"thought"}` and `{"kind":"program"}`, when the store held neither, the
+  next prompt showed "an answer you gave" and "a program (version 1)", and
+  `written-0-0` and `written-0-1` entered `built_from`. That is against "memory
+  is what the store held before the cycle that asks".
+  - Fix: the mind keeps a fingerprint of each payload it writes. When that
+    payload comes back, it is an echo, not an answer. A real answer to a
+    question asked in cycle N holds only what the store held before N, so it
+    cannot be a write of N.
+  - My own test of yesterday had pinned the bug: it asked at cycle 0. It now
+    asks when the program is in the store.
+- **A kept program was reported as not taken.** A program kept without a
+  `GOAL`, or with one refused, carried that as its note, and the next prompt
+  said "Your last answer was not taken". Now the model is told what happened:
+  either "not taken: why", or "the program was kept; its GOAL was not taken:
+  why". `run_game.py` counts "program not taken" by `kept`, not by note.
+- A candidate whose `propose` gave nothing had been told "it proposed ACTIONx
+  again". It is now told "its propose gave no action from where the game stands
+  now".
+- CLAUDE.md now names the model the submitted notebook serves (Qwen3.8-Flash-Next
+  NVFP4), and records the submission: v12, `3b31806`, ref `56588469`.
+  `build_dil_run.py` defaults to `flash-next`.
+- These fixes are not in the submitted v12. That notebook is as `3b31806` has it.
+
+265 tests.

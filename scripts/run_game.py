@@ -132,7 +132,7 @@ print(f"  programs in [data]    : {[(k, d.fixed.provenance, d.payload.get('versi
 program_ids = {k for k, _ in programs}
 answers = [d for _, d in daemon._data.entries() if d.open.get("kind") == "thought"]
 print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id in program_ids]}")
-print(f"  answers kept          : {len(answers)}  not taken: {sum(1 for d in answers if d.payload.get('note'))}")
+print(f"  answers kept          : {len(answers)}  program not taken: {sum(1 for d in answers if not d.payload.get('kept'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
 print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
