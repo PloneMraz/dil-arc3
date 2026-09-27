@@ -2826,3 +2826,9 @@ Now:
   gave the same 10 prompts and the same 31 data, byte for byte.
 - The flag stays `--mind language|learning`: `--model` is already the served
   model's name.
+- **Step 5, a place for an API key** (Plone: designed now, left empty, so it is
+  not forgotten): `ModelEndpoint.api_key_env`, the name of the environment
+  variable, read when a request is sent into its `Authorization` header only.
+  A test sends real requests to a local server: the header carries the key, and
+  nothing written, logged or kept holds it; a missing key is named, not shown.
+  CLAUDE.md gains "Kept for after the competition". 284 tests.

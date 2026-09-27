@@ -26,6 +26,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import json
+import os
 import textwrap
 import re
 import signal
@@ -484,6 +485,12 @@ class ModelEndpoint:
     # The mind knows no model: another model is another endpoint, and changes how
     # well it thinks, not what the mind is.
     extra: dict[str, Any] = field(default_factory=dict)
+    # The NAME of the environment variable that holds the endpoint's API key —
+    # never the key. None for an endpoint that asks none (every run so far: no
+    # network at evaluation). Kept for after the competition (Plone, 2026-09-27).
+    # The key is read when a request is sent and goes nowhere but its header: not
+    # into the store, `[event]`, a snapshot, a commit's config, a report or LOG.
+    api_key_env: str | None = None
 
 
 def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, dict[str, Any]]:
@@ -492,9 +499,16 @@ def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, 
         "temperature": endpoint.temperature, "max_tokens": endpoint.max_tokens,
     }
     payload.update(endpoint.extra)
+    headers = {"Content-Type": "application/json"}
+    if endpoint.api_key_env is not None:
+        key = os.environ.get(endpoint.api_key_env)
+        if not key:
+            # Named, not shown: the message carries the variable's name only.
+            raise RuntimeError(f"no API key in the environment variable {endpoint.api_key_env}")
+        headers["Authorization"] = f"Bearer {key}"
     req = urllib.request.Request(
         endpoint.url.rstrip("/") + "/chat/completions",
-        data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"},
+        data=json.dumps(payload).encode(), headers=headers,
     )
     t0 = time.time()
     with urllib.request.urlopen(req, timeout=endpoint.timeout) as r:  # noqa: S310 — the operator's endpoint

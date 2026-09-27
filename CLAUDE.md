@@ -779,6 +779,18 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
 - **Follow the rules as written**: keep the Writeup within 1,500 words rather
   than relying on the PDF route to go past it.
 
+## Kept for after the competition
+
+Plone (2026-09-27): this repository's design is to outlive the competition, so
+what it will need then is designed now and left unused, not forgotten.
+
+- **An API key for a model's endpoint.** `ModelEndpoint.api_key_env` names the
+  environment variable that holds the key — never the key itself; `chat()` reads
+  it when a request is sent and puts it in the `Authorization: Bearer` header,
+  and nowhere else: not the store, `[event]`, a snapshot, a commit's config, a
+  run's report or LOG (`tests/test_api_key.py` holds it to that). Every run so
+  far leaves it `None`: there is no network at evaluation.
+
 ## Still unverified
 
 - **Whether the 1,500-word limit also binds a PDF** submitted through the Public
