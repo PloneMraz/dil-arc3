@@ -2629,4 +2629,5 @@ submission. The four games took 2,204 s (v14: 946 s). No level.
 - **Time**: 55–71 thoughts a game against 10–42, and twice v14's wall time. At
   this pace 110 games would take about 17 h: most would go unplayed in a scored
   run.
-- Still there: 7 answers with an unterminated string, 4 without a code block.
+- Still there: 8 answers with an unterminated string (ls20 2, vc33 6), 4 without
+  a code block, 1 with no `predict`.
