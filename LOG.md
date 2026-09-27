@@ -2601,3 +2601,32 @@ spend a submission on telling them apart.
   81 actions each (RESET once, ACTION1..7 in between), no level, scorecard
   `total_actions` 320 (324 less the four RESETs). Not the agent: a submission
   the paper does not describe.
+
+### v15: the repeated remark and the look-ahead line, on four games (2026-09-27)
+
+Code `1710630`, Save & Run on four games offline, 60 cycles, 4 at once. Not a
+submission. The four games took 2,204 s (v14: 946 s). No level.
+
+| game | commands | frames held (v14) | thoughts (kept) | "the same again" refused | wall (v14) |
+|---|---|---|---|---|---|
+| ar25 | ACTION1 ×15, ACTION2 ×25, ACTION4 ×19 | 25/60 (54/60) | 55 (3) | 16 | 1,083 s (292 s) |
+| ls20 | ACTION1 ×10, ACTION2 ×37, ACTION1 ×12 | 11/60 (37/60) | 71 (3) | 12 | 2,200 s (851 s) |
+| sk48 | ACTION1 ×5, then ACTION2/ACTION1 alternating ×50 | 2/60 (48/60) | 62 (3) | 2 | 1,754 s (941 s) |
+| vc33 | ACTION6 ×50, none ×5, RESET ×4 | 26/55 (38/56) | 63 (16) | 16 | 1,705 s (853 s) |
+
+- **The look-ahead line was not taken up.** Of 251 answers, 2 have a `propose`
+  that calls `predict`, and neither was kept (v14: 1 of 123). No program ran
+  over its 2 s.
+- **The repeated remark came, and did not turn behaviour much.** Onlooker scars:
+  30, 30, 6, 40. Most rethinks it set off proposed the action already held and
+  were refused (16, 12, 2, 16), so the held program went on. Runs of one action
+  are still 10–50 long. sk48 moved from repeating into back-and-forth, which is
+  not said again, and stayed there for 50 cycles.
+- **Frames held fell in every game**, and the rethinks were mostly on the frame
+  (35, 49, 58, 29) and not taken for not explaining better. Only 3 programs were
+  kept in ar25, ls20 and sk48 (v14: 4, 6, 11). Not attributed: more varied
+  actions meet more unfamiliar frames, and the run changed two things at once.
+- **Time**: 55–71 thoughts a game against 10–42, and twice v14's wall time. At
+  this pace 110 games would take about 17 h: most would go unplayed in a scored
+  run.
+- Still there: 7 answers with an unterminated string, 4 without a code block.
