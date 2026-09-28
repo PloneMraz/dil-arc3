@@ -3989,3 +3989,18 @@ act — so runs can change. **Not yet measured**: Plone asked for the work on S4
 to be reported before the next measurement.
 
 319 pass, 34 skipped.
+
+### Learning notebook version 5 scored: 0.05 (2026-09-28)
+
+Submission `56623380` (`dil-arc3-learning` version 5, code `f76ff5f`, submitted
+00:12:57 UTC) is COMPLETE, public score **0.05**. It was first seen at 09:15 UTC
+and was PENDING ten minutes before.
+
+- It is above v12's 0.00 (`56588469`, the language model).
+- It does not show the learning mind beats the random agent: the random agent
+  scored 0.02 (`56462757`) and 0.06 (`56600038`), with no seed fixed.
+- Kaggle shows no log of the scored rerun. Which games it completed levels in,
+  and how many games it reached before the deadline, is not known.
+- The rerun is over, so a new `dil-arc3-src` dataset version may be pushed.
+- The code scored is `f76ff5f`. It is not the code of S1–S3 (`283fdf6` on),
+  which has not been submitted.
