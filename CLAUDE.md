@@ -664,9 +664,11 @@ beat it for Accuracy to mean anything. What it scored is in LOG.md.
 **Submitted:** notebook `plonemraz/dil-arc3-run` **version 12**, code `3b31806`,
 ref `56588469`, serving Qwen3.8-Flash-Next NVFP4. A second submission,
 `56600038`, is not the agent: the starter kit's random agent on the same road
-(`scripts/random_game.py`). What each scored, and what the run did, is in
-LOG.md. The paper must name the submission it describes, and describe that
-notebook: a later version is a later submission.
+(`scripts/random_game.py`). A third, `56623380`, is notebook
+`plonemraz/dil-arc3-learning` **version 5**, code `f76ff5f`: the learning mind
+(no weights), 600 cycles a game, four at once, on CPU. What each scored, and
+what the run did, is in LOG.md. The paper must name the submission it
+describes, and describe that notebook: a later version is a later submission.
 
 The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
 

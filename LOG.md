@@ -3343,3 +3343,12 @@ at once, 600 cycles each, as version 4 (`b928f28`). Not a submission. 1,115 s of
   compares the act whole.
 - For ~110 games four at once, at these four games' mean (847 s) about
   23,300 s (6.5 h) of the 9 h less 20 min.
+
+### Submitted: learning notebook version 5 (Plone, same day)
+
+At Plone's request, `dil-arc3-learning` version 5 (code `f76ff5f`) was submitted
+to ARC-AGI-3 at 2026-09-28 00:12:57 UTC, ref `56623380`: the learning mind, 600
+cycles a game, four at once, CPU, the deadline 9 h less 20 min from the
+notebook's start, each store dropped once its game has played. Its Save & Run
+is the entry above. Pending when written; no dataset version is pushed while
+its rerun may still read `dil-arc3-src`.
