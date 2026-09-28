@@ -4183,3 +4183,31 @@ To do after the 25-game measurement, so that its runs share one dataset:
 Open with Plone: whether the language inducer's words keep "The aim is to find
 how to get through its levels." (S5 kept it word for word; it tells the model
 what the region is for, not an aim to pursue) or drop it.
+
+### The constrained setting as a test of the design — a note for the paper (Plone, same day)
+
+Plone: the competition's setting — little knowledge, a budget of actions, no
+network — is why a specialised model had to be written; with a large language
+model behind an API key the work would be far simpler, and errors of code or
+design far harder to find; once the design is mended and runs smoothly, the
+agent with an API key in an open region is far stronger. Agreed, with what the
+record adds and two precisions, for the paper's limits and future work:
+
+- **A weak, transparent model shows the design's faults; a strong one covers
+  them.** Today's alone: the learning seated in the model's place (hidden for
+  days by the language model, which wrote, kept and proposed on its own), the
+  prompt a side door, the aim held twice, ls20's level lost to a law of
+  curiosity. And the learning mind is deterministic — ls20 on Kaggle and here
+  agree grid for grid — so every difference traces to one change; two language
+  runs on the same prompt did not agree (2026-09-25).
+- **Simpler in result, not in audit.** `[event]` records what a model was shown
+  and what it answered; why it wrote what it wrote no one can check. By design
+  the model is replaceable computing, judged by the region; the paper says the
+  loop reads back whole, and the inside of a model as far as that model allows.
+- **Stronger is likely and not measured.** Thinking is free under RHAE and the
+  place for a key is built (`ModelEndpoint.api_key_env`), but the mind's
+  learning still chooses the act: strength depends on the model's prediction and
+  on the mind's exploring alike.
+- **So, when a large model is fitted,** the exact and grid inducers stay as the
+  reference every change to the mind runs on first (as S1 took the exact one to
+  be), so that a strong model cannot hide a new fault.
