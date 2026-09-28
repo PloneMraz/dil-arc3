@@ -385,3 +385,43 @@ def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
     mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
                      write=lambda request: None, ask=None, test=pushed.append)
     assert pushed and mind.commands[-1][1] is not None, "the aim held, the waiting body gets a command"
+
+
+def _grid(i: int) -> list[list[int]]:
+    """A 3x3 grid of its own for each i: a state apart from every other."""
+    return [[i % 16, 0, 0], [0, (i // 16) % 16, 0], [0, 0, 0]]
+
+
+def test_told_once_it_repeats_while_every_step_goes_somewhere_new_it_keeps_on():
+    mind, cycle, data, events = loop()
+    for i in range(1, 4):
+        run(cycle, frame(_grid(i), _grid(i + 1), action=1), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
+    run(cycle, frame(_grid(4), _grid(5), action=1), status(), _remark(said))
+    thought = [d.payload for _, d in of_kind(data, "thought")][-1]
+    assert "kept_on" in thought and mind.model.objections() == set(), \
+        "its own steps say the repetition is getting somewhere: it keeps on, and says why"
+    assert mind._answer == (), "it expects to hear it again if it is wrong, not the onlooker to stop"
+
+
+def test_told_again_it_objects():
+    mind, cycle, data, events = loop()
+    for i in range(1, 4):
+        run(cycle, frame(_grid(i), _grid(i + 1), action=1), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
+    run(cycle, frame(_grid(4), _grid(5), action=1), status(), _remark(said))
+    for i in range(5, 8):
+        run(cycle, frame(_grid(i), _grid(i + 1), action=1), status(), _remark(said))   # held: no collision
+    assert mind.model.objections() == set()
+    run(cycle, frame(_grid(8), _grid(9), action=1), status(), _remark({**said, "at_least": 8}))
+    assert any(a == (1, None, None) for _, a in mind.model.objections()), "said again: it objects"
+    assert [d.payload for _, d in of_kind(data, "thought")][-1]["again"] is True
+
+
+def test_a_repetition_that_goes_nowhere_new_is_objected_to_at_once():
+    mind, cycle, data, events = loop()
+    for _ in range(3):
+        run(cycle, frame(_grid(1), _grid(1), action=1), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
+    run(cycle, frame(_grid(1), _grid(1), action=1), status(), _remark(said))
+    assert any(a == (1, None, None) for _, a in mind.model.objections())

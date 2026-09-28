@@ -274,6 +274,11 @@ class LearningModel:
             after it was answered, the objection reaches back over the run the
             onlooker points at, as far as the field's alertness says (½–1½ of
             it, within short-term perception);
+          - but told once that it repeats an act whose every step reached a state
+            it had not stood in — its own evidence that the repetition is getting
+            somewhere — it keeps on, and says why (`kept_on`); told again, it
+            objects (Plone, 2026-09-28: on ls20 the onlooker's word turned such
+            runs 16 times and cost 47 actions to level 1);
           - "standing still": it will act; with nothing else to do, RESET;
           - anything else, or nothing: what it objected to on an earlier word is
             lifted.
@@ -296,6 +301,18 @@ class LearningModel:
             payload = {"on": "onlooker", "remark": remark, "lifted": lifted}
             return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
         again = said in self._objected
+        if said[0] == "repeating" and not again and self._getting_somewhere(remark, context):
+            # Told once that it repeats an act whose every step so far reached a
+            # state it had not stood in: its own evidence says the repetition is
+            # getting somewhere, and it keeps on — the onlooker does not claim to
+            # be right. It answers so, expecting to hear it again if it is wrong:
+            # said again, it objects (a word repeated raises the mind's attention).
+            self._objected.setdefault(said, set())
+            payload = {"on": "onlooker", "remark": remark, "here": self._here, "kept_on":
+                       "each step of the run reached a state it had not stood in"}
+            if lifted:
+                payload["lifted"] = lifted
+            return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
         pairs = self._objecting(remark, context, again)
         self._objected.setdefault(said, set()).update(pairs)
         answer = Answer()
@@ -359,6 +376,17 @@ class LearningModel:
             if act in named:
                 pairs.add((grid_key(step.before), act))
         return pairs
+
+    def _getting_somewhere(self, remark: dict[str, Any], context: Context) -> bool:
+        """Whether each step of the run the onlooker points at reached a state it had
+        not stood in before in that run — a repetition going somewhere, not one
+        standing or circling."""
+        run = int(remark.get("at_least") or 0)
+        steps = [s for s, _, _ in context.seen][-run:] if run else []
+        if len(steps) < run or not steps:
+            return False
+        states = [grid_key(steps[0].before, self.clock)] + [grid_key(s.after, self.clock) for s in steps]
+        return len(set(states)) == len(states)
 
     def objections(self) -> set[tuple[str, Act]]:
         """What it objects to now, as (where the region stands, act) under the clock it holds."""

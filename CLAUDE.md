@@ -319,7 +319,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   are objected to — for "repeating", where the region stands now; for
   "back-and-forth", at the states the alternation ran through; said again after
   it was answered, over the run the onlooker points at, as far as the field's
-  alertness reaches (½–1½ of it, within short-term perception). An objection
+  alertness reaches (½–1½ of it, within short-term perception). Told once that
+  it repeats an act whose every step reached a state it had not stood in, the
+  mind weighs the word against that evidence and keeps on, writing why
+  (`kept_on`); told again, it objects (Plone, 2026-09-28). An objection
   puts an act behind every other at every point of choice: a way whose first
   act is objected to is taken only when there is no other, every act known here
   objected to gives the act that is always open (RESET), and it is said so in

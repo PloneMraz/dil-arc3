@@ -3366,3 +3366,39 @@ still" set it going. Now, when what it reads comes back and it holds an aim
 while the body waits, the mind commands (`Mind.take_return`); the runs stand
 still for no cycle. ls20 with the onlooker plays exactly as before (377 actions
 to level 1). A test holds it. 323 tests.
+
+### What the onlooker cost, and a repetition going somewhere kept on (Plone, same day)
+
+Version 5 took 377 actions to ls20's level 1 where version 4, whose learning
+model the onlooker did not reach, took 330. Plone: the design follows the
+specification; find the cause and what can be improved.
+
+- **The cost is the onlooker's, all of it.** The learning mind is deterministic
+  (ls20 on Kaggle and here agree to the grid), so the current code was run on
+  ls20 with and without the onlooker: 330 actions to level 1 alone — version
+  4's exactly — and 377 heard. (The run alone first stood for 600 cycles: the
+  bug above.)
+- **Where.** Versions 4 and 5 made the same 179 moves; they part at cycle 180,
+  on "repeating ACTION3", where version 4 walked on along a path it knew and
+  version 5 turned. Of version 5's 52 cycles commanded twice, the act changed in
+  16 — every one on "repeating" over a run whose every step had reached a state
+  not stood in before: a repetition going somewhere, which the onlooker, knowing
+  no game, remarks on too. In no cycle did the objection change an act while the
+  agent circled; there the first command had already left the act objected to.
+- **What changed.** Told once that it repeats an act whose every step reached a
+  new state, the mind weighs the word against that evidence and keeps on,
+  writing why (`kept_on`) and expecting to hear it again if it is wrong; told
+  again, `REPEAT_AT` acts later, it objects. A back-and-forth is objected to at
+  once: it returns by definition.
+
+| ls20 / vc33, 600 cycles | actions to level 1, ls20 | vc33 |
+|---|---|---|
+| without the onlooker | 330 | — |
+| heard, as version 5 | 377 | 83 |
+| heard, a repetition going somewhere kept on | **330** | **81** |
+
+In the kept-on ls20 run the mind kept on 15 times and objected 28 times; the
+body carried out no objected act in an objection's cycle (0 of 10), nor chose
+one where an objection held (0 of 8); it commanded twice in 57 cycles. vc33
+kept on twice and objected to nothing. One run each. Stores in
+`scripts/data/onlooker-cost/` (git-ignored). 326 tests.
