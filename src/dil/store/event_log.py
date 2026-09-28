@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import copy
 import os
+from dataclasses import fields, is_dataclass
 from typing import Any, Protocol
 
 from .decisions import INDEX_KEYS
@@ -41,12 +42,41 @@ from .event_sink import (
 from .resist_event import EventRecord, LogRecord
 
 
+# Values a copy keeps as they are: immutable, so nothing can reach into them.
+_PLAIN = frozenset({int, float, str, bool, type(None)})
+
+
 def deep_freeze(value: Any) -> Any:
     """Return a copy nothing outside the log still holds a reference into.
 
     See the module docstring: this is Python's honest stand-in for the
     reference's recursive `Object.freeze`, not a transliteration of it.
+
+    A port-side optimization, not dil-core's (LOG.md, 2026-09-28): the plain
+    data a record carries — values, lists, tuples, dicts, dataclasses of them —
+    is copied here directly, as `copy.deepcopy` would copy it; anything else
+    still goes to `copy.deepcopy`. It was an eighth of a run's time.
     """
+    return _fresh(value)
+
+
+def _fresh(value: Any) -> Any:
+    t = type(value)
+    if t in _PLAIN:
+        return value
+    if t is list:
+        return [v if type(v) in _PLAIN else _fresh(v) for v in value]
+    if t is dict:
+        return {k: v if type(v) in _PLAIN else _fresh(v) for k, v in value.items()}
+    if t is tuple:
+        return tuple(v if type(v) in _PLAIN else _fresh(v) for v in value)
+    if is_dataclass(value) and not isinstance(value, type):
+        copied = copy.copy(value)
+        for f in fields(value):
+            v = getattr(value, f.name)
+            if type(v) not in _PLAIN:
+                object.__setattr__(copied, f.name, _fresh(v))
+        return copied
     return copy.deepcopy(value)
 
 

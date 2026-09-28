@@ -89,8 +89,14 @@ def _marker_from_dict(obj: dict[str, Any]) -> CommitMarker:
     )
 
 
+# One encoder for every canonical text: `json.dumps` with these arguments builds a
+# new one per call — 2.8 million of them in 60 cycles of sb26. The text is the
+# same (a port-side optimization, LOG.md, 2026-09-28).
+_ENCODER = json.JSONEncoder(separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+
+
 def _canonical(value: Any) -> str:
-    return json.dumps(value, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    return _ENCODER.encode(value)
 
 
 def _sha256(text: str) -> str:

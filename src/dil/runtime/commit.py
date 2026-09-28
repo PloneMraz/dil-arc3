@@ -85,20 +85,33 @@ def restore_snapshot(
 _TAG: Final = "__dil__"
 
 
+# Values a snapshot keeps as they are. A port-side optimization, not dil-core's
+# (LOG.md, 2026-09-28): the encoder asked each cell of every grid whether it was
+# a dataclass — 168 million calls in 60 cycles of sb26, two thirds of the run —
+# so plain values and rows of them are now recognised first, by type, and the
+# same value comes out.
+_PLAIN: Final = frozenset({int, float, str, bool, type(None)})
+
+
 def encode_snapshot_value(value: Any) -> Any:
     """Recursively tag the dataclasses a snapshot carries, for JSON storage."""
+    t = type(value)
+    if t in _PLAIN:
+        return value
+    if isinstance(value, dict):
+        return {k: v if type(v) in _PLAIN else encode_snapshot_value(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        if _PLAIN.issuperset(map(type, value)):   # a row of plain values: read by type, in C
+            return list(value)
+        return [v if type(v) in _PLAIN else encode_snapshot_value(v) for v in value]
     if is_dataclass(value) and not isinstance(value, type):
         return {
-            _TAG: type(value).__name__,
+            _TAG: t.__name__,
             "fields": {
                 f.name: encode_snapshot_value(getattr(value, f.name))
                 for f in fields(value)
             },
         }
-    if isinstance(value, dict):
-        return {k: encode_snapshot_value(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [encode_snapshot_value(v) for v in value]
     return value
 
 

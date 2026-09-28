@@ -4235,3 +4235,48 @@ stays.
 `run_series.py` gains `--start`, `--stop` and `--games`. The driver running the
 five was stopped (it was waiting on run 1, which runs on as it was) and is
 started again for runs 1 and 2.
+
+### The port made faster: what a run spends its time on (Plone, same day)
+
+Run 1 of the measurement took 3 h 40 min on Kaggle (1,801 s a game against the
+847 s of the four games measured before; sb26 6,351 s, 10.6 s a cycle). At that
+pace 110 games at four at once would take about 13.8 h. Plone asked whether the
+computing could be made faster, and approved a port-side optimization, tested
+here.
+
+**Where the time goes, profiled** (sb26, 60 cycles, the exact inducer; the
+profiler inflates many small calls): 504 s in the daemon's steps, of which 409 s
+writing the commits — 346 s the snapshot encoder, which asked each cell of every
+grid whether it was a dataclass (168 million calls), and 54 s the commit store
+writing its tree — and 90 s the whole loop, mind and learning with it, 63 s of
+that the `[event]` log's `copy.deepcopy` of each record. The mind and its model
+are not what makes a run slow; writing down the state is. And every commit
+reads the whole `[data]` store back from SQLite (13,796 decodes in 60 cycles)
+and encodes it again, so a commit costs more as the store grows: why each cycle
+of a run has been slower than the last.
+
+**What was changed** — in `src/dil/`, the port; dil-core's formats and names
+unchanged, as for the tree of 2026-09-27:
+- `encode_snapshot_value`: plain values and rows of them recognised first, by
+  type (a row checked in C); dataclasses last.
+- `deep_freeze`: the plain data a record carries (values, lists, tuples, dicts,
+  dataclasses of them) copied directly; anything else still `copy.deepcopy`.
+- the commit store's canonical text: one `json.JSONEncoder`, not one per call
+  (2.8 million in 60 cycles).
+
+**Checked.** `scripts/check_fast_paths.py` plays a game with each fast path
+wrapped, compared at every call with the code it replaced (the old encoder,
+`copy.deepcopy`, `json.dumps`): vc33 120 cycles (grid) and sb26 40 — 87
+encodes, 11,152 freezes, 3.3 million canonical texts, no difference. Reports
+line for line the same as the same runs on the code before, but for key, time
+and path. 325 pass, 34 skipped.
+
+| run, this machine | before | after |
+|---|---|---|
+| sb26, 40 cycles | 96 s | 56 s |
+| vc33, 120 cycles, grid | 54 s | 43 s |
+| sb26, 200 cycles, side by side | 725 s | 375 s (1.93×) |
+
+The longer the run, the more it gains. Not yet measured on Kaggle, and not in
+the dataset runs 1 and 2 play. Left as it is, and the largest part remaining:
+every commit still reads the whole store back and encodes it again.
