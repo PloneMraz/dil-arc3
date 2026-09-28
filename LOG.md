@@ -4315,3 +4315,59 @@ The report the same line for line as before any of it, but for key, time, path
 and the number of commits. How much of the last step is the cadence and how
 much the rest was not measured apart. Not yet measured on Kaggle; not in the
 dataset runs 1 and 2 play.
+
+## 2026-09-29
+
+### The measurement on Kaggle: exact against grid on 25 games, four laws of curiosity on six (Plone, 2026-09-28)
+
+Save & Run versions of `dil-arc3-learning` (not submissions), 600 cycles a game,
+four at once, CPU; `scripts/kaggle/run_series.py`, outputs in
+`scripts/data/kaggle/dil-run/m25-*/` (git-ignored); scores read from each run's
+offline scorecard (`read_scorecard.py`, the toolkit's scoring, 0-100).
+
+| run | code | games | score | levels | notebook |
+|---|---|---|---|---|---|
+| 1 exact, S2b | `4bbd221` | 25 | 0.00426 | 6 / 183 | 12,695 s |
+| 2 grid, S2b | `4bbd221` | 25 | **0.14051** | 9 / 183 | 10,978 s |
+| 3 grid, S2 | `97e79fd` | 6 | 0.57678 | 7 / 49 | 1,209 s |
+| 4 grid, S2c | `97e79fd` | 6 | 0.57583 | 7 / 49 | 1,503 s |
+| 5 grid, S2d | `97e79fd` | 6 | 0.56794 | 6 / 49 | 1,002 s |
+
+Run 2 on the six games of runs 3-5 (ls20, vc33, ar25, lp85, tu93, lf52): 0.57583,
+7 levels. Actions to each level completed (human baseline in brackets):
+
+| game | S2b | S2 | S2c | S2d | exact S2b |
+|---|---|---|---|---|---|
+| ls20 (22) | 347 | 580 | 347 | — | — |
+| vc33 (7, 18) | 74, 282 | 69, 282 | 74, 282 | 74, 282 | 73 |
+| ar25 (32) | — | — | — | — | 585 |
+| lp85 (17) | **17** | 17 | 17 | 17 | — |
+| tu93 (19, 16) | 453, 108 | 445, 112 | 453, 108 | 286, 217 | 397 |
+| lf52 (32) | 61 | 60 | 61 | 59 | 443 |
+
+- **Grid against exact: 33 times the score on the same code and games.**
+  lp85's level 1 in 17 actions, the human's own (100 points for it); lf52's
+  in 61 against 443; tu93 and vc33 through level 2; ls20 through level 1. Exact
+  held one level where grid held none: ar25 (585 actions), and m0r0.
+- **The laws of curiosity make no difference that holds across the six.** S2c
+  chose as S2b did choice for choice in four games, and scored the same in all
+  six (its tie-break is rarely reached). S2 gained a little in lf52 and vc33 and
+  lost in ls20 (580 actions against 347) and tu93; S2d lost ls20's level. S2b
+  stays the default.
+- **S4 was used once**: one choice "an act its hypotheses say brings the aim
+  here", in lf52, in every run. The levels 2 of tu93 and vc33 did not come of it.
+  Its criterion (ls20 and vc33 through level 2): vc33 yes, not through S4; ls20
+  no.
+- **Q4 against the S3 runs** (the same games, before the rate): the exact runs
+  chose as S3's did, choice for choice, in ar25, ls20, sk48 and vc33 — the rate
+  changed nothing for them. The grid runs parted from S3's before any aim was
+  reached (ls20 at its 210th choice, vc33 at its 42nd), so by the rate — S4 and
+  the laws of curiosity reach nothing before that — and ls20, with no level in
+  S3's grid run, completed level 1.
+- **Time on Kaggle, the faster port** (runs 3-5 on `97e79fd`): with the same
+  choices as run 2 (S2c, four games), ls20 1,063 → 574 s and tu93 2,832 →
+  935 s; ar25 567 → 777 s and lp85 294 → 460 s — slower, on the same choices, in
+  a notebook playing six games against 25: not traced, taken as the machine's.
+  The six under S2c averaged 771 s against run 2's 1,439 s. At that ratio,
+  run 2's 25-game mean (1,411 s) would be about 755 s, and 110 games four at once
+  about 5.8 h — an estimate from six games, not measured on 110.
