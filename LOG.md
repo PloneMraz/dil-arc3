@@ -3547,8 +3547,8 @@ Curiosity now counts, for each kind of act and each act, how often it reached a
 situation not met before, instead of how often it changed the state. The odds
 are still Laplace's, raised by UCB1, and the choice datum says `odds_of_new`. An
 act that only takes the mind back where it stood changes the state every time
-and reaches nowhere new. On sk48, ACTION7 (undo) did that: 131 of 132 of its
-steps changed the state, and 35 reached a new one.
+and reaches nowhere new. On sk48, ACTION7 (undo) did that: in S1's 600-cycle run
+it was taken 133 times, and 105 of those led back to a situation already met.
 
 **S2 on ar25 and sk48, first.** With the exact inducer, the two reports agree
 with S1's line for line, as ls20 and vc33 did.
