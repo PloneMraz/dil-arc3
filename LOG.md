@@ -4125,3 +4125,61 @@ competitions submissions` after Plone said it had finished.
 The code now differs from `f76ff5f` (the mind holds its learning, the grid
 inducer, Q4, S4 and the laws of curiosity): a later submission is another
 submission, and the paper names the one it describes.
+
+### How the score is computed, and the human baselines (same day)
+
+Plone asked what the human baseline is in each game.
+
+- **The formula, read in the toolkit** (`arc_agi/scorecard.py`): a completed
+  level scores `(baseline_actions / actions_taken)² × 100`, capped at 115; a
+  level not completed scores 0 and still counts in the game's weights; a game's
+  score is its levels' scores weighted by level number; the scorecard's score
+  is the games' mean. Checked on version 5's offline scorecard: vc33's level 1,
+  a baseline of 7 against 85 actions, scores 0.678 (0.6782 in the card), and
+  the game 0.678 / 28 = 0.0242 (seven levels, weights 1 to 7). So the scale is
+  0-100: version 5's four offline games came to 0.00906, version 4's to
+  0.01027 (`scripts/read_scorecard.py`, added). Whether Kaggle's public 0.05 is
+  on the same scale was not checked.
+- **The baselines** are in each game's `metadata.json`, `baseline_actions`, one
+  per level. The 25 games' files were downloaded from the competition
+  (`kaggle competitions download -f environment_files/<game>/<version>/metadata.json`)
+  to `Downloads/arc-metadata/`: 6 to 10 levels a game, 171 (cd82) to 1,843
+  (wa30) actions a game; 6 to 578 a level, median 60; level 1, 7 to 78, median
+  30. ls20: 22, 123, 73, 84, 96, 192, 186. vc33: 7, 18, 44, 61, 131, 34, 152.
+- So version 5's level 1 took about 17 times ls20's baseline (379 against 22)
+  and 12 times vc33's (85 against 7): 0.34 and 0.68 points of 100.
+
+### Goal and aim, settled; the language model's earlier form to go (Plone, same day)
+
+Plone: every living thing has an aim without being told one. An instruction
+given from outside is a **goal**; the **aim** is the creature's own — it takes
+the goal's value when there is one, and when there is none, the creature still
+has an aim to act by. Settled, with one precision put to him and taken: the aim
+a mind holds without a goal is not an arbitrary one but one of its make-up, and
+it must be one what comes back could show (the regress rule of 2026-09-25) —
+proposed and agreed: **the region reports something it has not reported
+before**, of the same kind as the task's goal (`levelsDelta: 1` is a field of
+the report).
+
+Found on the way: the aim is not in the mind's code but in `prior:mind-task`'s
+data (`TASK_AIM`), recalled by the mind and held twice — as the seams' `_goal`
+and the learning's `_aim`. The learning mind has no aim of its own: with no task
+aim it commands nothing. `prior:mind-aim`'s words, which say to work one out,
+reach only the language model's earlier form.
+
+Plone also: the language model has no aim — it is a model; the aim is the
+mind's, and the mind tells the model what to compute. Its `GOAL` goes. Put to
+him and agreed in substance: the whole earlier form goes with it (its seat,
+`LanguageModel`, the 34 skipped tests, `prior:mind-aim`, the seams only it used
+— want, `within`), since stripping its `GOAL` alone would leave neither the
+submitted code nor the new one; `3b31806` keeps that code for the paper.
+
+To do after the 25-game measurement, so that its runs share one dataset:
+- the task's aim becomes the goal (data, a prior); the mind holds one aim, in
+  its code, taking the goal's value, or else its own: the region reports
+  something new;
+- the earlier form removed, and with it the second copy of the aim.
+
+Open with Plone: whether the language inducer's words keep "The aim is to find
+how to get through its levels." (S5 kept it word for word; it tells the model
+what the region is for, not an aim to pursue) or drop it.

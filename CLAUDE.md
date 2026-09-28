@@ -566,6 +566,14 @@ level_score = (human_baseline_actions / ai_actions) ^ 2      capped at 1.15x hum
 Per game, level scores are averaged with the 1-indexed level number as weight;
 the total is the mean across games, 0–100%.
 
+Read in the toolkit (`arc_agi/scorecard.py`, LOG.md, 2026-09-28): a level's
+score is `(baseline / actions)² × 100`, capped at 115; a level not completed
+scores 0 and still counts in the weights. The human baseline per level is each
+game's `metadata.json` (`baseline_actions`): over the 25 games in the
+competition's `environment_files`, 6 to 578 actions a level, median 60; level 1,
+7 to 78, median 30. An offline run's scorecard (`competition.json`) is scored
+so: `scripts/read_scorecard.py` reads it.
+
 Two consequences fix the design:
 
 1. **Wasted actions are punished quadratically.** Spending three times a human's
