@@ -200,6 +200,10 @@ class ExactInducer:
         """What one experience suggests: that it will happen again, exactly."""
         return [ExactForm(source=source, act=act, to=after)]
 
+    def key(self, form: ExactForm) -> tuple:
+        """What a hypothesis says, as one value: two that say the same are one."""
+        return ("exact", form.source, form.act, grid_key(form.to))
+
     def scope(self, form: ExactForm, situation_of) -> tuple:
         """Where a hypothesis applies: the situation it was met in, and its act."""
         return ("at", situation_of(form.source), form.act)

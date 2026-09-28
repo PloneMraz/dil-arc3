@@ -87,11 +87,22 @@ otherwise, weighs each hypothesis by how often the region bore it out (held
 while right more often than wrong), and chooses by the paths it knows and by
 curiosity — what it knows least. The inducer is replaceable and only computes:
 what a state is to it, what can be done in one, what an experience suggests and
-what a hypothesis predicts. The one there is, the exact inducer
-(`src/mind/models/exact.py`), suggests one hypothesis per experience — this act
-from this situation gives that — applying nowhere else; it generalises nothing,
-and is the reference others are measured against. It finds the clock a region
-keeps whatever is done.
+what a hypothesis predicts. There are two (`--inducer`):
+
+- **exact** (`src/mind/models/exact.py`) suggests one hypothesis per experience
+  — this act from this situation gives that — applying nowhere else. It
+  generalises nothing, and is the reference the other is measured against. It
+  finds the clock a region keeps whatever is done.
+- **grid** (`src/mind/models/grid.py`) perceives as the exact one does and
+  suggests, besides the exact hypothesis, one that reaches past where it was
+  met: "this act changes nothing" (for an act that takes a place, on that
+  colour), or "this act rewrites, in each part of the grid it changes, L into
+  R", each part found on its own wherever L lies, one place only.
+
+Curiosity counts how often a kind of act reached a situation not met before. An
+untried act its hypotheses say leads where it has stood is tried last, after the
+acts it cannot foresee here and the ways to them elsewhere — never out of reach,
+or the hypothesis could never be refuted.
 
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the game: what it knows of a game is

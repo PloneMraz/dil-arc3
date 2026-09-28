@@ -37,6 +37,7 @@ from arc3.task import TASK_CUE
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.learning import Learning
 from mind.models.exact import ExactInducer
+from mind.models.grid import GridInducer
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
@@ -63,6 +64,9 @@ ap.add_argument("--think", action="store_true")
 ap.add_argument("--mind", choices=("language", "learning"), default="language",
                 help="which mind sits in the one seat: the language model's (mind.py), or the one that "
                      "learns from nothing (mind/learning.py, with the exact inducer)")
+ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
+                help="what the learning mind computes with: exact hypotheses, or ones that reach past "
+                     "where they were met (mind/models/grid.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -93,7 +97,8 @@ LEARNING = a.mind == "learning"
 if LEARNING:
     # The one mind, neutral, learning from nothing with the exact inducer; the
     # host declares its organs, and the mind reads the task for its aim.
-    mind = Mind(Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    inducer = {"exact": ExactInducer, "grid": GridInducer}[a.inducer](ARC_ORGANS)
+    mind = Mind(Learning(inducer, ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
     seat = seat_rule(mind)
 else:
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
@@ -166,6 +171,9 @@ if LEARNING:
     print(f"  hypotheses written    : {len(learned)}  saying one no longer holds: {sum(1 for d in learned if not d.payload.get('holds'))}")
     print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.inducer.clock)})")
     print(f"  held off the clock    : {sum(mind.model.holds_off_clock)} of {len(mind.model.holds_off_clock)}")
+    held = sum(1 for h in mind.model._hypotheses if h.holds)
+    print(f"  inducer               : {mind.model.inducer.kind}  hypotheses {len(mind.model._hypotheses)} (held {held})")
+    print(f"  unseen (situation, act): {mind.model.unseen[0]}  expected {mind.model.unseen[1]}  right {mind.model.unseen[2]}")
     print(f"  why it chose          : {dict(why)}")
     print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, somewhere new, levels) most tried "
           f"{sorted(mind.model._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")

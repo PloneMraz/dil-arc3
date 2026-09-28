@@ -3574,3 +3574,116 @@ Actions to level 1 count the non-RESET moves in `[event]` before the first
   compare with S1's.
 
 Stores are in `scripts/data/s2/` and `s2b/` (git-ignored). 331 tests.
+
+### S3: the grid inducer, whose hypotheses reach past where they were met (same day)
+
+**What was built.**
+- `src/mind/models/grid.py` sees what the exact inducer sees. Beside the exact
+  hypothesis, it suggests one that reaches further:
+  - "this act changes nothing": for an act that takes a place, on that colour;
+  - "this act rewrites, in each part of the grid it changes, the cells L into
+    R".
+
+  Each part of a rewrite is found on its own:
+  - at the place the act is put, when that lies in or next to the part;
+  - else at the one place its box lies;
+  - or, where the box lies at several, by the ring of cells around it, the
+    grid's edge among them.
+
+  An act that takes a place must be put on the colour it was put on then.
+
+- The mind now asks its inducer for hypotheses on two occasions: a new situation
+  and act, and a step that no held hypothesis foresaw. It holds once what the
+  inducer keys alike.
+- The mind counts `unseen`: steps from a situation and act never met, how many
+  it expected, and how many of those were right.
+- `--inducer exact|grid` goes through `run_game.py`, `run_competition.py` and
+  the Kaggle builder. The default stays `exact`.
+- `scripts/replay_inducer.py` replays a run's steps through the mind's learning
+  with each inducer. The acts are the run's, so only the expectations differ.
+
+**Replayed on S1's steps**, of the steps from a situation and act never met
+(exact: 0 by construction):
+
+| | never met | grid expected | right |
+|---|---|---|---|
+| ls20 | 426 | 281 | 259 (92%) |
+| vc33 | 529 | 396 | 345 (87%) |
+| ar25 | 596 | 531 | 490 (92%) |
+| sk48 | 596 | 459 | 333 (73%) |
+
+**How it got there.**
+- The first rewrite placed its parts at fixed distances from each other. It was
+  right on 60 of 193 such steps in ar25 and 176 of 271 in sk48.
+- Each counter is a part of the state, not a clock:
+  - ar25 keeps one in column 63. It ticks on ACTION1-5 and never on ACTION6 or
+    7, so it counts moves, and the row-only clock rule cannot find it.
+  - sk48 keeps one in row 53, which ticks on some moves.
+- Every wrong prediction was off by those one or two cells, so each part is now
+  found on its own.
+- The first replay of vc33 had never found the clock. The replay did not name
+  the kinds of act as `propose` does, so every click was one kind. Fixed in the
+  script.
+- vc33 took 333 s to replay. Three changes brought it to 46 s, with the same
+  answers:
+  - the parts at the place are looked at first;
+  - the colour under the place must match;
+  - each box is checked rarest colour first, and where each part lies is
+    remembered per situation.
+
+**Live, 600 cycles, one run each.** Levels, with actions to level 1 in brackets.
+
+| | ls20 | vc33 | ar25 | sk48 | levels |
+|---|---|---|---|---|---|
+| exact (as S2b) | 0 | 1 (72) | 1 (578) | 0 | 2 |
+| grid, foreseen acts out of reach | **1 (128)** | 0 — stuck, 4 situations | 0 | 0 | 1 |
+| grid, foreseen acts last at here | 0 | 1 (71) | 0 | 0 | 1 |
+| grid, foreseen acts last (as now) | 0 | **2** (71; level 2 at cycle 306) | 0 | 0 | 2 |
+
+- **The first live round excluded foreseen acts, as S2 wrote.** An untried act
+  whose hypothesis said it leads where the mind has stood was taken out of
+  reach.
+  - On vc33 that stranded it: "a click on this colour changes nothing" was
+    right more often than wrong. No click on that colour was tried again, so the
+    hypothesis could never be refuted by one. The mind took the known act toward
+    the least visited situation 581 times.
+  - On sk48 the moves were foreseen to lead back, and undo, foreseen by nothing,
+    was taken 259 times.
+  - So a foreseen act is now tried last, never out of reach. This replaces
+    S2's line.
+- **The second round put foreseen acts last only at the situation it stands in.**
+  On ls20 it then walked to far situations to try acts it could foresee. So the
+  order is now:
+  1. what it cannot foresee, here;
+  2. the way to such an act, or to a situation not stood in;
+  3. what it can foresee, here;
+  4. the way to that, elsewhere;
+  5. RESET.
+- **What reached a level changed with each round.**
+  - ls20 was reached once, in 128 actions (S1: 330).
+  - vc33 reached level 2 for the first time, in the last round.
+  - ar25, reached with the exact inducer, was never reached with the grid one.
+
+  Over four games, one run each, no inducer and no order is shown better at
+  levels.
+- **The generalisation is not in doubt.** In the last round the grid inducer
+  expected, and was right on, these steps from a situation and act never met:
+
+  | | right | expected | never met |
+  |---|---|---|---|
+  | ls20 | 109 | 123 | 219 |
+  | vc33 | 229 | 283 | 510 |
+  | ar25 | 495 | 530 | 595 |
+  | sk48 | 175 | 301 | 598 |
+
+  The exact inducer expected none of them.
+- **Exact, on the S3 code** (asked on surprise, foreseen acts last), was the S2b
+  run in every cycle on all four games: it foresees nothing it has not met.
+- **Cost.** Eight runs shared the machine. Grid took 1131, 1088, 761 and 1400 s;
+  exact took 884, 707, 739 and 1190 s: 3% to 54% more. On Kaggle, 110 games at
+  600 cycles were estimated at about 6.5 h with exact against a 9 h limit. The
+  grid inducer would need fewer cycles or more games at once.
+
+Stores are in `scripts/data/s3-exact/`, `s3-grid/`, `s3-grid2/`, `s3-exact3/`
+and `s3-grid3/` (git-ignored). The games ran offline from `environment_files`.
+339 tests.

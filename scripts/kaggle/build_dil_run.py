@@ -487,6 +487,8 @@ def main() -> None:
                     help="the gateway probe: the random agent through the same path, no model, no GPU")
     ap.add_argument("--mind", choices=("language", "learning"), default="language",
                     help="learning: the mind that learns from nothing, on CPU, no model")
+    ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
+                    help="for the learning mind: the inducer it computes with")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -525,7 +527,7 @@ def main() -> None:
     }
     cpu = a.probe or a.mind == "learning"
     if cpu:
-        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning"]
+        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning", "--inducer", a.inducer]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]

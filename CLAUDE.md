@@ -134,10 +134,21 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   predict (at most `MAX_IMAGINED_STEPS` past where it has stood). The inducer
   declares where a hypothesis applies (its scope) and only computes: perception (a state's
   identity, where the region stands in it), the acts a state affords, `induce`,
-  `predict`, `describe`. The one there is, **exact** (`src/mind/models/exact.py`),
-  suggests one hypothesis per experience, applying where it was met and nowhere
-  else: one hypothesis per situation and act, so "the one right most often" has
-  nothing to choose between yet.
+  `predict`, `describe`. It is asked on a new situation and act, and on a step
+  no held hypothesis foresaw; what it keys alike is held once. Two inducers
+  (`--inducer`): **exact** (`src/mind/models/exact.py`), one hypothesis per
+  experience, applying where it was met and nowhere else; **grid**
+  (`src/mind/models/grid.py`), the exact one's perception and hypotheses plus
+  "still" and "rewrite" ones that apply wherever their cells lie (its docstring
+  declares the language).
+- **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
+  wanted by how often it reached a situation not met before, not by how often it
+  changed the state.
+- **A foreseen act is put last, never out of reach** (2026-09-28): an untried
+  act whose held hypothesis says it leads where the mind has stood is tried
+  after the acts it cannot foresee, here and by the ways to them. A hypothesis
+  that kept an act from being tried could never be refuted by it (measured:
+  LOG.md, S3).
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams

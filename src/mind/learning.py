@@ -11,9 +11,11 @@ THE LOOP, one step at a time:
 - **Experience.** Each step — from where the region stood, an act, where it
   stands and what it reported of itself — is kept, accrued (INV-5), with how
   often it was met and how often the region ended on it.
-- **Hypotheses are data.** What an experience suggests, the inducer says; the
-  mind holds it as a hypothesis and writes it (`kind: hypothesis`), built from
-  the step and the report it came in.
+- **Hypotheses are data.** What an experience suggests, the inducer says — asked
+  of a step from a situation and act never met, and of one no hypothesis it held
+  foresaw; the mind holds each as a hypothesis, once (what the inducer keys
+  alike is one), and writes it (`kind: hypothesis`), built from the step and
+  the report it came in.
 - **Expecting.** For a step, the hypotheses that apply to where the region stood
   and the act; of those it holds, the one that fits the store best is the
   expectation, and is what the expectation is (`held_by`) — so when the region
@@ -25,7 +27,8 @@ THE LOOP, one step at a time:
   changes, a new datum says so, built from the one before: nothing is revised
   in place.
 - **Choosing.** Toward the aim it has reached before; else what it knows least
-  (curiosity, below) — never an act its hypotheses say leads where it has stood;
+  (curiosity, below) — an act its hypotheses say leads where it has stood last,
+  never out of reach;
   else the shortest way to where something is left to try, looking ahead by what
   its held hypotheses predict — through the situations it has stood in and, for
   an inducer whose hypotheses reach past where they were met, up to
@@ -47,7 +50,9 @@ state every time and teaches it nothing (Plone, 2026-09-28: S2b).
 
 What it holds but does not write — its counts, how often an experience was met
 and ended the region, the situations it visited — follows from the observations
-in the store only when those are replayed through it, in order.
+in the store only when those are replayed through it, in order. So does
+`unseen`: of the steps from a situation and act never met, how many it expected
+and how many of those it expected right — what it learned, reaching further.
 """
 
 from __future__ import annotations
@@ -170,6 +175,11 @@ class Learning:
         self._scoped: dict[tuple, list[Hypothesis]] = {}
         self._applies: dict[tuple[str, Act], tuple[dict, list]] = {}
         self._new: list[Hypothesis] = []                     # induced, not yet written
+        self._keys: set = set()                              # what each hypothesis says, as the inducer keys it
+        # Steps from a situation and act never met: how many, how many it expected,
+        # how many of those it expected right — what it learned, reaching further.
+        self.unseen = [0, 0, 0]
+        self._unseen_expected: str | None = None
         self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
@@ -207,6 +217,19 @@ class Learning:
     def _add(self, h: Hypothesis) -> None:
         self._hypotheses.append(h)
         self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
+
+    def _induce(self, source_raw: str, act: Act, step: Step) -> list[Hypothesis]:
+        """What an experience suggests, held — save what it holds already."""
+        out = []
+        for form in self.inducer.induce(source_raw, act, step.before, step.after):
+            key = self.inducer.key(form)
+            if key in self._keys:
+                continue
+            self._keys.add(key)
+            h = Hypothesis(form)
+            self._add(h)
+            out.append(h)
+        return out
 
     def _applicable(self, situation: str, act: Act, state: Any = None) -> list[tuple[Hypothesis, Any, str]]:
         """The hypotheses that apply to a situation and act, each with what it
@@ -407,8 +430,15 @@ class Learning:
         source = self.inducer.situation(step.before)
         act = self.inducer.learnable(step.act)
         best = self._best(source, act, step.before)
+        unseen = (source, act) not in self._edges
+        self._unseen_expected = None
+        if unseen:
+            self.unseen[0] += 1
         if best is not None:
-            h, said, _ = best
+            h, said, to = best
+            if unseen:
+                self.unseen[1] += 1
+                self._unseen_expected = to
             state = [row[:] for row in said.state]
             fields = self.inducer.fields(h.form)
             self._expected = state
@@ -453,13 +483,15 @@ class Learning:
                 counts[0] += 1
                 counts[1] += int(new)
         self._last_new = known is None
+        if self._unseen_expected is not None:
+            self.unseen[2] += int(self._unseen_expected == to)
+            self._unseen_expected = None
         # Every hypothesis that applied is borne out, or not, by where the region stands.
+        foreseen = any(h.holds and said == to for h, _, said in applied)
         for h, _, said in applied:
             writes += self._weigh(h, said == to, (unit,))
         if known is None:
-            self._new = [Hypothesis(f) for f in self.inducer.induce(source_raw, act, step.before, step.after)]
-            for h in self._new:
-                self._add(h)
+            self._new = self._induce(source_raw, act, step)
             edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=self._new[0])
             self._learned.append(edge)
             self._edges[(source, act)] = edge
@@ -467,6 +499,9 @@ class Learning:
         else:
             edge = known
             edge.seen += 1
+            if not foreseen:
+                # What came, no hypothesis it holds foresaw: it asks what this suggests.
+                self._new = self._induce(source_raw, act, step)
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
         self._visits[to] = self._visits.get(to, 0) + 1
@@ -559,19 +594,19 @@ class Learning:
 
     def _open_here(self, here: str, offers: tuple[int, ...],
                    objected: set[tuple[str, Act]] | None = None) -> list[tuple[Act, tuple]]:
-        """The acts not yet taken from here, and not objected to — save those its
-        hypotheses say lead where it has stood: it knows what they do."""
+        """The acts not yet taken from here, and not objected to."""
         objected = self.objections() if objected is None else objected
-        out = []
-        for act, kind in self._candidates(here, offers):
-            if (here, act) in self._edges or (here, act) in objected:
-                continue
-            if self.inducer.general:
-                best = self._best(here, act)
-                if best is not None and best[2] in self._grid_of:
-                    continue
-            out.append((act, kind))
-        return out
+        return [(act, kind) for act, kind in self._candidates(here, offers)
+                if (here, act) not in self._edges and (here, act) not in objected]
+
+    def _foreseen(self, here: str, act: Act) -> bool:
+        """Whether its hypotheses say an act leads where it has stood. Such an act
+        is put behind the others, never out of reach: a hypothesis that kept an
+        act from being taken could never be refuted by it."""
+        if not self.inducer.general:
+            return False
+        best = self._best(here, act)
+        return best is not None and best[2] in self._grid_of
 
     def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
         """From a situation, where each act leads, by the hypothesis it holds best
@@ -625,6 +660,24 @@ class Learning:
                 queue.append(to)
         return None
 
+    def _curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
+        """Of the acts in `pool`, the one it is most curious about: first which act,
+        over every kind of it; then which of its kinds. With the odds it gives it."""
+        chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
+        best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
+        self._kind_of[(here, best[0])] = best[1]
+        return best[0], self._odds(best[1])[1]
+
+    def _way(self, here: str, goal: Callable[[str], bool], offers: tuple[int, ...],
+             objected: set[tuple[str, Act]]) -> tuple[list[tuple[Act, Hypothesis]] | None, bool]:
+        """A way to where `goal` holds whose first act is not objected to; only if
+        there is none, one that is (and says so)."""
+        path = self._path(here, goal, offers, avoid=objected)
+        if path:
+            return path, False
+        path = self._path(here, goal, offers)
+        return path, bool(path)
+
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
         here = self._here
         if here is None:
@@ -645,30 +698,38 @@ class Learning:
             aim_here = [e for e in self._out.get(here, {}).values() if e.hypothesis.holds and self._reached(e.status)]
             path = None if aim_here or not gained else self._path(here, lambda n: n in gained, offers)
             opened = self._open_here(here, offers, objected)
+            fresh = [ak for ak in opened if not self._foreseen(here, ak[0])]
             if aim_here:
                 act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0].hypothesis]
             elif path:
                 act, why, through = path[0][0], f"toward the aim reached before ({len(path)} steps)", [h for _, h in path]
-            elif opened:
-                chosen = max({a for (a, _, _), _ in opened}, key=lambda a: (self._action_curiosity(a), -a))
-                best = max((ak for ak in opened if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
-                act, odds = best[0], self._odds(best[1])[1]
-                self._kind_of[(here, act)] = best[1]
+            elif fresh:
+                act, odds = self._curious(here, fresh)
                 why = "not yet taken from here"
             else:
-                def open_at(n: str) -> bool:
-                    # A situation it has not stood in is itself what it has not tried.
-                    return n not in self._grid_of or bool(self._open_here(n, offers, objected))
+                # Where it has not tried something it cannot foresee — a situation
+                # it has not stood in is itself such a place; then what it can
+                # foresee, here; then, anywhere.
+                def fresh_at(n: str) -> bool:
+                    return n not in self._grid_of or any(not self._foreseen(n, a)
+                                                         for a, _ in self._open_here(n, offers, objected))
 
-                path = self._path(here, open_at, offers, avoid=objected)
-                over = False
-                if not path:
-                    path = self._path(here, open_at, offers)
-                    over = bool(path)
+                def open_at(n: str) -> bool:
+                    return n in self._grid_of and bool(self._open_here(n, offers, objected))
+
+                path, over = self._way(here, fresh_at, offers, objected)
+                foreseen = False
+                if not path and not opened and self.inducer.general:
+                    path, over = self._way(here, open_at, offers, objected)
+                    foreseen = bool(path)
                 if path:
                     act, through = path[0][0], [h for _, h in path]
                     why = f"toward a state with an act not yet taken ({len(path)} steps)" + \
+                        ("; its hypotheses say where each leads" if foreseen else "") + \
                         ("; objected to, and no other way" if over else "")
+                elif opened:
+                    act, odds = self._curious(here, opened)
+                    why = "not yet taken from here; its hypotheses say where each leads"
                 elif self._learned_since_reset:
                     act, why = self.organs.reset, "nothing left to try from anywhere it can reach"
                 else:
