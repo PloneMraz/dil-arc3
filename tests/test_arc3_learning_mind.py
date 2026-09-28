@@ -519,3 +519,39 @@ def test_of_the_hypotheses_held_the_one_right_at_the_highest_rate_is_expected_fr
     even = Hypothesis("even", supports=10, fails=0)
     learning._applicable = lambda situation, act, state=None: [(even, None, "a"), (truer, None, "b")]
     assert learning._best("here", (1, None, None))[0] is even, "at an equal rate, the first met stands"
+
+
+def test_each_law_of_curiosity_wants_what_it_counts():
+    # Plone, 2026-09-28: S2, S2b, S2c and S2d, to be measured against each other.
+    # Two kinds of act, each tried 10 times: "back" changed the state 9 times but
+    # reached somewhere new once (it mostly goes back where it stood); "wall"
+    # reached somewhere new twice and changed nothing else (it is mostly blocked).
+    from mind.learning import CURIOSITY, Learning
+    back, wall = ("act", 1), ("act", 2)
+
+    def wants(law):
+        learning = Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=law)
+        learning._kinds = {back: [10, 1, 0], wall: [10, 2, 0]}
+        learning._kind_changes = {back: 9, wall: 2}
+        return max((back, wall), key=learning._curiosity)
+
+    assert CURIOSITY[0] == "new", "S2b is the default"
+    assert wants("new") == wall, "S2b: somewhere new"
+    assert wants("changed") == back, "S2: a change, going back included"
+    assert wants("new-then-changed") == wall, "S2c: somewhere new first"
+    assert wants("new-plus-changed") == back, "S2d: both odds, added"
+    with pytest.raises(ValueError):
+        Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="most")
+
+
+def test_the_default_law_is_the_one_measured_before():
+    # S2b, as it was computed before the other laws were added: the odds of the
+    # aim, then the odds of somewhere new raised by UCB1 — the same numbers.
+    import math
+    learning = seated().learning
+    learning._kinds = {("act", 1): [7, 3, 1], ("act", 2): [2, 2, 0]}
+    total = 9
+    for kind, (tried, new, aim) in learning._kinds.items():
+        level = (aim + 1) / (tried + 2) if aim else 0.0
+        assert learning._curiosity(kind) == (level, (new + 1) / (tried + 2)
+                                             + math.sqrt(2 * math.log(total + 1) / (tried + 1)))

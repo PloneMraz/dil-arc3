@@ -122,7 +122,9 @@ what a hypothesis predicts. There are three (`--inducer`):
   Each answer is kept whole in the store, built from the prior. Not run against a served model, and not used for ARC-AGI-3
   for now (Plone, 2026-09-28).
 
-Curiosity counts how often a kind of act reached a situation not met before. An
+Curiosity counts how often a kind of act reached a situation not met before
+(S2b); three other laws — a change (S2), somewhere new then a change (S2c), the
+two added (S2d) — are kept to be measured against it (`--curiosity`). An
 untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.

@@ -490,6 +490,8 @@ def main() -> None:
                          "language model's earlier form on a GPU, kept, not built (LOG.md, 2026-09-28)")
     ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
                     help="the mind's model, what its learning computes with")
+    ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
+                    default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
     a = ap.parse_args()
     if a.mind == "language" and not a.probe:
         # Kept, not run: its notebook would play no game (run_game.py stops).
@@ -532,7 +534,7 @@ def main() -> None:
     }
     cpu = a.probe or a.mind == "learning"
     if cpu:
-        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning", "--inducer", a.inducer]
+        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning", "--inducer", a.inducer, "--curiosity", a.curiosity]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]

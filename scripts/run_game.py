@@ -39,6 +39,7 @@ from arc3.host import create_source, declaration
 from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
+from mind.learning import CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.exact import ExactInducer
 from mind.models.grid import GridInducer
@@ -73,6 +74,9 @@ ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exa
                 help="the mind's model, what its learning computes with: exact hypotheses, ones that reach "
                      "past where they were met (mind/models/grid.py), or programs a served language model "
                      "writes (mind/models/language_inducer.py, at --endpoint)")
+ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
+                help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
+                     "new-then-changed (S2c), new-plus-changed (S2d) — mind/learning.py")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -112,7 +116,7 @@ if LEARNING:
                                                             max_tokens=a.max_tokens, extra=extra))
     else:
         inducer = {"exact": ExactInducer, "grid": GridInducer}[a.inducer](ARC_ORGANS)
-    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity)
     seat = seat_rule(mind)
 else:  # not reached: the language model is not run (above)
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
@@ -189,6 +193,9 @@ if LEARNING:
     print(f"  inducer               : {mind.learning.inducer.kind}  hypotheses {len(mind.learning._hypotheses)} (held {held})")
     print(f"  unseen (situation, act): {mind.learning.unseen[0]}  expected {mind.learning.unseen[1]}  right {mind.learning.unseen[2]}")
     print(f"  why it chose          : {dict(why)}")
+    if a.curiosity != CURIOSITY[0]:
+        print(f"  curiosity             : {a.curiosity}  changes by kind "
+              f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")
     if a.inducer == "language":
         answers = mind.learning.inducer.answers
         why_not = collections.Counter((t["why_not"] or "")[:60] for t in answers if not t["program"])

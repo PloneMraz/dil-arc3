@@ -4004,3 +4004,52 @@ and was PENDING ten minutes before.
 - The rerun is over, so a new `dil-arc3-src` dataset version may be pushed.
 - The code scored is `f76ff5f`. It is not the code of S1–S3 (`283fdf6` on),
   which has not been submitted.
+
+### Four laws of curiosity, to be measured against each other (Plone, same day)
+
+Why ls20 lost the level S1 reached, read from the S2 and S2b runs of ls20
+(`scripts/data/s2/`, `s2b/`): the two agree to cycle 10 and part at cycle 11,
+and the only change between them is what curiosity counts. S2 counted a change;
+S2b counts somewhere new. The inducer was the same exact one.
+
+| act | S2: changed / tried | S2b: somewhere new / tried |
+|---|---|---|
+| ACTION1 | 183 / 219 (84%) | 31 / 164 (19%) |
+| ACTION4 | 105 / 132 (80%) | 49 / 163 (30%) |
+| ACTION3 | 97 / 125 (78%) | 15 / 134 (11%) |
+| ACTION2 | 90 / 117 (77%) | 33 / 133 (25%) |
+
+In a maze a change is mostly "not blocked": nearly even across acts, ACTION1
+slightly ahead, and ACTION1 — the act that gained the level — taken 219 times.
+Somewhere new is rare and uneven, and depends on where the walk has been: S2b
+wanted ACTION4 and ACTION2, and ACTION1 less. ls20 ends a life about every 133
+actions (resets at cycles 132, 265-267, 398-400...), so the exit must be reached
+deep within one: S2 got there in its third life (cycle 333), S2b spread out
+(125 situations against 134) and did not. vc33's level 2 is the grid inducer's
+(exact reaches level 1 only). One run each; one map.
+
+Plone asked why neither "somewhere new, and a change" nor "a change, and a new
+one": taken as both conditions, each is somewhere new (reaching somewhere new is
+a change). But a step ends one of three ways — blocked, back where it stood,
+somewhere new — and S2 counts the last two alike, S2b the first two. Settled
+with Plone: the laws are named and kept side by side, and the one that does
+best across the games chosen after.
+
+- **S2** `changed`, **S2b** `new` (the default), **S2c** `new-then-changed`
+  (somewhere new; between kinds as likely to, a change), **S2d**
+  `new-plus-changed` (the two odds added) — `learning.CURIOSITY`,
+  `--curiosity` in `run_game.py`, `run_competition.py` and `build_dil_run.py`.
+  The learning counts changes beside what it counted; the choice datum gives
+  `odds_of_change` where a law counts one.
+- The grid inducer with S2's law had never been run: it is one of the cells of
+  the measurement.
+- Tests: each law wants what it counts (a kind that mostly goes back against one
+  mostly blocked); the default gives the numbers S2b gave. A 20-cycle ls20 run of
+  each, grid inducer, ran through. 321 pass, 34 skipped.
+
+To be measured on the 25 games in the competition's `environment_files` — all
+of them are there (listed with `kaggle competitions files`: ar25, bp35, cd82,
+cn04, dc22, ft09, g50t, ka59, lf52, lp85, ls20, m0r0, r11l, re86, s5i5, sb26,
+sc25, sk48, sp80, su15, tn36, tr87, tu93, vc33, wa30) — on Kaggle, once
+submission `56623380` is done (it was PENDING at the time of writing): every law
+on the same code, Q4 in it, S2b run again.

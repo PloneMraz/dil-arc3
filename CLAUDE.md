@@ -165,7 +165,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   has recalled it; each answer names the prior.
 - **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
   wanted by how often it reached a situation not met before, not by how often it
-  changed the state.
+  changed the state. Three other laws are kept beside it to be measured, and the
+  one that does best across the games chosen after (Plone, 2026-09-28;
+  `--curiosity`, `learning.CURIOSITY`): **S2**, a change (back where it stood
+  included); **S2c**, somewhere new, then a change between kinds as likely to;
+  **S2d**, both odds added. A step is blocked, back where it stood, or somewhere
+  new: S2 counts the last two alike, S2b the first two.
 - **A foreseen act is put last, never out of reach** (2026-09-28): an untried
   act whose held hypothesis says it leads where the mind has stood is tried
   after the acts it cannot foresee, here and by the ways to them. A hypothesis

@@ -57,7 +57,7 @@ from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
-from .learning import Learning
+from .learning import CURIOSITY, Learning
 from .models.base import Context, Inducer, Learner, Write
 from .organs import Act, Organs, Step
 
@@ -92,10 +92,12 @@ def expected_report(said: dict[str, Any] | None, standing: dict[str, Any] | None
 class Mind:
     """The one mind: it reads, expects, learns, and commands the body."""
 
-    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
+    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
+                 curiosity: str = CURIOSITY[0]) -> None:
         # Its learning is its own, whatever its model: the model's seat takes the
-        # inducer, and the learning computes with it (Plone, 2026-09-28).
-        self.learning: Learner = Learning(inducer, organs, priors)
+        # inducer, and the learning computes with it (Plone, 2026-09-28). Its law of
+        # curiosity is the learning's (`learning.CURIOSITY`).
+        self.learning: Learner = Learning(inducer, organs, priors, curiosity=curiosity)
         self.organs = organs
         self.frame_calls = 0
         # For the run's report only, never the field: whether each expectation of

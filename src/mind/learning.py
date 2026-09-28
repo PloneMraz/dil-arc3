@@ -49,6 +49,17 @@ of it. What most often brought the aim first; then the odds of somewhere new
 change: an act that only takes it back where it stood (an undo) changes the
 state every time and teaches it nothing (Plone, 2026-09-28: S2b).
 
+A step ends one of three ways: nothing changed (blocked), it changed but came
+back to a situation met before, or it reached one not met before. Which of them
+the mind counts as worth trying is `curiosity` (CURIOSITY), each a law of the
+mind naming no task; the default is S2b, the others are kept to be measured
+against it (Plone, 2026-09-28):
+
+  new               S2b  somewhere new
+  changed           S2   a change: somewhere new or back where it stood
+  new-then-changed  S2c  somewhere new; between kinds as likely to, a change
+  new-plus-changed  S2d  the odds of somewhere new and of a change, added
+
 What it holds but does not write — its counts, how often an experience was met
 and ended the region, the situations it visited — follows from the observations
 in the store only when those are replayed through it, in order. So does
@@ -78,6 +89,9 @@ MAX_PATH_NODES: Final = 20_000
 # hypotheses predict. DECLARED: a bound on work.
 MAX_IMAGINED_STEPS: Final = 3
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
+# What the mind counts as worth trying (the docstring's CURIOSITY), by name; the
+# first is the default (S2b).
+CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed")
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
                   "the one right at the highest rate, (supports + 1) / (supports + fails + 2), is the "
                   "expectation; at an equal rate, the one right more often")
@@ -142,9 +156,17 @@ class Learning:
     mind's seat for one. The mind holds it (`mind.py`), and its seams ask it what
     to expect, show it what came back, ask it what to do."""
 
-    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
+    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
+                 curiosity: str = CURIOSITY[0]) -> None:
+        if curiosity not in CURIOSITY:
+            raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer
         self.organs = organs
+        self.curiosity = curiosity
+        # How often each kind of act, and each act, changed the state (for the
+        # laws that count a change: S2, S2c, S2d).
+        self._kind_changes: dict[tuple, int] = {}
+        self._action_changes: dict[int, int] = {}
         self._now_raw: str | None = None                       # the latest state's own identity
         self._last_choice: dict[str, Any] | None = None        # the choice it wrote last
         # What the onlooker's word made it object to, by what the word was: (the
@@ -194,6 +216,7 @@ class Learning:
         # The mind's short-term perception at the step being learned: what an
         # inducer is shown when it is asked what the step suggests.
         self._seen_now: list = []
+        self._chosen_kind: tuple | None = None
 
     # ── what it reads ──
 
@@ -503,6 +526,9 @@ class Learning:
             for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0])):
                 counts[0] += 1
                 counts[1] += int(new)
+            if changed:
+                self._kind_changes[kind] = self._kind_changes.get(kind, 0) + 1
+                self._action_changes[act[0]] = self._action_changes.get(act[0], 0) + 1
         self._last_new = known is None
         if self._unseen_expected is not None:
             self.unseen[2] += int(self._unseen_expected == to)
@@ -600,20 +626,35 @@ class Learning:
         """The odds it gives a kind of act: of the aim, and of somewhere new."""
         return self._odds_of(self._kinds.get(kind, (0, 0, 0)))
 
-    def _action_curiosity(self, act: int) -> tuple[float, float]:
-        """How much it wants an act at all, over every kind of it."""
-        level, change = self._odds_of(self._actions.get(act, (0, 0, 0)))
-        tried = self._actions.get(act, (0, 0, 0))[0]
-        total = sum(a[0] for a in self._actions.values())
-        return level, change + math.sqrt(2 * math.log(total + 1) / (tried + 1))
+    def _wanted(self, counts, changes: int, total: int) -> tuple[float, ...]:
+        """How much it wants what `counts` counts: the odds of the aim first; then,
+        by its law of curiosity, the odds of somewhere new, of a change, or both,
+        raised by how little it has been tried (UCB1)."""
+        level, new = self._odds_of(counts)
+        tried = counts[0]
+        more = math.sqrt(2 * math.log(total + 1) / (tried + 1))
+        change = (changes + 1) / (tried + 2)
+        if self.curiosity == "changed":
+            return level, change + more
+        if self.curiosity == "new-then-changed":
+            return level, new + more, change
+        if self.curiosity == "new-plus-changed":
+            return level, new + change + more
+        return level, new + more
 
-    def _curiosity(self, kind: tuple) -> tuple[float, float]:
-        """How much it wants a kind of act: the odds of the aim first; then the
-        odds of somewhere new, raised by how little it knows the kind (UCB1)."""
-        level, change = self._odds(kind)
-        tried = self._kinds.get(kind, (0, 0, 0))[0]
+    def _change_odds(self, kind: tuple) -> float:
+        """The odds it gives a kind of act of a change."""
+        return (self._kind_changes.get(kind, 0) + 1) / (self._kinds.get(kind, (0, 0, 0))[0] + 2)
+
+    def _action_curiosity(self, act: int) -> tuple[float, ...]:
+        """How much it wants an act at all, over every kind of it."""
+        total = sum(a[0] for a in self._actions.values())
+        return self._wanted(self._actions.get(act, (0, 0, 0)), self._action_changes.get(act, 0), total)
+
+    def _curiosity(self, kind: tuple) -> tuple[float, ...]:
+        """How much it wants a kind of act, by its law of curiosity."""
         total = sum(k[0] for k in self._kinds.values())
-        return level, change + math.sqrt(2 * math.log(total + 1) / (tried + 1))
+        return self._wanted(self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0), total)
 
     def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         return self.inducer.candidates(here, self._state(here), offers)
@@ -692,6 +733,9 @@ class Learning:
         chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
         best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
         self._kind_of[(here, best[0])] = best[1]
+        self._chosen_kind = best[1]
+        if self.curiosity == "changed":
+            return best[0], self._change_odds(best[1])
         return best[0], self._odds(best[1])[1]
 
     def _way(self, here: str, goal: Callable[[str], bool], offers: tuple[int, ...],
@@ -776,7 +820,12 @@ class Learning:
         choice: dict[str, Any] = {"cycle": self.frame_calls, "here": here, "chose": list(act) if act else None,
                                   "why": why, "aim": (self._aim or {}).get("aim")}
         if odds is not None:
-            choice["odds_of_new"] = round(odds, 3)
+            if self.curiosity == "changed":
+                choice["odds_of_change"] = round(odds, 3)
+            else:
+                choice["odds_of_new"] = round(odds, 3)
+                if self.curiosity != "new":
+                    choice["odds_of_change"] = round(self._change_odds(self._chosen_kind), 3)
         built: list[object] = [self._unit] if self._unit is not None else []
         if lifted:
             choice["lifted"] = lifted
@@ -793,5 +842,5 @@ class Learning:
         return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]
 
 
-__all__ = ["CHOICE_TAGS", "FIT_LAW", "HYPOTHESIS_TAGS", "MAX_PATH_NODES", "THOUGHT_TAGS",
+__all__ = ["CHOICE_TAGS", "CURIOSITY", "FIT_LAW", "HYPOTHESIS_TAGS", "MAX_PATH_NODES", "THOUGHT_TAGS",
            "Answer", "Choice", "Edge", "Hypothesis", "Learning"]

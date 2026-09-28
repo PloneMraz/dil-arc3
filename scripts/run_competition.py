@@ -55,6 +55,8 @@ ap.add_argument("--mind", choices=("learning", "language"), default="learning",
 ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
                 help="the mind's model, what its learning computes with; language: a model served at "
                      "--endpoint")
+ap.add_argument("--curiosity", default="new",
+                help="the mind's law of curiosity, passed to run_game.py (mind/learning.py: CURIOSITY)")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
@@ -146,7 +148,7 @@ while queue or running:
             [sys.executable, "-u", str(HERE / a.player), g, str(a.cycles),
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
              "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"), "--mind", a.mind,
-             *(["--inducer", a.inducer] if a.mind == "learning" else [])],
+             *(["--inducer", a.inducer, "--curiosity", a.curiosity] if a.mind == "learning" else [])],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()
