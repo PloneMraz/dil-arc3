@@ -41,8 +41,9 @@ WHAT IT DOES:
   the aim it held (Plone, 2026-09-25).
 
 The seams for a want, and for an aim with a time (`within`), served the language
-model, unfinished and not seated now (LOG.md, 2026-09-28); the learning states
-neither, and they stay as they are until that model is revised.
+model's earlier form, kept and not seated (LOG.md, 2026-09-28). No model seated
+now states either — the learning does not, and the language inducer only
+computes for it — so they stay as they are, unused.
 """
 
 from __future__ import annotations

@@ -3,8 +3,9 @@
 Plone (2026-09-28): learning is developing experience into what serves the agent,
 not storing it; and it is the mind's, not the model's — another task, another
 model, and learning is not defined again. The mind holds the loop; a model — an
-inducer (`models/exact.py`) — is its computing: what a state is to it, what can
-be done in one, what an experience suggests, what a hypothesis predicts.
+inducer (`models/exact.py`, `grid.py`, `language_inducer.py`) — is its
+computing: what a state is to it, what can be done in one, what an experience
+suggests, what a hypothesis predicts.
 
 THE LOOP, one step at a time:
 

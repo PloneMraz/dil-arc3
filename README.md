@@ -117,7 +117,8 @@ what a hypothesis predicts. There are three (`--inducer`):
   stands, and where an act that takes a cell is worth putting: its reading of
   the grid. All that reads the grid is the model's; code keeps only records
   beside it, a state's hash and the exact hypothesis. Each answer is kept whole
-  in the store. Not yet run against a served model.
+  in the store. Not run against a served model, and not used for ARC-AGI-3
+  for now (Plone, 2026-09-28).
 
 Curiosity counts how often a kind of act reached a situation not met before. An
 untried act its hypotheses say leads where it has stood is tried last, after the
@@ -207,13 +208,15 @@ now, in dil-core first and then here.
 
 ### Gaps in this agent
 
-7. **With the language model, what is kept is not what gets through a level.** A
-   rewritten program is kept for predicting better; or for predicting as well
-   and giving a command, when the body waits for one; or for predicting as well
-   and acting otherwise, when the onlooker objected or a command or the aim did
-   not bring about what it was for; or for stating an aim when the mind holds
-   none. A missed aim sets the mind thinking, but nothing in what is kept
-   favours a program whose acts reach the aim.
+7. **With the language model's earlier form, what was kept was not what gets
+   through a level.** A rewritten program was kept for predicting better; or for
+   predicting as well and giving a command, when the body waited for one; or for
+   predicting as well and acting otherwise, when the onlooker objected or a
+   command or the aim did not bring about what it was for; or for stating an aim
+   when the mind held none. Nothing in what was kept favoured a program whose
+   acts reach the aim. That form is kept and not run; with every inducer now, a
+   hypothesis is kept by how often the region bore it out, and the way to the
+   aim is the learning's to choose.
 8. **What the onlooker says reaches no further than the acts it names.** It
    strikes the mind as a collision, and the mind answers there and then — it
    objects to the named acts where they were taken and commands again before
@@ -221,9 +224,10 @@ now, in dil-core first and then here.
    held while the onlooker says it and lifted when it stops.
 9. **The language model's prompt does not show the field.** The field reaches
    the mind at T5 and conditions it whatever its model: its alertness sets how
-   often the mind thinks in a cycle, for either model. The learning mind reads
-   it further (how far an objection reaches); the language model is not shown
-   it, so what it writes is not conditioned by the loop's disposition.
+   often the mind thinks in a cycle. The learning reads it further (how far an
+   objection reaches); a language model is not shown it — neither the earlier
+   form nor the language inducer — so what it writes is not conditioned by the
+   loop's disposition.
 
 Local to this repository, not upstream's.
 

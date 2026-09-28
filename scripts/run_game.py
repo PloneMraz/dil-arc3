@@ -12,9 +12,10 @@ the body waits. Each hypothesis, each choice and each thought is kept as data.
 What is printed is read back from the run's own `[event]` log, `[data]` and
 commits — the same ones a third party would read.
 
-`--mind language` seated the language model in the place of the mind's learning.
-It is unfinished work, not yet revised into a model the mind learns with, and is
-kept and not run (LOG.md, 2026-09-28): the run stops before it starts.
+`--mind language` seated the language model's earlier form in the place of the
+mind's learning. It is kept and not run (LOG.md, 2026-09-28): the run stops
+before it starts. Its revision is `--inducer language`, which ARC-AGI-3 is not
+played with for now (Plone, 2026-09-28).
 
 The game is played in a world (`world/`) with an onlooker in it (tag E): an Other
 outside the agent and outside its host, who sees the agent's acts, or the lack
@@ -66,8 +67,8 @@ ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--mind", choices=("learning", "language"), default="learning",
-                help="learning: the one mind with its learning; language: the unfinished language model, "
-                     "not run (arc3/mind.py)")
+                help="learning: the one mind with its learning; language: the language model's earlier "
+                     "form, kept, not run (arc3/mind.py)")
 ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
                 help="the mind's model, what its learning computes with: exact hypotheses, ones that reach "
                      "past where they were met (mind/models/grid.py), or programs a served language model "

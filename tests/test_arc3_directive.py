@@ -32,8 +32,8 @@ from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
 from dil.store.tagging_gate import HostDatum, admit_host_data
 
-# The language model is not seated: what goes through its seat is kept, not run
-# (Plone, 2026-09-28; LOG.md).
+# The language model's earlier form is not seated: what goes through its seat is
+# kept, not run (Plone, 2026-09-28; LOG.md).
 unseated = pytest.mark.skip(reason=UNSEATED)
 
 NOTHING = {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}

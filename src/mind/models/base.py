@@ -14,9 +14,9 @@ learning writes nothing and asks nothing itself: it says what should be written
 and asked, and the mind does it, so every write and question goes through the
 one mind's seams.
 
-The language model (`language.py`) is work left unfinished inside the model: it
-answers `Learner`, having sat where the learning sits, and is not seated until
-it is revised into a model the mind learns with (LOG.md, 2026-09-28).
+A language model is an inducer too (`language_inducer.py`). Its earlier form
+(`language.py`, which submission `56588469` ran) answers `Learner`, having sat
+where the learning sits: it is kept and not seated (LOG.md, 2026-09-28).
 """
 
 from __future__ import annotations

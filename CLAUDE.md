@@ -120,7 +120,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   learns with (Plone, 2026-09-28). In the code: `Mind(inducer, organs,
   priors)` holds its learning (`Learning`), and the model's seat takes the
   inducer (`Inducer`, `src/mind/models/base.py`). A language model is one such
-  inducer (`language`, below), not yet run against a served one. Its earlier
+  inducer (`language`, below), not run against a served one and **not used for
+  ARC-AGI-3 for now** (Plone, 2026-09-28: the code kept consistent, the
+  competition played without it). Its earlier
   form — **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
   `7b71922`), which submission `56588469` used — sat in the learning's place
   and is kept, not run ("The language model as submission 56588469 ran it",
@@ -169,7 +171,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   brain: it is the part of the one mind that computes. The mind holds the seams
   with the loop — what it expects and which datum that is, when it thinks, what
   it commands, what it writes — and its learning; the model only computes for
-  them. A model can be replaced (an inducer; the language model, once revised);
+  them. A model can be replaced (an inducer: exact, grid, language);
   the mind stays one, and so does its learning. The mind's code is to be
   neutral about the environment: what is particular to one region is data the
   mind reads (its priors), not code. In the code: `src/mind/` imports nothing
@@ -769,14 +771,15 @@ The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
 How it plays, following the official harness (`ARC-AGI-3-Agents/agents/swarm.py`):
 one arcade, **one scorecard, each game made on it once**, the scorecard closed at
 the end. Where it differs: each game runs in a process of its own
-(`run_game.py --remote`), because the mind bounds the programs it runs with
-SIGALRM, which needs a main thread. The arcade and its games stay in the one
-process, and each game's process reaches its game through `world/remote.py`, as
-plain data both ways; `GameAction` does not survive a pickle. `CONCURRENCY`
-games at once (4) share one model server. A deadline at 9 h less 20 min from the
-notebook's start: no game starts after it, and a game still running is stopped.
-The wait for the model's server stops at once when its log says the engine
-failed to start, rather than at the end of the wait.
+(`run_game.py --remote`), made so because a language model's programs are
+bounded with SIGALRM, which needs a main thread; the learning mind's notebook
+plays the same way. The arcade and its games stay in the one process, and each
+game's process reaches its game through `world/remote.py`, as plain data both
+ways; `GameAction` does not survive a pickle. `CONCURRENCY` games at once (4) —
+in the GPU notebook, sharing one model server. A deadline at 9 h less 20 min
+from the notebook's start: no game starts after it, and a game still running is
+stopped. The GPU notebook's wait for the model's server stops at once when its
+log says the engine failed to start, rather than at the end of the wait.
 
 The gateway takes one scorecard driven from several processes' requests through
 one arcade, and scores the levels completed on it (established by the gateway

@@ -1,14 +1,13 @@
-"""Where this host seated the one mind with a language model — not seated now.
+"""Where this host seated the one mind with a language model's earlier form — not seated now.
 
-The language model (`mind/models/language.py`: a program written by a language
-model) is work left unfinished inside the model: it sat in the place of the
-mind's learning, so with it the mind had no learning of its own. The mind now
-holds its learning, and its model's seat takes an inducer (`mind/mind.py`), which
-the language model is not. So `create_mind` does not run until the language
-model is revised into a model the mind learns with (Plone, 2026-09-28: kept, not
-run; LOG.md). The rest names what the language model's tests reach for, bound to
-this host's organs — the fields of its report, its acts, which act takes a cell.
-Nothing here thinks.
+That form (`mind/models/language.py`: a program written by a language model,
+which submission `56588469` ran) sat in the place of the mind's learning, so
+with it the mind had no learning of its own. The mind now holds its learning,
+and its model's seat takes an inducer (`mind/mind.py`), which that form is not;
+its revision is one (`mind/models/language_inducer.py`). So `create_mind` is kept
+and does not run (Plone, 2026-09-28; LOG.md). The rest names what that form's
+tests reach for, bound to this host's organs — the fields of its report, its
+acts, which act takes a cell. Nothing here thinks.
 """
 
 from __future__ import annotations
@@ -34,8 +33,8 @@ from .task import TASK_CUE
 STATUS_FIELDS = REPORT_FIELDS
 
 # Why the language model is not seated.
-UNSEATED = ("the language model is unfinished work inside the model, not yet revised into a model the mind "
-            "learns with; its seat is kept and not run (LOG.md, 2026-09-28)")
+UNSEATED = ("the language model's earlier form sat in the place of the mind's learning and is not an inducer; "
+            "its seat is kept and not run, and its revision is the language inducer (LOG.md, 2026-09-28)")
 
 goal_check = partial(_language.goal_check, fields=REPORT_FIELDS)
 goal_of = partial(_language.goal_of, fields=REPORT_FIELDS)

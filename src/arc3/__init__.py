@@ -12,8 +12,8 @@ kept apart:
     (`mind/`); this host declares its eye and body to it (`organs.py`) and tells
     it its task (`task.py`). It reads, expects, is curious and wants, and
     constructs the next action, commanding it as T5's test (§6.4). It acts on
-    nothing. `mind.py` here is where the language model was seated: kept, not
-    run, until that model is revised (LOG.md, 2026-09-28).
+    nothing. `mind.py` here is where the language model's earlier form was
+    seated: kept, not run (LOG.md, 2026-09-28).
 
 Nothing here is the agent's first person: that is what the loop produces when it
 runs (§7), located in no file.

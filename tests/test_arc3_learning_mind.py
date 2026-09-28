@@ -75,12 +75,12 @@ def test_the_mind_holds_its_learning_and_its_models_seat_takes_the_inducer():
 
 
 def test_the_language_models_seat_is_kept_and_not_run():
-    # Unfinished inside the model: it sat in the learning's place (LOG.md,
-    # 2026-09-28). Kept, not run, until it is revised.
+    # Its earlier form sat in the learning's place (LOG.md, 2026-09-28): kept,
+    # not run; its revision is the language inducer.
     from arc3.mind import UNSEATED, create_mind as seat_language
-    with pytest.raises(NotImplementedError, match="unfinished"):
+    with pytest.raises(NotImplementedError, match="earlier form"):
         seat_language()
-    assert "not yet revised" in UNSEATED
+    assert "language inducer" in UNSEATED
 
 
 def loop():

@@ -3908,3 +3908,32 @@ steps (`s1-fit`, 600), with the learning choosing at each step and timed:
 
 Stores and reports in `scripts/data/step2a-exact/`, `step2a-grid/`, `step2b/`
 (git-ignored).
+
+### No language model for ARC-AGI-3 for now; the code and the documents made to agree (Plone, same day)
+
+Plone stopped step 2 before the Kaggle run (2c): ARC-AGI-3 is not played with a
+language model for now. The language inducer stays as it is — built, tested,
+never run against a served model — and the work goes back to the mind with its
+other inducers. What was asked was only that the code agree with itself and
+with its documents. No logic changed: every edit is a docstring, a message, a
+help text or a test's expectation of a message.
+
+- What still said the language model was "unfinished" and "not yet revised" —
+  `src/arc3/mind.py` (its docstring and `UNSEATED`, the skip reason of the 34
+  tests), `src/mind/models/base.py`, `src/arc3/__init__.py`, `src/mind/mind.py`,
+  `run_game.py`, `run_competition.py`, `build_dil_run.py`, three test comments,
+  `scripts/README.md` — now says what holds: its earlier form, which submission
+  `56588469` ran, sat in the learning's place and is kept, not run; its revision
+  is the language inducer. The test of the kept seat expects that message.
+- `mind.py`: the seams for a want and for an aim with a time served only that
+  earlier form; no model seated now states either, so they are unused.
+- CLAUDE.md: the language inducer is not used for ARC-AGI-3 for now; "the
+  language model, once revised" is gone from what a model can be; the notebook
+  section says which lines are the GPU notebook's (one model server, the wait
+  for it) and why a game plays in a process of its own.
+- README: finding 7 is the earlier form's, and says how every inducer is kept
+  now; finding 9 says neither form of the language model is shown the field;
+  the language inducer is not used for ARC-AGI-3 for now.
+- `learning.py` names the three inducers.
+
+314 pass, 34 skipped.

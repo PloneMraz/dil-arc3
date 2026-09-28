@@ -487,13 +487,14 @@ def main() -> None:
                     help="the gateway probe: the random agent through the same path, no model, no GPU")
     ap.add_argument("--mind", choices=("learning", "language"), default="learning",
                     help="learning: the one mind with its learning, on CPU, no model served; language: the "
-                         "unfinished language model on a GPU, not run (LOG.md, 2026-09-28)")
+                         "language model's earlier form on a GPU, kept, not built (LOG.md, 2026-09-28)")
     ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
                     help="the mind's model, what its learning computes with")
     a = ap.parse_args()
     if a.mind == "language" and not a.probe:
         # Kept, not run: its notebook would play no game (run_game.py stops).
-        raise SystemExit("--mind language: the language model is unfinished and not run (LOG.md, 2026-09-28)")
+        raise SystemExit("--mind language: the language model's earlier form is kept and not run "
+                         "(LOG.md, 2026-09-28)")
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
     for d in (dataset, kernel):

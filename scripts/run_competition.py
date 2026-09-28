@@ -50,7 +50,7 @@ ap.add_argument("--deadline", type=float, default=None, help="epoch seconds: sta
 ap.add_argument("--endpoint", default="")
 ap.add_argument("--model", default="")
 ap.add_argument("--mind", choices=("learning", "language"), default="learning",
-                help="learning: the one mind with its learning; language: the unfinished language model, "
+                help="learning: the one mind with its learning; language: the language model's earlier form, "
                      "not run (LOG.md, 2026-09-28)")
 ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
                 help="the mind's model, what its learning computes with; language: a model served at "
@@ -67,7 +67,7 @@ ap.add_argument("--drop-stores", action="store_true",
 a = ap.parse_args()
 if a.mind == "language" and a.player == "run_game.py":
     # Its games would each stop before they start (run_game.py).
-    sys.exit("--mind language: the language model is unfinished and not run (LOG.md, 2026-09-28)")
+    sys.exit("--mind language: the language model's earlier form is kept and not run (LOG.md, 2026-09-28)")
 out = Path(a.out)
 out.mkdir(parents=True, exist_ok=True)
 stores = Path(a.stores) if a.stores else out
