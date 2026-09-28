@@ -4101,3 +4101,27 @@ brought the aim — a count held, not a hypothesis.
 The criterion — ls20 and vc33 through level 2 — is to be measured with the
 rest on the 25 games. ls20 does not reach level 1 on this code now (since
 S2b), so ls20 can show nothing for S4 until it does.
+
+### Learning notebook version 5 scored: 0.05 (same day)
+
+Submission `56623380` (`dil-arc3-learning` version 5, code `f76ff5f`: the
+learning model, before the learning moved to the mind; 600 cycles a game, four
+at once, CPU) is COMPLETE with a public score of **0.05**, read with `kaggle
+competitions submissions` after Plone said it had finished.
+
+- Beside the others on the same scale: the language model's `56588469` 0.00;
+  the starter kit's random agent 0.02 (`56462757`) and, on this repository's
+  road, 0.06 (`56600038`).
+- It does not show the agent beats the random one: two draws of the random
+  agent gave 0.02 and 0.06, and 0.05 lies between them.
+- What the rerun did cannot be read: Kaggle shows no log of it. How many of the
+  games it played before the deadline (the offline estimate was 6.5 h of the
+  9 h less 20 min) and how many levels it completed are not known.
+- Offline, this code completed level 1 of ls20 in 377 actions and of vc33 in
+  83, and no level of ar25 or sk48. The score squares the ratio of a human's
+  actions to the agent's, so a level got through in many more actions than a
+  human takes counts for little.
+
+The code now differs from `f76ff5f` (the mind holds its learning, the grid
+inducer, Q4, S4 and the laws of curiosity): a later submission is another
+submission, and the paper names the one it describes.
