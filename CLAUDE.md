@@ -130,7 +130,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   out and did not — **held while right more often than wrong, and of those that
   apply, the one right most often** (FIT_LAW, DECIDE@IMPL, tag H: fit against the
   store); says in a new datum, built from the last, when whether it holds
-  changes; is curious; chooses. The inducer only computes: perception (a state's
+  changes; is curious; chooses, looking ahead by what its held hypotheses
+  predict (at most `MAX_IMAGINED_STEPS` past where it has stood). The inducer
+  declares where a hypothesis applies (its scope) and only computes: perception (a state's
   identity, where the region stands in it), the acts a state affords, `induce`,
   `predict`, `describe`. The one there is, **exact** (`src/mind/models/exact.py`),
   suggests one hypothesis per experience, applying where it was met and nowhere

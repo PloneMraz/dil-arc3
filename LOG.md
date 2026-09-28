@@ -3512,3 +3512,31 @@ One run each.
 The code is under the next commit. Stores are in `scripts/data/s1-baseline/`,
 `s1-check/` and `s1-fit/` (git-ignored). There are 330 tests; the new one keeps a
 hypothesis right twice and wrong once.
+
+### S2: the mind looks ahead by what its hypotheses predict (same day)
+
+The mind now reaches its hypotheses by the scope the inducer declares for each:
+for the exact inducer, the situation it was met in and its act. It expects from
+the held hypothesis that applies and was right most often. It weighs every
+hypothesis that applied to a step.
+
+It looks ahead by what its held hypotheses predict, not by the experiences it
+kept:
+- through the situations it has stood in;
+- for an inducer whose hypotheses apply beyond where they were met, up to
+  `MAX_IMAGINED_STEPS` (3, declared) past them, where a situation it has not
+  stood in counts as something left to try.
+
+An act its hypotheses say leads to a situation it has stood in no longer counts
+as untried. With the exact inducer, whose hypotheses apply only where they were
+met, none of this can differ.
+
+**Measured.** ls20 and vc33, 600 cycles. Each report agrees line for line with
+S1's, apart from the run's key, time and path. Wall time was 499 and 336 s,
+against 468 and 324 s, but the two runs did not share the machine equally, so
+the times do not compare.
+
+The check on ar25 and sk48 is reported with S2b. Both games can now run on this
+machine: their files are the competition's public `environment_files`,
+downloaded to `Downloads/` and git-ignored here. The S1 runs of both, 600
+cycles, reached no level, with 498 and 379 states met.

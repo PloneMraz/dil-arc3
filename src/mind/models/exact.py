@@ -132,6 +132,8 @@ class ExactInducer:
     """Exact hypotheses, over a grid's perception."""
 
     kind = "exact"
+    # Its hypotheses apply where they were met and nowhere else.
+    general = False
 
     def __init__(self, organs: Organs) -> None:
         self.organs = organs
@@ -194,19 +196,32 @@ class ExactInducer:
 
     # ── hypotheses ──
 
-    def induce(self, source: str, act: Act, to: Grid) -> list[ExactForm]:
+    def induce(self, source: str, act: Act, before: Grid, after: Grid) -> list[ExactForm]:
         """What one experience suggests: that it will happen again, exactly."""
-        return [ExactForm(source=source, act=act, to=to)]
+        return [ExactForm(source=source, act=act, to=after)]
 
-    def predict(self, form: ExactForm, situation: str, act: Act, situation_of) -> Prediction | None:
+    def scope(self, form: ExactForm, situation_of) -> tuple:
+        """Where a hypothesis applies: the situation it was met in, and its act."""
+        return ("at", situation_of(form.source), form.act)
+
+    def scopes(self, situation: str, act: Act) -> list[tuple]:
+        """The scopes a situation and act fall in."""
+        return [("at", situation, act)]
+
+    def predict(self, form: ExactForm, situation: str, state: Grid, act: Act, situation_of) -> Prediction | None:
         """What an exact hypothesis predicts: what came, where and when it came."""
         if act != form.act or situation_of(form.source) != situation:
             return None
-        return Prediction(state=[row[:] for row in form.to], fields=dict(form.status) if form.status else None)
+        return Prediction(state=form.to)
+
+    def fields(self, form: ExactForm) -> dict[str, Any] | None:
+        """What it says the region will report of itself: what it reported then."""
+        return form.status
 
     def describe(self, form: ExactForm, situation_of) -> dict[str, Any]:
-        return {"from": situation_of(form.source), "act": list(form.act), "to": self.situation(form.to),
-                "status": form.status}
+        source = situation_of(form.source)
+        to = self.situation(form.to)
+        return {"from": source, "act": list(form.act), "to": to, "changed": to != source, "status": form.status}
 
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "MAX_CLICK_TARGETS",

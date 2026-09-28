@@ -309,8 +309,8 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
     model._objected[("repeating", (1, None, None))] = {(model._now_raw, (1, None, None))}
     assert (here, (1, None, None)) in model.objections()
     first = [e for e in model._out.get(here, {}).values()]
-    path = model._path(here, lambda n: n != here, avoid=model.objections())
-    assert path is None or path[0].act != (1, None, None)
+    path = model._path(here, lambda n: n != here, (1, 2), avoid=model.objections())
+    assert path is None or path[0][0] != (1, None, None)
 
 
 def test_every_known_act_objected_to_the_act_that_is_always_open():

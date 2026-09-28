@@ -25,8 +25,13 @@ THE LOOP, one step at a time:
   changes, a new datum says so, built from the one before: nothing is revised
   in place.
 - **Choosing.** Toward the aim it has reached before; else what it knows least
-  (curiosity, below); else the shortest way it knows to where something is left
-  to try; else RESET, or the known act toward the situation least visited.
+  (curiosity, below) — never an act its hypotheses say leads where it has stood;
+  else the shortest way to where something is left to try, looking ahead by what
+  its held hypotheses predict — through the situations it has stood in and, for
+  an inducer whose hypotheses reach past where they were met, up to
+  MAX_IMAGINED_STEPS past them, where a situation not stood in is itself
+  something left to try; else RESET, or the known act toward the situation least
+  visited.
 - **The onlooker's word** strikes the mind as a collision; what it objects to is
   put behind every other act at every point of choice — never over a known way
   to the aim — and lifted when the onlooker says something else. A repetition
@@ -61,6 +66,9 @@ THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
 # How far it searches the situations it knows for a way. DECLARED: a bound on work.
 MAX_PATH_NODES: Final = 20_000
+# How many steps it looks ahead past the situations it has stood in, on what its
+# hypotheses predict. DECLARED: a bound on work.
+MAX_IMAGINED_STEPS: Final = 3
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
                   "the one right most often is the expectation")
@@ -153,6 +161,14 @@ class Learning:
         self._last_new = False
         self._expected: Any = None
         self._visits: dict[str, int] = {}
+        # Every hypothesis, in the order induced, and by the scope the inducer says
+        # it applies in; what applies to a situation and act, and what it predicts,
+        # as far as it has been worked out.
+        self._hypotheses: list[Hypothesis] = []
+        self._scoped: dict[tuple, list[Hypothesis]] = {}
+        self._applies: dict[tuple[str, Act], tuple[dict, list]] = {}
+        self._new: list[Hypothesis] = []                     # induced, not yet written
+        self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
         self.frame_calls = 0
@@ -183,6 +199,42 @@ class Learning:
 
     def held(self) -> tuple[object, ...]:
         return ()
+
+    # ── hypotheses ──
+
+    def _add(self, h: Hypothesis) -> None:
+        self._hypotheses.append(h)
+        self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
+
+    def _applicable(self, situation: str, act: Act, state: Any = None) -> list[tuple[Hypothesis, Any, str]]:
+        """The hypotheses that apply to a situation and act, each with what it
+        predicts and the situation that is: worked out once, and again only for
+        hypotheses induced since."""
+        cached = self._applies.get((situation, act))
+        checked, found = cached if cached is not None else ({}, [])
+        for scope in self.inducer.scopes(situation, act):
+            held = self._scoped.get(scope, ())
+            start = checked.get(scope, 0)
+            if start < len(held):
+                if state is None:
+                    state = self._state(situation)
+                for h in held[start:]:
+                    said = self.inducer.predict(h.form, situation, state, act, self._situation_of)
+                    if said is not None:
+                        found.append((h, said, self.inducer.situation(said.state)))
+                checked[scope] = len(held)
+        self._applies[(situation, act)] = (checked, found)
+        return found
+
+    def _best(self, situation: str, act: Act, state: Any = None) -> tuple[Hypothesis, Any, str] | None:
+        """Of the hypotheses that apply and are held, the one right most often (FIT_LAW)."""
+        held = [a for a in self._applicable(situation, act, state) if a[0].holds]
+        return max(held, key=lambda a: a[0].supports) if held else None
+
+    def _state(self, situation: str) -> Any:
+        """A state of a situation: one it stood in, or one it predicted."""
+        raw = self._grid_of.get(situation)
+        return self._raw[raw] if raw is not None else self._imagined[situation]
 
     def acknowledge(self, handle: object, datum_id: str) -> None:
         if isinstance(handle, Hypothesis):
@@ -329,6 +381,9 @@ class Learning:
         for raw, situation in self._state_of.items():
             self._grid_of.setdefault(situation, raw)
         self._edges, self._out = {}, {}
+        self._scoped, self._applies, self._imagined = {}, {}, {}
+        for h in self._hypotheses:
+            self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
         writes: list[Write] = []
         for edge in self._learned:
             key = (self._state_of[edge.source], edge.act)
@@ -338,7 +393,7 @@ class Learning:
                 self._out.setdefault(key[0], {})[edge.act] = edge
             elif self._state_of[first.to] != self._state_of[edge.to] and (first, edge) not in self._against:
                 self._against.add((first, edge))   # one experience, counted against it once
-                writes += self._weigh(first, False, built_from)
+                writes += self._weigh(first.hypothesis, False, built_from)
         if self._here is not None and self._now_raw is not None:
             self._here = self._state_of[self._now_raw]
         return writes
@@ -349,13 +404,14 @@ class Learning:
         self.frame_calls += 1
         source = self.inducer.situation(step.before)
         act = self.inducer.learnable(step.act)
-        known = self._edges.get((source, act))
-        if known is not None and known.hypothesis.holds:
-            said = self.inducer.predict(known.hypothesis.form, source, act, self._situation_of)
-            if said is not None:
-                self._expected = said.state
-                return Expectation(state=said.state, fields=said.fields,
-                                   held=(("handle", known.hypothesis),), by_model=True)
+        best = self._best(source, act, step.before)
+        if best is not None:
+            h, said, _ = best
+            state = [row[:] for row in said.state]
+            fields = self.inducer.fields(h.form)
+            self._expected = state
+            return Expectation(state=state, fields=dict(fields) if fields else None,
+                               held=(("handle", h),), by_model=True)
         self._expected = [row[:] for row in step.before] if isinstance(step.before, list) else step.before
         return Expectation(state=self._expected, by_model=False)
 
@@ -363,26 +419,26 @@ class Learning:
                 on_report: bool) -> list[Write]:
         return self._learn_report(fields, units) if on_report else self._learn_step(step, unit)
 
-    def _weigh(self, edge: Edge, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
-        """Count a return for or against an experience's hypothesis; when whether it
-        holds changes, a datum of its own says so."""
-        h = edge.hypothesis
+    def _weigh(self, h: Hypothesis, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
+        """Count a return for or against a hypothesis; when whether it holds
+        changes, a datum of its own says so."""
         before = h.holds
         if borne_out:
             h.supports += 1
         else:
             h.fails += 1
-        return self._revise(edge, built_from) if h.holds != before else []
+        return self._revise(h, built_from) if h.holds != before else []
 
     def _learn_step(self, step: Step, unit: Any) -> list[Write]:
         writes: list[Write] = []
-        if self._last is not None and self._last_new and not self._last.hypothesis.written:
-            writes += self._write(self._last, ())  # a step whose report never came
+        if self._new:
+            writes += self._write(())  # a step whose report never came
         o = self.organs
         act: Act = self.inducer.learnable(step.act)
         source_raw = self._meet(step.before)
         source = self._state_of[source_raw]
         known = self._edges.get((source, act))
+        applied = list(self._applicable(source, act, step.before))
         to_raw = self._meet(step.after)
         self.holds_off_clock.append(int(self.inducer.situation(self._expected) == self._state_of[to_raw])
                                     if self._expected is not None else 0)
@@ -394,17 +450,20 @@ class Learning:
                 counts[0] += 1
                 counts[1] += int(changed)
         self._last_new = known is None
+        # Every hypothesis that applied is borne out, or not, by where the region stands.
+        for h, _, said in applied:
+            writes += self._weigh(h, said == to, (unit,))
         if known is None:
-            forms = self.inducer.induce(source_raw, act, step.after)
-            edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=Hypothesis(forms[0]))
+            self._new = [Hypothesis(f) for f in self.inducer.induce(source_raw, act, step.before, step.after)]
+            for h in self._new:
+                self._add(h)
+            edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=self._new[0])
             self._learned.append(edge)
             self._edges[(source, act)] = edge
             self._out.setdefault(source, {})[act] = edge
         else:
             edge = known
             edge.seen += 1
-            # The same act from the same situation gave the same, or another.
-            writes += self._weigh(edge, self._state_of[edge.to] == to, (unit,))
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
         self._visits[to] = self._visits.get(to, 0) + 1
@@ -433,34 +492,38 @@ class Learning:
             # The aim from one and not from the other: the hypothesis did not bear
             # out. The region ending one time and not another is the clock's doing
             # (a budget of acts), not the act's.
-            writes += self._weigh(edge, False, units)
+            writes += self._weigh(edge.hypothesis, False, units)
         if said.get(self.organs.state_field) in self.organs.ended:
             edge.ended += 1
         if self._reached(said) and edge.act[0] != self.organs.reset[0]:
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
             self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
-        if self._last_new and not edge.hypothesis.written:
-            writes += self._write(edge, units)
+        if self._new:
+            writes += self._write(units)
         return writes
 
-    def _describe(self, edge: Edge) -> dict[str, Any]:
-        h = edge.hypothesis
+    def _describe(self, h: Hypothesis) -> dict[str, Any]:
         return {"inducer": self.inducer.kind, **self.inducer.describe(h.form, self._situation_of),
-                "changed": edge.changed, "holds": h.holds, "supports": h.supports, "fails": h.fails}
+                "holds": h.holds, "supports": h.supports, "fails": h.fails}
 
-    def _write(self, edge: Edge, built_from: tuple[object, ...]) -> list[Write]:
-        edge.hypothesis.written = True
-        self.version += 1
-        return [Write(payload=self._describe(edge), tags=dict(HYPOTHESIS_TAGS), handle=edge.hypothesis,
-                      built_from=built_from)]
+    def _write(self, built_from: tuple[object, ...]) -> list[Write]:
+        """The hypotheses the last experience suggested, each a datum built from it."""
+        writes = []
+        for h in self._new:
+            h.written = True
+            self.version += 1
+            writes.append(Write(payload=self._describe(h), tags=dict(HYPOTHESIS_TAGS), handle=h,
+                                built_from=built_from))
+        self._new = []
+        return writes
 
-    def _revise(self, edge: Edge, built_from: tuple[object, ...]) -> list[Write]:
+    def _revise(self, h: Hypothesis, built_from: tuple[object, ...]) -> list[Write]:
         """Whether a hypothesis holds has changed: said in a datum of its own, built
         from the one before — added, not revised in place."""
-        if not edge.hypothesis.written:
+        if not h.written:
             return []
-        return [Write(payload=self._describe(edge), tags=dict(HYPOTHESIS_TAGS),
-                      built_from=(*built_from, ("handle", edge.hypothesis)))]
+        return [Write(payload=self._describe(h), tags=dict(HYPOTHESIS_TAGS),
+                      built_from=(*built_from, ("handle", h)))]
 
     # ── what to do next ──
 
@@ -489,36 +552,74 @@ class Learning:
         return level, change + math.sqrt(2 * math.log(total + 1) / (tried + 1))
 
     def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
-        return self.inducer.candidates(here, self._raw[self._grid_of[here]], offers)
+        return self.inducer.candidates(here, self._state(here), offers)
 
     def _open_here(self, here: str, offers: tuple[int, ...],
                    objected: set[tuple[str, Act]] | None = None) -> list[tuple[Act, tuple]]:
+        """The acts not yet taken from here, and not objected to — save those its
+        hypotheses say lead where it has stood: it knows what they do."""
         objected = self.objections() if objected is None else objected
-        return [(act, kind) for act, kind in self._candidates(here, offers)
-                if (here, act) not in self._edges and (here, act) not in objected]
+        out = []
+        for act, kind in self._candidates(here, offers):
+            if (here, act) in self._edges or (here, act) in objected:
+                continue
+            if self.inducer.general:
+                best = self._best(here, act)
+                if best is not None and best[2] in self._grid_of:
+                    continue
+            out.append((act, kind))
+        return out
 
-    def _path(self, start: str, goal: Callable[[str], bool],
-              avoid: set[tuple[str, Act]] | frozenset = frozenset()) -> list[Edge] | None:
-        """The shortest way it knows from `start` to a situation `goal` holds of, by
-        experiences whose hypothesis holds and that did not end the region every
-        time, and whose first act is none of `avoid` there; None if none."""
-        prev: dict[str, Edge | None] = {start: None}
+    def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
+        """From a situation, where each act leads, by the hypothesis it holds best
+        there: the acts taken from it first, in the order taken — never one that
+        ended the region every time — then, for an inducer whose hypotheses reach
+        past where they were met, any other its hypotheses predict."""
+        ways = []
+        taken = self._out.get(node, {})
+        for act, edge in taken.items():
+            if act[0] == self.organs.reset[0] or edge.ended >= edge.seen:
+                continue
+            best = self._best(node, act)
+            if best is not None:
+                ways.append((act, best[2], best[0], best[1]))
+        if self.inducer.general:
+            for act, _ in self._candidates(node, offers):
+                if act not in taken:
+                    best = self._best(node, act)
+                    if best is not None:
+                        ways.append((act, best[2], best[0], best[1]))
+        return ways
+
+    def _path(self, start: str, goal: Callable[[str], bool], offers: tuple[int, ...],
+              avoid: set[tuple[str, Act]] | frozenset = frozenset()) -> list[tuple[Act, Hypothesis]] | None:
+        """The shortest way from `start` to a situation `goal` holds of, looking
+        ahead by what its held hypotheses predict — through situations it has stood
+        in, and at most MAX_IMAGINED_STEPS past them — whose first act is none of
+        `avoid` there: each step an act and the hypothesis it goes by; None if none."""
+        prev: dict[str, tuple[str, Act, Hypothesis] | None] = {start: None}
+        past: dict[str, int] = {start: 0}          # steps taken past where it has stood
         queue = deque([start])
         while queue and len(prev) < MAX_PATH_NODES:
             node = queue.popleft()
             if node != start and goal(node):
                 path = []
                 while prev[node] is not None:
-                    edge = prev[node]
-                    path.append(edge)
-                    node = self._state_of[edge.source]
+                    node, act, h = prev[node]
+                    path.append((act, h))
                 return path[::-1]
-            for edge in self._out.get(node, {}).values():
-                to = self._state_of[edge.to]
-                if edge.hypothesis.holds and edge.ended < edge.seen and edge.act[0] != self.organs.reset[0] \
-                        and to not in prev and not (node == start and (start, edge.act) in avoid):
-                    prev[to] = edge
-                    queue.append(to)
+            if past[node] >= MAX_IMAGINED_STEPS:
+                continue
+            for act, to, h, said in self._ways(node, offers):
+                if to in prev or (node == start and (start, act) in avoid):
+                    continue
+                if to not in self._grid_of:
+                    self._imagined.setdefault(to, said.state)
+                    past[to] = past[node] + 1
+                else:
+                    past[to] = 0
+                prev[to] = (node, act, h)
+                queue.append(to)
         return None
 
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
@@ -526,7 +627,7 @@ class Learning:
         if here is None:
             return Proposal(None, why="nowhere yet"), []
         offers = context.offers
-        through: list[Edge] = []
+        through: list[Hypothesis] = []
         odds: float | None = None
         act: Act | None = None
         said = self._said(context.remark or {})
@@ -539,12 +640,12 @@ class Learning:
             gained = {self._state_of[e.source] for e in self._edges.values()
                       if e.hypothesis.holds and self._reached(e.status)}
             aim_here = [e for e in self._out.get(here, {}).values() if e.hypothesis.holds and self._reached(e.status)]
-            path = None if aim_here or not gained else self._path(here, lambda n: n in gained)
+            path = None if aim_here or not gained else self._path(here, lambda n: n in gained, offers)
             opened = self._open_here(here, offers, objected)
             if aim_here:
-                act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0]]
+                act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0].hypothesis]
             elif path:
-                act, why, through = path[0].act, f"toward the aim reached before ({len(path)} steps)", path
+                act, why, through = path[0][0], f"toward the aim reached before ({len(path)} steps)", [h for _, h in path]
             elif opened:
                 chosen = max({a for (a, _, _), _ in opened}, key=lambda a: (self._action_curiosity(a), -a))
                 best = max((ak for ak in opened if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
@@ -553,15 +654,16 @@ class Learning:
                 why = "not yet taken from here"
             else:
                 def open_at(n: str) -> bool:
-                    return n in self._grid_of and bool(self._open_here(n, offers, objected))
+                    # A situation it has not stood in is itself what it has not tried.
+                    return n not in self._grid_of or bool(self._open_here(n, offers, objected))
 
-                path = self._path(here, open_at, avoid=objected)
+                path = self._path(here, open_at, offers, avoid=objected)
                 over = False
                 if not path:
-                    path = self._path(here, open_at)
+                    path = self._path(here, open_at, offers)
                     over = bool(path)
                 if path:
-                    act, through = path[0].act, path
+                    act, through = path[0][0], [h for _, h in path]
                     why = f"toward a state with an act not yet taken ({len(path)} steps)" + \
                         ("; objected to, and no other way" if over else "")
                 elif self._learned_since_reset:
@@ -573,7 +675,7 @@ class Learning:
                     if free:
                         least = min(free, key=lambda e: (self._visits.get(self._state_of[e.to], 0), e.seen,
                                                          e.act[0], e.act[1] or 0, e.act[2] or 0))
-                        act, why, through = least.act, "all known; toward the state visited least", [least]
+                        act, why, through = least.act, "all known; toward the state visited least", [least.hypothesis]
                     elif known:
                         act, why = self.organs.reset, "every act known here was objected to"
                     elif said is not None and said[0] == "standing still":
@@ -596,7 +698,7 @@ class Learning:
             choice["onlooker"] = context.remark
             if context.remark_unit is not None:
                 built.append(context.remark_unit)   # what it quotes, it was built from
-        built += [("handle", e.hypothesis) for e in through]
+        built += [("handle", h) for h in through]
         built.append(("prior", "task"))
         return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]
 
