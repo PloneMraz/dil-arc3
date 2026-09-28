@@ -3687,3 +3687,39 @@ Stores are in `scripts/data/s2/` and `s2b/` (git-ignored). 331 tests.
 Stores are in `scripts/data/s3-exact/`, `s3-grid/`, `s3-grid2/`, `s3-exact3/`
 and `s3-grid3/` (git-ignored). The games ran offline from `environment_files`.
 339 tests.
+
+### Two points the S1–S3 entries left out, and one not yet checked (Plone, same day)
+
+**Where the runs got their games.**
+- The S1 runs of ls20 and vc33 (`s1-baseline`, `s1-check`, `s1-fit`) were made
+  without `--offline-dir`. The toolkit took an anonymous API key and fetched the
+  list of environments from the API. It still loaded each game's code from the
+  local `environment_files` (ls20 `9607627b`, vc33 `5430563c`).
+- Every run from S2 on, and S1's ar25 and sk48, ran offline from those same
+  files.
+- S2's check agreed with S1's runs line for line across the two modes. On these
+  games, the two modes play the same game.
+
+**The replay before the mind held each hypothesis once.**
+- Before the mind asked on surprise and held each hypothesis once, the grid
+  inducer replayed on S1's steps (the kinds of act already named):
+  - ls20: expected 312 of 426 steps from a situation and act never met, right on
+    285;
+  - vc33: expected 408 of 529, right on 335.
+- After that change, and before each part was found on its own:
+  - ls20: expected 282, right on 257;
+  - vc33: expected 402, right on 335.
+
+  So it expected fewer steps, and was right about as often. Why it expected
+  fewer was not traced.
+- The figures in the S3 entry are those after the parts were found on its own.
+
+**Not yet checked: more games to measure on.**
+- Run without `--offline-dir`, the toolkit logs "Successfully fetched 25
+  environment(s) from API".
+- Unchecked:
+  - whether each of those 25 can be downloaded and played here, as ls20 and
+    vc33 are;
+  - which games they are.
+- If they can, the inducers could be measured on 25 games, not 4. To be updated
+  here once checked.
