@@ -4211,3 +4211,27 @@ record adds and two precisions, for the paper's limits and future work:
 - **So, when a large model is fitted,** the exact and grid inducers stay as the
   reference every change to the mind runs on first (as S1 took the exact one to
   be), so that a strong model cannot hide a new fault.
+
+### The measurement narrowed, and how a change is measured (Plone, same day)
+
+Plone: 25 games are many and slow if most of them score nothing in every
+configuration. Settled: runs 1 and 2 (exact and grid with S2b) play the 25 —
+which games score at all, the reference, and each game's time on Kaggle's
+machine; runs 3 to 5 (grid with S2, S2c, S2d) play 6: ls20, vc33 and ar25 —
+levels reached before, where the laws of curiosity made the difference — and
+three more from what runs 1 and 2 show, or else by kind of control
+(`metadata.json`'s tags), sk48 first. Put to Plone and taken: selecting on runs
+1 and 2 alone would drop ls20, the very game the S2 run is asked about.
+
+Then how a change is measured, now in CLAUDE.md: six games are the development
+set; what counts is not a level more but playing clearly well — the six
+completed, each in few actions against its baseline (Plone: that cannot be got
+by a trick fitted to six, and shows the mind and model reasoning better);
+every change is a general law; when the six are met, the 25 are run once to
+confirm. Put to Plone first and not taken: a held-out check on the other 19
+before every change — it would stop the quick loop; the one run at the end
+stays.
+
+`run_series.py` gains `--start`, `--stop` and `--games`. The driver running the
+five was stopped (it was waiting on run 1, which runs on as it was) and is
+started again for runs 1 and 2.

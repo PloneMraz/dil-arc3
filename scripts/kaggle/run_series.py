@@ -1,13 +1,15 @@
 """A series of Save & Run versions of the learning notebook, one after another.
 
-    python scripts/kaggle/run_series.py SERIES [--first-pushed]
+    python scripts/kaggle/run_series.py SERIES [--first-pushed] [--start I] [--stop J] [--games a,b,...]
 
 For each configuration in turn: build the notebook (`build_dil_run.py`), push
 it — the kernel only: the dataset the series runs on is pushed once, before,
 with `push_dil_run.py` — wait until Kaggle has run it, and download its outputs
 to `scripts/data/kaggle/dil-run/<series>-<name>/` (git-ignored), with the
 notebook as it was built. `--first-pushed`: the first configuration's version
-is already running; wait for it, and push the rest.
+is already running; wait for it, and push the rest. `--start`/`--stop` run the
+configurations from I up to J (0-based, J not included); `--games` plays those
+games in place of the 25 (Plone, 2026-09-28: the laws of curiosity on 6 games).
 
 A version that does not end COMPLETE stops the series, its outputs downloaded:
 what came of it is looked at before anything else runs. Each line goes to the
@@ -88,16 +90,21 @@ def main() -> None:
     ap.add_argument("--first-pushed", action="store_true")
     ap.add_argument("--cycles", type=int, default=600)
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--start", type=int, default=0)
+    ap.add_argument("--stop", type=int, default=None)
+    ap.add_argument("--games", default=GAMES)
     a = ap.parse_args()
     log = OUT / f"{a.series}-series.log"
-    for i, (name, inducer, curiosity) in enumerate(SERIES[a.series]):
+    chosen = SERIES[a.series][a.start:a.stop]
+    say(log, f"series {a.series}: {[c[0] for c in chosen]} on {a.games}")
+    for i, (name, inducer, curiosity) in enumerate(chosen):
         dest = OUT / f"{a.series}-{name}"
         dest.mkdir(parents=True, exist_ok=True)
         pushed_at = None
         if not (i == 0 and a.first_pushed):
             built = subprocess.run(
                 [sys.executable, str(HERE / "build_dil_run.py"), "--mind", "learning", "--inducer", inducer,
-                 "--curiosity", curiosity, "--game", GAMES, "--cycles", str(a.cycles),
+                 "--curiosity", curiosity, "--game", a.games, "--cycles", str(a.cycles),
                  "--concurrency", str(a.concurrency)], capture_output=True, text=True, cwd=str(REPO))
             if built.returncode != 0:
                 say(log, f"{name}: build failed: {built.stderr.strip()[-500:]}")
@@ -115,7 +122,7 @@ def main() -> None:
         if "COMPLETE" not in end.upper():
             say(log, f"{name}: did not complete; the series stops here")
             sys.exit(2)
-    say(log, f"series {a.series}: all {len(SERIES[a.series])} done")
+    say(log, f"series {a.series}: {[c[0] for c in chosen]} done")
 
 
 if __name__ == "__main__":

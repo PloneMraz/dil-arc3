@@ -645,6 +645,16 @@ change is not whether it raises a score but whether what the loop did can be
 read back, by a third party, from `[event]` alone. A game-specific strategy that
 scored better would work against the paper, not for it.
 
+**How a change is measured — settled with Plone, 2026-09-28.**
+1. Six games are the development set: every change to the mind or its model is
+   tried on them first, for a quick loop.
+2. What counts as good is not a level more here and there but playing clearly
+   well: all six games completed, each in few actions against its human
+   baseline. Along the way, two figures on the six show how far a change goes:
+   levels completed, and each level's actions against its baseline.
+3. Every change is a law of the mind or of a model, named for no game.
+4. When the six are met, the 25 games are run once, to confirm.
+
 **The protocol document is not the paper.** `DIL-protocol-v0.3.5.md` is 60 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
