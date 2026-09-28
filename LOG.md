@@ -4417,3 +4417,40 @@ Point 10 of the measurement's report, part 1, as settled with Plone on
 Kaggle's machine; the mind is deterministic across machines): every choice line
 the same — 2,400 of 2,400 — and the levels the same. Here the four took 263,
 359, 334 and 108 s.
+
+### Attention, idea (a), as an option (Plone, 2026-09-29: point 10, part 2)
+
+Plone kept the idea of borrowing self-attention's way of working, with no
+training: the mind weighs its experiences by how alike their situation is to
+the one it stands in. The design is mine, put to him for review.
+
+- **What it changes**: only how much an act is wanted (curiosity, and the odds of
+  the aim the curiosity is ranked by first). Without it, the counts are over all
+  the act did, everywhere. With `--attention`, over the `ATTENTION_K = 16`
+  experiences of that act (or of that kind of it) whose situations are most like
+  where the mind stands, each weighed by how alike raised to
+  `ATTENTION_SHARPNESS = 4`, each counted as often as it was met; when they weigh
+  less than `ATTENTION_MIN_WEIGHT = 1.0`, the counts over all, as without it.
+  The three values are declared, not measured. Paths, the aim's ways, objections
+  and expectation do not change.
+- **How alike is the inducer's** (`Inducer.similarity`): the exact inducer's, and
+  so grid's, is the share of cells equal between the two states, off the rows it
+  takes for the clock; 0 for states of other shapes. The language inducer
+  inherits the exact one's.
+- **An experience keeps what attention reads**: how often it reached a situation
+  not met before (`Edge.new`) and how often the aim came of it
+  (`Edge.reached`), counted as the global counts are, at each step.
+- **The trace**: a choice made by attention names the experiences it went by
+  (`attended`: where, which act, the weight) and is built from their hypotheses
+  (those written).
+- Checked, off: ls20, 300 cycles, grid, here, against the code before it
+  (`a2e307f`): the same 300 commands and the same 21,776 `[event]` records. On:
+  the first choice that differs is the 73rd; 300 cycles took the same time.
+- Also: `run_series.py` still passed `--mind learning`, which the builder no
+  longer takes since part 1; removed. Series `a6` added (the six games, grid
+  with and without attention). README's list of the mind's files still named
+  `src/arc3/aim.py` and `mind.py`; corrected.
+- Tests: how alike two states are; with attention an act is wanted by what it
+  did where the mind stood alike, and without it by all; too little alike, as
+  without it; the choice names the experiences and is built from their
+  hypotheses. 327 pass.

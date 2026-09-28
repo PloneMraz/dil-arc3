@@ -140,6 +140,7 @@ class ExactInducer:
         self.clock: frozenset[int] = frozenset()
         self._recent: deque = deque(maxlen=CLOCK_WINDOW)   # (kind, rows changed) per step
         self._things: dict[str, list[tuple[int, int, int, int]]] = {}
+        self._masks: dict[str, tuple[int, tuple[int, ...]]] = {}   # identity -> (cells, a bit mask per colour)
 
     # ── perception ──
 
@@ -166,8 +167,36 @@ class ExactInducer:
         if not always or always <= self.clock:
             return None
         self.clock = self.clock | always
-        self._things = {}
+        self._things, self._masks = {}, {}
         return Perceived(payload={"rows": sorted(self.clock)}, tags=dict(CLOCK_TAGS))
+
+    def _mask(self, state: Grid) -> tuple[int, tuple[int, ...]]:
+        """A grid off the clock as one bit mask per colour, and how many cells it has."""
+        raw = grid_key(state)
+        kept = self._masks.get(raw)
+        if kept is None:
+            masks = [0] * 16
+            bit, cells = 1, 0
+            for r, row in enumerate(state):
+                if r in self.clock:
+                    bit <<= len(row)
+                    continue
+                for v in row:
+                    masks[v & 15] |= bit
+                    bit <<= 1
+                    cells += 1
+            kept = (cells, tuple(masks))
+            self._masks[raw] = kept
+        return kept
+
+    def similarity(self, a: Grid, b: Grid) -> float:
+        """How alike two states are, 0 to 1: the share of their cells, off the clock,
+        of one colour in both (idea (a), Plone, 2026-09-29)."""
+        cells, ma = self._mask(a)
+        other, mb = self._mask(b)
+        if not cells or cells != other:
+            return 0.0
+        return sum((x & y).bit_count() for x, y in zip(ma, mb)) / cells
 
     # ── what can be done ──
 

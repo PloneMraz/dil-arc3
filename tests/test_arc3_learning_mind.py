@@ -584,3 +584,71 @@ def test_its_own_aim_is_a_report_other_than_the_one_it_has_been_making_and_not_a
     assert not learning._reached(usual), "what it has been reporting"
     assert learning._reached({**usual, "levelsDelta": 1}), "something else"
     assert not learning._reached({**usual, "stateTo": "GAME_OVER"}), "an end is no aim"
+
+
+def test_how_alike_two_states_are_is_the_share_of_cells_equal_off_the_clock():
+    # Idea (a): how alike is the inducer's to say.
+    inducer = ExactInducer(ARC_ORGANS)
+    assert inducer.similarity(lit(0), lit(0)) == 1.0
+    assert inducer.similarity(lit(0), lit(1)) == 7 / 9, "two cells differ of nine"
+    assert inducer.similarity(lit(0), [[1, 0], [0, 0]]) == 0.0, "states of another shape are not alike"
+
+
+def _attending(new_here, new_elsewhere):
+    """A learning that tried act 1 and act 2 ten times each: `new_here` says how
+    often each reached somewhere new in a situation alike to where it stands,
+    `new_elsewhere` in one not alike at all."""
+    from mind.learning import Edge
+    learning = Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
+    for act in (1, 2):
+        for at, news in (("alike", new_here[act]), ("other", new_elsewhere[act])):
+            learning._learned.append(Edge(at, (act, None, None), "to", ("act", act), True, seen=5, new=news))
+        tried = 10
+        learning._actions[act] = [tried, new_here[act] + new_elsewhere[act], 0]
+        learning._kinds[("act", act)] = list(learning._actions[act])
+    learning._alike = {"alike": 1.0, "other": 0.0}
+    return learning
+
+
+def test_with_attention_an_act_is_wanted_by_what_it_did_where_it_was_alike():
+    # Act 1 reached somewhere new often, but only elsewhere; act 2 less often in
+    # all, but where it stood alike to here.
+    learning = _attending(new_here={1: 0, 2: 3}, new_elsewhere={1: 5, 2: 0})
+    assert max((1, 2), key=learning._action_curiosity) == 2
+    learning.attention = False
+    assert max((1, 2), key=learning._action_curiosity) == 1, "without it, by all it did everywhere"
+
+
+def test_too_little_alike_to_go_by_it_wants_as_without_attention():
+    learning = _attending(new_here={1: 0, 2: 3}, new_elsewhere={1: 5, 2: 0})
+    learning._alike = {"alike": 0.4, "other": 0.0}     # 0.4 ** 4 * 5 falls short of ATTENTION_MIN_WEIGHT
+    attended = learning._action_curiosity(1)
+    learning.attention = False
+    assert attended == learning._action_curiosity(1)
+
+
+def test_the_choice_names_the_experiences_it_went_by(monkeypatch):
+    import mind.learning as learning_module
+    monkeypatch.setattr(learning_module, "ATTENTION_MIN_WEIGHT", 0.1)
+    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
+    mind.receive("task", MIND_TASK.payload, None)
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(
+            t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+        ),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(1)), status())
+    attended = [(k, d.payload) for k, d in of_kind(data, "choice") if "attended" in d.payload]
+    assert attended, "a choice made by attention says what it attended to"
+    key, choice = attended[-1]
+    assert all(e["act"] == choice["chose"] and 0 < e["weight"] <= 1 for e in choice["attended"])
+    written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
+               for w in r.activity.written}
+    hypotheses = {k for k, _ in of_kind(data, "hypothesis")}
+    assert hypotheses & set(written[key]), "what each suggested, it was built from"

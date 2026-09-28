@@ -35,14 +35,22 @@ KERNEL = "plonemraz/dil-arc3-learning"
 GAMES = ("ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,"
          "sp80,su15,tn36,tr87,tu93,vc33,wa30")
 
-# (name, inducer, curiosity): the 25-game measurement settled with Plone.
+# The six games a change is measured on first (Plone, 2026-09-28).
+DEV = "ls20,vc33,ar25,lp85,tu93,lf52"
+
+# (name, inducer, curiosity, more options): m25, the 25-game measurement settled
+# with Plone; a6, attention (idea (a)) against the mind without it, on the six.
 SERIES = {
     "m25": [
-        ("exact-new", "exact", "new"),
-        ("grid-new", "grid", "new"),
-        ("grid-changed", "grid", "changed"),
-        ("grid-new-then-changed", "grid", "new-then-changed"),
-        ("grid-new-plus-changed", "grid", "new-plus-changed"),
+        ("exact-new", "exact", "new", ()),
+        ("grid-new", "grid", "new", ()),
+        ("grid-changed", "grid", "changed", ()),
+        ("grid-new-then-changed", "grid", "new-then-changed", ()),
+        ("grid-new-plus-changed", "grid", "new-plus-changed", ()),
+    ],
+    "a6": [
+        ("grid-new", "grid", "new", ()),
+        ("grid-new-attention", "grid", "new", ("--attention",)),
     ],
 }
 
@@ -92,19 +100,20 @@ def main() -> None:
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--stop", type=int, default=None)
-    ap.add_argument("--games", default=GAMES)
+    ap.add_argument("--games", default=None, help="the series' own by default: a6 the six, else the 25")
     a = ap.parse_args()
     log = OUT / f"{a.series}-series.log"
     chosen = SERIES[a.series][a.start:a.stop]
+    a.games = a.games or (DEV if a.series == "a6" else GAMES)
     say(log, f"series {a.series}: {[c[0] for c in chosen]} on {a.games}")
-    for i, (name, inducer, curiosity) in enumerate(chosen):
+    for i, (name, inducer, curiosity, more) in enumerate(chosen):
         dest = OUT / f"{a.series}-{name}"
         dest.mkdir(parents=True, exist_ok=True)
         pushed_at = None
         if not (i == 0 and a.first_pushed):
             built = subprocess.run(
-                [sys.executable, str(HERE / "build_dil_run.py"), "--mind", "learning", "--inducer", inducer,
-                 "--curiosity", curiosity, "--game", a.games, "--cycles", str(a.cycles),
+                [sys.executable, str(HERE / "build_dil_run.py"), "--inducer", inducer,
+                 "--curiosity", curiosity, *more, "--game", a.games, "--cycles", str(a.cycles),
                  "--concurrency", str(a.concurrency)], capture_output=True, text=True, cwd=str(REPO))
             if built.returncode != 0:
                 say(log, f"{name}: build failed: {built.stderr.strip()[-500:]}")

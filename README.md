@@ -44,7 +44,7 @@ Settled deliberately, with Plone.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
-| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — exact, grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py`, `aim.py`, `mind.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — exact, grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -113,7 +113,11 @@ what a hypothesis predicts. There are three (`--inducer`):
 
 Curiosity counts how often a kind of act reached a situation not met before
 (S2b); three other laws — a change (S2), somewhere new then a change (S2c), the
-two added (S2d) — are kept to be measured against it (`--curiosity`). An
+two added (S2d) — are kept to be measured against it (`--curiosity`). With
+`--attention` (off by default), what an act did is read not from everywhere but
+from the sixteen situations most like where the mind stands, each weighed by how
+alike — the inducer says how alike two states are — and the choice names the
+experiences it went by. An
 untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.

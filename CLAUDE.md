@@ -179,6 +179,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   included); **S2c**, somewhere new, then a change between kinds as likely to;
   **S2d**, both odds added. A step is blocked, back where it stood, or somewhere
   new: S2 counts the last two alike, S2b the first two.
+- **Attention, an option** (idea (a), after self-attention; Plone, 2026-09-29:
+  the idea kept, the design mine, for review): with `--attention`, how much an
+  act is wanted is read from what it did in the situations most like where the
+  mind stands — the `ATTENTION_K = 16` experiences most alike, each weighed by
+  how alike raised to `ATTENTION_SHARPNESS = 4` — once they weigh
+  `ATTENTION_MIN_WEIGHT = 1.0`; else from all it did, as without it. Declared,
+  not measured. How alike is the inducer's to say (`similarity`: the exact
+  inducer's, and so grid's, is the share of cells equal off the clock). The
+  choice it made so names the experiences it went by (`attended`, each with its
+  weight) and is built from their hypotheses. Off by default.
 - **A foreseen act is put last, never out of reach** (2026-09-28): an untried
   act whose held hypothesis says it leads where the mind has stood is tried
   after the acts it cannot foresee, here and by the ways to them. A hypothesis

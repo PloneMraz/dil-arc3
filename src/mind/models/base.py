@@ -125,6 +125,10 @@ class Inducer(Protocol):
     def situation(self, state: State) -> str:
         """Where the region stands in a state, read by its perception now."""
 
+    def similarity(self, a: State, b: State) -> float:
+        """How alike two states are, 0 to 1, as its perception reads them: what
+        the learning weighs one experience against another by (attention)."""
+
     def perceive(self, step: Step, kind: tuple) -> Any:
         """What its perception learns from a step, as a datum to write (with
         `payload` and `tags`); None when nothing. The learning then reads every

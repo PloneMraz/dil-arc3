@@ -492,6 +492,8 @@ def main() -> None:
                     help="the mind's model, what its learning computes with")
     ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
+    ap.add_argument("--attention", action="store_true",
+                    help="the mind attends to the experiences most like where it stands (mind/learning.py)")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -530,7 +532,8 @@ def main() -> None:
     }
     cpu = a.probe or not a.served
     if cpu:
-        run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity]
+        run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity,
+                                                                        *(["--attention"] if a.attention else [])]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]

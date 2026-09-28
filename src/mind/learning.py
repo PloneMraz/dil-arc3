@@ -94,6 +94,15 @@ MAX_PATH_NODES: Final = 20_000
 # hypotheses predict. DECLARED: a bound on work.
 MAX_IMAGINED_STEPS: Final = 3
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
+# ATTENTION (idea (a), Plone, 2026-09-29): with it, how much an act is wanted is
+# read not from all it did everywhere but from what it did in the situations most
+# like this one — the K most alike, each weighed by how alike, raised to SHARPNESS
+# (as a softmax's temperature sharpens) — when they weigh at least MIN_WEIGHT;
+# else from all, as without it. How alike is the inducer's to say (`similarity`).
+# DECLARED, not measured.
+ATTENTION_K: Final = 16
+ATTENTION_SHARPNESS: Final = 4
+ATTENTION_MIN_WEIGHT: Final = 1.0
 # What the mind counts as worth trying (the docstring's CURIOSITY), by name; the
 # first is the default (S2b).
 CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed")
@@ -138,6 +147,8 @@ class Edge:
     status: dict[str, Any] | None = None
     ended: int = 0               # how many times the region ended on it
     seen: int = 1
+    new: int = 0                 # how many times it reached a situation not met before
+    reached: int = 0             # how many times the aim came of it
 
 
 class Answer:
@@ -162,12 +173,19 @@ class Learning:
     to expect, show it what came back, ask it what to do."""
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
-                 curiosity: str = CURIOSITY[0]) -> None:
+                 curiosity: str = CURIOSITY[0], attention: bool = False) -> None:
         if curiosity not in CURIOSITY:
             raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer
         self.organs = organs
         self.curiosity = curiosity
+        self.attention = attention
+        # For a choice being made: how alike each state met is to where it stands
+        # (attention), and what the chosen act was weighed by.
+        self._alike: dict[str, float] = {}
+        self._attended: list[tuple[Edge, float]] = []
+        self._last_attended: list[tuple[Edge, float]] = []
+        self._attended_change = 0.0
         # How often each kind of act, and each act, changed the state (for the
         # laws that count a change: S2, S2c, S2d).
         self._kind_changes: dict[tuple, int] = {}
@@ -593,6 +611,7 @@ class Learning:
             if not foreseen:
                 # What came, no hypothesis it holds foresaw: it asks what this suggests.
                 self._new = self._induce(source_raw, act, step, foreseen)
+        edge.new += int(new)
         # What the inducer said in computing — a language model's answers — kept
         # whole, built from the step it was asked on and the words it was told.
         for said in self.inducer.said():
@@ -645,6 +664,7 @@ class Learning:
         if said.get(self.organs.state_field) in self.organs.ended:
             edge.ended += 1
         if self._reached(said) and edge.act[0] != self.organs.reset[0]:
+            edge.reached += 1
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
             self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
         if self._new:
@@ -708,12 +728,45 @@ class Learning:
     def _action_curiosity(self, act: int) -> tuple[float, ...]:
         """How much it wants an act at all, over every kind of it."""
         total = sum(a[0] for a in self._actions.values())
+        attended = self._attend(lambda e: e.act[0] == act)
+        if attended is not None:
+            return self._wanted(*attended, total)
         return self._wanted(self._actions.get(act, (0, 0, 0)), self._action_changes.get(act, 0), total)
 
     def _curiosity(self, kind: tuple) -> tuple[float, ...]:
         """How much it wants a kind of act, by its law of curiosity."""
         total = sum(k[0] for k in self._kinds.values())
+        attended = self._attend(lambda e: e.kind == kind)
+        if attended is not None:
+            return self._wanted(*attended, total)
         return self._wanted(self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0), total)
+
+    def _attend(self, which: Callable[[Edge], bool]) -> tuple[tuple[float, float, float], float] | None:
+        """What an act did in the situations most like where it stands (ATTENTION):
+        (tried, somewhere new, aim) and changes, each weighed by how alike; None
+        without attention, or when too little alike to go by."""
+        if not self.attention or not self._alike:
+            return None
+        met = sorted(((self._alike.get(e.source, 0.0), e) for e in self._learned
+                      if e.act[0] != self.organs.reset[0] and which(e)), key=lambda se: -se[0])[:ATTENTION_K]
+        weighed = [(e, a ** ATTENTION_SHARPNESS) for a, e in met if a > 0]
+        tried = sum(w * e.seen for e, w in weighed)
+        if tried < ATTENTION_MIN_WEIGHT:
+            return None
+        self._last_attended = weighed
+        new = sum(w * e.new for e, w in weighed)
+        aim = sum(w * e.reached for e, w in weighed)
+        changes = sum(w * e.seen for e, w in weighed if e.changed)
+        return (tried, new, aim), changes
+
+    def _look_alike(self, here: str) -> None:
+        """How alike each state met is to where it stands, for a choice (attention)."""
+        self._alike, self._attended, self._last_attended = {}, [], []
+        if not self.attention or here not in self._grid_of:
+            return
+        now = self._state(here)
+        for raw in {e.source for e in self._learned}:
+            self._alike[raw] = self.inducer.similarity(now, self._raw[raw])
 
     def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         return self.inducer.candidates(here, self._state(here), offers)
@@ -789,10 +842,17 @@ class Learning:
     def _curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
         """Of the acts in `pool`, the one it is most curious about: first which act,
         over every kind of it; then which of its kinds. With the odds it gives it."""
+        self._look_alike(here)
         chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
         best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
         self._kind_of[(here, best[0])] = best[1]
         self._chosen_kind = best[1]
+        attended = self._attend(lambda e: e.kind == best[1])     # what the chosen kind was weighed by
+        if attended is not None:
+            self._attended = list(self._last_attended)
+            (tried, new, aim), changes = attended
+            self._attended_change = (changes + 1) / (tried + 2)
+            return best[0], self._attended_change if self.curiosity == "changed" else self._odds_of((tried, new, aim))[1]
         if self.curiosity == "changed":
             return best[0], self._change_odds(best[1])
         return best[0], self._odds(best[1])[1]
@@ -896,8 +956,15 @@ class Learning:
             else:
                 choice["odds_of_new"] = round(odds, 3)
                 if self.curiosity != "new":
-                    choice["odds_of_change"] = round(self._change_odds(self._chosen_kind), 3)
+                    choice["odds_of_change"] = round(self._attended_change if self._attended
+                                                     else self._change_odds(self._chosen_kind), 3)
         built: list[object] = [self._unit] if self._unit is not None else []
+        if odds is not None and self._attended:
+            # The experiences it went by (attention), each with its weight; what
+            # each suggested, it was built from.
+            choice["attended"] = [{"at": self._state_of[e.source], "act": list(e.act), "weight": round(w, 3)}
+                                  for e, w in self._attended]
+            through = [*through, *(e.hypothesis for e, _ in self._attended if e.hypothesis not in through)]
         if lifted:
             choice["lifted"] = lifted
         if context.on == "command again" and self._last_choice is not None \

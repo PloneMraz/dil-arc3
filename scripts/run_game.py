@@ -36,7 +36,7 @@ from arc3 import transducers
 from arc3.host import create_source, declaration
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
-from mind.learning import CURIOSITY
+from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.exact import ExactInducer
 from mind.models.grid import GridInducer
@@ -76,6 +76,9 @@ ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exa
 ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
                 help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
                      "new-then-changed (S2c), new-plus-changed (S2d) — mind/learning.py")
+ap.add_argument("--attention", action="store_true",
+                help="weigh how much an act is wanted by what it did in the situations most like where it "
+                     "stands, not everywhere (idea (a), mind/learning.py: ATTENTION_K)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -109,7 +112,8 @@ if a.inducer == "language":
                                                         max_tokens=a.max_tokens, extra=extra))
 else:
     inducer = {"exact": ExactInducer, "grid": GridInducer}[a.inducer](ARC_ORGANS)
-mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity)
+mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
+            attention=a.attention)
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -180,6 +184,8 @@ print(f"  why it chose          : {dict(why)}")
 if a.curiosity != CURIOSITY[0]:
     print(f"  curiosity             : {a.curiosity}  changes by kind "
           f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")
+if a.attention:
+    print(f"  attention             : the {ATTENTION_K} experiences most alike")
 if a.inducer == "language":
     answers = mind.learning.inducer.answers
     why_not = collections.Counter((t["why_not"] or "")[:60] for t in answers if not t["program"])
