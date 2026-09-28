@@ -3352,3 +3352,17 @@ cycles a game, four at once, CPU, the deadline 9 h less 20 min from the
 notebook's start, each store dropped once its game has played. Its Save & Run
 is the entry above. Pending when written; no dataset version is pushed while
 its rerun may still read `dil-arc3-src`.
+
+### A mind with no aim at its first step never started without the onlooker (same day)
+
+Found while running ls20 `--alone` to weigh the onlooker's cost: 600 cycles, one
+state met, no choice made. At cycle 1 the learning mind holds no aim yet — the
+task comes back from memory a moment later — so it commands nothing and the
+body stands. What it reads then arrives, and nothing asked it to command: in a
+cycle the body stood still in, only the onlooker's word arrives, and with no
+onlooker nothing does. Every run with the onlooker stood one cycle at the start
+for this reason ("the body stood still: 1 cycles"), and the remark "standing
+still" set it going. Now, when what it reads comes back and it holds an aim
+while the body waits, the mind commands (`Mind.take_return`); the runs stand
+still for no cycle. ls20 with the onlooker plays exactly as before (377 actions
+to level 1). A test holds it. 323 tests.

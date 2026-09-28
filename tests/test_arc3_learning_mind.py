@@ -362,3 +362,26 @@ def test_the_field_reaches_the_mind_and_alertness_lets_it_think_more_in_a_cycle(
     rule("x", (), __import__("dil.loop.types", fromlist=["InfoUnit"]).InfoUnit(
         content={"channel": "none", "value": 1}, ref_frame=__import__("dil.loop.types", fromlist=["RefFrame"]).RefFrame(bound_layer=3, ref="x"), t=0), field=f)
     assert mind._field is f and mind._context("x").field is f
+
+
+def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
+    # Without an onlooker nothing arrives in a cycle the body stood still in, so a
+    # mind that held no aim at its first step, and was never asked again, stood
+    # for the whole run (LOG.md, 2026-09-28). Once what it reads comes back and it
+    # holds an aim, while the body waits, it commands.
+    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)   # the task not yet recalled
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(
+            t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+        ),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    first = run(cycle, frame(lit(0), lit(1)), status())
+    assert first.tests == () and mind.commands[-1][1] is None, "no aim yet: nothing commanded"
+    pushed: list = []
+    mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
+                     write=lambda request: None, ask=None, test=pushed.append)
+    assert pushed and mind.commands[-1][1] is not None, "the aim held, the waiting body gets a command"

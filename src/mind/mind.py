@@ -177,7 +177,11 @@ class Mind:
                     return
                 if self._pending is not None:
                     self.think(self._pending, ask, write)
-                if self._command_due:
+                if self._command_due or (self._goal is not None and self.commands and self.commands[-1][1] is None):
+                    # It waited for what it reads, or the body waits for want of an
+                    # aim it now holds: command. Without this a mind that held no
+                    # aim at its first step commanded only when something else
+                    # arrived — the onlooker — and without one never did.
                     self.command(ask, write, test)
                 return
         mark = _fingerprint(payload)
