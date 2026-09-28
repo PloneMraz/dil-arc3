@@ -39,9 +39,11 @@ THE LOOP, one step at a time:
   objected to.
 
 CURIOSITY. Per kind of act, and per act over every kind of it: how often it was
-tried, how often it changed where the region stands, how often the aim came of
-it. What most often brought the aim first; then the odds of a change (Laplace),
-raised by how little it has been tried (UCB1).
+tried, how often it reached a situation not met before, how often the aim came
+of it. What most often brought the aim first; then the odds of somewhere new
+(Laplace), raised by how little it has been tried (UCB1). Somewhere new, not a
+change: an act that only takes it back where it stood (an undo) changes the
+state every time and teaches it nothing (Plone, 2026-09-28: S2b).
 
 What it holds but does not write — its counts, how often an experience was met
 and ended the region, the situations it visited — follows from the observations
@@ -152,8 +154,8 @@ class Learning:
         self._learned: list[Edge] = []                      # every experience, in the order met
         self._edges: dict[tuple[str, Act], Edge] = {}
         self._out: dict[str, dict[Act, Edge]] = {}
-        self._kinds: dict[tuple, list[int]] = {}   # kind -> [tried, changed, aim]
-        self._actions: dict[int, list[int]] = {}   # act -> [tried, changed, aim], every kind of it
+        self._kinds: dict[tuple, list[int]] = {}   # kind -> [tried, somewhere new, aim]
+        self._actions: dict[int, list[int]] = {}   # act -> [tried, somewhere new, aim], every kind of it
         self._kind_of: dict[tuple[str, Act], tuple] = {}
         self._here: str | None = None
         self._unit: Any = None
@@ -439,6 +441,7 @@ class Learning:
         source = self._state_of[source_raw]
         known = self._edges.get((source, act))
         applied = list(self._applicable(source, act, step.before))
+        new = self.inducer.situation(step.after) not in self._grid_of
         to_raw = self._meet(step.after)
         self.holds_off_clock.append(int(self.inducer.situation(self._expected) == self._state_of[to_raw])
                                     if self._expected is not None else 0)
@@ -448,7 +451,7 @@ class Learning:
         if act[0] != o.reset[0]:
             for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0])):
                 counts[0] += 1
-                counts[1] += int(changed)
+                counts[1] += int(new)
         self._last_new = known is None
         # Every hypothesis that applied is borne out, or not, by where the region stands.
         for h, _, said in applied:
@@ -529,11 +532,11 @@ class Learning:
 
     @staticmethod
     def _odds_of(counts) -> tuple[float, float]:
-        tried, changed, aim = counts
-        return (aim + 1) / (tried + 2) if aim else 0.0, (changed + 1) / (tried + 2)
+        tried, new, aim = counts
+        return (aim + 1) / (tried + 2) if aim else 0.0, (new + 1) / (tried + 2)
 
     def _odds(self, kind: tuple) -> tuple[float, float]:
-        """The odds it gives a kind of act: of the aim, and of the state changing."""
+        """The odds it gives a kind of act: of the aim, and of somewhere new."""
         return self._odds_of(self._kinds.get(kind, (0, 0, 0)))
 
     def _action_curiosity(self, act: int) -> tuple[float, float]:
@@ -545,7 +548,7 @@ class Learning:
 
     def _curiosity(self, kind: tuple) -> tuple[float, float]:
         """How much it wants a kind of act: the odds of the aim first; then the
-        odds of a change, raised by how little it knows the kind (UCB1)."""
+        odds of somewhere new, raised by how little it knows the kind (UCB1)."""
         level, change = self._odds(kind)
         tried = self._kinds.get(kind, (0, 0, 0))[0]
         total = sum(k[0] for k in self._kinds.values())
@@ -686,7 +689,7 @@ class Learning:
         choice: dict[str, Any] = {"cycle": self.frame_calls, "here": here, "chose": list(act) if act else None,
                                   "why": why, "aim": (self._aim or {}).get("aim")}
         if odds is not None:
-            choice["odds_of_change"] = round(odds, 3)
+            choice["odds_of_new"] = round(odds, 3)
         built: list[object] = [self._unit] if self._unit is not None else []
         if lifted:
             choice["lifted"] = lifted

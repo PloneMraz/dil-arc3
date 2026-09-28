@@ -3540,3 +3540,37 @@ The check on ar25 and sk48 is reported with S2b. Both games can now run on this
 machine: their files are the competition's public `environment_files`,
 downloaded to `Downloads/` and git-ignored here. The S1 runs of both, 600
 cycles, reached no level, with 498 and 379 states met.
+
+### S2b: curiosity for somewhere new, not for a change (Plone, same day)
+
+Curiosity now counts, for each kind of act and each act, how often it reached a
+situation not met before, instead of how often it changed the state. The odds
+are still Laplace's, raised by UCB1, and the choice datum says `odds_of_new`. An
+act that only takes the mind back where it stood changes the state every time
+and reaches nowhere new. On sk48, ACTION7 (undo) did that: 131 of 132 of its
+steps changed the state, and 35 reached a new one.
+
+**S2 on ar25 and sk48, first.** With the exact inducer, the two reports agree
+with S1's line for line, as ls20 and vc33 did.
+
+**Measured.** All four games, 600 cycles each, the exact inducer, one run each.
+Actions to level 1 count the non-RESET moves in `[event]` before the first
+`levelsDelta > 0`.
+
+| | S1: level (actions to level 1) | S2b | steps reaching somewhere new | ACTION7 steps back to a situation met |
+|---|---|---|---|---|
+| ls20 | 1 (330) | **0** | 133 → 124 | — |
+| vc33 | 1 (81) | 1 (**72**) | 53 → 53 | — |
+| ar25 | 0 | **1 (578)** | 497 → 535 | 20 → 7 |
+| sk48 | 0 | 0 | 378 → 452 | **105 → 12** |
+
+- **sk48's undo loop is gone.** ACTION7 was taken 16 times instead of 133.
+- **ar25 passed a level for the first time, at cycle 586.**
+- **ls20 lost the level S1 reached.** It met 125 situations against 134, and
+  took ACTION1 165 times against 219. This was not traced further: one run, and
+  the order of exploring changed from the first choices on.
+- Levels over the four games stay at 2, now vc33 and ar25.
+- Wall times (614, 464, 481, 949 s) ran six games at once, so they do not
+  compare with S1's.
+
+Stores are in `scripts/data/s2/` and `s2b/` (git-ignored). 331 tests.

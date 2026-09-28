@@ -167,7 +167,7 @@ if LEARNING:
     print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.inducer.clock)})")
     print(f"  held off the clock    : {sum(mind.model.holds_off_clock)} of {len(mind.model.holds_off_clock)}")
     print(f"  why it chose          : {dict(why)}")
-    print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, changed, levels) most tried "
+    print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, somewhere new, levels) most tried "
           f"{sorted(mind.model._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
 else:
     print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")

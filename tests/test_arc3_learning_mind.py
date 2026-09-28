@@ -475,3 +475,13 @@ def test_what_it_reads_recalled_again_later_is_no_reason_to_command():
     mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
                      write=lambda request: None, ask=None, test=pushed.append)
     assert pushed == [], "only its first arrival commands a body waiting for want of an aim"
+
+
+def test_curiosity_counts_somewhere_new_not_a_change():
+    # S2b (Plone, 2026-09-28): an act that only takes it back where it stood
+    # changes the state and reaches nowhere new.
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())                     # somewhere new
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))   # back: a change, not new
+    assert mind.model._actions[1][:2] == [1, 1]
+    assert mind.model._actions[2][:2] == [1, 0]
