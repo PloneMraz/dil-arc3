@@ -137,8 +137,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   report; expects from the applicable hypothesis that fits the store best, which
   holds that expectation (`held_by`); weighs each by the returns that bore it
   out and did not — **held while right more often than wrong, and of those that
-  apply, the one right most often** (FIT_LAW, DECIDE@IMPL, tag H: fit against the
-  store); says in a new datum, built from the last, when whether it holds
+  apply, the one right at the highest rate**, (right + 1) / (tried + 2) (FIT_LAW,
+  DECIDE@IMPL, tag H: fit against the store; Plone, 2026-09-28: a rate, not a
+  count); says in a new datum, built from the last, when whether it holds
   changes; is curious; chooses, looking ahead by what its held hypotheses
   predict (at most `MAX_IMAGINED_STEPS` past where it has stood). The inducer
   declares where a hypothesis applies (its scope) and only computes: perception (a state's
@@ -157,7 +158,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   `targets(grid)`, its reading of the grid — only when no hypothesis held
   foresaw a step; all that reads the grid is the model's, code keeping only
   records beside it: a state's hash and the exact hypothesis (Plone,
-  2026-09-28: option (a)).
+  2026-09-28: option (a)). What it is told is `prior:mind-task`'s `induce`,
+  `induce_feedback` and `unforeseen` — the earlier form's words kept word for
+  word where they still hold, what changed said in `src/arc3/task.py` and held
+  by a test (Plone, 2026-09-28: S5) — handed on by the learning once the mind
+  has recalled it; each answer names the prior.
 - **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
   wanted by how often it reached a situation not met before, not by how often it
   changed the state.
@@ -207,7 +212,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
   through the levels; no kind of game, mechanic or strategy is named. It enters
-  through the tagging-gate, and the mind recalls it at its first arrival.
+  through the tagging-gate, and the mind recalls it at its first arrival; the
+  learning hands it on to the inducer, and what a language model is told is
+  these words, never text in code (Plone, 2026-09-25).
 - **What the body can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
   proposal as a command.

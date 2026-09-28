@@ -21,6 +21,8 @@ capability of the program, not a strategy for a kind of game (Plone,
 thinking: nothing here names them.
 
 `{rows}`, `{cols}`, `{evidence}`, `{also}` and `{seconds}` are filled when the mind thinks.
+TASK, FEEDBACK and the aim prior are the words the language model's earlier form
+was told, kept word for word; INDUCE and INDUCE_FEEDBACK, the language inducer's.
 """
 
 from __future__ import annotations
@@ -59,6 +61,44 @@ Some it got wrong (expected vs yours, as changed cells relative to the grid befo
 
 Revise your program — predict, propose and GOAL — so it explains all the evidence. Return one ```python code block."""
 
+# What a language model the mind learns with is told (`mind/models/language_inducer.py`):
+# the words of TASK and FEEDBACK above, word for word, but where it is asked for
+# what it no longer does — propose an action, hold a GOAL, ask memory — and for
+# what it now does: read the grid (`where`, `targets`). Changed from TASK: "two
+# Python functions" becomes "Python functions"; the `propose` block becomes the
+# `where` and `targets` blocks; the paragraph on `propose` looking ahead toward the
+# GOAL becomes its last sentence, on the time each run has, naming the three
+# functions; the ASK sentence is gone. From FEEDBACK: "predict, propose and GOAL"
+# becomes "predict, where and targets". UNFORESEEN is new: why it is asked
+# (Plone, 2026-09-28: S5, the prompts kept word for word where they can be).
+INDUCE: Final = """You are meeting a game you have not seen before. The aim is to find how to get through its levels. Nobody has told you its rules: work them out from what you have seen.
+
+Each step shows the game's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what the game returned. Actions are RESET (0) and ACTION1 to ACTION7; ACTION6 also carries a cell (x = column, y = row). Only the actions the game offers at a step can be taken there.
+
+{evidence}
+{also}
+Write Python functions, using only the standard library:
+
+    def predict(grid, action, x=None, y=None):
+        # the grid the game will return for this state and this action
+    def where(grid):
+        # if you can: the grid as it bears on where the game stands, a copy with every
+        # cell that changes whatever is done (a counter, a timer) set to -1
+    def targets(grid):
+        # if you can: the cells (x, y) worth taking ACTION6 on
+
+Each run of predict, where or targets must end within {seconds} seconds.
+
+State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block."""
+
+INDUCE_FEEDBACK: Final = """Your predict was run on those steps. It got {ok}/{n} exactly right.
+Some it got wrong (expected vs yours, as changed cells relative to the grid before):
+{misses}
+
+Revise your program — predict, where and targets — so it explains all the evidence. Return one ```python code block."""
+
+UNFORESEEN: Final = "\nNo program you wrote foresaw the last step.\n"
+
 # The task's aim, stated in the form a mind that reads no text can hold itself to:
 # what will come back when it is reached, in the fields of the region's report
 # (Plone, 2026-09-27: what is particular to the region is data the mind reads).
@@ -66,7 +106,8 @@ TASK_AIM: Final = {"aim": "get through the levels", "reached_when": {"fields": {
 
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
-    payload={"task": TASK, "feedback": FEEDBACK, "aim": TASK_AIM},
+    payload={"task": TASK, "feedback": FEEDBACK, "aim": TASK_AIM,
+             "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK, "unforeseen": UNFORESEEN},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 
@@ -74,4 +115,5 @@ MIND_TASK: Final = PreexistingItem(
 # what it is for from its own memory, as it reads anything else.
 TASK_CUE: Final = {"domain": TASK_DOMAIN}
 
-__all__ = ["FEEDBACK", "MIND_TASK", "TASK", "TASK_AIM", "TASK_CUE", "TASK_DOMAIN", "TASK_SOURCE"]
+__all__ = ["FEEDBACK", "INDUCE", "INDUCE_FEEDBACK", "MIND_TASK", "TASK", "TASK_AIM", "TASK_CUE", "TASK_DOMAIN",
+           "TASK_SOURCE", "UNFORESEEN"]

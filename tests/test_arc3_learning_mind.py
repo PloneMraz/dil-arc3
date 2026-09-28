@@ -506,3 +506,16 @@ def test_curiosity_counts_somewhere_new_not_a_change():
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))   # back: a change, not new
     assert mind.learning._actions[1][:2] == [1, 1]
     assert mind.learning._actions[2][:2] == [1, 0]
+
+
+def test_of_the_hypotheses_held_the_one_right_at_the_highest_rate_is_expected_from():
+    # Plone, 2026-09-28 (Q4): a rate, not a count. By a count, a hypothesis held
+    # longer — right 300 times, wrong 200 — outranked one right all 10 times.
+    from mind.learning import Hypothesis
+    learning = seated().learning
+    older, truer = Hypothesis("older", supports=300, fails=200), Hypothesis("truer", supports=10, fails=0)
+    learning._applicable = lambda situation, act, state=None: [(older, None, "a"), (truer, None, "b")]
+    assert learning._best("here", (1, None, None))[0] is truer
+    even = Hypothesis("even", supports=10, fails=0)
+    learning._applicable = lambda situation, act, state=None: [(even, None, "a"), (truer, None, "b")]
+    assert learning._best("here", (1, None, None))[0] is even, "at an equal rate, the first met stands"

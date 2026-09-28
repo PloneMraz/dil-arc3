@@ -27,7 +27,14 @@ hash), and the exact hypothesis — "from here, this act gave that" (`exact.py`)
 WHEN IT THINKS. Only when no hypothesis the mind holds foresaw a step (the
 learning says so: `foreseen`): each answer costs seconds of a served model. It is
 shown the steps of short-term perception (`evidence`), the last of them the step
-not foreseen, and the program it wrote last. A program is a hypothesis only if it
+not foreseen, and the program it wrote last with how it did on those steps.
+
+WHAT IT IS TOLD is data the mind read, never code (Plone, 2026-09-25: a prompt is
+a prior): the words of `prior:mind-task`, which the learning hands on once the
+mind has recalled it (`induce`, `induce_feedback`, `unforeseen`) — the language
+model's earlier words, kept word for word where they still hold (`arc3/task.py`
+says what changed; Plone, 2026-09-28: S5). Until they come it is asked nothing.
+Each answer names the prior among what it was built from. A program is a hypothesis only if it
 gives, from that step, where the region came to stand: what one experience
 suggests must bear it out. Each answer is kept whole as the mind's datum
 (`said`): its text, its reasoning when the model gives one, the program it
@@ -50,8 +57,8 @@ from typing import Any, Callable, Final
 from ..organs import Act, Organs, Step
 from .exact import ExactForm, ExactInducer, Grid, Perceived, Prediction, grid_key
 from .language import (
-    MAX_EVIDENCE_CHARS, PROGRAM_SECONDS, THOUGHT_TAGS, ModelEndpoint, ProgramError, Transition, chat,
-    extract_code, render_evidence,
+    MAX_EVIDENCE_CHARS, MAX_SHOWN, PROGRAM_SECONDS, THOUGHT_TAGS, ModelEndpoint, ProgramError, Transition, chat,
+    extract_code, misses_text, render_evidence, score,
 )
 
 PERCEPTION_TAGS: Final = {"domain": "mind", "kind": "perception", "object": "frame", "source": "mind"}
@@ -130,6 +137,7 @@ class LanguageInducer(ExactInducer):
         self._perceived = False                      # its reading changed since the learning last asked
         self._last: ProgramForm | None = None        # the last program that was a hypothesis
         self._said: list[Perceived] = []
+        self._words: dict[str, str] | None = None      # what it is told, as the mind recalled it
         self._situations: dict[str, str] = {}        # a state's identity -> its situation, under its reading
         self._targets: dict[str, list[tuple[Act, tuple]]] = {}
         # For the run's report: each answer, with what came of it.
@@ -210,11 +218,19 @@ class LanguageInducer(ExactInducer):
                 forms.append(program)
         return forms
 
+    def receive_prior(self, name: str, payload: Any) -> None:
+        if name == "task" and isinstance(payload, dict) and all(
+                isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen")):
+            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen")}
+
     def _think(self, act: Act, before: Grid, after: Grid, evidence: tuple) -> ProgramForm | None:
         """Have the model write a program from what the mind has seen; the program,
-        if it is a hypothesis: it gives, from the step, where the region came to."""
+        if it is a hypothesis: it gives, from the step, where the region came to.
+        Not asked before it has been told what it is asked (its prior)."""
+        if self._words is None:
+            return None
         steps = [Transition(before=s.before, action=s.act[0], x=s.act[1], y=s.act[2], after=s.after, status=r)
-                 for s, r in (evidence or ((Step(before, act, after), None),))]
+                 for s, r in (evidence or ((Step(before, act, after), None),))][-MAX_SHOWN:]
         text, usage, why, form = "", {}, None, None
         try:
             text, usage = self._chat(self.endpoint, self._messages(steps))
@@ -251,31 +267,26 @@ class LanguageInducer(ExactInducer):
         return form
 
     def _messages(self, steps: list[Transition]) -> list[dict[str, str]]:
-        """What the model is shown: the region as the host declares it, the steps
-        seen (the oldest left out while they do not fit), its last program."""
-        o = self.organs
-        acts = ", ".join(name for a, name in sorted(o.acts.items()) if a != o.reset[0])
-        placed = ", ".join(o.acts[a] for a in sorted(o.placed))
+        """What the model is shown, in the words it was told, as its earlier form
+        was: the steps seen (the oldest left out while they do not fit) and why it
+        is asked; then the program it wrote last and how it did on those steps."""
+        words = self._words or {}
         shown = list(steps)
-        evidence = render_evidence(shown, report=True)
-        while len(evidence) > MAX_EVIDENCE_CHARS and len(shown) > 1:
+        while len(shown) > 1 and len(render_evidence(shown)) > MAX_EVIDENCE_CHARS:
             shown = shown[1:]
-            evidence = render_evidence(shown, report=True)
-        system = (f"You work out how a region behaves from what was seen of it, and write it as a Python program. "
-                  f"Its states are {o.state_kind}; a grid is shown one row per line, row 0 first, a colour as a hex "
-                  f"digit (0-f). It is acted on with {acts}, and {o.acts[o.reset[0]]}; {placed} takes a cell (x, y).")
-        last = (f"\n\nThe program you wrote last:\n```python\n{self._last.code}\n```" if self._last else "")
-        user = (f"What was seen, oldest first:\n{evidence}\n\n"
-                f"No program you wrote foresaw the last step.{last}\n\n"
-                "Write one Python block, standard library only, that defines:\n"
-                "- predict(grid, action, x, y): the grid that follows when `action` (its number) is taken on "
-                "`grid` (a list of rows of ints 0-15, row 0 first); x and y are the cell for an action that takes "
-                "one, else None.\n"
-                "- where(grid), if you can: the grid as it bears on where the region stands — a copy with every "
-                "cell that changes whatever is done (a counter, a timer) set to -1.\n"
-                "- targets(grid), if you can: the cells (x, y) worth acting on with an action that takes a cell.\n"
-                f"Each call must return within {PROGRAM_SECONDS} seconds.")
-        return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        grid = shown[-1].after if shown else [[]]
+        first = words["induce"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
+                                       evidence=render_evidence(shown, report=True), also=words["unforeseen"],
+                                       seconds=PROGRAM_SECONDS)
+        messages = [{"role": "user", "content": first}]
+        if self._last is not None:
+            # Scored on the grid alone, as it is asked to predict it.
+            evidence = [Transition(t.before, t.action, t.x, t.y, t.after) for t in shown]
+            ok, misses = score(self._last.predict, evidence, (), lambda status: status)
+            messages.append({"role": "assistant", "content": f"```python\n{self._last.code}```"})
+            messages.append({"role": "user", "content": words["induce_feedback"].format(
+                ok=ok, n=len(evidence), misses=misses_text(misses))})
+        return messages
 
     def said(self) -> list[Perceived]:
         out, self._said = self._said, []

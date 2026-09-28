@@ -542,6 +542,15 @@ class Thought:
     asked: list[dict[str, str]] = field(default_factory=list)
 
 
+def misses_text(misses: list[tuple[Transition, Any]]) -> str:
+    """A program's misses as the model is told them: the first MAX_MISSES_SHOWN."""
+    out = []
+    for t, got in misses[:MAX_MISSES_SHOWN]:
+        mine = got if isinstance(got, str) else describe_change(t.before, got[0])
+        out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
+    return "\n".join(out)
+
+
 def _transition(step: Step, report: Status | None) -> Transition:
     return Transition(before=step.before, action=step.act[0], x=step.act[1], y=step.act[2],
                       after=step.after, status=report)
@@ -834,11 +843,7 @@ class LanguageModel:
         return [Write(payload=payload, revises="program", built_from=built_from)]
 
     def _misses_text(self, misses: list[tuple[Transition, Any]]) -> str:
-        out = []
-        for t, got in misses[:MAX_MISSES_SHOWN]:
-            mine = got if isinstance(got, str) else describe_change(t.before, got[0])
-            out.append(f"- {_name(t)}\n  expected: {describe_change(t.before, t.after)}\n  yours:    {mine}")
-        return "\n".join(out)
+        return misses_text(misses)
 
 
 def context_frame(context: Context) -> int:

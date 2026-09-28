@@ -208,6 +208,9 @@ class ExactInducer:
         nothing but its hypotheses."""
         return []
 
+    def receive_prior(self, name: str, payload: Any) -> None:
+        """A prior the mind recalled: it reads no words."""
+
     def key(self, form: ExactForm) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""
         return ("exact", form.source, form.act, grid_key(form.to))

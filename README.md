@@ -95,7 +95,8 @@ every step as experience, holds what an experience suggests as a hypothesis,
 written as data built from the step, expects from the hypothesis that fits the
 store best, which holds that expectation and is scarred when the region returns
 otherwise, weighs each hypothesis by how often the region bore it out (held
-while right more often than wrong), and chooses by the paths it knows and by
+while right more often than wrong; of those that apply, the one right at the
+highest rate is expected from), and chooses by the paths it knows and by
 curiosity — what it knows least. The inducer is replaceable and only computes:
 what a state is to it, what can be done in one, what an experience suggests and
 what a hypothesis predicts. There are three (`--inducer`):
@@ -116,8 +117,9 @@ what a hypothesis predicts. There are three (`--inducer`):
   stands, and, if it can, `where(grid)` and `targets(grid)` — where the region
   stands, and where an act that takes a cell is worth putting: its reading of
   the grid. All that reads the grid is the model's; code keeps only records
-  beside it, a state's hash and the exact hypothesis. Each answer is kept whole
-  in the store. Not run against a served model, and not used for ARC-AGI-3
+  beside it, a state's hash and the exact hypothesis. What it is told is the
+  task prior's words — the earlier form's, word for word where they still hold.
+  Each answer is kept whole in the store, built from the prior. Not run against a served model, and not used for ARC-AGI-3
   for now (Plone, 2026-09-28).
 
 Curiosity counts how often a kind of act reached a situation not met before. An

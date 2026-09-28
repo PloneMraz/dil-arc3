@@ -23,7 +23,7 @@ THE LOOP, one step at a time:
   returns otherwise, it is scarred (v0.3.5).
 - **Weighing.** Each return that a hypothesis predicted counts for it, each it
   did not counts against: a hypothesis is held while it has been right more
-  often than wrong, and the one right most often is preferred (DECIDE@IMPL
+  often than wrong, and the one right at the highest rate is preferred (DECIDE@IMPL
   FIT_LAW; tag H: fit against the store, never a scored standard). When that
   changes, a new datum says so, built from the one before: nothing is revised
   in place.
@@ -79,7 +79,8 @@ MAX_PATH_NODES: Final = 20_000
 MAX_IMAGINED_STEPS: Final = 3
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
-                  "the one right most often is the expectation")
+                  "the one right at the highest rate, (supports + 1) / (supports + fails + 2), is the "
+                  "expectation; at an equal rate, the one right more often")
 
 
 @dataclass(eq=False)
@@ -96,6 +97,11 @@ class Hypothesis:
     @property
     def holds(self) -> bool:
         return self.supports > self.fails
+
+    @property
+    def rate(self) -> float:
+        """How often it was right, Laplace's estimate: (right + 1) / (tried + 2)."""
+        return (self.supports + 1) / (self.supports + self.fails + 2)
 
 
 @dataclass(eq=False)
@@ -198,6 +204,7 @@ class Learning:
         return frozenset()
 
     def receive_prior(self, name: str, payload: Any, datum_id: str) -> None:
+        self.inducer.receive_prior(name, payload)
         aim = payload.get("aim") if isinstance(payload, dict) else None
         if name == "task" and isinstance(aim, dict) and isinstance(aim.get("reached_when"), dict):
             self._aim = {"aim": str(aim.get("aim") or ""), "source": "stated",
@@ -261,9 +268,11 @@ class Learning:
         return found
 
     def _best(self, situation: str, act: Act, state: Any = None) -> tuple[Hypothesis, Any, str] | None:
-        """Of the hypotheses that apply and are held, the one right most often (FIT_LAW)."""
+        """Of the hypotheses that apply and are held, the one right at the highest
+        rate (FIT_LAW; Plone, 2026-09-28: a rate, not a count — by a count, a
+        hypothesis held longer outranked a truer one met later)."""
         held = [a for a in self._applicable(situation, act, state) if a[0].holds]
-        return max(held, key=lambda a: a[0].supports) if held else None
+        return max(held, key=lambda a: (a[0].rate, a[0].supports)) if held else None
 
     def _state(self, situation: str) -> Any:
         """A state of a situation: one it stood in, or one it predicted."""
@@ -515,10 +524,10 @@ class Learning:
                 # What came, no hypothesis it holds foresaw: it asks what this suggests.
                 self._new = self._induce(source_raw, act, step, foreseen)
         # What the inducer said in computing — a language model's answers — kept
-        # whole, built from the step it was asked on.
+        # whole, built from the step it was asked on and the words it was told.
         for said in self.inducer.said():
             writes.append(Write(payload={**said.payload, "cycle": self.frame_calls}, tags=dict(said.tags),
-                                built_from=(unit,)))
+                                built_from=(unit, ("prior", "task"))))
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
         self._visits[to] = self._visits.get(to, 0) + 1

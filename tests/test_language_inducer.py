@@ -10,7 +10,7 @@ hypothesis held foresaw a step (LOG.md, 2026-09-28).
 from __future__ import annotations
 
 from arc3.organs import ARC_ORGANS
-from arc3.task import MIND_TASK, TASK_CUE
+from arc3.task import FEEDBACK, INDUCE, INDUCE_FEEDBACK, MIND_TASK, TASK, TASK_CUE
 from mind.learning import HYPOTHESIS_TAGS
 from mind.mind import Mind, mind_rule
 from mind.models.exact import grid_key
@@ -107,7 +107,7 @@ def test_it_is_shown_the_steps_seen_and_the_step_not_foreseen():
     mind, inducer, cycle, data = loop(script)
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(2)), status())
-    user = script.shown[1][1]["content"]
+    user = script.shown[1][0]["content"]   # one message: the last answer was no program
     assert "#0 ACTION1" in user and "#1 ACTION1" in user, "short-term perception, oldest first"
     assert "No program you wrote foresaw the last step." in user
 
@@ -141,6 +141,7 @@ def targets(grid):
     return [(c, 0) for c in range(3) if grid[0][c] == 1]
 '''
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(targets)))
+    inducer.receive_prior("task", MIND_TASK.payload)
     assert [a for a, _ in inducer.candidates(grid_key(lit(1)), lit(1), (6,))] == [], "no program: no cell"
     inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1))
     situation = inducer.situation(lit(1))
@@ -162,9 +163,60 @@ def test_a_model_that_does_not_answer_leaves_the_mind_learning_as_before():
 
 def test_a_program_predicts_wherever_it_applies_and_is_weighed_there():
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT)))
+    inducer.receive_prior("task", MIND_TASK.payload)
     forms = inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1),
                            evidence=((Step(lit(0), (1, None, None), lit(1)), None),))
     program = forms[1]
     assert inducer.scope(program, lambda raw: raw) == ("program",)
     said = inducer.predict(program, "anywhere", lit(1), (2, None, None), lambda raw: raw)
     assert said is not None and said.state == lit(0)
+
+
+def test_what_it_is_told_is_the_prior_and_it_is_asked_nothing_before():
+    script = Script(block(STILL), block(RIGHT))
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=script)
+    step = (Step(lit(0), (1, None, None), lit(1)), None)
+    assert inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1), evidence=(step,))[1:] == []
+    assert script.shown == [], "not told yet: not asked"
+    inducer.receive_prior("task", MIND_TASK.payload)
+    inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1), evidence=(step,))
+    first = script.shown[0][0]["content"]
+    assert first.startswith(TASK.split("\n\n")[0]), "the earlier form's words, word for word"
+    assert "propose" not in first and "GOAL" not in first and "ASK" not in first
+
+
+def test_its_answers_name_the_prior_among_what_they_were_built_from():
+    from mind.learning import Learning
+    learning = Learning(LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT))), ARC_ORGANS,
+                        priors={"task": TASK_CUE})
+    learning.receive_prior("task", MIND_TASK.payload, "prior:mind-task")
+    writes = learning.observe(Step(lit(0), (1, None, None), lit(1)), "unit", None, ("unit",), on_report=False)
+    answers = [w for w in writes if (w.tags or {}).get("kind") == "thought"]
+    assert answers and answers[0].built_from == ("unit", ("prior", "task")), \
+        "built from the step it was asked on and the words it was told"
+
+
+def test_the_program_it_wrote_last_is_shown_with_how_it_did():
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=(script := Script(block(RIGHT), block(RIGHT))))
+    inducer.receive_prior("task", MIND_TASK.payload)
+    one = (Step(lit(0), (1, None, None), lit(1)), None)
+    two = (Step(lit(1), (2, None, None), lit(1)), None)   # not what RIGHT says
+    inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1), evidence=(one,))
+    inducer.induce(grid_key(lit(1)), (2, None, None), lit(1), lit(1), evidence=(one, two))
+    shown = script.shown[1]
+    assert [m["role"] for m in shown] == ["user", "assistant", "user"], "as the earlier form was shown"
+    assert shown[1]["content"] == f"```python\n{RIGHT}```"
+    assert shown[2]["content"].startswith("Your predict was run on those steps. It got 1/2 exactly right.")
+
+
+def test_the_words_differ_from_the_earlier_forms_only_where_declared():
+    # Plone, 2026-09-28 (S5): the prompts that ran are kept word for word; what
+    # had to change is said in arc3/task.py.
+    task, induce = TASK.split("\n\n"), INDUCE.split("\n\n")
+    assert induce[:2] == task[:2], "the game, and the steps"
+    assert induce[2].split("\n")[:2] == task[2].split("\n")[:2] == ["{evidence}", "{also}"]
+    assert induce[2].split("\n")[2] == task[2].split("\n")[2].replace("Write two Python", "Write Python")
+    assert induce[3].split("\n")[:2] == task[3].split("\n")[:2], "predict, as it was"
+    assert induce[-1] == task[-1].split(" To see more")[0], "the last paragraph, but for ASK"
+    assert INDUCE_FEEDBACK.split("\n\n")[0] == FEEDBACK.split("\n\n")[0]
+    assert INDUCE_FEEDBACK.replace("predict, where and targets", "predict, propose and GOAL") == FEEDBACK

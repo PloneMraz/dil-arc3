@@ -164,6 +164,10 @@ class Inducer(Protocol):
         """What it said in computing since last asked, each a datum to keep whole
         (with `payload` and `tags`): a language model's answers. [] for none."""
 
+    def receive_prior(self, name: str, payload: Any) -> None:
+        """A prior the mind recalled, handed on by the learning: what a language
+        model is told is data the mind read (`prior:mind-task`), never code."""
+
     def key(self, form: Any) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""
 

@@ -3937,3 +3937,55 @@ help text or a test's expectation of a message.
 - `learning.py` names the three inducers.
 
 314 pass, 34 skipped.
+
+### S5 held to its criterion; FIT_LAW by rate (Plone, same day)
+
+Plone set out what S4 and S5 were in the design approved for S1:
+
+- **S4 — a hypothesis about the aim, carried to the next level.** Reaching the
+  aim is an experience too; the mind draws from it what brings the aim, and uses
+  it at the next level — in the same loop, not a mechanism of its own. Passes
+  if ls20 and vc33 get through level 2.
+- **S5 — the language model through the inducer interface.** The hypothesis is
+  a `predict` program, `induce` has the model write one, and the rule "kept if it
+  explains better" moves from `language.py` to the mind, as the general fit law.
+  Passes if the prompts that ran are kept word for word; if one must change,
+  Plone is told first.
+
+**S5 was not held to its criterion, and this repository's own rule was broken.**
+The language inducer of step 2a was built with a prompt of its own, in code:
+only `render_evidence`'s lines were the earlier form's. Plone was not told
+first. And words written into code are the side door Plone closed on
+2026-09-25 ("Bản chất prompt cũng có khác gì datum có tag 'prior' đâu"): in no
+store, in no `built_from`. Plone asked for it to be fixed:
+
+- The inducer's words are `prior:mind-task`'s, under three new keys — `induce`,
+  `induce_feedback`, `unforeseen` (`src/arc3/task.py`). `TASK` and `FEEDBACK`
+  are unchanged byte for byte. What changed from them is said beside them: "two
+  Python functions" becomes "Python functions"; the `propose` block becomes the
+  `where` and `targets` blocks; the paragraph on `propose` looking ahead toward
+  the GOAL becomes one sentence on the time each run has; the ASK sentence is
+  gone; in the feedback, "predict, propose and GOAL" becomes "predict, where and
+  targets"; `unforeseen` ("No program you wrote foresaw the last step.") is new.
+  A test holds the two texts to that.
+- The inducer is shown them as the earlier form was: one message with the task,
+  the evidence and why it is asked; then, when it wrote a program before, that
+  program as its own turn and the feedback, scored on the grid alone
+  (`misses_text`, moved out of `LanguageModel` unchanged, so the earlier form's
+  words are the same). It gets the words from the learning, which hands on
+  each prior the mind recalls (`Inducer.receive_prior`), and is asked nothing
+  before they come. Each answer is built from the step and `prior:mind-task`.
+- Smoke, ls20, 5 cycles, endpoint closed: 3 answers, not 4 (the first step came
+  before the prior); `written-2-0` is built from `signal-2-0` and
+  `prior:mind-task`.
+
+**Q4: FIT_LAW by rate** (Plone). Of the hypotheses that apply and are held, the
+one right at the highest rate, (right + 1) / (tried + 2), is expected from; at
+an equal rate, the one right more often, then the first met. By a count, a
+hypothesis held longer outranked a truer one met later. It changes which
+hypothesis is expected from wherever two apply — for the grid inducer the exact
+and the general ones, for the exact inducer two exact ones at one situation and
+act — so runs can change. **Not yet measured**: Plone asked for the work on S4
+to be reported before the next measurement.
+
+319 pass, 34 skipped.
