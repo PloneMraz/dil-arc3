@@ -550,7 +550,8 @@ own form (a `present` set, a `predict` rule for T5).
    hypothesis and choice is a new datum in `[event]`.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
-by the field; the resistance-retrieval channel (`recollection`) is not wired —
+by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a
+commit is the costliest thing a cycle does); the resistance-retrieval channel (`recollection`) is not wired —
 the channel exists, off by default, and is not recommended as a predictor. T3
 asks the store once per description: re-asking returns the same data, and asking
 every cycle would crowd T2's matching window of 8.

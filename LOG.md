@@ -4280,3 +4280,38 @@ and path. 325 pass, 34 skipped.
 The longer the run, the more it gains. Not yet measured on Kaggle, and not in
 the dataset runs 1 and 2 play. Left as it is, and the largest part remaining:
 every commit still reads the whole store back and encodes it again.
+
+### The port made faster again: nothing unchanged is read or encoded twice; a commit every 12 scars (Plone, same day)
+
+Plone approved the deeper change left open in the entry before, and asked for
+the scar count that fires a commit to go from 9 to 12.
+
+**What was changed** — port-side, dil-core's formats and names unchanged:
+- The SQLite `[data]` store holds what its table holds, decoded, in the table's
+  order: read from the table once, kept as each write goes to the table
+  (decoded from the text written). Every commit had read the whole table back.
+- The daemon keeps each datum's snapshot encoding from one commit to the next
+  while the datum is the same object (a stored `TaggedDatum` is immutable).
+- The commit store keeps the text of each container it made at the last commit,
+  held so its id is not reused: a container shared with the last snapshot is
+  not made into text again; its objects are on disk already.
+- A commit every **12** scars: declared by the run (`run_game.py`,
+  `Daemon(commit_every=12)`); the port keeps dil-core's 9 in
+  `store/decisions.py`, with the run's value noted beside it.
+
+**Checked** (`check_fast_paths.py`, every call wrapped): vc33 120 cycles (grid)
+and sb26 40 — 4.3 million canonical texts; 2,930 store reads, each the same as
+the table decoded afresh; 23 data encodings kept across commits, each the same
+as the data encoded anew; 23 snapshot addresses, each the same as a commit store
+keeping no text gives. 325 pass, 34 skipped.
+
+| sb26, 200 cycles, this machine | wall | commits |
+|---|---|---|
+| before any of this | 725 s | 34 |
+| the first fast paths | 375 s | 34 |
+| these, and a commit every 12 scars | **142 s (5.1×)** | 27 |
+
+The report the same line for line as before any of it, but for key, time, path
+and the number of commits. How much of the last step is the cadence and how
+much the rest was not measured apart. Not yet measured on Kaggle; not in the
+dataset runs 1 and 2 play.

@@ -2,10 +2,12 @@
 
     python scripts/check_fast_paths.py GAME CYCLES [run_game.py options...]
 
-Plays a game through `run_game.py` with the snapshot encoder and the event log's
-freezing wrapped: at every call, the value the fast path returns is compared
-with what the code it replaced returns (the encoder as it was before; the log's
-`copy.deepcopy`), and the first difference stops the run with what it was. A
+Plays a game through `run_game.py` with each fast path wrapped: at every call,
+what it returns is compared with what the code it replaced returns — the
+snapshot encoder as it was, the log's `copy.deepcopy`, `json.dumps`; the store's
+reads against its table decoded afresh; the data's encodings kept across commits
+against the data encoded anew; each snapshot's address against a commit store
+that keeps no text — and the first difference stops the run with what it was. A
 check of the optimization of 2026-09-28 (LOG.md), for the record; slow, since
 each call is made twice.
 """
@@ -77,7 +79,68 @@ daemon.encode_snapshot_value = encode_checked
 event_log.deep_freeze = freeze_checked
 commit_store._canonical = canonical_checked
 
+# The store read from memory, against the table decoded afresh at every read.
+import dil.store.sqlite_data_store as sqlite_store  # noqa: E402
+
+calls.update({"read": 0, "data": 0, "state": 0})
+held_entries, held_get = sqlite_store.SqliteDataStore.entries, sqlite_store.SqliteDataStore.get
+
+
+def table(store):
+    rows = store._db.execute("SELECT k, v FROM data ORDER BY rowid").fetchall()
+    return [(k, sqlite_store._decode(v)) for k, v in rows]
+
+
+def entries_checked(self):
+    got = held_entries(self)
+    calls["read"] += 1
+    if got != table(self):
+        sys.exit(f"the store read from memory differs from its table at read {calls['read']}")
+    return got
+
+
+def get_checked(self, id):
+    got = held_get(self, id)
+    calls["read"] += 1
+    if got != dict(table(self)).get(id):
+        sys.exit(f"the store's datum {id} differs from its table at read {calls['read']}")
+    return got
+
+
+sqlite_store.SqliteDataStore.entries = entries_checked
+sqlite_store.SqliteDataStore.get = get_checked
+
+# Each datum's encoding kept across commits, against encoding the data anew.
+kept_data = daemon._encoded_data
+
+
+def data_checked(data, held):
+    got = kept_data(data, held)
+    calls["data"] += 1
+    if got != encode_before(data):
+        sys.exit(f"the data kept encoded differs at commit {calls['data']}")
+    return got
+
+
+daemon._encoded_data = data_checked
+
+# The commit store's kept texts, against a store with none (the same address).
+kept_put = commit_store.DirCommitStore.put_state
+
+
+def put_checked(self, state):
+    h = kept_put(self, state)
+    fresh = commit_store.DirCommitStore(self._dir)
+    calls["state"] += 1
+    if kept_put(fresh, state) != h:
+        sys.exit(f"the snapshot's address differs at commit {calls['state']}")
+    return h
+
+
+commit_store.DirCommitStore.put_state = put_checked
+
 sys.argv = [str(Path(__file__).with_name("run_game.py")), *sys.argv[1:]]
 runpy.run_path(sys.argv[0], run_name="__main__")
-print(f"checked: encode {calls['encode']}, freeze {calls['freeze']}, canonical text {calls['canonical']} calls; "
+print(f"checked: encode {calls['encode']}, freeze {calls['freeze']}, canonical text {calls['canonical']}, "
+      f"store reads {calls['read']}, data kept {calls['data']}, snapshot addresses {calls['state']}; "
       "no difference", flush=True)

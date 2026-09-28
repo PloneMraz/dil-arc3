@@ -139,7 +139,7 @@ _ESC: Final = "#dil-esc"
 class DirCommitStore:
     """A commit repo backed by a directory."""
 
-    __slots__ = ("_dir", "_state_dir", "_object_dir", "_head_file")
+    __slots__ = ("_dir", "_state_dir", "_object_dir", "_head_file", "_texts", "_touched")
 
     def __init__(self, dir_: str | os.PathLike[str]) -> None:
         self._dir = Path(dir_)
@@ -148,8 +148,27 @@ class DirCommitStore:
         self._state_dir.mkdir(parents=True, exist_ok=True)
         self._object_dir.mkdir(parents=True, exist_ok=True)
         self._head_file = self._dir / "HEAD"
+        # The text of each container stored at the last commit, by the object it
+        # was made from — held, so no other object takes its id — and what the
+        # commit being put has asked for. A container a snapshot shares with the
+        # last (a datum not changed since) is not made into text again; its
+        # objects are on disk already (a port-side optimization, LOG.md,
+        # 2026-09-28; the names and the text are those it would be given anew).
+        self._texts: dict[int, tuple[Any, str]] = {}
+        self._touched: dict[int, tuple[Any, str]] = {}
 
     def _text(self, value: Any) -> str:
+        if type(value) in _CONTAINERS:
+            kept = self._texts.get(id(value))
+            if kept is not None and kept[0] is value:
+                self._touched[id(value)] = kept
+                return kept[1]
+            text = self._made_text(value)
+            self._touched[id(value)] = (value, text)
+            return text
+        return self._made_text(value)
+
+    def _made_text(self, value: Any) -> str:
         """The canonical text of `value` as it stands in its parent: inline, or,
         when it is at least MIN_OBJECT_BYTES long, the reference to the object it
         is stored as. Built bottom-up, each node's text from its children's, so
@@ -191,9 +210,11 @@ class DirCommitStore:
 
     def put_state(self, state: Any) -> str:
         """Store a snapshot payload; returns its content address (idempotent)."""
+        self._touched = {}
         text = self._node_text(state)
         h = _sha256(text)
         _put_object(self._state_dir / f"{h}.json", text)
+        self._texts, self._touched = self._touched, {}
         return h
 
     def put_marker(self, marker: CommitMarker) -> str:

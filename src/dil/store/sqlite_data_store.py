@@ -60,45 +60,63 @@ def _decode(text: str) -> TaggedDatum:
 
 
 class SqliteDataStore:
-    """A SQLite `[data]` store. Close it with `close()`."""
+    """A SQLite `[data]` store. Close it with `close()`.
 
-    __slots__ = ("_db",)
+    A port-side optimization, not dil-core's (LOG.md, 2026-09-28): what the table
+    holds is also held decoded, in the table's order, read from the table once
+    and kept as each write goes to it. Every commit read the whole table back and
+    decoded it — the more a run had stored, the more each commit cost. What a
+    read returns is what the table holds, decoded from the text written to it."""
+
+    __slots__ = ("_db", "_held")
 
     def __init__(self, db_path: str | os.PathLike[str]) -> None:
         self._db = sqlite3.connect(db_path)
         self._db.execute("CREATE TABLE IF NOT EXISTS data (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
         self._db.commit()
+        self._held: dict[str, TaggedDatum] | None = None
+
+    def _all(self) -> dict[str, TaggedDatum]:
+        if self._held is None:
+            rows = self._db.execute("SELECT k, v FROM data ORDER BY rowid").fetchall()
+            self._held = {k: _decode(v) for k, v in rows}
+        return self._held
 
     def put(self, id: str, datum: TaggedDatum) -> None:
-        # Upsert preserves the row's rowid on update, so insertion order is stable.
+        # Upsert preserves the row's rowid on update, so insertion order is stable
+        # (a dict keeps a key's place when its value is replaced, as the table does).
+        text = _encode(datum)
         self._db.execute(
             "INSERT INTO data(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v",
-            (id, _encode(datum)),
+            (id, text),
         )
         self._db.commit()
+        if self._held is not None:
+            self._held[id] = _decode(text)
 
     def get(self, id: str) -> TaggedDatum | None:
-        row = self._db.execute("SELECT v FROM data WHERE k = ?", (id,)).fetchone()
-        return _decode(row[0]) if row is not None else None
+        return self._all().get(id)
 
     def has(self, id: str) -> bool:
-        return self._db.execute("SELECT 1 FROM data WHERE k = ?", (id,)).fetchone() is not None
+        return id in self._all()
 
     def delete(self, id: str) -> bool:
         cur = self._db.execute("DELETE FROM data WHERE k = ?", (id,))
         self._db.commit()
+        if self._held is not None:
+            self._held.pop(id, None)
         return cur.rowcount > 0
 
     def clear(self) -> None:
         self._db.execute("DELETE FROM data")
         self._db.commit()
+        self._held = {}
 
     def size(self) -> int:
-        return int(self._db.execute("SELECT count(*) FROM data").fetchone()[0])
+        return len(self._all())
 
     def entries(self) -> list[tuple[str, TaggedDatum]]:
-        rows = self._db.execute("SELECT k, v FROM data ORDER BY rowid").fetchall()
-        return [(k, _decode(v)) for k, v in rows]
+        return list(self._all().items())
 
     def close(self) -> None:
         """Close the underlying database handle."""

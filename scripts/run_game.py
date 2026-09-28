@@ -60,6 +60,10 @@ from dil.loop.layers.t7 import create_t7
 from dil.loop.layers.t8 import create_t8
 from dil.runtime.daemon import Daemon
 
+# This host's commit cadence, declared by the run: every 12 scars (Plone,
+# 2026-09-28). dil-core declares 9 (dil/store/decisions.py, COMMIT_EVERY).
+COMMIT_EVERY_HERE = 12
+
 ap = argparse.ArgumentParser()
 ap.add_argument("game", nargs="?", default="ls20")
 ap.add_argument("cycles", nargs="?", type=int, default=10)
@@ -134,6 +138,9 @@ daemon = Daemon(
     # The learning mind writes every cycle and adds data rather than revising
     # one: the scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE).
     commit_on_write=not LEARNING,
+    # A commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28): a commit is
+    # the costliest thing a cycle does (decisions.COMMIT_EVERY; LOG.md).
+    commit_every=COMMIT_EVERY_HERE,
 )
 gate = daemon.start()
 print("gate:", type(gate).__name__, " store:", store_root, flush=True)

@@ -80,7 +80,7 @@ class Daemon:
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
-        "_running", "_last", "_total_scars", "_scars_since_commit",
+        "_running", "_last", "_total_scars", "_scars_since_commit", "_encoded",
     )
 
     def __init__(
@@ -137,6 +137,10 @@ class Daemon:
         self._last: CycleResult | None = None
         self._total_scars = 0
         self._scars_since_commit = 0
+        # Each datum's snapshot encoding, kept from one commit to the next while
+        # the datum is the same object (a port-side optimization, LOG.md,
+        # 2026-09-28): a datum is immutable once stored, so its encoding is too.
+        self._encoded: dict[int, tuple[Any, Any]] = {}
 
     # ── commit markers ─────────────────────────────────────────────────────
 
@@ -152,7 +156,8 @@ class Daemon:
                 _snapshot_payload(
                     take_snapshot(
                         self._layers, self._glob, self._cycle.snapshot(), self._data
-                    )
+                    ),
+                    self._encoded,
                 )
             )
 
@@ -346,7 +351,26 @@ class Daemon:
         self._running = False
 
 
-def _snapshot_payload(snap: SystemSnapshot) -> dict[str, Any]:
+def _encoded_data(data: list[tuple[str, Any]], held: dict[int, tuple[Any, Any]]) -> list[list[Any]]:
+    """`encode_snapshot_value(data)`, each pair's encoding kept in `held` by its
+    datum, and taken from there while the datum is the same object — so a
+    datum stored before a commit is encoded once, not at every commit after."""
+    out: list[list[Any]] = []
+    seen: dict[int, tuple[Any, Any]] = {}
+    for k, datum in data:
+        kept = held.get(id(datum))
+        if kept is not None and kept[0] is datum and kept[1][0] == k:
+            pair = kept[1]
+        else:
+            pair = [k, encode_snapshot_value(datum)]
+        seen[id(datum)] = (datum, pair)
+        out.append(pair)
+    held.clear()
+    held.update(seen)
+    return out
+
+
+def _snapshot_payload(snap: SystemSnapshot, held: dict[int, tuple[Any, Any]] | None = None) -> dict[str, Any]:
     """The commit store is content-addressed over JSON, so the snapshot goes as data."""
     return {
         "layers": encode_snapshot_value(snap.layers),
@@ -355,7 +379,7 @@ def _snapshot_payload(snap: SystemSnapshot) -> dict[str, Any]:
         # dropped the returns and writes on their way to T1 would lose what the
         # agent asked for and what it wrote in the cycle before the commit.
         "driver": encode_snapshot_value(snap.driver),
-        "data": encode_snapshot_value(snap.data),
+        "data": encode_snapshot_value(snap.data) if held is None else _encoded_data(snap.data, held),
     }
 
 

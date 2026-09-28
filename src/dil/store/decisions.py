@@ -187,7 +187,10 @@ EVENT_TAMPER_EVIDENCE: Final = (
 # entire system … into an immutable, content-addressed marker. Recovery is
 # full-system. DECIDE@IMPL: events between commits; snapshots retained").
 
-# A commit fires after this many SCARS since the last commit.
+# A commit fires after this many SCARS since the last commit. dil-core's value,
+# kept in the port; this host's run declares 12 (Plone, 2026-09-28:
+# scripts/run_game.py, `Daemon(commit_every=...)`), a commit being the costliest
+# thing a cycle does (LOG.md).
 COMMIT_EVERY: Final = 9
 # Rationale (tunable, NOT derived): the cadence counts scars, not all records —
 # state changes most when collisions are digested. Because activity records carry
