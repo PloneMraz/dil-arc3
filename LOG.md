@@ -3830,3 +3830,81 @@ grid sk48 1,704 s against 1,400 s). The change adds no work to a cycle — the
 seams call `self.learning` where they called `self.model` — and this machine
 also ran the tests during the runs; not traced. Stores are in
 `scripts/data/step1-exact/` and `step1-grid/` (git-ignored).
+
+### Step 2a: a language model the mind learns with; 2b, its mechanism on a probe's program (Plone, same day)
+
+Step 2 of the entry before last: the language model as an inducer. Plone's
+choices: the model thinks and computes, and does not decide — it chooses no act,
+holds no aim, does not judge its own program (Q1); all that reads the grid is
+the model's, not code beside it (option (a)). Asked when to call it (Q2) and what
+to show it (Q3), he let the proposals stand. Whether FIT_LAW's "the one right
+most often" is a count or a rate (Q4) is left as it is, a count, and open.
+
+- **The learning tells the inducer more, and keeps what it says.** `induce`
+  takes `foreseen` — whether a hypothesis held foresaw the step — and
+  `evidence`, the mind's short-term perception as (step, report) pairs, this
+  step last; the mind passes its perception to the learning with each step
+  (`observe(..., seen=)`). An inducer's `said()` is written whole, each a datum
+  built from the step it was asked on. The exact and grid inducers take both and
+  ignore them, and say nothing.
+- **`src/mind/models/language_inducer.py`** (`--inducer language`, at
+  `--endpoint`). Asked only on a step not foreseen, shown the perception, the
+  step, and the program it wrote last, the model writes one program:
+  `predict(grid, action, x, y)`, and if it can `where(grid)` (the grid as it
+  bears on where the region stands, cells that change whatever is done set to
+  -1) and `targets(grid)` (the cells worth putting an act that takes a cell on).
+  The program is a hypothesis applying everywhere (`general`), its code in the
+  datum. Its reading of the grid is the latest program's that defines `where`
+  or `targets`, and a change of it is a datum (`kind: perception`) on which the
+  learning reads every situation again. Before any, a situation is the grid as
+  it came and no cell is a target. Code keeps only records beside it: a state's
+  hash, the exact hypothesis. A program is a hypothesis only if it gives, from
+  the step it was asked on, where the region came to — what an experience
+  suggests must bear it out; otherwise the answer says why. Declared: it
+  predicts no report of the region, and asks memory nothing.
+- Tests, with a scripted model on the learning mind's 3x3 game (7): asked once,
+  every later step foreseen by its program; shown the perception; a program
+  that does not bear out its step is no hypothesis, and asked again; its `where`
+  reads the clock cell out, and the change is a datum; its `targets` are where
+  ACTION6 may go; a model that does not answer leaves the exact records and the
+  commands. One expectation of the first test was wrong and corrected: the mind's
+  whole-grid `holds` stays 0 where the program does not predict the clock; the
+  learning's off-the-clock count is 1. 314 pass, 34 skipped.
+- Smoke, ls20, 5 cycles, the endpoint closed: 4 answers kept, each "the model
+  did not answer"; 4 exact hypotheses; the mind commanded every cycle.
+
+**Exact and grid unchanged.** The eight S3 runs again (600 cycles, offline):
+every report agrees line for line with `s3-exact3` and `s3-grid3`, but for
+key, time and path. Wall time was shorter than S3's this time (exact ls20 731 s
+against 884 s; grid sk48 1,255 s against 1,400 s), so step 1's longer times
+were the machine's.
+
+**2b — the mechanism, on a program written outside the loop.** With no served
+model here, `replay_inducer.py --inducer language --program` has a scripted
+model answer every question with the 95% ls20 program of 2026-09-24
+(`output-run2/probe_nothink_1.json`, under an adapter for its two-argument
+`predict`) — a fixture for the mechanism, not evidence about a model. S1's ls20
+steps (`s1-fit`, 600), with the learning choosing at each step and timed:
+
+| | expected (right) | never met: expected (right) | hypotheses (held) | choosing |
+|---|---|---|---|---|
+| exact | 174 (172) | 426: 0 (0) | 428 (427) | 1 s |
+| grid | 455 (426) | 426: 281 (259) | 614 (592) | 9 s |
+| language (fixture) | 566 (288) | 550: 516 (271) | 551 (550) | 2 s |
+
+- **The program was held while right more often than wrong, and dropped when it
+  no longer was**: 278 for, 320 against. Before level 2 (cycle < 333) it gave
+  where the region came to on 278 of 329 steps (misses: 42 elsewhere, 9 in the
+  bar on rows 61-62); from level 2 on, on none of 264 — 254 of them in the bar
+  alone. It was written for level 1, and the fixture cannot write another.
+- **The model was asked 279 times in 600 steps**: on every step no held
+  hypothesis foresaw. At 3.9-76.3 s an answer (the one mind's first run on
+  Kaggle, Qwen3.6-35B-A3B, 2026-09-24), that is 18 minutes to 6 hours a game,
+  before a real model's answers change how often it is asked. That is what 2c has to measure.
+- **Looking ahead with a program is cheap here**: 2 s of choosing in 600 steps.
+- 550 steps met no situation met before, against 426: the program has no
+  `where`, so the bar makes every grid a situation of its own.
+- Q4 is not tested here: one program only.
+
+Stores and reports in `scripts/data/step2a-exact/`, `step2a-grid/`, `step2b/`
+(git-ignored).

@@ -152,8 +152,17 @@ class Inducer(Protocol):
 
     # ── hypotheses ──
 
-    def induce(self, source: str, act: Act, before: State, after: State) -> list[Any]:
-        """What one experience suggests: hypotheses, in its own forms."""
+    def induce(self, source: str, act: Act, before: State, after: State, *, foreseen: bool = False,
+               evidence: tuple = ()) -> list[Any]:
+        """What one experience suggests: hypotheses, in its own forms. The
+        learning says whether a hypothesis it holds foresaw the step, and shows
+        the steps of short-term perception as `evidence` ((step, report) pairs,
+        oldest first, the step itself last): an inducer whose computing is
+        costly computes only what the step was not foreseen by."""
+
+    def said(self) -> list[Any]:
+        """What it said in computing since last asked, each a datum to keep whole
+        (with `payload` and `tags`): a language model's answers. [] for none."""
 
     def key(self, form: Any) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""
@@ -200,9 +209,11 @@ class Learner(Protocol):
         """What will come back, from where the region stood and the act alone (INV-8)."""
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
-                on_report: bool) -> list[Write]:
+                on_report: bool, seen: list[tuple[Step, Any, dict[str, Any] | None]] | None = None
+                ) -> list[Write]:
         """What came back — the step, then its report: it learns from every
-        return."""
+        return. With a step, the mind's short-term perception (`seen`: step, unit,
+        report or None, oldest first, this step last)."""
 
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
         """What to do next, from where the region stands and what it has seen."""

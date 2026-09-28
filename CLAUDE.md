@@ -119,11 +119,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   (`src/mind/learning.py`), and its model is the replaceable computing it
   learns with (Plone, 2026-09-28). In the code: `Mind(inducer, organs,
   priors)` holds its learning (`Learning`), and the model's seat takes the
-  inducer (`Inducer`, `src/mind/models/base.py`). A language model —
-  **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
-  `7b71922`), which submission `56588469` used — is work left unfinished
-  inside the model, not yet revised to this design ("The language model —
-  unfinished", below). Submission `56623380` ran the mind learning from nothing,
+  inducer (`Inducer`, `src/mind/models/base.py`). A language model is one such
+  inducer (`language`, below), not yet run against a served one. Its earlier
+  form — **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
+  `7b71922`), which submission `56588469` used — sat in the learning's place
+  and is kept, not run ("The language model as submission 56588469 ran it",
+  below). Submission `56623380` ran the mind learning from nothing,
   before its learning was moved out of the model (code `f76ff5f`; LOG.md,
   2026-09-28).
 - **Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28:
@@ -141,12 +142,20 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   declares where a hypothesis applies (its scope) and only computes: perception (a state's
   identity, where the region stands in it), the acts a state affords, `induce`,
   `predict`, `describe`. It is asked on a new situation and act, and on a step
-  no held hypothesis foresaw; what it keys alike is held once. Two inducers
-  (`--inducer`): **exact** (`src/mind/models/exact.py`), one hypothesis per
-  experience, applying where it was met and nowhere else; **grid**
-  (`src/mind/models/grid.py`), the exact one's perception and hypotheses plus
-  "still" and "rewrite" ones that apply wherever their cells lie (its docstring
-  declares the language).
+  no held hypothesis foresaw — told which of the two it is (`foreseen`) and
+  shown short-term perception (`evidence`); what it keys alike is held once;
+  what it says in computing (`said`: a language model's answers) is kept whole
+  as data. Three inducers (`--inducer`): **exact** (`src/mind/models/exact.py`),
+  one hypothesis per experience, applying where it was met and nowhere else;
+  **grid** (`src/mind/models/grid.py`), the exact one's perception and
+  hypotheses plus "still" and "rewrite" ones that apply wherever their cells lie
+  (its docstring declares the language); **language**
+  (`src/mind/models/language_inducer.py`), a served language model that writes
+  one program — `predict(grid, action, x, y)`, and if it can `where(grid)` and
+  `targets(grid)`, its reading of the grid — only when no hypothesis held
+  foresaw a step; all that reads the grid is the model's, code keeping only
+  records beside it: a state's hash and the exact hypothesis (Plone,
+  2026-09-28: option (a)).
 - **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
   wanted by how often it reached a situation not met before, not by how often it
   changed the state.
@@ -325,11 +334,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   no action. Without an onlooker nothing arrives in them, so the mind is never
   asked, and the run spends its budget standing.
 
-### The language model — unfinished, not yet revised
+### The language model as submission 56588469 ran it — kept, not run
 
-Plone, 2026-09-28: the language model is work left unfinished inside the model,
-set aside for now — not a settled branch beside the learning. Only the rules
-above are in force. What follows is how its code works, as submission
+Plone, 2026-09-28: the language model was work left unfinished inside the model
+— not a settled branch beside the learning. Its revision is the language inducer
+(above); only the rules above are in force. What follows is how its earlier code
+works, as submission
 `56588469` ran it (`3b31806`) and as it stands: its rules have not been revised
 to the design above. It was seated where the learning was
 (`Mind(LanguageModel(...))`, by `src/arc3/mind.py`), so with it the mind had no
@@ -338,8 +348,7 @@ model, for now", Plone, 2026-09-27), and its program, not the mind, proposes
 the action and states the aim. The mind now holds its learning and its model's
 seat takes an inducer, which the language model is not: its seat is kept and
 not run (`create_mind` raises, `--mind language` stops before a run starts),
-and the tests that go through it are kept and skipped (Plone, 2026-09-28). It
-is to become a model the mind learns with.
+and the tests that go through it are kept and skipped (Plone, 2026-09-28).
 
 - **The program** (`src/mind/models/language.py`): `predict(grid, action, x,
   y)`, `propose(grid, steps)` and `GOAL`. The mind runs `propose` on where the

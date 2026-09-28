@@ -196,9 +196,17 @@ class ExactInducer:
 
     # ── hypotheses ──
 
-    def induce(self, source: str, act: Act, before: Grid, after: Grid) -> list[ExactForm]:
-        """What one experience suggests: that it will happen again, exactly."""
+    def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
+               evidence: tuple = ()) -> list[ExactForm]:
+        """What one experience suggests: that it will happen again, exactly. It
+        costs nothing, so whether the step was foreseen, and the steps before it,
+        change nothing here."""
         return [ExactForm(source=source, act=act, to=after)]
+
+    def said(self) -> list[Perceived]:
+        """What it said in computing, to be kept whole as data: nothing — it says
+        nothing but its hypotheses."""
+        return []
 
     def key(self, form: ExactForm) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""

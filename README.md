@@ -18,12 +18,12 @@ In the code, the mind holds its learning — `Mind(inducer, organs, priors)` —
 and its model's seat takes the inducer, so a model seated there changes how it
 computes, never whether it learns.
 
-**With the language model — unfinished work, not yet revised.** The language
-model is work left inside the model and set aside for now, not a settled branch
-beside the learning: it sat in the learning's place, which left the mind no
-learning of its own, and it is not an inducer, so it is not seated now — its
-code and tests are kept, and not run. As submission `56588469` ran it (served offline;
-Qwen3.8-Flash-Next NVFP4), the mind has the model write a program:
+**The language model, as submission `56588469` ran it — kept, not run.** It was
+work left inside the model, not a settled branch beside the learning: it sat in
+the learning's place, which left the mind no learning of its own. Its revision is
+an inducer (below); this earlier form is not an inducer, so it is not seated now
+— its code and tests are kept, and not run. As that submission ran it (served
+offline; Qwen3.8-Flash-Next NVFP4), the mind has the model write a program:
 `predict(grid, action, x, y)`, the next grid and what the region will report of
 itself; `propose(grid, steps)`, the next action from where the game stands and
 the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
@@ -59,7 +59,7 @@ Settled deliberately, with Plone.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
-| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with (the language model is unfinished). The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py`, `aim.py`, `mind.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — exact, grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py`, `aim.py`, `mind.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -98,7 +98,7 @@ otherwise, weighs each hypothesis by how often the region bore it out (held
 while right more often than wrong), and chooses by the paths it knows and by
 curiosity — what it knows least. The inducer is replaceable and only computes:
 what a state is to it, what can be done in one, what an experience suggests and
-what a hypothesis predicts. There are two (`--inducer`):
+what a hypothesis predicts. There are three (`--inducer`):
 
 - **exact** (`src/mind/models/exact.py`) suggests one hypothesis per experience
   — this act from this situation gives that — applying nowhere else. It
@@ -109,6 +109,15 @@ what a hypothesis predicts. There are two (`--inducer`):
   met: "this act changes nothing" (for an act that takes a place, on that
   colour), or "this act rewrites, in each part of the grid it changes, L into
   R", each part found on its own wherever L lies, one place only.
+- **language** (`src/mind/models/language_inducer.py`) is a served language
+  model. Asked only when no hypothesis the mind holds foresaw a step, and shown
+  the steps of short-term perception, it writes one program:
+  `predict(grid, action, x, y)`, a hypothesis that applies wherever the region
+  stands, and, if it can, `where(grid)` and `targets(grid)` — where the region
+  stands, and where an act that takes a cell is worth putting: its reading of
+  the grid. All that reads the grid is the model's; code keeps only records
+  beside it, a state's hash and the exact hypothesis. Each answer is kept whole
+  in the store. Not yet run against a served model.
 
 Curiosity counts how often a kind of act reached a situation not met before. An
 untried act its hypotheses say leads where it has stood is tried last, after the
@@ -116,7 +125,9 @@ acts it cannot foresee here and the ways to them elsewhere — never out of reac
 or the hypothesis could never be refuted.
 
 **A pretrained language model, used as it is, and the program it writes** —
-unfinished, as said above; what follows is how its code works now. The
+as the earlier form above ran it. The language inducer keeps the first two
+points below; for the third, it is shown short-term perception, bounded, asks
+memory nothing yet, and thinks only on a step no hypothesis held foresaw. The
 model is not trained here and does not hold the game: what it knows of a game is
 what the mind shows it — evidence the mind chose from its store and its window —
 and what it produces is a program, which the loop then tests against the region
@@ -258,8 +269,9 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
-                  (learning.py); the models it learns with (exact, grid) and the
-                  unfinished language model. Imports nothing from arc3.
+                  (learning.py); the models it learns with (exact, grid,
+                  language_inducer) and the language model's earlier form
+                  (language.py), kept, not run. Imports nothing from arc3.
 src/arc3/         the body, its declared organs, what the mind is told, and
                   where this host seats the mind.
 src/world/        what lies outside the agent: the region it acts on, served to

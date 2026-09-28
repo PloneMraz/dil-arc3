@@ -304,7 +304,8 @@ class Mind:
         self._seen = [*self._seen, [step, observed, None]][-2 * BASELINE_WINDOW:]
         hit = expected == step.after
         self.holds.append(int(hit))
-        self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False))
+        self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
+                                                 seen=self._perception()))
         # 3. The expectation failed: think, on the first part that failed.
         if not hit:
             if foreseen != step.after:

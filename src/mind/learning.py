@@ -184,6 +184,9 @@ class Learning:
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
         self.frame_calls = 0
+        # The mind's short-term perception at the step being learned: what an
+        # inducer is shown when it is asked what the step suggests.
+        self._seen_now: list = []
 
     # ── what it reads ──
 
@@ -218,10 +221,15 @@ class Learning:
         self._hypotheses.append(h)
         self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
 
-    def _induce(self, source_raw: str, act: Act, step: Step) -> list[Hypothesis]:
-        """What an experience suggests, held — save what it holds already."""
+    def _induce(self, source_raw: str, act: Act, step: Step, foreseen: bool) -> list[Hypothesis]:
+        """What an experience suggests, held — save what it holds already. The
+        inducer is told whether a hypothesis held foresaw the step, and shown
+        short-term perception: one whose computing is costly computes only what
+        was not foreseen."""
         out = []
-        for form in self.inducer.induce(source_raw, act, step.before, step.after):
+        evidence = tuple((s, r) for s, _, r in self._seen_now)
+        for form in self.inducer.induce(source_raw, act, step.before, step.after, foreseen=foreseen,
+                                        evidence=evidence):
             key = self.inducer.key(form)
             if key in self._keys:
                 continue
@@ -448,8 +456,11 @@ class Learning:
         return Expectation(state=self._expected, by_model=False)
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
-                on_report: bool) -> list[Write]:
-        return self._learn_report(fields, units) if on_report else self._learn_step(step, unit)
+                on_report: bool, seen: list | None = None) -> list[Write]:
+        if on_report:
+            return self._learn_report(fields, units)
+        self._seen_now = list(seen or [(step, unit, None)])
+        return self._learn_step(step, unit)
 
     def _weigh(self, h: Hypothesis, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
         """Count a return for or against a hypothesis; when whether it holds
@@ -491,7 +502,7 @@ class Learning:
         for h, _, said in applied:
             writes += self._weigh(h, said == to, (unit,))
         if known is None:
-            self._new = self._induce(source_raw, act, step)
+            self._new = self._induce(source_raw, act, step, foreseen)
             edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=self._new[0])
             self._learned.append(edge)
             self._edges[(source, act)] = edge
@@ -501,7 +512,12 @@ class Learning:
             edge.seen += 1
             if not foreseen:
                 # What came, no hypothesis it holds foresaw: it asks what this suggests.
-                self._new = self._induce(source_raw, act, step)
+                self._new = self._induce(source_raw, act, step, foreseen)
+        # What the inducer said in computing — a language model's answers — kept
+        # whole, built from the step it was asked on.
+        for said in self.inducer.said():
+            writes.append(Write(payload={**said.payload, "cycle": self.frame_calls}, tags=dict(said.tags),
+                                built_from=(unit,)))
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
         self._visits[to] = self._visits.get(to, 0) + 1

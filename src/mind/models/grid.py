@@ -126,7 +126,8 @@ class GridInducer(ExactInducer):
 
     # ── hypotheses ──
 
-    def induce(self, source: str, act: Act, before: Grid, after: Grid) -> list[Any]:
+    def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
+               evidence: tuple = ()) -> list[Any]:
         forms: list[Any] = [ExactForm(source=source, act=act, to=after)]
         rows = min(len(before), len(after))
         changed = [(r, c) for r in range(rows) if r not in self.clock

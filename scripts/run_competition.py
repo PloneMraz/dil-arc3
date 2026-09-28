@@ -52,8 +52,9 @@ ap.add_argument("--model", default="")
 ap.add_argument("--mind", choices=("learning", "language"), default="learning",
                 help="learning: the one mind with its learning; language: the unfinished language model, "
                      "not run (LOG.md, 2026-09-28)")
-ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
-                help="the mind's model, what its learning computes with")
+ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
+                help="the mind's model, what its learning computes with; language: a model served at "
+                     "--endpoint")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
