@@ -4053,3 +4053,51 @@ cn04, dc22, ft09, g50t, ka59, lf52, lp85, ls20, m0r0, r11l, re86, s5i5, sb26,
 sc25, sk48, sp80, su15, tn36, tr87, tu93, vc33, wa30) — on Kaggle, once
 submission `56623380` is done (it was PENDING at the time of writing): every law
 on the same code, Q4 in it, S2b run again.
+
+### S4: a hypothesis about the aim, carried to the next level — built, not yet measured (Plone, same day)
+
+Plone chose (B): what brings the aim is read from what the grid showed before
+the step that reached it, where the act worked. Reported before measuring, as
+asked.
+
+**Why (B), from the stores.** The step that reaches the aim changes the grid
+nearly whole — a level over: vc33 2,768 and 2,872 of 4,096 cells, ls20 1,479,
+ar25 715 (`s3-grid3`, `s3-exact3`, `s1-fit`). The grid inducer suggests nothing
+general from a change that large (`BIG_CHANGE`, 1,024), and its general
+hypotheses carried no report, so nothing about the aim reached past where it
+was met: the mind went toward the aim only at situations it had reached it from.
+What did carry to a new level was curiosity's count of how often a kind of act
+brought the aim — a count held, not a hypothesis.
+
+**What was built.**
+- The learning (every inducer): a prediction may have no state and say only
+  what the region will report — a hypothesis about the aim. When the report
+  says the aim came, the inducer is asked again with that report and with what
+  the mind expected of the step (`induce(..., report=, expected=)`); what it
+  suggests is held and written as any hypothesis, built from the frame and the
+  report. Each hypothesis about the aim that applied to a step is weighed by
+  that step's report. It is kept out of the step's expectation (so not scarred:
+  the status's scar would fall on the state's hypothesis too), declared.
+- Choosing: an act that reached the aim here; else an act a held hypothesis
+  says brings the aim here; else the way to where the aim was reached; else the
+  way to where a held hypothesis says an act brings it; then what it has not
+  tried, as before.
+- The grid inducer's `aim` form: this act, where these cells lie, brings the
+  aim. For an act with no place, the cells are those the mind expected it to
+  change (the prediction of the hypothesis it held for the step); for an act
+  that takes a place, the thing it was put on; with the ring around each, as
+  it was. It applies where every part lies, box and ring both — around it is
+  part of what brought the aim. With nothing expected to change and no place,
+  nothing is suggested. The exact and language inducers suggest none.
+- Tests (4): the form from the expected change, applying where the cells and
+  the exit beside them lie and not where the exit is elsewhere; the form from a
+  click, the thing's colour; in the loop, at a layout never stood in, the mind
+  takes the act its hypothesis says brings the aim; a hypothesis that applied
+  and did not bring it is counted against, and no longer held. Each fails with
+  its part of S4 taken out. 325 pass, 34 skipped.
+- Smoke, vc33, grid, 100 cycles: ran through; one `aim` hypothesis written
+  (a click on colour 9, one part). Not a measurement.
+
+The criterion — ls20 and vc33 through level 2 — is to be measured with the
+rest on the 25 games. ls20 does not reach level 1 on this code now (since
+S2b), so ls20 can show nothing for S4 until it does.

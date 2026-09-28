@@ -197,10 +197,13 @@ class ExactInducer:
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
-               evidence: tuple = ()) -> list[ExactForm]:
+               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None) -> list[ExactForm]:
         """What one experience suggests: that it will happen again, exactly. It
         costs nothing, so whether the step was foreseen, and the steps before it,
-        change nothing here."""
+        change nothing here. Asked again when the aim came (`report`), it has
+        nothing more to say: its exact hypothesis takes the report as it comes."""
+        if report is not None:
+            return []
         return [ExactForm(source=source, act=act, to=after)]
 
     def said(self) -> list[Perceived]:

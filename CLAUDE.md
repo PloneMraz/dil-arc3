@@ -141,7 +141,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   DECIDE@IMPL, tag H: fit against the store; Plone, 2026-09-28: a rate, not a
   count); says in a new datum, built from the last, when whether it holds
   changes; is curious; chooses, looking ahead by what its held hypotheses
-  predict (at most `MAX_IMAGINED_STEPS` past where it has stood). The inducer
+  predict (at most `MAX_IMAGINED_STEPS` past where it has stood). **Reaching
+  the aim is an experience too** (S4, Plone, 2026-09-28): the inducer, asked
+  with the step's report and what the mind expected of it, says what brings the
+  aim — a hypothesis that predicts only the report — held, written and weighed
+  by the report wherever it applies, and the mind goes where one it holds says
+  an act brings the aim, after where it reached the aim and before what it has
+  not tried. Only the grid inducer suggests one (`aim`, its docstring). The inducer
   declares where a hypothesis applies (its scope) and only computes: perception (a state's
   identity, where the region stands in it), the acts a state affords, `induce`,
   `predict`, `describe`. It is asked on a new situation and act, and on a step

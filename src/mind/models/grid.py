@@ -22,6 +22,13 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
   applies when every part is found. What lies in the way is in L: a move whose
   landing is blocked finds no L, and the rewrite says nothing there.
 
+- **Aim** — "this act, taken where these cells lie, brings the aim": suggested
+  when the region's report says the aim came (S4). Each part is what the act was
+  to change — read from what the mind expected of the step, or, for an act that
+  takes a place, the thing it was put on — with the ring around it, as it was.
+  It says nothing of the state; where every part lies, box and ring alike, it
+  says the region will report what it reported then.
+
 The clock's rows are no part of any of them: what lies there matches anything.
 """
 
@@ -83,6 +90,23 @@ class RewriteForm:
         return ("rewrite", self.act, self.placed, self.colour, self.parts)
 
 
+@dataclass(eq=False)
+class AimForm:
+    """This act brings the aim, taken where its parts lie: the region then reports
+    `status`. Each part is what the act was to change and what lay around it, as
+    it was (`rhs` empty) — for an act that takes a place, the thing it was put on."""
+
+    act: int
+    placed: bool
+    parts: tuple[Part, ...]
+    colour: int | None
+    status: dict
+
+    @property
+    def key(self) -> tuple:
+        return ("aim", self.act, self.placed, self.colour, self.parts)
+
+
 def parts(cells: list[tuple[int, int]], gap: int = PART_GAP) -> list[list[tuple[int, int]]]:
     """The cells grouped into parts: two in one part when a chain of cells, each
     within `gap` rows and columns of the next, joins them."""
@@ -127,7 +151,9 @@ class GridInducer(ExactInducer):
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
-               evidence: tuple = ()) -> list[Any]:
+               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None) -> list[Any]:
+        if report is not None:
+            return self._aim(act, before, expected, report)
         forms: list[Any] = [ExactForm(source=source, act=act, to=after)]
         rows = min(len(before), len(after))
         changed = [(r, c) for r in range(rows) if r not in self.clock
@@ -168,6 +194,61 @@ class GridInducer(ExactInducer):
                                  colour=before[act[2]][act[1]] if placed else None))
         return forms
 
+    def _aim(self, act: Act, before: Grid, expected: Grid | None, report: dict) -> list[Any]:
+        """What reaching the aim suggests (S4, Plone, 2026-09-28): that this act,
+        taken where the same cells lie again, brings it again. The step itself
+        says nothing of where: the region comes back changed nearly whole (a
+        level over, 715 to 2,872 of 4,096 cells in the runs measured). So what
+        the act was to change is read from what the mind expected of the step,
+        and for an act that takes a place, from the thing it was put on; with
+        neither, nothing is suggested."""
+        placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
+        if placed:
+            x, y = act[1], act[2]
+            if not (0 <= y < len(before) and 0 <= x < len(before[y])):
+                return []
+            cells = self._thing_at(before, x, y)
+        else:
+            if expected is None:
+                return []
+            rows = min(len(before), len(expected))
+            cells = [(r, c) for r in range(rows) if r not in self.clock
+                     for c in range(min(len(before[r]), len(expected[r]))) if before[r][c] != expected[r][c]]
+        if not cells or len(cells) > MAX_REWRITE_CELLS:
+            return []
+        found = []
+        for part in parts(cells):
+            r0, r1 = min(r for r, _ in part), max(r for r, _ in part)
+            c0, c1 = min(c for _, c in part), max(c for _, c in part)
+
+            def at(r: int, c: int) -> int:
+                return before[r][c] if 0 <= r < len(before) and 0 <= c < len(before[r]) else OFF_GRID
+            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)]
+            ring = [(r, c) for r in range(r0 - 1, r1 + 2) if r not in self.clock for c in range(c0 - 1, c1 + 2)
+                    if not (r0 <= r <= r1 and c0 <= c <= c1)]
+            seen: dict[int, int] = {}
+            for r, c in box:
+                seen[before[r][c]] = seen.get(before[r][c], 0) + 1
+            box.sort(key=lambda rc: (seen[before[rc[0]][rc[1]]], rc))
+            place = (r0 - act[2], c0 - act[1]) if placed else None
+            found.append(Part(lhs=tuple((r - r0, c - c0, before[r][c]) for r, c in box),
+                              ring=tuple((r - r0, c - c0, at(r, c)) for r, c in ring), rhs=(), place=place))
+        return [AimForm(act=act[0], placed=placed, parts=tuple(found),
+                        colour=before[act[2]][act[1]] if placed else None, status=dict(report))]
+
+    def _thing_at(self, grid: Grid, x: int, y: int) -> list[tuple[int, int]]:
+        """The cells of one colour joined side to side to the cell at (x, y)."""
+        colour, cells, stack, seen = grid[y][x], [], [(y, x)], {(y, x)}
+        while stack and len(cells) <= MAX_REWRITE_CELLS:
+            r, c = stack.pop()
+            cells.append((r, c))
+            for q in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+                if q not in seen and 0 <= q[0] < len(grid) and 0 <= q[1] < len(grid[q[0]]) \
+                        and grid[q[0]][q[1]] == colour:
+                    seen.add(q)
+                    stack.append(q)
+        return cells
+
     def key(self, form: Any) -> tuple:
         if isinstance(form, ExactForm):
             return ("exact", form.source, form.act, grid_key(form.to))
@@ -176,10 +257,12 @@ class GridInducer(ExactInducer):
     def scope(self, form: Any, situation_of) -> tuple:
         if isinstance(form, ExactForm):
             return super().scope(form, situation_of)
+        if isinstance(form, AimForm):
+            return ("aim", form.act)
         return ("act", form.act)
 
     def scopes(self, situation: str, act: Act) -> list[tuple]:
-        return [("at", situation, act), ("act", act[0])]
+        return [("at", situation, act), ("act", act[0]), ("aim", act[0])]
 
     def predict(self, form: Any, situation: str, state: Grid, act: Act, situation_of) -> Prediction | None:
         if isinstance(form, ExactForm):
@@ -187,6 +270,8 @@ class GridInducer(ExactInducer):
         if act[0] != form.act:
             return None
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
+        if isinstance(form, AimForm):
+            return self._aim_predict(form, placed, situation, state, act)
         if isinstance(form, StillForm):
             if placed != (form.colour is not None):
                 return None
@@ -219,6 +304,28 @@ class GridInducer(ExactInducer):
                 if 0 <= r < len(out) and 0 <= c < len(out[r]):
                     out[r][c] = colour
         return Prediction(state=out)
+
+    def _aim_predict(self, form: AimForm, placed: bool, situation: str, state: Grid,
+                     act: Act) -> Prediction | None:
+        """Where every part of an aim hypothesis lies, it says the region will report
+        what it reported when the aim came; of the state it says nothing."""
+        if placed != form.placed:
+            return None
+        if placed and not (0 <= act[2] < len(state) and 0 <= act[1] < len(state[act[2]])
+                           and state[act[2]][act[1]] == form.colour):
+            return None
+        for part in form.parts:
+            if part.place is not None:
+                corner = (act[2] + part.place[0], act[1] + part.place[1])
+            else:
+                corner = self._lies(part, situation, state)
+                if corner is None:
+                    return None
+            # What lay around it is part of what brought the aim: it must lie so
+            # too, not only tell one place from another as in a rewrite.
+            if not (self._fits(part.lhs, corner, state) and self._fits(part.ring, corner, state)):
+                return None
+        return Prediction(state=None, fields=dict(form.status))
 
     def _fits(self, cells, anchor: tuple[int, int], state: Grid) -> bool:
         ar, ac = anchor
@@ -257,17 +364,22 @@ class GridInducer(ExactInducer):
         return corner
 
     def fields(self, form: Any) -> dict[str, Any] | None:
-        return form.status if isinstance(form, ExactForm) else None
+        return form.status if isinstance(form, (ExactForm, AimForm)) else None
 
     def describe(self, form: Any, situation_of) -> dict[str, Any]:
         if isinstance(form, ExactForm):
             return {"form": "exact", **super().describe(form, situation_of)}
         if isinstance(form, StillForm):
             return {"form": "still", "act": form.act, "colour": form.colour}
+        if isinstance(form, AimForm):
+            return {"form": "aim", "act": form.act, "placed": form.placed, "colour": form.colour,
+                    "status": form.status,
+                    "parts": [{"from": [list(c) for c in p.lhs], "ring": [list(c) for c in p.ring],
+                               "place": list(p.place) if p.place else None} for p in form.parts]}
         return {"form": "rewrite", "act": form.act, "placed": form.placed, "colour": form.colour,
                 "parts": [{"from": [list(c) for c in p.lhs], "ring": [list(c) for c in p.ring],
                            "to": [list(c) for c in p.rhs], "place": list(p.place) if p.place else None}
                           for p in form.parts]}
 
 
-__all__ = ["MAX_REWRITE_CELLS", "OFF_GRID", "PART_GAP", "GridInducer", "Part", "RewriteForm", "StillForm", "parts"]
+__all__ = ["MAX_REWRITE_CELLS", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer", "Part", "RewriteForm", "StillForm", "parts"]

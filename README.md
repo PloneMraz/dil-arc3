@@ -109,7 +109,10 @@ what a hypothesis predicts. There are three (`--inducer`):
   suggests, besides the exact hypothesis, one that reaches past where it was
   met: "this act changes nothing" (for an act that takes a place, on that
   colour), or "this act rewrites, in each part of the grid it changes, L into
-  R", each part found on its own wherever L lies, one place only.
+  R", each part found on its own wherever L lies, one place only. When the aim
+  comes it suggests what brought it: "this act, taken where these cells lie,
+  brings the aim" — the cells the act was to change, or the thing it was put on,
+  with what lay around them — which the mind carries to the next level (S4).
 - **language** (`src/mind/models/language_inducer.py`) is a served language
   model. Asked only when no hypothesis the mind holds foresaw a step, and shown
   the steps of short-term perception, it writes one program:

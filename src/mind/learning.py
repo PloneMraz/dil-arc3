@@ -27,7 +27,12 @@ THE LOOP, one step at a time:
   FIT_LAW; tag H: fit against the store, never a scored standard). When that
   changes, a new datum says so, built from the one before: nothing is revised
   in place.
-- **Choosing.** Toward the aim it has reached before; else what it knows least
+- **The aim.** Reaching it is an experience too (S4, Plone, 2026-09-28): asked
+  with the step's report and what it expected of the step, the inducer says
+  what brings the aim — hypotheses that predict no state, only the report —
+  held and written as any are, weighed by each report where they applied.
+- **Choosing.** Toward the aim it has reached before, or where its held
+  hypotheses say an act brings it; else what it knows least
   (curiosity, below) — an act its hypotheses say leads where it has stood last,
   never out of reach;
   else the shortest way to where something is left to try, looking ahead by what
@@ -217,6 +222,11 @@ class Learning:
         # inducer is shown when it is asked what the step suggests.
         self._seen_now: list = []
         self._chosen_kind: tuple | None = None
+        # Hypotheses about the aim (S4): those that applied to the step being
+        # learned, weighed by its report; the step; whether any is held yet.
+        self._aim_applied: list[Hypothesis] = []
+        self._last_step: tuple[str, Act, Step] | None = None
+        self._aim_held = False
 
     # ── what it reads ──
 
@@ -252,15 +262,18 @@ class Learning:
         self._hypotheses.append(h)
         self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
 
-    def _induce(self, source_raw: str, act: Act, step: Step, foreseen: bool) -> list[Hypothesis]:
+    def _induce(self, source_raw: str, act: Act, step: Step, foreseen: bool,
+                report: dict[str, Any] | None = None) -> list[Hypothesis]:
         """What an experience suggests, held — save what it holds already. The
         inducer is told whether a hypothesis held foresaw the step, and shown
         short-term perception: one whose computing is costly computes only what
-        was not foreseen."""
+        was not foreseen. With the step's `report`, when the aim came: what
+        brings the aim, from what the mind expected of the step (S4)."""
         out = []
         evidence = tuple((s, r) for s, _, r in self._seen_now)
+        extra = {"report": report, "expected": self._expected} if report is not None else {}
         for form in self.inducer.induce(source_raw, act, step.before, step.after, foreseen=foreseen,
-                                        evidence=evidence):
+                                        evidence=evidence, **extra):
             key = self.inducer.key(form)
             if key in self._keys:
                 continue
@@ -285,7 +298,10 @@ class Learning:
                 for h in held[start:]:
                     said = self.inducer.predict(h.form, situation, state, act, self._situation_of)
                     if said is not None:
-                        found.append((h, said, self.inducer.situation(said.state)))
+                        # A prediction with no state says only what the region will
+                        # report: a hypothesis about the aim (S4).
+                        to = self.inducer.situation(said.state) if said.state is not None else None
+                        found.append((h, said, to))
                 checked[scope] = len(held)
         self._applies[(situation, act)] = (checked, found)
         return found
@@ -294,8 +310,24 @@ class Learning:
         """Of the hypotheses that apply and are held, the one right at the highest
         rate (FIT_LAW; Plone, 2026-09-28: a rate, not a count — by a count, a
         hypothesis held longer outranked a truer one met later)."""
-        held = [a for a in self._applicable(situation, act, state) if a[0].holds]
+        held = [a for a in self._applicable(situation, act, state) if a[0].holds and a[2] is not None]
         return max(held, key=lambda a: (a[0].rate, a[0].supports)) if held else None
+
+    def _aims(self, situation: str, act: Act, state: Any = None) -> list[Hypothesis]:
+        """The held hypotheses that say this act, here, brings the aim (S4)."""
+        return [h for h, said, to in self._applicable(situation, act, state)
+                if to is None and h.holds and self._reached(said.fields)]
+
+    def _aims_at(self, situation: str, offers: tuple[int, ...]) -> list[tuple[Act, Hypothesis]]:
+        """The acts here its held hypotheses say bring the aim, each with the one."""
+        if not self._aim_held:
+            return []
+        out = []
+        for act, _ in self._candidates(situation, offers):
+            aims = self._aims(situation, act)
+            if aims:
+                out.append((act, max(aims, key=lambda h: (h.rate, h.supports))))
+        return out
 
     def _state(self, situation: str) -> Any:
         """A state of a situation: one it stood in, or one it predicted."""
@@ -533,10 +565,14 @@ class Learning:
         if self._unseen_expected is not None:
             self.unseen[2] += int(self._unseen_expected == to)
             self._unseen_expected = None
-        # Every hypothesis that applied is borne out, or not, by where the region stands.
+        # Every hypothesis that applied is borne out, or not, by where the region
+        # stands — one about the aim, by what the region reports (below).
+        self._aim_applied = [h for h, _, said in applied if said is None]
+        applied = [a for a in applied if a[2] is not None]
         foreseen = any(h.holds and said == to for h, _, said in applied)
         for h, _, said in applied:
             writes += self._weigh(h, said == to, (unit,))
+        self._last_step = (source_raw, act, step)
         if known is None:
             self._new = self._induce(source_raw, act, step, foreseen)
             edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=self._new[0])
@@ -583,6 +619,19 @@ class Learning:
             # out. The region ending one time and not another is the clock's doing
             # (a budget of acts), not the act's.
             writes += self._weigh(edge.hypothesis, False, units)
+        # Each hypothesis that said this act, there, brings the aim is borne out
+        # by the report, or not (S4).
+        for h in self._aim_applied:
+            writes += self._weigh(h, self._reached(said), units)
+        self._aim_applied = []
+        if self._reached(said) and edge.act[0] != self.organs.reset[0] and self._last_step is not None:
+            # Reaching the aim is an experience too: what it suggests brings the
+            # aim, held and written as any hypothesis is (S4, Plone, 2026-09-28).
+            source_raw, act, step = self._last_step
+            aims = self._induce(source_raw, act, step, False, report=said)
+            if aims:
+                self._aim_held = True
+                self._new = [*self._new, *aims]
         if said.get(self.organs.state_field) in self.organs.ended:
             edge.ended += 1
         if self._reached(said) and edge.act[0] != self.organs.reset[0]:
@@ -766,13 +815,25 @@ class Learning:
             gained = {self._state_of[e.source] for e in self._edges.values()
                       if e.hypothesis.holds and self._reached(e.status)}
             aim_here = [e for e in self._out.get(here, {}).values() if e.hypothesis.holds and self._reached(e.status)]
-            path = None if aim_here or not gained else self._path(here, lambda n: n in gained, offers)
+            # What its hypotheses say brings the aim, where it stands or where it
+            # can go (S4): after what reached it, before what it has not tried.
+            said_here = [] if aim_here else self._aims_at(here, offers)
+            path = None if aim_here or said_here or not gained else self._path(here, lambda n: n in gained, offers)
+            toward = None
+            if not (aim_here or said_here or path) and self._aim_held:
+                toward = self._path(here, lambda n: bool(self._aims_at(n, offers)), offers)
             opened = self._open_here(here, offers, objected)
             fresh = [ak for ak in opened if not self._foreseen(here, ak[0])]
             if aim_here:
                 act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0].hypothesis]
+            elif said_here:
+                act, h = said_here[0]
+                why, through = "an act its hypotheses say brings the aim here", [h]
             elif path:
                 act, why, through = path[0][0], f"toward the aim reached before ({len(path)} steps)", [h for _, h in path]
+            elif toward:
+                act, through = toward[0][0], [h for _, h in toward]
+                why = f"toward where its hypotheses say an act brings the aim ({len(toward)} steps)"
             elif fresh:
                 act, odds = self._curious(here, fresh)
                 why = "not yet taken from here"
