@@ -116,10 +116,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   dùng Qwen, đừng nhập nhằng" — one mind at a time, not two mixed. Which mind
   that is can change. Its model is either a language model —
   **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
-  `7b71922`), the one the submitted run used — and the program it writes,
+  `7b71922`), which submission `56588469` used — and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
   (`src/mind/models/language.py`, seated by `src/arc3/mind.py`); or a model
-  that learns from nothing (`src/mind/models/learning.py`).
+  that learns from nothing (`src/mind/models/learning.py`), which submission
+  `56623380` used.
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams
@@ -179,8 +180,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   proposal as a command.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
-- **Short-term perception is as long as T5's window** (`BASELINE_WINDOW = 16`):
-  the steps just seen, each with what the region reported of itself that cycle.
+- **Short-term perception is as long as T5's window**: `BASELINE_WINDOW = 16`
+  when the field has not leaned, shifted by exploration as T5's is (½–1½, 8 to
+  24; the mind keeps 32 and reads that many): the steps just seen, each with
+  what the region reported of itself that cycle.
   The mind thinks from what the store answered, those steps, and what the
   onlooker says now — bounded, never the whole history.
 - **The learning model keeps what it learned** (Plone, 2026-09-27, in place of the
@@ -215,7 +218,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   agent keeps doing what it names: the answer did not do what it was for. The
   mind thinks on the collision there and then and, if it thought, commands
   again before the body moves; the body carries out the last command of the
-  cycle. The mind does not wait for the Other. The first time a remark comes
+  cycle. Read back: a cycle's T5 tests in `[event]` are its commands, in order,
+  and the last is the one carried out; the learning model's second `choice`
+  says which it replaces (`supersedes`). The mind does not wait for the Other. The first time a remark comes
   back, in the cycle right after the answer, the answer's datum id is not yet
   known, and that one collision is not attributed to it.
 - **The mind always holds an expectation of reaching an aim** (Plone,

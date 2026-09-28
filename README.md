@@ -14,8 +14,8 @@ or one that learns from nothing (below). What it has done — the scored
 submission, and every run — is in `LOG.md`, with the code each ran; this file
 says only what the agent is.
 
-**With the language model** — served offline; Qwen3.8-Flash-Next NVFP4, the one
-the submitted run used — the mind has the model write a program:
+**With the language model** — served offline; Qwen3.8-Flash-Next NVFP4, which
+submission `56588469` used — the mind has the model write a program:
 `predict(grid, action, x, y)`, the next grid and what the region will report of
 itself; `propose(grid, steps)`, the next action from where the game stands and
 the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
@@ -75,8 +75,9 @@ the engine returns it; working out what is in it is the mind's program.
 
 One mind, neutral about its region (`src/mind/mind.py`), thinking with a model:
 the part of it that computes (Plone, 2026-09-27). It can think with two models.
-The first, below, is the one the submitted run used. The second learns from
-nothing (`src/mind/models/learning.py`): no weights, no text; it learns each
+The first, below, is the one submission `56588469` used. The second, which
+submission `56623380` used, learns from nothing
+(`src/mind/models/learning.py`): no weights, no text; it learns each
 transition it takes as data, expects from what it learned, finds the clock a
 region keeps whatever is done, and chooses by curiosity — what it knows least —
 and by the paths it knows.
@@ -173,9 +174,11 @@ now, in dil-core first and then here.
    objects to the named acts where they were taken and commands again before
    the body moves. It learns nothing wider from being told: an objection is
    held while the onlooker says it and lifted when it stops.
-9. **The language model does not read the field.** The field reaches the mind
-   at T5, and the learning model reads it; the language model's prompt does
-   not show it, so its thinking is not conditioned by the loop's disposition.
+9. **The language model's prompt does not show the field.** The field reaches
+   the mind at T5 and conditions it whatever its model: its alertness sets how
+   often the mind thinks in a cycle, for either model. The learning model reads
+   it further (how far an objection reaches); the language model is not shown
+   it, so what it writes is not conditioned by the loop's disposition.
 
 Local to this repository, not upstream's.
 

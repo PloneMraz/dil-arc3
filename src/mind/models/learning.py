@@ -195,6 +195,7 @@ class LearningModel:
     def __init__(self, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
         self.organs = organs
         self._now_raw: str | None = None                       # the latest grid's own key
+        self._last_choice: dict[str, Any] | None = None        # the choice it wrote last
         # What the onlooker's word made it object to, by what the word was: (the
         # grid as it came, act). Held while the onlooker says it; lifted when it
         # says something else (Plone, 2026-09-27); read under the clock it holds.
@@ -697,6 +698,12 @@ class LearningModel:
         built: list[object] = [self._unit] if self._unit is not None else []
         if lifted:
             choice["lifted"] = lifted
+        if context.on == "command again" and self._last_choice is not None \
+                and self._last_choice.get("cycle") == self.frame_calls:
+            # A second command this cycle, on what the onlooker said: the body
+            # carries out this one, and this datum says which choice it replaces.
+            choice["supersedes"] = {"chose": self._last_choice.get("chose"), "why": self._last_choice.get("why")}
+        self._last_choice = choice
         if context.remark and context.remark.get("remark"):
             choice["onlooker"] = context.remark
             if context.remark_unit is not None:

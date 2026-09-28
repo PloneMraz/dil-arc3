@@ -425,3 +425,36 @@ def test_a_repetition_that_goes_nowhere_new_is_objected_to_at_once():
     said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
     run(cycle, frame(_grid(1), _grid(1), action=1), status(), _remark(said))
     assert any(a == (1, None, None) for _, a in mind.model.objections())
+
+
+def test_short_term_perception_is_as_long_as_t5s_window_under_the_field():
+    from dil.loop.types import ModField
+    mind, cycle, data, events = loop()
+    for i in range(1, 30):
+        run(cycle, frame(_grid(i), _grid(i + 1), action=1), status(), _remark(QUIET))
+    for field, n in ((ModField(params={}), 16), (ModField(params={"exploration": 1.0}), 8),
+                     (ModField(params={"exploration": 0.0}), 24)):
+        mind._field = field
+        assert len(mind._context("x").seen) == n, (field.params, n)
+
+
+def test_a_choice_commanded_again_says_which_it_replaces():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(said))
+    choices = [d.payload for _, d in of_kind(data, "choice")]
+    last = choices[-1]
+    assert last["supersedes"]["chose"] == [2, None, None] and last["chose"] != [2, None, None], \
+        "the second choice of the cycle, the one the body carries out, names the one it replaces"
+    assert "supersedes" not in choices[-2]
+
+
+def test_what_it_reads_recalled_again_later_is_no_reason_to_command():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
+    mind.commands.append((mind.frame_calls, None))    # the body waits, for its own reasons
+    pushed: list = []
+    mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
+                     write=lambda request: None, ask=None, test=pushed.append)
+    assert pushed == [], "only its first arrival commands a body waiting for want of an aim"

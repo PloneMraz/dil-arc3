@@ -44,7 +44,7 @@ import json
 from typing import Any, Callable, Final
 
 from dil.loop.decisions import BASELINE_WINDOW
-from dil.loop.field import ALERTNESS, axis, rising, shifted_count
+from dil.loop.field import ALERTNESS, EXPLORATION, axis, falling, rising, shifted_count
 from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
@@ -171,17 +171,21 @@ class Mind:
         entity = str(ret.get("entity"))
         for name, cue in self.model.cues().items():
             if isinstance(payload, dict) and all(open_tags.get(k) == v for k, v in cue.items()):
-                if name not in self._priors:
+                first = name not in self._priors
+                if first:
                     self.receive(name, payload, entity)
                 if not self._ready():
                     return
                 if self._pending is not None:
                     self.think(self._pending, ask, write)
-                if self._command_due or (self._goal is not None and self.commands and self.commands[-1][1] is None):
-                    # It waited for what it reads, or the body waits for want of an
-                    # aim it now holds: command. Without this a mind that held no
-                    # aim at its first step commanded only when something else
-                    # arrived — the onlooker — and without one never did.
+                if self._command_due or (first and self._goal is not None and self.commands
+                                         and self.commands[-1][1] is None):
+                    # It waited for what it reads, or — on its first arrival — the
+                    # body waits for want of an aim it now holds: command. Without
+                    # this a mind that held no aim at its first step commanded only
+                    # when something else arrived — the onlooker — and without one
+                    # never did. A prior recalled again later, asked for, is not a
+                    # reason to command.
                     self.command(ask, write, test)
                 return
         mark = _fingerprint(payload)
@@ -285,7 +289,9 @@ class Mind:
         predicted = InfoUnit(content={**content, "value": o.expected_payload(payload, expected)},
                              ref_frame=observed.ref_frame, t=observed.t)
         # 2. Then look: this step joins short-term perception.
-        self._seen = [*self._seen, [step, observed, None]][-BASELINE_WINDOW:]
+        # Kept as long as the longest window the field can ask of T5; read as long
+        # as the one it asks now (`_perception`).
+        self._seen = [*self._seen, [step, observed, None]][-2 * BASELINE_WINDOW:]
         hit = expected == step.after
         self.holds.append(int(hit))
         self._write(write, self.model.observe(step, observed, None, (observed,), on_report=False))
@@ -402,7 +408,7 @@ class Mind:
         else:
             self._answer = ()
             if self.think("onlooker", ask, write, again=True) and self._status_this_cycle:
-                self.command(ask, write, test)  # again, before the body moves
+                self.command(ask, write, test, on="command again")  # before the body moves
         if not self._status_this_cycle:
             self.command(ask, write, test)
         self._status_this_cycle = False
@@ -410,20 +416,29 @@ class Mind:
 
     # ── commanding ──
 
+    def _perception(self) -> list[list[Any]]:
+        """Short-term perception: as long as T5's window this cycle — BASELINE_WINDOW,
+        shifted by the field's exploration as T5 shifts it (½–1½, 8 to 24)."""
+        n = int(shifted_count(BASELINE_WINDOW, falling(axis(self._field, EXPLORATION))))
+        return self._seen[-n:]
+
     def _context(self, on: str) -> Context:
         report = self._seen[-1][2] if self._seen else None
         state = (report or {}).get(self.organs.state_field)
         return Context(
-            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r in self._seen],
+            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r in self._perception()],
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
             remark=self._remark, remark_unit=self._remark_unit, missed=self._missed, aim=self._goal,
             priors=dict(self._priors), field=self._field,
         )
 
-    def command(self, ask, write, test) -> None:
+    def command(self, ask, write, test, on: str = "command") -> None:
         """Construct the next action, and command it: T5's test, carried out by
-        the body if it can. With no command, think again while the body waits."""
+        the body if it can. With no command, think again while the body waits.
+        `on` is "command again" when it commands a second time in a cycle, on
+        what an Other said: the body carries out the last, and the model is told
+        so, so that what it writes can say which it replaces."""
         if not self._seen:
             return
         if not self._ready():
@@ -436,7 +451,7 @@ class Mind:
             if self.model.can_propose() and self._goal is None:
                 reason = "no goal"
             else:
-                proposal, writes = self.model.propose(self._context("command"))
+                proposal, writes = self.model.propose(self._context(on))
                 self._write(write, writes)
                 act = proposal.act
                 if act is not None and self.organs.can_carry_out(*act, state, self._offers):

@@ -3402,3 +3402,31 @@ body carried out no objected act in an objection's cycle (0 of 10), nor chose
 one where an objection held (0 of 8); it commanded twice in 57 cycles. vc33
 kept on twice and objected to nothing. One run each. Stores in
 `scripts/data/onlooker-cost/` (git-ignored). 326 tests.
+
+### A review of the documents and the mind's seams (Plone, same day)
+
+Five points, each checked against the code:
+
+1. "The submitted run" named no submission once there were two of the agent:
+   CLAUDE.md and README now name `56588469` for the language model and
+   `56623380` for the learning model.
+2. Short-term perception was cut at `BASELINE_WINDOW` (16) while T5's window,
+   since the field, is 16 shifted by exploration (8 to 24 — about 22 at the
+   exploration of 0.13 measured on ls20). The mind now reads its perception as
+   T5 does its window, from the same field (it keeps 32).
+3. README's ninth gap said the language model does not read the field; the
+   field's alertness sets how often the mind thinks for either model. Only the
+   language model's prompt does not show it; said so.
+4. A cycle the mind commands twice in left two `choice` data and no mark of
+   which the body carried out. The mind now tells its model it is commanding
+   again (`on="command again"`), and the learning model's second choice says
+   which it replaces (`supersedes`); CLAUDE.md says how to read it back — a
+   cycle's T5 tests in `[event]`, the last carried out.
+5. The fix of the no-aim start commanded on any recall of a prior while the
+   last command was none — a language model asking for its task mid-run could
+   have spent up to two model calls on "no command". It now acts only on a
+   prior's first arrival.
+
+Three tests, each failing on the code before (`git stash` segfaulted on this
+checkout; the check was made by restoring the committed files by hand). 329
+tests.
