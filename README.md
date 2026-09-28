@@ -9,13 +9,21 @@ the agent leaves the loop to think.
 
 ## Status, plainly
 
-It runs, with one mind, which thinks with a language model, or learns from
-nothing with an inducer (below). What it has done — the scored
-submission, and every run — is in `LOG.md`, with the code each ran; this file
-says only what the agent is.
+It runs, with one mind, which learns from nothing; its model is the computing it
+learns with, an inducer (below). What it has done — the scored submissions, and
+every run — is in `LOG.md`, with the code each ran; this file says only what the
+agent is.
 
-**With the language model** — served offline; Qwen3.8-Flash-Next NVFP4, which
-submission `56588469` used — the mind has the model write a program:
+In the code, the mind's learning still sits in the seat its model should hold
+(`Mind(Learning(inducer))`), so a model seated there instead replaces the
+learning with it. That is to change: the mind holds its learning, and the seat
+takes the inducer.
+
+**With the language model — unfinished work, not yet revised.** The language
+model is work left inside the model and set aside for now, not a settled branch
+beside the learning: seated in the learning's place, it leaves the mind no
+learning of its own. As submission `56588469` ran it (served offline;
+Qwen3.8-Flash-Next NVFP4), the mind has the model write a program:
 `predict(grid, action, x, y)`, the next grid and what the region will report of
 itself; `propose(grid, steps)`, the next action from where the game stands and
 the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
@@ -51,7 +59,7 @@ Settled deliberately, with Plone.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
-| **model** | the mind's computing, inside it — not a second mind — and replaceable: a language model and the program it writes, or an inducer the mind learns with. The **mind** is **one** and neutral about its region: it reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `models/`), seated by `src/arc3/mind.py`; `task.py`, `aim.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with (the language model is unfinished). The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py`, `aim.py`, `mind.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -73,10 +81,13 @@ the engine returns it; working out what is in it is the mind's program.
 
 ## What the mind is
 
-One mind, neutral about its region (`src/mind/mind.py`), thinking with a model:
-the part of it that computes (Plone, 2026-09-27). It can think with a language
-model — below; submission `56588469` used it — or learn from nothing, with no
-weights and no text, which submission `56623380` did (LOG.md, 2026-09-28).
+One mind, neutral about its region (`src/mind/mind.py`), learning with a model:
+the part of it that computes (Plone, 2026-09-27). What the mind is — its
+learning, curiosity, want and expectation — stays whatever its model; replacing
+the model changes how well it computes, not what it is (Plone, 2026-09-28). It
+learns from nothing, with no weights and no text. Submission `56623380` ran it
+before its learning was moved out of the model (code `f76ff5f`; LOG.md,
+2026-09-28).
 
 **Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28).
 The loop is the mind's and names no task (`src/mind/learning.py`): it keeps
@@ -104,7 +115,8 @@ untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.
 
-**A pretrained language model, used as it is, and the program it writes.** The
+**A pretrained language model, used as it is, and the program it writes** —
+unfinished, as said above; what follows is how its code works now. The
 model is not trained here and does not hold the game: what it knows of a game is
 what the mind shows it — evidence the mind chose from its store and its window —
 and what it produces is a program, which the loop then tests against the region
@@ -212,8 +224,12 @@ Requires Python 3.12+. No dependencies.
 # tests
 uv run --with pytest python -m pytest tests/ -q
 
-# a live game, with the model served at an OpenAI-compatible endpoint
 PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
+
+# a live game, the mind learning with an inducer (exact or grid)
+$PY scripts/run_game.py ls20 600 --mind learning --inducer grid
+
+# the unfinished language model, served at an OpenAI-compatible endpoint
 $PY scripts/run_game.py ls20 10 --endpoint http://127.0.0.1:8080/v1
 ```
 
@@ -239,8 +255,8 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
-                  (learning.py); the models it thinks or learns with (language,
-                  exact). Imports nothing from arc3.
+                  (learning.py); the models it learns with (exact, grid) and the
+                  unfinished language model. Imports nothing from arc3.
 src/arc3/         the body, its declared organs, what the mind is told, and
                   where this host seats the mind.
 src/world/        what lies outside the agent: the region it acts on, served to

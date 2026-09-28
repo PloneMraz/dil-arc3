@@ -84,20 +84,21 @@ region offers — it reads everything — and a command the region does not affo
 is not carried out: the body waits.
 
 What judges a command is the region, never the mind: the move's return is
-compared with what the program predicted, and when it does not hold, the
-program is scarred and the mind thinks again. That is what keeps the invariants:
+compared with what the mind expected, and when it does not hold, what the
+expectation is — the hypothesis it came from — is scarred and the mind thinks
+again. That is what keeps the invariants:
 
-- **INV-4** — no layer assigns meaning to a signal in isolation. The program is
-  built from the store and the window, and tested against the region.
+- **INV-4** — no layer assigns meaning to a signal in isolation. A hypothesis is
+  built from a step the mind met and the report it came in, and tested against
+  the region.
 - **INV-5** — temporal state forms only by sequential accrual, never loaded. The
-  model is shown what the mind asked for and its short-term perception, bounded;
-  never the whole history.
+  mind learns each step as it comes; nothing is loaded into it.
 - **INV-6** — model output is self-written; the returned grid is
   environment-pushed. The command is the mind's; what comes back is the
   region's.
 - **INV-8** — appraisal may not draw its criteria from the state being edited.
   The mind commands; it does not score its command — the region's return does,
-  and the scar lands on the program.
+  and the scar lands on the hypothesis that held the expectation.
 
 ### What this settles about model choice
 
@@ -113,13 +114,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **One mind** (Plone, 2026-09-27: his rule stops there). Whatever thinks is one:
   nothing else computes over the grid — a second computation is a second mind,
   and the self would have no one mind to crystallize from. Plone: "Dùng Qwen thì
-  dùng Qwen, đừng nhập nhằng" — one mind at a time, not two mixed. Which mind
-  that is can change. Its model is either a language model —
+  dùng Qwen, đừng nhập nhằng" — one computing at a time, not two mixed. What
+  can change is the model, never the mind: the mind learns
+  (`src/mind/learning.py`), and its model is the replaceable computing it
+  learns with (Plone, 2026-09-28). A language model —
   **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
-  `7b71922`), which submission `56588469` used — and the program it writes,
-  `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
-  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`); or it learns
-  from nothing, which submission `56623380` did (LOG.md, 2026-09-28).
+  `7b71922`), which submission `56588469` used — is work left unfinished
+  inside the model, not yet revised to this design ("The language model —
+  unfinished", below). Submission `56623380` ran the mind learning from nothing,
+  before its learning was moved out of the model (code `f76ff5f`; LOG.md,
+  2026-09-28).
 - **Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28:
   learning is developing experience, not storing it, and another task must not
   have to define it again). The loop (`src/mind/learning.py`) names no task: it
@@ -153,26 +157,23 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams
   with the loop — what it expects and which datum that is, when it thinks, what
-  it commands, what it writes — and the model is how it predicts, proposes and
-  revises. A model can be replaced (a language model, an inducer the mind learns
-  with); the mind stays one. The mind's code is to be neutral about the
-  environment: what is particular to one region is data the mind reads (its
-  priors), not code. In the code: `src/mind/` imports nothing from `arc3` —
-  `mind.py` (the seams), `organs.py` (what a host declares of its eye and body),
-  `learning.py` (its learning), `models/`; `src/arc3/organs.py` is this host's declaration, every value read
-  from its own code. The task's aim reaches a model that reads no text as data
-  (`prior:mind-task`'s `aim`). The language model's prompt still speaks of the
-  game in its own words, kept word for word (LOG.md, 2026-09-27).
+  it commands, what it writes — and its learning; the model only computes for
+  them. A model can be replaced (an inducer; the language model, once revised);
+  the mind stays one, and so does its learning. The mind's code is to be
+  neutral about the environment: what is particular to one region is data the
+  mind reads (its priors), not code. In the code: `src/mind/` imports nothing
+  from `arc3` — `mind.py` (the seams), `organs.py` (what a host declares of its
+  eye and body), `learning.py` (its learning), `models/`; `src/arc3/organs.py`
+  is this host's declaration, every value read from its own code. The task's aim reaches a model that reads no text as data
+  (`prior:mind-task`'s `aim`).
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
   and computes nothing from it: the frame (both grid stacks and the move, as the
   engine returned them) and the region's status each cycle, and — when the world
   has an onlooker — what it says of the agent, after them. Never name a
   computation of the mind with a verb of the senses.
-- **The mind commands; the body carries out.** From its program's
-  `propose(grid, steps)`, run on where the game stands and the steps it has
-  just seen (short-term perception, each with the state and levels the region
-  reported) once the region has said all it says in a cycle — on its status;
-  in a cycle the body stood still in, after the onlooker's remark — the mind
+- **The mind commands; the body carries out.** Once the region has said all it
+  says in a cycle — on its status; in a cycle the body stood still in, after
+  the onlooker's remark — the mind chooses from where the region stands and
   pushes the next action as T5's `test`, if the body can carry it out: RESET
   always, any other action the region offers unless the game has ended.
   `src/arc3/command.py` carries it out and weighs nothing. With no such command
@@ -185,24 +186,15 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **Curiosity, want and expectation are the mind's own computation.** Nothing
   computes them on the mind's behalf — not the host, not the body, not code
   standing beside the mind (Plone, 2026-09-27: "cấm tính hộ, không phải cấm
-  code"). A mind that is itself code computes them in itself.
+  code"). A mind that is itself code computes them in itself. They are the
+  mind's whatever its model: "Chỉ cần model tư duy theo đúng chỉ thị thì
+  curiosity, expectation và want sẽ là hệ quả" (Plone, 2026-09-25) means they
+  come about in the mind, and replacing the model must leave them there (Plone,
+  2026-09-28).
 - **What the mind is told is a `prior`** (`prior:mind-task`, `src/arc3/task.py`):
   this project's own words (`source: dil-arc3`), neutral — the aim is to get
-  through the levels; no kind of game, mechanic or strategy is named. It says
-  what the program can do with its own parts: `propose` may run `predict` ahead,
-  toward what the `GOAL` says will come back, each run within `PROGRAM_SECONDS`
-  (Plone, 2026-09-27: a capability of the program, not a strategy). It enters
-  through the tagging-gate, the mind recalls it at its first arrival (a thought
-  before it waits for it), and every program names it in `built_from`.
-- **The mind reads by asking; nothing is poured into it** — the language model
-  (Plone, 2026-09-27: this rule and the next are for it). It may read anything
-  in the store, and the model chooses what: `ASK {...}` lines in its answer, a
-  cue by any tag key and `provenance` — frames, statuses, the onlooker's remarks,
-  the rules it was told, scars or not. No cue is written into the code; until
-  the model asks, it thinks from what it has seen. **What T3 recalls is not
-  shown to it** (Plone, 2026-09-27): T3 asks the store by the description of each
-  arrival — the protocol's recall, traced as `prior → running` — but only a
-  return that answers a cue the model asked reaches its prompt or `built_from`.
+  through the levels; no kind of game, mechanic or strategy is named. It enters
+  through the tagging-gate, and the mind recalls it at its first arrival.
 - **What the body can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
   proposal as a command.
@@ -211,11 +203,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **Short-term perception is as long as T5's window**: `BASELINE_WINDOW = 16`
   when the field has not leaned, shifted by exploration as T5's is (½–1½, 8 to
   24; the mind keeps 32 and reads that many): the steps just seen, each with
-  what the region reported of itself that cycle.
-  The mind thinks from what the store answered, those steps, and what the
-  onlooker says now — bounded, never the whole history.
-- **The learning mind keeps what it learned** (Plone, 2026-09-27, in place of the
-  two rules above for it). It is shown every step as it comes (`observe`) and
+  what the region reported of itself that cycle. The mind reads them for how
+  far an objection of the onlooker's reaches.
+- **The mind keeps what it learned** (Plone, 2026-09-27). It is shown every step
+  as it comes (`observe`) and
   holds all it learned, one step at a time (INV-5: accrued, never loaded). What
   it learns as data — its hypotheses, the clock, what the onlooker made it
   object to, each choice — is in the store and
@@ -224,19 +215,18 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   experience was met and ended the region,
   the states it visited. That is derivable from the store only by replaying its
   observations through the mind's learning, in order (not yet done). It does not read
-  back what it holds. The mind's right to
-  read the store is the same for it: whatever it asks, the mind asks, and the
+  back what it holds. It may read anything in the store: whatever it asks, the
   answer reaches it.
-- **The program predicts what the region returns**: the next grid and, when it
-  says so, the region's status (`{"grid": ..., "status": {...}}`); status fields
-  it leaves out stay as they were. Where it says nothing, the standing
-  expectation holds: the region reports what it reported last.
+- **The mind expects what the region returns**: the next state and the region's
+  report, from the held hypothesis that applies and fits the store best. Where
+  it holds none, the standing expectation holds: nothing changes, and the region
+  reports what it reported last.
 - **A mismatch on any channel sets the mind thinking** — the frame, the status,
   or what the onlooker says — as many times a cycle as the field's alertness
   allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full); what the onlooker
   says is thought on even in a cycle already thought in. The field reaches the
-  mind at T5 as it reaches every layer (INV-7); the learning mind reads it (how
-  far an objection reaches), the language model's prompt does not show it.
+  mind at T5 as it reaches every layer (INV-7), and the mind reads it (how far
+  an objection reaches).
 - **What an Other says strikes the mind as a mismatch** (Plone, 2026-09-27/28):
   a ResistEvent, not plain data (§8.4, "a collision read into coordinates by a
   third party"). The mind expects the Other to say what it said — or, once it
@@ -248,58 +238,22 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   mind thinks on the collision there and then and, if it thought, commands
   again before the body moves; the body carries out the last command of the
   cycle. Read back: a cycle's T5 tests in `[event]` are its commands, in order,
-  and the last is the one carried out; the learning mind's second `choice`
+  and the last is the one carried out; the mind's second `choice`
   says which it replaces (`supersedes`). The mind does not wait for the Other. The first time a remark comes
   back, in the cycle right after the answer, the answer's datum id is not yet
   known, and that one collision is not attributed to it.
 - **The mind always holds an expectation of reaching an aim** (Plone,
-  2026-09-25): whatever aim the task it receives has — stated, or worked out and
-  said to be its inference. The words are the mind's own prior
-  (`prior:mind-aim`, `src/arc3/aim.py`), apart from the environment's task; they
-  name no environment. The program writes `GOAL = {aim, source, reached_when,
-  within}`: `reached_when` is what will come back when the aim is reached, and
-  when the aim falls due it joins the program's expectation of that step. Not
-  reached then, or reached sooner: the mind thinks on `goal`, and a program that
-  predicts as well and acts otherwise is kept; the aim is then held again from
-  that step. **The aim is the mind's, not the program's**: a program that states
-  one replaces it, one that states none leaves the mind the aim it held. With no
-  aim held at all, the mind commands nothing and thinks again while the body
-  waits. Why a `GOAL` was not taken (`goal_check`), or why the last answer did
-  not load, is said to the model in the last message, where it reads what to do.
+  2026-09-25): the aim the task it receives states (`prior:mind-task`'s `aim`,
+  with `reached_when`, what will come back when it is reached). With no aim
+  held, the mind commands nothing and the body waits.
 - **Where a regress stops.** (1) The mind thinks only on what comes from outside
   — a return, the onlooker — or while the body waits; one thought never sets off
   another. (2) An aim must ground out in what comes back: an aim nothing coming
   back could show is not taken. (3) Standing still is said by the onlooker each
   moment, and standing costs the run's budget, which ends it.
-- **What a command is for is an expectation too** (Plone, 2026-09-25). `propose`
-  may return `(action, x, y, want)`, `want` being cells of the next grid and
-  fields of the region's next report. It joins the program's expectation of the
-  step the command makes, and meets the region there: when only it fails, the
-  mind thinks on `want`. The aim stays in the prior; what the program wants of
-  each move is its own, and the region can refute it.
-- **Every answer the model gives is kept whole** as the mind's datum
-  (`domain: mind`, `kind: thought`: the text, and the reasoning when the model
-  gives one), built from what it was shown. It is evidence for a later thought
-  only when the model asks for it.
-- **A program the model writes is `running` data**, not `prior`. It enters at
-  `nascent` bearing the cycle that wrote it, arrives at T1 the next cycle, is
-  SELF_WRITTEN at T2, runs every layer and moves `nascent → running`. A rewrite
-  is a **revision**: the content changes, the provenance does not, and `[event]`
-  gets a bare `revision` line with no content; the content is read from the
-  commit snapshot. The mind keeps a new program only if it explains the evidence
-  better; the first is kept because there was none. It also keeps one that
-  explains as much and can command, when the body is waiting for a command, or
-  when what set it thinking was how it acts — the onlooker's objection, or a
-  command that did not bring about what it was for — which is met by acting
-  otherwise (Plone, 2026-09-25). For those reasons (onlooker, want, goal) such a
-  program must **act otherwise**: its `propose`, from where the game stands,
-  gives another action than the held program's. The same action again is not
-  kept, and the model is told so (Plone, 2026-09-27).
-- **There is no trigger for rewriting, and no constant to declare.** Rewriting is
-  the consequence of mismatch: if the mind does not adjust, the mismatch recurs.
 - **Every written datum records what it was built from** (protocol v0.3.4): ids
-  only, never content; `()` for nothing held. The mind's `built_from` is exactly
-  the evidence the model was shown.
+  only, never content; `()` for nothing held. A hypothesis names the step and
+  the report it came from; a choice, what it was chosen from.
 - **What the region returns is data, and the scar is on it.** Each return enters
   through the tagging-gate as `signal-<cycle>-<i>` at `running`, its tags (never
   its content) in the cycle's record under `admitted`; when the expectation
@@ -307,10 +261,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   `arc3.observe.admit` tags returns `domain: observation`, `kind`, `source`, and
   the channel's `object` or `sense`.
 - **Every datum that meets a mismatch is scarred** (protocol v0.3.5, Plone): the
-  return, and each datum the expectation is (`held_by`) — the program, for an
+  return, and each datum the expectation is (`held_by`) — the hypothesis, for an
   expectation it made; the observation repeated, for a standing one — each with
   its own scar record of the same ResistEvent. A scar used again returns to
-  `running`, so the program circulates between the two as its expectations meet
+  `running`, so a hypothesis circulates between the two as its expectations meet
   the region. This is how the mind turns behaviour: what enters appraisal
   changes (§6.4). A mismatch with the agent's own revision coming back from the
   store scars no expecting side.
@@ -347,9 +301,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Declared, not arranged: the diversity C7 asks for is only as real as the
   onlooker's reasons to object.
 - **The onlooker's remark reaches behaviour only through the mind.** It strikes
-  the mind as a collision, and the model is shown what it says. The language
-  model: a program that acts otherwise and predicts as well is kept, and is its
-  answer. The learning mind (Plone, 2026-09-27/28): the acts the onlooker names
+  the mind as a collision (Plone, 2026-09-27/28): the acts the onlooker names
   are objected to — for "repeating", where the region stands now; for
   "back-and-forth", at the states the alternation ran through; said again after
   it was answered, over the run the onlooker points at, as far as the field's
@@ -370,10 +322,97 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   by the frame it stands on. Such cycles count against the run's budget and cost
   no action. Without an onlooker nothing arrives in them, so the mind is never
   asked, and the run spends its budget standing.
-- **The aim's time is the model's.** `within` is how many actions the model
-  expects; a large one means the aim is not met by the region within a run. Not
-  bounded by the host's budget, which would put an environment's constant in the
-  mind (declared).
+- **In the code, the mind's learning still sits in its model's seat.** `Mind`
+  takes one model (`src/mind/mind.py`), and the learning loop is what is seated
+  there — `Mind(Learning(inducer))` (`scripts/run_game.py`) — with the inducer
+  inside it. So the learning is replaceable where only the inducer should be:
+  seating the language model instead (`Mind(LanguageModel(...))`) leaves the
+  mind no learning of its own. To change: `Mind` holds its learning, and its
+  model's seat takes the inducer (LOG.md, 2026-09-28).
+
+### The language model — unfinished, not yet revised
+
+Plone, 2026-09-28: the language model is work left unfinished inside the model,
+set aside for now — not a settled branch beside the learning. Only the rules
+above are in force. What follows is how its code works, as submission
+`56588469` ran it (`3b31806`) and as it stands: its rules have not been revised
+to the design above. It is seated where the learning is seated
+(`Mind(LanguageModel(...))`, by `src/arc3/mind.py`), so with it the mind has no
+learning of its own: what it keeps of a revision is the model's rule ("in the
+model, for now", Plone, 2026-09-27), and its program, not the mind, proposes
+the action and states the aim. It is to become a model the mind learns with.
+
+- **The program** (`src/mind/models/language.py`): `predict(grid, action, x,
+  y)`, `propose(grid, steps)` and `GOAL`. The mind runs `propose` on where the
+  game stands and the steps it has just seen (short-term perception, each with
+  the state and levels the region reported), and commands what it gives. The
+  prompt speaks of the game in its own words, kept word for word (LOG.md,
+  2026-09-27).
+- **What it is told**: `prior:mind-task` also says what the program can do with
+  its own parts: `propose` may run `predict` ahead, toward what the `GOAL` says
+  will come back, each run within `PROGRAM_SECONDS` (Plone, 2026-09-27: a
+  capability of the program, not a strategy). The mind recalls it at its first
+  arrival (a thought before it waits for it), and every program names it in
+  `built_from`.
+- **It reads by asking; nothing is poured into it** (Plone, 2026-09-27). It may
+  read anything in the store, and the model chooses what: `ASK {...}` lines in
+  its answer, a cue by any tag key and `provenance` — frames, statuses, the
+  onlooker's remarks, the rules it was told, scars or not. No cue is written
+  into the code; until the model asks, it thinks from what it has seen. **What
+  T3 recalls is not shown to it** (Plone, 2026-09-27): T3 asks the store by the
+  description of each arrival — the protocol's recall, traced as `prior →
+  running` — but only a return that answers a cue the model asked reaches its
+  prompt or `built_from`. It thinks from what the store answered, the steps of
+  short-term perception, and what the onlooker says now — bounded, never the
+  whole history.
+- **The program predicts what the region returns**: the next grid and, when it
+  says so, the region's status (`{"grid": ..., "status": {...}}`); status fields
+  it leaves out stay as they were. Where it says nothing, the standing
+  expectation holds: the region reports what it reported last. Its prompt does
+  not show the field.
+- **The aim, as the program states it.** The words are the mind's own prior
+  (`prior:mind-aim`, `src/arc3/aim.py`), apart from the environment's task; they
+  name no environment: whatever aim the task has — stated, or worked out and said
+  to be its inference. The program writes `GOAL = {aim, source, reached_when,
+  within}`: `reached_when` is what will come back when the aim is reached, and
+  when the aim falls due it joins the program's expectation of that step. Not
+  reached then, or reached sooner: the mind thinks on `goal`, and a program that
+  predicts as well and acts otherwise is kept; the aim is then held again from
+  that step. **The aim is the mind's, not the program's**: a program that states
+  one replaces it, one that states none leaves the mind the aim it held. Why a
+  `GOAL` was not taken (`goal_check`), or why the last answer did not load, is
+  said to the model in the last message, where it reads what to do. `within` is
+  how many actions the model expects; a large one means the aim is not met by
+  the region within a run. Not bounded by the host's budget, which would put an
+  environment's constant in the mind (declared).
+- **What a command is for is an expectation too** (Plone, 2026-09-25). `propose`
+  may return `(action, x, y, want)`, `want` being cells of the next grid and
+  fields of the region's next report. It joins the program's expectation of the
+  step the command makes, and meets the region there: when only it fails, the
+  mind thinks on `want`. The aim stays in the prior; what the program wants of
+  each move is its own, and the region can refute it.
+- **Every answer the model gives is kept whole** as the mind's datum
+  (`domain: mind`, `kind: thought`: the text, and the reasoning when the model
+  gives one), built from what it was shown. It is evidence for a later thought
+  only when the model asks for it. The program's `built_from` is exactly the
+  evidence the model was shown.
+- **A program the model writes is `running` data**, not `prior`. It enters at
+  `nascent` bearing the cycle that wrote it, arrives at T1 the next cycle, is
+  SELF_WRITTEN at T2, runs every layer and moves `nascent → running`. A rewrite
+  is a **revision**: the content changes, the provenance does not, and `[event]`
+  gets a bare `revision` line with no content; the content is read from the
+  commit snapshot (`COMMIT_CADENCE`, below). The model keeps a new program only
+  if it explains the evidence better; the first is kept because there was none.
+  It also keeps one that explains as much and can command, when the body is
+  waiting for a command, or when what set it thinking was how it acts — the
+  onlooker's objection, or a command that did not bring about what it was for —
+  which is met by acting otherwise (Plone, 2026-09-25). For those reasons
+  (onlooker, want, goal) such a program must **act otherwise**: its `propose`,
+  from where the game stands, gives another action than the held program's. The
+  same action again is not kept, and the model is told so (Plone, 2026-09-27).
+  A kept program is its answer to the onlooker.
+- **There is no trigger for rewriting, and no constant to declare.** Rewriting is
+  the consequence of mismatch: if the mind does not adjust, the mismatch recurs.
 - **One expectation a run is not attributed**: the cycle the program first
   comes back, T5 meets the frame before the store arrival that tells the mind
   its datum's id. Every later one is the program's.
@@ -449,8 +488,8 @@ are below.
   check the cycle it reads the agent's log, which the onlooker never sees. The
   onlooker's remark enters through the host's transducer on its own channel.
 
-- **Tag H — situation fit.** The frame fits when the grid the mind's program
-  predicted equals, cell for cell, the grid the region returned (the last of each
+- **Tag H — situation fit.** The frame fits when the grid the mind expected
+  equals, cell for cell, the grid the region returned (the last of each
   stack); the region's status, when the region reports what it reported last —
   its `context`, the action just taken, is the agent's own and is not expected back.
   Not against a correct answer: no answer is ever revealed during a run.
@@ -476,9 +515,11 @@ own form (a `present` set, a `predict` rule for T5).
    otherwise it waits. dil-core has no body and hands the tests over after the
    cycle (`CycleResult.tests`).
 4. **`COMMIT_CADENCE`** (Plone: too costly for a full agent, right for this one):
-   dil-arc3 also commits at the close of every cycle in which the agent wrote a
-   datum, so every version of the program is in a snapshot tied to its place in
-   `[event]`.
+   with the language model, dil-arc3 also commits at the close of every cycle in
+   which the agent wrote a datum, so every version of the program is in a
+   snapshot tied to its place in `[event]`. The learning mind keeps dil-core's
+   scar rhythm alone (Plone, 2026-09-27): it revises nothing in place, and every
+   hypothesis and choice is a new datum in `[event]`.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; the resistance-retrieval channel (`recollection`) is not wired —

@@ -3723,3 +3723,63 @@ and `s3-grid3/` (git-ignored). The games ran offline from `environment_files`.
   - which games they are.
 - If they can, the inducers could be measured on 25 games, not 4. To be updated
   here once checked.
+
+### How the language model came to sit level with the mind's learning (Plone, same day)
+
+Asked whether the inducer belongs to the model alone, a check of the code found
+that the mind's seat for a model holds its learning, not its inducer:
+`Mind(Learning(ExactInducer(...)))` (`scripts/run_game.py`), and
+`Mind(LanguageModel(...))` in the same seat. So the language model and the
+learning are alternatives, and seating the language model leaves the mind no
+learning of its own. What it keeps of a revision is the model's rule
+(`language.py`), so learning is defined twice — once in the mind, once in the
+model — which is what S1 was to prevent ("a model for another task should not
+have to define learning again"). S1 prevents it between inducers only.
+
+Plone: the model is the replaceable computing; the mind's learning must not
+depend on it. Read back through this log, the misreading built up in four
+steps, each correction carried out by moving code between files while the
+wiring `Mind(<what is replaceable>)` stayed:
+
+1. **2026-09-24: the mind was the model.** "One mind, and it is the model";
+   Direction C: "The model sits at the **mind**: it is the thinking … adjusting
+   is what thinking does with that." Adjusting after a mismatch — learning —
+   was the model's from the start.
+2. **2026-09-27: the mind learning from nothing was built as another mind.**
+   "One mind" was read as "(which mind sits there can change)", and
+   `arc3/learning_mind.py` took the seat instead of the language model's
+   (`--mind learning`). The seat was a mind's, and learning a trait of one kind
+   of mind.
+3. **Same day: "the model is the mind's computing" was read as "the mind is its
+   seams".** `mind.py` kept when to think, write, ask and command; everything
+   that computes went to a model, the learning algorithm whole ("the same
+   algorithm, through the model interface"), and the language model's rule for
+   what it keeps "in the model, for now".
+4. **2026-09-28, S1: the file moved, the wiring did not.** `learning.py` moved
+   from `models/` to `src/mind/` and "learning model" became "exact inducer",
+   but `Learning(ExactInducer(...))` still sits in the model's seat. The entry
+   does not name the language model, and its list of what S1 does not yet do
+   leaves it out; "for now" was not taken up again. S1's check — reports equal
+   line for line — can find a change in behaviour, not a thing in the wrong
+   seat, since putting it in the right seat changes no behaviour.
+
+Plone put most of it down to how his ideas were first phrased, the code then
+corrected step by step. And he corrected one reading made in this check:
+"Chỉ cần model tư duy theo đúng chỉ thị thì curiosity, expectation và want sẽ là
+hệ quả" (2026-09-25) means these come about in the mind, not in the language
+model alone: replace the model and they must still be there. So the language
+model is work left unfinished inside the model, set aside for now, not a
+settled branch; its rules are not a second mind's, they are not yet revised,
+and only the learning mind's are in force.
+
+Documents set to that, no code changed:
+
+- CLAUDE.md: "One mind" says the model changes, never the mind or its learning;
+  curiosity, want and expectation are the mind's whatever its model; the rules
+  in force speak of hypotheses, not the program (the invariants, what is
+  expected, what is scarred, tag H); the language model's rules move, word for
+  word, into "The language model — unfinished, not yet revised", which says why
+  they are not in force; the open items gain the seat, and `COMMIT_CADENCE`
+  says it is the language model's.
+- README: the status, the roles, "What the mind is", the layout (the grid
+  inducer, missing from it) and how to run the learning mind.
