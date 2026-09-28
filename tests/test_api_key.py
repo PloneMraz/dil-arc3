@@ -12,8 +12,10 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import pytest
+
 from arc3.aim import MIND_AIM
-from arc3.mind import ModelEndpoint, create_mind, mind_rule
+from arc3.mind import UNSEATED, ModelEndpoint, create_mind, mind_rule
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from arc3.task import MIND_TASK
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
@@ -29,6 +31,10 @@ from dil.loop.layers.t8 import create_t8
 from dil.loop.types import Signal
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
+
+# The language model is not seated: what goes through its seat is kept, not run
+# (Plone, 2026-09-28; LOG.md).
+unseated = pytest.mark.skip(reason=UNSEATED)
 
 KEY = "sk-test-0123456789-never-to-be-written"
 PROGRAM = "def predict(grid, action, x=None, y=None):\n    return [row[:] for row in grid]\n"
@@ -56,6 +62,7 @@ def serve():
     return server, seen
 
 
+@unseated
 def test_the_key_reaches_the_header_and_nothing_the_mind_keeps(monkeypatch):
     monkeypatch.setenv("DIL_TEST_API_KEY", KEY)
     server, seen = serve()

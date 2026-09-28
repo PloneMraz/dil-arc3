@@ -10,7 +10,9 @@ trace says so; and the model reads it only when it asks for it (Plone,
 
 from __future__ import annotations
 
-from arc3.mind import ModelEndpoint, create_mind, mind_rule
+import pytest
+
+from arc3.mind import UNSEATED, ModelEndpoint, create_mind, mind_rule
 from arc3.observe import FRAME_CHANNEL, REGION_ENTITY, STATUS_CHANNEL, transducers
 from arc3.prior import DIRECTIVE, RULES
 from arc3.aim import MIND_AIM
@@ -30,6 +32,10 @@ from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
 from dil.store.tagging_gate import HostDatum, admit_host_data
 
+# The language model is not seated: what goes through its seat is kept, not run
+# (Plone, 2026-09-28; LOG.md).
+unseated = pytest.mark.skip(reason=UNSEATED)
+
 NOTHING = {"stateFrom": "NOT_FINISHED", "stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
 SAID = "You are playing a game. Your goal is to win."
 
@@ -45,6 +51,7 @@ class Listener:
         return "", {}
 
 
+@unseated
 def test_a_recalled_datum_is_read_not_predicted_as_an_other():
     mind = create_mind(ModelEndpoint(), chat_fn=Listener(), task=MIND_TASK.payload, aim=MIND_AIM.payload)
     rule = mind_rule(mind)
@@ -80,6 +87,7 @@ def _store_with_rules():
     return data
 
 
+@unseated
 def test_the_first_status_report_brings_the_directive_to_mind_and_the_model_reads_it():
     model = Listener()
     mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload, aim=MIND_AIM.payload)
@@ -138,6 +146,7 @@ class Asker(Listener):
         return ('ASK {"domain": "%s", "kind": "directive"}' % DIRECTIVE.open["domain"]) if len(self.prompts) == 1 else "", {}
 
 
+@unseated
 def test_what_the_model_asks_for_it_reads():
     model = Asker()
     mind = create_mind(ModelEndpoint(), chat_fn=model, task=MIND_TASK.payload, aim=MIND_AIM.payload)

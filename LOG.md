@@ -3783,3 +3783,50 @@ Documents set to that, no code changed:
   says it is the language model's.
 - README: the status, the roles, "What the mind is", the layout (the grid
   inducer, missing from it) and how to run the learning mind.
+
+### The mind holds its learning; its model's seat takes the inducer (Plone, same day)
+
+Step 1 of what the entry above found, approved by Plone with option (b): the
+language model's seat and the tests through it are kept and not run.
+
+- `Mind(inducer, organs, priors)` (`src/mind/mind.py`) makes its own `Learning`
+  and holds it (`mind.learning`); nothing seated can replace it. The seat's
+  interface is declared, `Inducer` (`src/mind/models/base.py`: the fourteen
+  parts the learning asks of an inducer, which it had taken as `Any`), and what
+  the seams ask of the learning is `Learner` (it was `Model`). The learning's
+  logic is unchanged.
+- The language model is not an inducer, so it is not seated: `create_mind`
+  (`src/arc3/mind.py`) raises `NotImplementedError` before its body, which is
+  kept as it was; `--mind language` stops before a run starts in `run_game.py`,
+  `run_competition.py` and `build_dil_run.py`, whose default is now the mind
+  with its learning.
+- Tests: the 35 that went through the language model's seat were marked
+  skipped, not removed — 30 in `test_arc3_mind.py`, 3 in
+  `test_arc3_directive.py`, 1 in `test_api_key.py`, and
+  `test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_still`.
+  That last one checks the host and the onlooker, and no other test does: a
+  cycle the body stood still in carries only what is heard, the region is not
+  counted absent then, the waits cost no action and count against the budget,
+  and each nudge collides. The body's acts in it are scripted; the language
+  model only filled T5, and was never asked. Plone approved porting it: it now
+  seats the mind with the exact inducer, every assertion as it was. Its
+  onlooker scars fall at cycles 2, 3 and 4 on the remarks (`signal-2-0`,
+  `signal-3-0`, `signal-4-0`), at 2 on the remark before (the standing
+  expectation's datum) and at 4 on the mind's answer (`written-2-0`), which
+  the language model, not asked, never gave. Two tests added: the mind holds
+  its learning and the seat takes the inducer; the language model's seat
+  raises. 307 pass, 34 skipped.
+
+**Measured: nothing changes.** ar25, ls20, sk48 and vc33, 600 cycles, each
+inducer, offline from `environment_files`, eight at once as S3 ran, against the
+S3 runs `s3-exact3` and `s3-grid3`. All eight reports agree line for line (635
+lines each) apart from the scorecard, two timestamps, the store's path and the
+wall time: every choice, the scars by source and datum kind, the `[event]`
+records (38,670 exact ls20 to 42,763 grid sk48) and the levels — exact vc33 1
+and ar25 1; grid vc33 2.
+
+Wall time was 25–55% longer in every run (exact ls20 1,227 s against 884 s;
+grid sk48 1,704 s against 1,400 s). The change adds no work to a cycle — the
+seams call `self.learning` where they called `self.model` — and this machine
+also ran the tests during the runs; not traced. Stores are in
+`scripts/data/step1-exact/` and `step1-grid/` (git-ignored).

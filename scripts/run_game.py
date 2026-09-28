@@ -1,16 +1,18 @@
-"""A live game with the one mind in the loop: the mind thinks, DIL runs.
+"""A live game with the one mind in the loop: the mind learns, DIL runs.
 
-    $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
-        [--max-tokens N] [--think] [--alone] [--offline-dir DIR] [--remote HOST:PORT] [--out DIR]
-    $PY scripts/run_game.py GAME CYCLES --mind learning [...]      (the mind that learns from nothing, by an inducer)
+    $PY scripts/run_game.py GAME CYCLES [--inducer exact|grid] [--alone] [--offline-dir DIR]
+        [--remote HOST:PORT] [--out DIR]
 
-The host carries the whole frame; the mind predicts it with the program the
-model wrote, and thinks when an expectation meets a mismatch — the frame, the
-status, what a command or the aim was for, the onlooker — or while the body
-waits; the model asks its memory for what it wants to read. The program is kept
-as data (`nascent`, then revisions), each answer too, and every cycle in which
-the mind wrote is committed. What is printed is read back from the run's
-own `[event]` log, `[data]` and commits — the same ones a third party would read.
+The host carries the whole frame; the mind expects it from the hypotheses its
+learning holds, computed by its model — the inducer — and thinks when an
+expectation meets a mismatch — the frame, the status, the onlooker — or while
+the body waits. Each hypothesis, each choice and each thought is kept as data.
+What is printed is read back from the run's own `[event]` log, `[data]` and
+commits — the same ones a third party would read.
+
+`--mind language` seated the language model in the place of the mind's learning.
+It is unfinished work, not yet revised into a model the mind learns with, and is
+kept and not run (LOG.md, 2026-09-28): the run stops before it starts.
 
 The game is played in a world (`world/`) with an onlooker in it (tag E): an Other
 outside the agent and outside its host, who sees the agent's acts, or the lack
@@ -35,7 +37,6 @@ from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.mind import Mind, mind_rule as seat_rule
-from mind.learning import Learning
 from mind.models.exact import ExactInducer
 from mind.models.grid import GridInducer
 from arc3.observe import admit
@@ -61,12 +62,12 @@ ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
-ap.add_argument("--mind", choices=("language", "learning"), default="language",
-                help="which mind sits in the one seat: the language model's (mind.py), or the one that "
-                     "learns from nothing (mind/learning.py, with the exact inducer)")
+ap.add_argument("--mind", choices=("learning", "language"), default="learning",
+                help="learning: the one mind with its learning; language: the unfinished language model, "
+                     "not run (arc3/mind.py)")
 ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
-                help="what the learning mind computes with: exact hypotheses, or ones that reach past "
-                     "where they were met (mind/models/grid.py)")
+                help="the mind's model, what its learning computes with: exact hypotheses, or ones that reach "
+                     "past where they were met (mind/models/grid.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -74,6 +75,9 @@ ap.add_argument("--out", default=None, help="where the store goes (default: a fr
 ap.add_argument("--remote", default=None,
                 help="HOST:PORT of the regions served by run_competition.py; the key is in DIL_REGIONS_KEY")
 a = ap.parse_args()
+if a.mind == "language":
+    from arc3.mind import UNSEATED
+    sys.exit(f"--mind language: {UNSEATED}")
 
 if a.remote:
     # The game was made in another process, on the one arcade and scorecard
@@ -95,12 +99,13 @@ host_source = source
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
 LEARNING = a.mind == "learning"
 if LEARNING:
-    # The one mind, neutral, learning from nothing with the exact inducer; the
-    # host declares its organs, and the mind reads the task for its aim.
+    # The one mind, neutral, with its learning; its model's seat takes the
+    # inducer. The host declares its organs, and the mind reads the task for
+    # its aim.
     inducer = {"exact": ExactInducer, "grid": GridInducer}[a.inducer](ARC_ORGANS)
-    mind = Mind(Learning(inducer, ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
     seat = seat_rule(mind)
-else:
+else:  # not reached: the language model is not run (above)
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
     seat = mind_rule(mind)
 layers = Layers(
@@ -169,14 +174,14 @@ if LEARNING:
     learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypothesis"]
     why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
     print(f"  hypotheses written    : {len(learned)}  saying one no longer holds: {sum(1 for d in learned if not d.payload.get('holds'))}")
-    print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.inducer.clock)})")
-    print(f"  held off the clock    : {sum(mind.model.holds_off_clock)} of {len(mind.model.holds_off_clock)}")
-    held = sum(1 for h in mind.model._hypotheses if h.holds)
-    print(f"  inducer               : {mind.model.inducer.kind}  hypotheses {len(mind.model._hypotheses)} (held {held})")
-    print(f"  unseen (situation, act): {mind.model.unseen[0]}  expected {mind.model.unseen[1]}  right {mind.model.unseen[2]}")
+    print(f"  states met            : {len(mind.learning._grid_of)} (grids {len(mind.learning._raw)}; clock rows {sorted(mind.learning.inducer.clock)})")
+    print(f"  held off the clock    : {sum(mind.learning.holds_off_clock)} of {len(mind.learning.holds_off_clock)}")
+    held = sum(1 for h in mind.learning._hypotheses if h.holds)
+    print(f"  inducer               : {mind.learning.inducer.kind}  hypotheses {len(mind.learning._hypotheses)} (held {held})")
+    print(f"  unseen (situation, act): {mind.learning.unseen[0]}  expected {mind.learning.unseen[1]}  right {mind.learning.unseen[2]}")
     print(f"  why it chose          : {dict(why)}")
-    print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, somewhere new, levels) most tried "
-          f"{sorted(mind.model._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
+    print(f"  kinds of act          : {len(mind.learning._kinds)}  (tried, somewhere new, levels) most tried "
+          f"{sorted(mind.learning._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
 else:
     print(f"  thoughts              : {[(t.frame_call, t.on, t.evidence, t.held_score, t.candidate_score, t.adopted, t.usage.get('completion_tokens'), t.usage.get('seconds'), t.note) for t in mind.thoughts]}")
     print(f"  what the model asked  : {[(t.frame_call, t.asked) for t in mind.thoughts if t.asked]}")

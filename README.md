@@ -14,15 +14,15 @@ learns with, an inducer (below). What it has done — the scored submissions, an
 every run — is in `LOG.md`, with the code each ran; this file says only what the
 agent is.
 
-In the code, the mind's learning still sits in the seat its model should hold
-(`Mind(Learning(inducer))`), so a model seated there instead replaces the
-learning with it. That is to change: the mind holds its learning, and the seat
-takes the inducer.
+In the code, the mind holds its learning — `Mind(inducer, organs, priors)` —
+and its model's seat takes the inducer, so a model seated there changes how it
+computes, never whether it learns.
 
 **With the language model — unfinished work, not yet revised.** The language
 model is work left inside the model and set aside for now, not a settled branch
-beside the learning: seated in the learning's place, it leaves the mind no
-learning of its own. As submission `56588469` ran it (served offline;
+beside the learning: it sat in the learning's place, which left the mind no
+learning of its own, and it is not an inducer, so it is not seated now — its
+code and tests are kept, and not run. As submission `56588469` ran it (served offline;
 Qwen3.8-Flash-Next NVFP4), the mind has the model write a program:
 `predict(grid, action, x, y)`, the next grid and what the region will report of
 itself; `propose(grid, steps)`, the next action from where the game stands and
@@ -227,22 +227,25 @@ uv run --with pytest python -m pytest tests/ -q
 PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
 
 # a live game, the mind learning with an inducer (exact or grid)
-$PY scripts/run_game.py ls20 600 --mind learning --inducer grid
+$PY scripts/run_game.py ls20 600 --inducer grid
 
-# the unfinished language model, served at an OpenAI-compatible endpoint
-$PY scripts/run_game.py ls20 10 --endpoint http://127.0.0.1:8080/v1
 ```
 
 Playing a game needs the ARC-AGI-3 environment, which is not vendored here: point
 the host at an environment exposing `reset()` and `step(action, data)` and hand
 it the engine's action class. `scripts/kaggle/build_dil_run.py` builds the Kaggle
-notebook that runs it with the model on a GPU.
+notebook that runs it, on CPU.
 
 ```python
 from arc3 import admit, transducers
 from arc3.host import create_source, declaration
-from arc3.mind import ModelEndpoint, create_mind, mind_rule
+from arc3.organs import ARC_ORGANS
+from arc3.task import TASK_CUE
+from mind.mind import Mind, mind_rule
+from mind.models.grid import GridInducer
 from arc3.command import carry_out
+
+mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
 ```
 
 `scripts/run_game.py` shows the whole wiring; `src/arc3/decisions.py`

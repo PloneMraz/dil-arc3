@@ -11,10 +11,11 @@ again.
 from __future__ import annotations
 
 from arc3.host import Arc3Source
-from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.observe import ONLOOKER_CHANNEL, admit, move_value, transducers
 from arc3.action import Move
 from arc3.command import WAIT
+from arc3.organs import ARC_ORGANS
+from arc3.task import TASK_CUE
 from dil.loop.cycle import Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
@@ -27,6 +28,8 @@ from dil.loop.layers.t7 import create_t7
 from dil.loop.layers.t8 import create_t8
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
+from mind.mind import Mind, mind_rule
+from mind.models.exact import ExactInducer
 from tests.test_arc3_host import FakeEnv, FakeGameAction, f
 from world import REPEAT_AT, Onlooker, World, act_of
 
@@ -121,16 +124,15 @@ def test_the_world_shows_each_act_to_the_others_once_they_watch():
     assert act_of(FakeGameAction(6), {"x": 3, "y": 4}) == {"act": 6, "x": 3, "y": 4}
 
 
-def no_model(*_):
-    raise AssertionError("the model is not asked here")
-
-
 def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_still():
+    # The body's acts are scripted here (`plan`), not the mind's: the mind only
+    # fills T5, as it would in a run.
+    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(create_mind(ModelEndpoint(), chat_fn=no_model))),
+            t5=create_t5(predict=mind_rule(mind)),
             t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,

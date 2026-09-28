@@ -64,7 +64,7 @@ from typing import Any, Callable, Final
 
 from dil.loop.field import ALERTNESS, axis, rising, shifted_count
 
-from .models.base import Context, Expectation, Proposal, Thinking, Write
+from .models.base import Context, Expectation, Inducer, Proposal, Thinking, Write
 from .organs import Act, Organs, Step
 
 HYPOTHESIS_TAGS: Final = {"domain": "mind", "kind": "hypothesis", "object": "frame", "source": "mind"}
@@ -131,11 +131,11 @@ class Choice:
 
 
 class Learning:
-    """The mind's learning loop, computing with an inducer. It stands in the mind's
-    seat for a model: the mind's seams (`mind.py`) ask it what to expect, show it
-    what came back, ask it what to do."""
+    """The mind's learning loop, computing with an inducer — the model in the
+    mind's seat for one. The mind holds it (`mind.py`), and its seams ask it what
+    to expect, show it what came back, ask it what to do."""
 
-    def __init__(self, inducer: Any, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
+    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
         self.inducer = inducer
         self.organs = organs
         self._now_raw: str | None = None                       # the latest state's own identity

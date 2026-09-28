@@ -1,11 +1,14 @@
-"""The one mind as this host seats it, thinking with a language model.
+"""Where this host seated the one mind with a language model — not seated now.
 
-The mind is neutral about its region (`mind/mind.py`); its model is the part of
-it that computes (`mind/models/language.py`: a program written by a language
-model); this host declares its eye and body (`organs.py`). This module puts them
-together for ARC-AGI-3 and names what the host's tests and scripts reach for,
-bound to this host's organs — the fields of its report, its acts, which act
-takes a cell. Nothing here thinks.
+The language model (`mind/models/language.py`: a program written by a language
+model) is work left unfinished inside the model: it sat in the place of the
+mind's learning, so with it the mind had no learning of its own. The mind now
+holds its learning, and its model's seat takes an inducer (`mind/mind.py`), which
+the language model is not. So `create_mind` does not run until the language
+model is revised into a model the mind learns with (Plone, 2026-09-28: kept, not
+run; LOG.md). The rest names what the language model's tests reach for, bound to
+this host's organs — the fields of its report, its acts, which act takes a cell.
+Nothing here thinks.
 """
 
 from __future__ import annotations
@@ -29,6 +32,10 @@ from .task import TASK_CUE
 
 # The fields of this host's report, as a program may predict them.
 STATUS_FIELDS = REPORT_FIELDS
+
+# Why the language model is not seated.
+UNSEATED = ("the language model is unfinished work inside the model, not yet revised into a model the mind "
+            "learns with; its seat is kept and not run (LOG.md, 2026-09-28)")
 
 goal_check = partial(_language.goal_check, fields=REPORT_FIELDS)
 goal_of = partial(_language.goal_of, fields=REPORT_FIELDS)
@@ -59,7 +66,11 @@ def create_mind(endpoint: ModelEndpoint | None = None,
                 chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat,
                 task: dict[str, str] | None = None, aim: dict[str, str] | None = None) -> Mind:
     """The one mind, thinking with a language model, on this host's organs. It
-    reads its task and aim from memory; a test may hand them in, as if recalled."""
+    read its task and aim from memory; a test could hand them in, as if recalled.
+    Not run: the language model is not seated (the module's docstring)."""
+    raise NotImplementedError(UNSEATED)
+    # Not reached — how it was seated, kept as it was for the revision: the mind
+    # no longer takes a model in its learning's place.
     model = LanguageModel(ARC_ORGANS, endpoint, chat_fn, priors={"task": TASK_CUE, "aim": AIM_CUE},
                           kinds={"status": STATUS_KIND, "remark": REMARK_KIND})
     mind = Mind(model, ARC_ORGANS)
@@ -72,7 +83,8 @@ def create_mind(endpoint: ModelEndpoint | None = None,
 
 __all__ = [
     "MAX_ASKS", "MAX_MISSES_SHOWN", "MAX_SHOWN", "MAX_WAIT_THOUGHTS", "PROGRAM_SECONDS", "PROGRAM_TAGS",
-    "STATUS_FIELDS", "THOUGHT_TAGS", "LanguageModel", "Mind", "ModelEndpoint", "ProgramError", "Proposal",
+    "STATUS_FIELDS", "THOUGHT_TAGS", "UNSEATED", "LanguageModel", "Mind", "ModelEndpoint", "ProgramError",
+    "Proposal",
     "Thought", "Transition", "chat", "compile_all", "compile_functions", "compile_program", "create_mind",
     "expected_status", "extract_asks", "extract_code", "goal_check", "goal_of", "mind_rule", "render_evidence",
     "run_full", "run_program", "run_propose", "run_propose_full", "score", "steps_of",

@@ -9,6 +9,8 @@ party reads says so.
 
 from __future__ import annotations
 
+import pytest
+
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
@@ -51,15 +53,34 @@ def status(state="NOT_FINISHED", levels=0, action=1, affords=(1, 2)) -> Signal:
     })
 
 
-def learning() -> Learning:
-    return Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
+def seated() -> Mind:
+    """The one mind with its learning; its model's seat takes the inducer."""
+    return Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
 
 
 def create_mind() -> Mind:
-    mind = Mind(learning(), ARC_ORGANS)
+    mind = seated()
     # What it reads, handed in as if recalled: the in-memory store admits no prior.
     mind.receive("task", MIND_TASK.payload, None)
     return mind
+
+
+def test_the_mind_holds_its_learning_and_its_models_seat_takes_the_inducer():
+    # Plone, 2026-09-28: the model is the replaceable computing; the learning is
+    # the mind's, whatever its model. Seating a model does not replace it.
+    inducer = ExactInducer(ARC_ORGANS)
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    assert isinstance(mind.learning, Learning)
+    assert mind.learning.inducer is inducer
+
+
+def test_the_language_models_seat_is_kept_and_not_run():
+    # Unfinished inside the model: it sat in the learning's place (LOG.md,
+    # 2026-09-28). Kept, not run, until it is revised.
+    from arc3.mind import UNSEATED, create_mind as seat_language
+    with pytest.raises(NotImplementedError, match="unfinished"):
+        seat_language()
+    assert "not yet revised" in UNSEATED
 
 
 def loop():
@@ -149,7 +170,7 @@ def test_a_hypothesis_right_more_often_than_wrong_is_still_held():
     run(cycle, frame(lit(0), lit(1)), status())          # borne out: 2 for, 0 against
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(2)), status())          # not borne out: 2 for, 1 against
-    model = mind.model
+    model = mind.learning
     h = model._edges[(model.inducer.situation(lit(0)), (1, None, None))].hypothesis
     assert (h.supports, h.fails, h.holds) == (2, 1, True)
     assert not [d for _, d in of_kind(data, "hypothesis") if d.payload["holds"] is False]
@@ -186,8 +207,8 @@ def test_clicking_that_never_did_anything_is_wanted_less_whatever_is_left_to_cli
     # thing to click was a new kind, so clicking went on (LOG.md). The action is
     # chosen first, over every kind of it.
     mind, cycle, data, events = loop()
-    mind.model._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
-    mind.model._kinds = {("act", 1): [5, 5, 0]}
+    mind.learning._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
+    mind.learning._kinds = {("act", 1): [5, 5, 0]}
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 6)))
     assert mind.commands[-1][1][0] == 1, "the action that changes things, not an untried click"
 
@@ -202,9 +223,9 @@ def test_the_onlookers_word_puts_the_act_it_names_behind_the_others():
     run(cycle, frame(lit(0), lit(1)), status(), remark({"remark": None}))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), remark(said))   # its word changed
-    assert (mind.model._here, (2, None, None)) in mind.model.objections()
+    assert (mind.learning._here, (2, None, None)) in mind.learning.objections()
     thought = [d for _, d in of_kind(data, "thought")]
-    assert thought and thought[-1].payload["objected"] == [[mind.model._here, [2, None, None]]], \
+    assert thought and thought[-1].payload["objected"] == [[mind.learning._here, [2, None, None]]], \
         "what was objected to, and where, is written"
 
 
@@ -275,10 +296,10 @@ def test_quiet_after_an_answer_is_the_answer_holding_and_lifts_the_objection():
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     r = run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
-    assert mind.model.objections()
+    assert mind.learning.objections()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
-    assert mind.model.objections() == set(), "the onlooker stopped saying it: lifted (H7 (ii))"
+    assert mind.learning.objections() == set(), "the onlooker stopped saying it: lifted (H7 (ii))"
     choices = [d.payload for _, d in of_kind(data, "choice") if d.payload.get("lifted")]
     assert choices, "what was lifted is written"
 
@@ -291,7 +312,7 @@ def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
     said = {"remark": "back-and-forth", "acts": [{"act": "ACTION1"}, {"act": "ACTION2"}], "since": 0,
             "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
-    model = mind.model
+    model = mind.learning
     s0, s1 = model.inducer.situation(lit(0)), model.inducer.situation(lit(1))
     got = model.objections()
     assert (s0, (1, None, None)) in got and (s1, (2, None, None)) in got, "each act where it was taken"
@@ -301,7 +322,7 @@ def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
 def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
     from mind.learning import Edge
     mind, cycle, data, events = loop()
-    model = mind.model
+    model = mind.learning
     # A known state a with two known ways out, 1 and 2, both to states with an
     # act not yet taken; 1 objected to at a.
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
@@ -316,7 +337,7 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
 def test_every_known_act_objected_to_the_act_that_is_always_open():
     # Every act at every state known: lit(0) and lit(1), ACTION1 and ACTION2 each.
     mind, cycle, data, events = loop()
-    model = mind.model
+    model = mind.learning
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(1), action=1), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
@@ -333,7 +354,7 @@ def test_every_known_act_objected_to_the_act_that_is_always_open():
 
 def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_and_it_says_so():
     mind, cycle, data, events = loop()
-    model = mind.model
+    model = mind.learning
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
     # At lit(0): ACTION1 known (to lit(1), where ACTION1 is untried); ACTION2 untried.
@@ -347,7 +368,7 @@ def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_
 
 def test_told_it_stands_still_with_nothing_to_do_it_resets():
     mind, cycle, data, events = loop()
-    model = mind.model
+    model = mind.learning
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     model._learned_since_reset = False
     ctx = mind._context("command")
@@ -359,7 +380,7 @@ def test_told_it_stands_still_with_nothing_to_do_it_resets():
 
 def test_an_objection_survives_the_clock_growing():
     mind, cycle, data, events = loop()
-    model = mind.model
+    model = mind.learning
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
@@ -386,7 +407,7 @@ def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
     # mind that held no aim at its first step, and was never asked again, stood
     # for the whole run (LOG.md, 2026-09-28). Once what it reads comes back and it
     # holds an aim, while the body waits, it commands.
-    mind = Mind(learning(), ARC_ORGANS)   # the task not yet recalled
+    mind = seated()   # the task not yet recalled
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
@@ -416,7 +437,7 @@ def test_told_once_it_repeats_while_every_step_goes_somewhere_new_it_keeps_on():
     said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
     run(cycle, frame(_grid(4), _grid(5), action=1), status(), _remark(said))
     thought = [d.payload for _, d in of_kind(data, "thought")][-1]
-    assert "kept_on" in thought and mind.model.objections() == set(), \
+    assert "kept_on" in thought and mind.learning.objections() == set(), \
         "its own steps say the repetition is getting somewhere: it keeps on, and says why"
     assert mind._answer == (), "it expects to hear it again if it is wrong, not the onlooker to stop"
 
@@ -429,9 +450,9 @@ def test_told_again_it_objects():
     run(cycle, frame(_grid(4), _grid(5), action=1), status(), _remark(said))
     for i in range(5, 8):
         run(cycle, frame(_grid(i), _grid(i + 1), action=1), status(), _remark(said))   # held: no collision
-    assert mind.model.objections() == set()
+    assert mind.learning.objections() == set()
     run(cycle, frame(_grid(8), _grid(9), action=1), status(), _remark({**said, "at_least": 8}))
-    assert any(a == (1, None, None) for _, a in mind.model.objections()), "said again: it objects"
+    assert any(a == (1, None, None) for _, a in mind.learning.objections()), "said again: it objects"
     assert [d.payload for _, d in of_kind(data, "thought")][-1]["again"] is True
 
 
@@ -441,7 +462,7 @@ def test_a_repetition_that_goes_nowhere_new_is_objected_to_at_once():
         run(cycle, frame(_grid(1), _grid(1), action=1), status(), _remark(QUIET))
     said = {"remark": "repeating", "act": {"act": "ACTION1"}, "since": 0, "at_least": 4}
     run(cycle, frame(_grid(1), _grid(1), action=1), status(), _remark(said))
-    assert any(a == (1, None, None) for _, a in mind.model.objections())
+    assert any(a == (1, None, None) for _, a in mind.learning.objections())
 
 
 def test_short_term_perception_is_as_long_as_t5s_window_under_the_field():
@@ -483,5 +504,5 @@ def test_curiosity_counts_somewhere_new_not_a_change():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status())                     # somewhere new
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))   # back: a change, not new
-    assert mind.model._actions[1][:2] == [1, 1]
-    assert mind.model._actions[2][:2] == [1, 0]
+    assert mind.learning._actions[1][:2] == [1, 1]
+    assert mind.learning._actions[2][:2] == [1, 0]

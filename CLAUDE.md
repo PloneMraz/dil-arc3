@@ -117,7 +117,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   dùng Qwen, đừng nhập nhằng" — one computing at a time, not two mixed. What
   can change is the model, never the mind: the mind learns
   (`src/mind/learning.py`), and its model is the replaceable computing it
-  learns with (Plone, 2026-09-28). A language model —
+  learns with (Plone, 2026-09-28). In the code: `Mind(inducer, organs,
+  priors)` holds its learning (`Learning`), and the model's seat takes the
+  inducer (`Inducer`, `src/mind/models/base.py`). A language model —
   **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
   `7b71922`), which submission `56588469` used — is work left unfinished
   inside the model, not yet revised to this design ("The language model —
@@ -322,13 +324,6 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   by the frame it stands on. Such cycles count against the run's budget and cost
   no action. Without an onlooker nothing arrives in them, so the mind is never
   asked, and the run spends its budget standing.
-- **In the code, the mind's learning still sits in its model's seat.** `Mind`
-  takes one model (`src/mind/mind.py`), and the learning loop is what is seated
-  there — `Mind(Learning(inducer))` (`scripts/run_game.py`) — with the inducer
-  inside it. So the learning is replaceable where only the inducer should be:
-  seating the language model instead (`Mind(LanguageModel(...))`) leaves the
-  mind no learning of its own. To change: `Mind` holds its learning, and its
-  model's seat takes the inducer (LOG.md, 2026-09-28).
 
 ### The language model — unfinished, not yet revised
 
@@ -336,11 +331,15 @@ Plone, 2026-09-28: the language model is work left unfinished inside the model,
 set aside for now — not a settled branch beside the learning. Only the rules
 above are in force. What follows is how its code works, as submission
 `56588469` ran it (`3b31806`) and as it stands: its rules have not been revised
-to the design above. It is seated where the learning is seated
-(`Mind(LanguageModel(...))`, by `src/arc3/mind.py`), so with it the mind has no
+to the design above. It was seated where the learning was
+(`Mind(LanguageModel(...))`, by `src/arc3/mind.py`), so with it the mind had no
 learning of its own: what it keeps of a revision is the model's rule ("in the
 model, for now", Plone, 2026-09-27), and its program, not the mind, proposes
-the action and states the aim. It is to become a model the mind learns with.
+the action and states the aim. The mind now holds its learning and its model's
+seat takes an inducer, which the language model is not: its seat is kept and
+not run (`create_mind` raises, `--mind language` stops before a run starts),
+and the tests that go through it are kept and skipped (Plone, 2026-09-28). It
+is to become a model the mind learns with.
 
 - **The program** (`src/mind/models/language.py`): `predict(grid, action, x,
   y)`, `propose(grid, steps)` and `GOAL`. The mind runs `propose` on where the

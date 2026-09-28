@@ -1,41 +1,48 @@
 """The one mind — neutral about the region it lives in.
 
-It holds the seams with the loop and thinks with a model, which is the part of
-it that computes (`models/`; Plone, 2026-09-27: not a second mind, not a second
-brain). It knows no region: how its eye and body work is the host's declaration
-(`organs.py`); what the region is, what it is for, how it behaves, it reads from
-its priors and learns from what comes back.
+It holds the seams with the loop, and its learning (`learning.py`), which is its
+own whatever its model: the model's seat takes an inducer, the part of it that
+computes (`models/`; Plone, 2026-09-27: not a second mind, not a second brain;
+2026-09-28: another model, and learning is not defined again). It knows no
+region: how its eye and body work is the host's declaration (`organs.py`); what
+the region is, what it is for, how it behaves, it reads from its priors and
+learns from what comes back.
 
-WHAT IT DOES, whatever its model:
+WHAT IT DOES:
 
-- **Expects.** For each step the eye delivers, it asks its model what will come
-  back, from where the region stood and the act alone (INV-8); where the command
-  that made the step said what it was for (its want), that too; and, when the
-  aim it holds falls due, the aim reached. All are its expectation of the step,
-  and the datum the model says that expectation is, is `held_by` (v0.3.5). Where
-  the model says nothing, the standing expectation holds: nothing changes, and
-  the region reports what it reported last.
+- **Expects.** For each step the eye delivers, it asks its learning what will
+  come back, from where the region stood and the act alone (INV-8); where the
+  command that made the step said what it was for (its want), that too; and,
+  when the aim it holds falls due, the aim reached. All are its expectation of
+  the step, and the datum its learning says that expectation is, is `held_by`
+  (v0.3.5). Where its learning says nothing, the standing expectation holds:
+  nothing changes, and the region reports what it reported last.
 - **Thinks when an expectation fails** — the step, the region's report, what a
-  command was for, the aim — at most once a cycle; on a change of the onlooker's
-  word in its own right; and while the body waits for a command. It hands the
-  model what it has: short-term perception (as long as T5's window), what memory
-  answered to what was asked, what the onlooker says, what the region offers,
-  why it is thinking. A model that learns from every return is also shown each.
-- **Commands.** When the region has said all it says in a cycle, it asks the
-  model what to do next and, if the body can carry it out (the body's own rule),
-  pushes it as T5's test (§6.4); the body carries it out. With no command it
-  thinks again while the body waits, at most MAX_WAIT_THOUGHTS times; then the
+  command was for, the aim — as often a cycle as alertness allows; on a change
+  of the onlooker's word in its own right; and while the body waits for a
+  command. It hands its learning what it has: short-term perception (as long as
+  T5's window), what memory answered to what was asked, what the onlooker says,
+  what the region offers, why it is thinking. Its learning is also shown every
+  return.
+- **Commands.** When the region has said all it says in a cycle, it asks its
+  learning what to do next and, if the body can carry it out (the body's own
+  rule), pushes it as T5's test (§6.4); the body carries it out. With no command
+  it thinks again while the body waits, at most MAX_WAIT_THOUGHTS times; then the
   body stands still. It commands nothing while it holds no aim (Plone,
-  2026-09-25) — once its model can propose at all.
-- **Writes** what its model says to write — anew or as a revision — each with
+  2026-09-25).
+- **Writes** what its learning says to write — anew or as a revision — each with
   what it was built from, ids only (v0.3.4); it learns each datum's id when the
   datum comes back, and a write that comes back is an echo, not an answer.
-- **Asks** its memory what its model asks, and hands the model only what answers
-  a question asked (Plone, 2026-09-27): what T3 recalls by description is the
-  protocol's recall, traced, and not poured in. Its priors — what its model says
-  it reads — it recalls itself, at its first arrival, and waits for them.
-- **Holds the aim.** A model may state an aim; one that states none leaves the
-  mind the aim it held (Plone, 2026-09-25).
+- **Asks** its memory what its learning asks, and hands it only what answers a
+  question asked (Plone, 2026-09-27): what T3 recalls by description is the
+  protocol's recall, traced, and not poured in. Its priors — what its learning
+  says it reads — it recalls itself, at its first arrival, and waits for them.
+- **Holds the aim.** Its learning may state an aim; none stated leaves the mind
+  the aim it held (Plone, 2026-09-25).
+
+The seams for a want, and for an aim with a time (`within`), served the language
+model, unfinished and not seated now (LOG.md, 2026-09-28); the learning states
+neither, and they stay as they are until that model is revised.
 """
 
 from __future__ import annotations
@@ -49,7 +56,8 @@ from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
 
-from .models.base import Context, Model, Write
+from .learning import Learning
+from .models.base import Context, Inducer, Learner, Write
 from .organs import Act, Organs, Step
 
 # How many more times the mind thinks, in the same cycle, when it has no command
@@ -81,10 +89,12 @@ def expected_report(said: dict[str, Any] | None, standing: dict[str, Any] | None
 
 
 class Mind:
-    """The one mind: it reads, expects, thinks with its model, and commands the body."""
+    """The one mind: it reads, expects, learns, and commands the body."""
 
-    def __init__(self, model: Model, organs: Organs) -> None:
-        self.model = model
+    def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]]) -> None:
+        # Its learning is its own, whatever its model: the model's seat takes the
+        # inducer, and the learning computes with it (Plone, 2026-09-28).
+        self.learning: Learner = Learning(inducer, organs, priors)
         self.organs = organs
         self.frame_calls = 0
         # For the run's report only, never the field: whether each expectation of
@@ -122,7 +132,7 @@ class Mind:
         self._asks_open: list[tuple[int, dict[str, str]]] = []
         self._recalled: dict[str, tuple[Step | None, dict[str, str], Any]] = {}
         self._recalled_at: int | None = None
-        # What it wrote, by fingerprint, until each comes back; the model's handle
+        # What it wrote, by fingerprint, until each comes back; its learning's handle
         # for each, and the datum id each became; revisions owed until then.
         self._echoes: list[str] = []
         self._handle_of: dict[str, object] = {}
@@ -133,24 +143,24 @@ class Mind:
 
     @property
     def thoughts(self) -> list[Any]:
-        return self.model.thoughts
+        return self.learning.thoughts
 
     def __getattr__(self, name: str) -> Any:
-        # What a report or a test reads of the model through the mind: its code,
-        # its version, its last note — the model's, not the mind's.
-        if name.startswith("__") or name == "model":
+        # What a report or a test reads of the learning through the mind: its
+        # version, its counts — the learning's, not the seams'.
+        if name.startswith("__") or name == "learning":
             raise AttributeError(name)
-        return getattr(self.model, name)
+        return getattr(self.learning, name)
 
     # ── priors, echoes, answers ──
 
     def _ready(self) -> bool:
-        return self.model.required() <= set(self._priors)
+        return self.learning.required() <= set(self._priors)
 
     def _ask_priors(self, ask) -> None:
         if self._priors_asked or ask is None:
             return
-        for name, cue in self.model.cues().items():
+        for name, cue in self.learning.cues().items():
             if name not in self._priors:
                 ask(dict(cue))
         self._priors_asked = True
@@ -159,8 +169,8 @@ class Mind:
         """A prior it reads, as it came back from memory. A test may hand one in
         with no datum behind it: then nothing names it as built from."""
         self._priors[name] = (payload, datum_id)
-        self.model.receive_prior(name, payload, datum_id)
-        aim = self.model.stated_aim()
+        self.learning.receive_prior(name, payload, datum_id)
+        aim = self.learning.stated_aim()
         if aim is not None and self._goal is None:
             self._hold_aim(aim)
 
@@ -169,7 +179,7 @@ class Mind:
         open_tags = ret.get("open", {})
         payload = ret.get("payload")
         entity = str(ret.get("entity"))
-        for name, cue in self.model.cues().items():
+        for name, cue in self.learning.cues().items():
             if isinstance(payload, dict) and all(open_tags.get(k) == v for k, v in cue.items()):
                 first = name not in self._priors
                 if first:
@@ -195,7 +205,7 @@ class Mind:
             handle = self._handle_of.pop(mark, None)
             if handle is not None and handle not in self._ids:
                 self._ids[handle] = entity
-                self.model.acknowledge(handle, entity)
+                self.learning.acknowledge(handle, entity)
                 owed = self._owed.pop(handle, None)
                 if owed is not None and write is not None:
                     self._request(write, WriteRequest(payload=owed[0], datum_id=entity, built_from=owed[1]))
@@ -269,7 +279,7 @@ class Mind:
         o = self.organs
         # 1. Expect, from the situation alone; what the command that made this
         #    step was for; and, when it falls due, the aim reached.
-        expectation = self.model.expect(step)
+        expectation = self.learning.expect(step)
         foreseen = expectation.state
         wanted = self._wanted if self._wanted and self._wanted[0] == step.act else None
         self._wanted = None
@@ -285,7 +295,7 @@ class Mind:
             self._goal_due = self.frame_calls + self._goal["within"]  # held again, from here
         by_model = expectation.by_model or bool(want) or bool(reached)
         self._said, self._said_by_model = expectation.fields, expectation.fields is not None
-        self._held = expectation.held if expectation.held else (self.model.held() if by_model else ())
+        self._held = expectation.held if expectation.held else (self.learning.held() if by_model else ())
         predicted = InfoUnit(content={**content, "value": o.expected_payload(payload, expected)},
                              ref_frame=observed.ref_frame, t=observed.t)
         # 2. Then look: this step joins short-term perception.
@@ -294,7 +304,7 @@ class Mind:
         self._seen = [*self._seen, [step, observed, None]][-2 * BASELINE_WINDOW:]
         hit = expected == step.after
         self.holds.append(int(hit))
-        self._write(write, self.model.observe(step, observed, None, (observed,), on_report=False))
+        self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False))
         # 3. The expectation failed: think, on the first part that failed.
         if not hit:
             if foreseen != step.after:
@@ -322,7 +332,7 @@ class Mind:
             self._seen[-1][2] = report
             self._status_seen_at = self.frame_calls
         # The expectation: what the region reported last, the agent's own act as
-        # it is — or, where the model said the report, what it said, the fields it
+        # it is — or, where its learning said the report, what it said, the fields it
         # left out staying as they were; with the want, and the aim when due.
         base = standing if isinstance(standing, dict) else dict(payload)
         own_act = {k: payload[k] for k in o.own_keys if k in payload}
@@ -347,7 +357,7 @@ class Mind:
             aim = self._goal["reached_when"].get("fields") if self._goal else None
             if expecting(own) != payload and aim and report is not None and all(
                     report.get(k) == v for k, v in aim.items()):
-                # The aim came before it was due: the model's time for it was wrong.
+                # The aim came before it was due: the time held for it was wrong.
                 self._missed = {"what": "goal-sooner", "aim": self._goal["aim"]}
                 if self._goal.get("within") is not None:
                     self._goal_due = self.frame_calls + self._goal["within"]
@@ -365,7 +375,7 @@ class Mind:
         self._want_fields = self._goal_fields = None
         if self._seen and report is not None:
             step, unit, _ = self._seen[-1]
-            self._write(write, self.model.observe(step, unit, report, (unit, observed), on_report=True))
+            self._write(write, self.learning.observe(step, unit, report, (unit, observed), on_report=True))
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()
@@ -437,7 +447,7 @@ class Mind:
         """Construct the next action, and command it: T5's test, carried out by
         the body if it can. With no command, think again while the body waits.
         `on` is "command again" when it commands a second time in a cycle, on
-        what an Other said: the body carries out the last, and the model is told
+        what an Other said: the body carries out the last, and its learning is told
         so, so that what it writes can say which it replaces."""
         if not self._seen:
             return
@@ -448,10 +458,10 @@ class Mind:
         report = self._seen[-1][2] or {}
         state = report.get(self.organs.state_field)
         for attempt in range(MAX_WAIT_THOUGHTS + 1):
-            if self.model.can_propose() and self._goal is None:
+            if self.learning.can_propose() and self._goal is None:
                 reason = "no goal"
             else:
-                proposal, writes = self.model.propose(self._context(on))
+                proposal, writes = self.learning.propose(self._context(on))
                 self._write(write, writes)
                 act = proposal.act
                 if act is not None and self.organs.can_carry_out(*act, state, self._offers):
@@ -462,15 +472,15 @@ class Mind:
                     return
                 reason = "no command"
             if attempt < MAX_WAIT_THOUGHTS and not self.think(reason, ask, write, again=True):
-                break  # its model does not think on this: asking again changes nothing
+                break  # its learning does not think on this: asking again changes nothing
         self.commands.append((self.frame_calls, None))
 
     # ── thinking ──
 
     def think(self, on: str, ask, write, again: bool = False) -> bool:
-        """An expectation met a mismatch, or no command came: have the model think.
+        """An expectation met a mismatch, or no command came: have its learning think.
         Once a cycle for a mismatch; `again` is the body waiting. False when the
-        model does not think on this."""
+        learning does not think on this."""
         if self._thought_at != self.frame_calls:
             self._thoughts_this_cycle = 0
         allowed = shifted_count(MIND_THOUGHTS_PER_CYCLE, rising(axis(self._field, ALERTNESS)))
@@ -483,7 +493,7 @@ class Mind:
         self._thought_at = self.frame_calls
         if not again:
             self._thoughts_this_cycle += 1
-        result = self.model.think(self._context(on))
+        result = self.learning.think(self._context(on))
         if result is None:
             return False
         if result.asks is not None:

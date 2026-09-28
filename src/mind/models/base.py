@@ -1,16 +1,22 @@
-"""What a model is to the mind: the part of the one mind that computes.
+"""What the mind's parts are to one another.
 
-Not a second mind beside it, not a second brain (Plone, 2026-09-27). The mind
-holds the seams with the loop — what it expects and which datum that is, when
-it thinks, what it commands, what it writes, what it asks of its memory, its
-aim — and asks its model to compute: what will come back, what to do next, and,
-when an expectation fails, how to revise itself. The model writes nothing and
-asks nothing itself: it says what should be written and asked, and the mind
-does it, so every write and question goes through the one mind's seams.
+The mind holds the seams with the loop — what it expects and which datum that
+is, when it thinks, what it commands, what it writes, what it asks of its
+memory, its aim (`../mind.py`) — and its learning (`../learning.py`), which the
+seams ask what will come back, show what came back, and ask what to do next
+(`Learner`). Neither is replaceable: the mind is one, and so is its learning
+(Plone, 2026-09-28: another model, and learning is not defined again).
 
-A model may be a language model that writes a program (`language.py`). Or the
-mind learns from nothing (`../learning.py`), and sits its learning in this seat,
-computing with an inducer (`exact.py`); the mind is the same.
+Its model is what is replaceable: the part of the one mind that computes — not a
+second mind beside it, not a second brain (Plone, 2026-09-27). It is an inducer
+(`Inducer`: `exact.py`, `grid.py`), which only computes for the learning. Its
+learning writes nothing and asks nothing itself: it says what should be written
+and asked, and the mind does it, so every write and question goes through the
+one mind's seams.
+
+The language model (`language.py`) is work left unfinished inside the model: it
+answers `Learner`, having sat where the learning sits, and is not seated until
+it is revised into a model the mind learns with (LOG.md, 2026-09-28).
 """
 
 from __future__ import annotations
@@ -23,21 +29,21 @@ from ..organs import Act, State, Step
 
 @dataclass
 class Expectation:
-    """What the model expects to come back for a step."""
+    """What the mind's learning expects to come back for a step."""
 
     state: State
     # The fields of the region's report it says will come; None says nothing.
     fields: dict[str, Any] | None = None
-    # Which data the expectation is (`held_by`): the model's handles for data it
-    # had written, or datum ids. Empty: no datum of the model's is it.
+    # Which data the expectation is (`held_by`): its learning's handles for data
+    # it had written, or datum ids. Empty: no datum of its learning's is it.
     held: tuple[object, ...] = ()
-    # False: the model made no expectation; this is the standing one (nothing changes).
+    # False: its learning made no expectation; this is the standing one (nothing changes).
     by_model: bool = True
 
 
 @dataclass
 class Proposal:
-    """What the model proposes the body do next, and what it is for."""
+    """What the mind's learning proposes the body do next, and what it is for."""
 
     act: Act | None
     # What the act is for, as what will come back: {"part": a part of the next
@@ -48,7 +54,7 @@ class Proposal:
 
 @dataclass
 class Write:
-    """A datum the model asks the mind to write: anew (with `tags`), or as a
+    """A datum the mind's learning asks the mind to write: anew (with `tags`), or as a
     revision of one it wrote before (`revises`: that datum's handle)."""
 
     payload: Any
@@ -56,7 +62,7 @@ class Write:
     handle: object | None = None
     revises: object | None = None
     # What it was built from: observation units, datum ids, handles of the
-    # model's own data, or ("prior", name) for a prior the mind recalled.
+    # learning's own data, or ("prior", name) for a prior the mind recalled.
     built_from: tuple[object, ...] = ()
 
 
@@ -65,11 +71,11 @@ class Thinking:
     """What came of one act of thinking."""
 
     writes: list[Write] = field(default_factory=list)
-    # Questions to memory, each a cue by the store's tags; None when the model
+    # Questions to memory, each a cue by the store's tags; None when it
     # could not think at all (its questions stand as they were).
     asks: list[dict[str, str]] | None = None
-    # An aim the model now states: {"aim", "source", "reached_when": {"part",
-    # "fields"}, "within"} (and anything the model keeps with it). None: it
+    # An aim it now states: {"aim", "source", "reached_when": {"part",
+    # "fields"}, "within"} (and anything kept with it). None: it
     # states none, and the mind keeps the aim it held.
     aim: dict[str, Any] | None = None
     # When it thought on what an Other said: the data that are its answer (its
@@ -81,7 +87,7 @@ class Thinking:
 
 @dataclass
 class Context:
-    """What the mind hands the model to think or propose from: all of it is the
+    """What the mind hands its learning to think or propose from: all of it is the
     mind's — what it has seen and was answered, what the onlooker says, what the
     region offers, why it is thinking."""
 
@@ -108,14 +114,75 @@ class Context:
     field: Any = None
 
 
-class Model(Protocol):
-    """The part of the one mind that computes."""
+class Inducer(Protocol):
+    """The mind's model: what its learning computes with (`../learning.py`). It
+    declares where a hypothesis applies and only computes — never the learning
+    itself: the learning holds the experiences and the hypotheses, weighs them,
+    expects, is curious and chooses."""
+
+    # Its name, for the run's report.
+    kind: str
+    # Whether its hypotheses apply past where they were met: the learning then
+    # looks ahead past the situations it has stood in.
+    general: bool
+
+    # ── perception ──
+
+    def identity(self, state: State) -> str:
+        """A state's own identity, as it came."""
+
+    def situation(self, state: State) -> str:
+        """Where the region stands in a state, read by its perception now."""
+
+    def perceive(self, step: Step, kind: tuple) -> Any:
+        """What its perception learns from a step, as a datum to write (with
+        `payload` and `tags`); None when nothing. The learning then reads every
+        situation again."""
+
+    # ── what can be done ──
+
+    def learnable(self, act: Act) -> Act:
+        """An act as it is learned."""
+
+    def default_kind(self, act: Act) -> tuple:
+        """The kind of an act it was not offered as a candidate."""
+
+    def candidates(self, situation: str, state: State, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
+        """The acts it can take in a state, each with its kind."""
+
+    # ── hypotheses ──
+
+    def induce(self, source: str, act: Act, before: State, after: State) -> list[Any]:
+        """What one experience suggests: hypotheses, in its own forms."""
+
+    def key(self, form: Any) -> tuple:
+        """What a hypothesis says, as one value: two that say the same are one."""
+
+    def scope(self, form: Any, situation_of: Any) -> tuple:
+        """Where a hypothesis applies."""
+
+    def scopes(self, situation: str, act: Act) -> list[tuple]:
+        """The scopes a situation and act fall in."""
+
+    def predict(self, form: Any, situation: str, state: State, act: Act, situation_of: Any) -> Any:
+        """What a hypothesis predicts there (with `state` and `fields`); None
+        when it says nothing there."""
+
+    def fields(self, form: Any) -> dict[str, Any] | None:
+        """What it says the region will report of itself."""
+
+    def describe(self, form: Any, situation_of: Any) -> dict[str, Any]:
+        """A hypothesis, said as data."""
+
+
+class Learner(Protocol):
+    """The mind's learning, as its seams ask it (`../mind.py`)."""
 
     # For the run's report: each act of thinking, or each choice.
     thoughts: list[Any]
 
     def cues(self) -> dict[str, dict[str, str]]:
-        """The priors this model reads, by name: the cue the mind recalls each by."""
+        """The priors it reads, by name: the cue the mind recalls each by."""
 
     def required(self) -> frozenset[str]:
         """The priors it needs before it can think or propose."""
@@ -134,15 +201,15 @@ class Model(Protocol):
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
                 on_report: bool) -> list[Write]:
-        """What came back — the step, then its report — for a model that learns
-        from every return. A model that revises only when it thinks returns []."""
+        """What came back — the step, then its report: it learns from every
+        return."""
 
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
         """What to do next, from where the region stands and what it has seen."""
 
     def think(self, context: Context) -> Thinking | None:
-        """Revise itself on what set the mind thinking. None: this model does not
-        think on this (the mind does not wait on it)."""
+        """Think on what set the mind thinking. None: it does not think on this
+        (the mind does not wait on it)."""
 
     def held(self) -> tuple[object, ...]:
         """The data its expectations are, when it made them (its handles)."""
@@ -151,4 +218,4 @@ class Model(Protocol):
         """The datum a write became, now that it is known."""
 
 
-__all__ = ["Context", "Expectation", "Model", "Proposal", "Thinking", "Write"]
+__all__ = ["Context", "Expectation", "Inducer", "Learner", "Proposal", "Thinking", "Write"]

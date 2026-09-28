@@ -8,10 +8,12 @@ kept apart:
     was committed, `observe.py` carries the frame and the region's status
     inward, `command.py` carries out the mind's command at link 5. It takes in
     and carries out; it computes nothing and weighs nothing.
-  - **the mind** — `mind.py`: one mind, the model and the program it writes.
-    It reads, expects, is curious and wants — in its thinking, not in a formula
-    — and constructs the next action, commanding it as T5's test (§6.4). It
-    acts on nothing.
+  - **the mind** — one mind, neutral about its region, with its learning
+    (`mind/`); this host declares its eye and body to it (`organs.py`) and tells
+    it its task (`task.py`). It reads, expects, is curious and wants, and
+    constructs the next action, commanding it as T5's test (§6.4). It acts on
+    nothing. `mind.py` here is where the language model was seated: kept, not
+    run, until that model is revised (LOG.md, 2026-09-28).
 
 Nothing here is the agent's first person: that is what the loop produces when it
 runs (§7), located in no file.

@@ -8,8 +8,10 @@ trace a third party reads says so.
 
 from __future__ import annotations
 
+import pytest
+
 from arc3.mind import (
-    PROGRAM_TAGS, THOUGHT_TAGS, ModelEndpoint, Transition,
+    PROGRAM_TAGS, THOUGHT_TAGS, UNSEATED, ModelEndpoint, Transition,
     compile_program, create_mind, mind_rule, render_evidence, run_program,
 )
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
@@ -30,6 +32,10 @@ from dil.loop.layers.t8 import create_t8
 from dil.loop.types import Signal
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
+
+# The language model is not seated: what goes through its seat is kept, not run
+# (Plone, 2026-09-28; LOG.md).
+unseated = pytest.mark.skip(reason=UNSEATED)
 
 RIGHT = '''
 def predict(grid, action, x=None, y=None):
@@ -110,6 +116,7 @@ def test_a_program_runs_on_a_transition_and_a_bad_one_is_caught():
     assert "Starting from this grid" in render_evidence([t])
 
 
+@unseated
 def test_no_mismatch_no_thinking_and_the_standing_expectation_is_nothing_changes():
     model = Script()
     wm, cycle, data, events = loop(model)
@@ -118,6 +125,7 @@ def test_no_mismatch_no_thinking_and_the_standing_expectation_is_nothing_changes
     assert [r for r in events.all() if type(r).__name__ == "EventRecord"] == []
 
 
+@unseated
 def test_a_mismatch_makes_it_think_and_the_program_is_written_as_data():
     model = Script(RIGHT)
     wm, cycle, data, events = loop(model)
@@ -147,6 +155,7 @@ def test_a_mismatch_makes_it_think_and_the_program_is_written_as_data():
     assert len(model.prompts) == 1, "no mismatch, no thinking"
 
 
+@unseated
 def test_a_better_program_revises_the_datum_and_the_log_says_so():
     model = Script(STILL, RIGHT)
     wm, cycle, data, events = loop(model)
@@ -171,6 +180,7 @@ def test_a_better_program_revises_the_datum_and_the_log_says_so():
     assert [f"{r.id}: {r.detail}" for r in report.results if r.verdict == "fail"] == []
 
 
+@unseated
 def test_the_model_chooses_what_to_read_and_each_question_is_a_store_query_from_t5():
     model = Script(RIGHT, asks={0: 'ASK {"kind": "remark"}\nASK {"kind": "frame", "provenance": "scar"}\n'
                                    'ASK {"quality": "good"}\nASK not json'})
@@ -182,6 +192,7 @@ def test_the_model_chooses_what_to_read_and_each_question_is_a_store_query_from_
     assert wm.thoughts[0].asked == [{"kind": "remark"}, {"kind": "frame", "provenance": "scar"}]
 
 
+@unseated
 def test_the_programs_expectation_is_the_programs_and_scars_it_when_it_fails():
     model = Script(STILL)
     wm, cycle, data, events = loop(model)
@@ -197,6 +208,7 @@ def test_the_programs_expectation_is_the_programs_and_scars_it_when_it_fails():
     assert [e.held_by for e in expectations] == [(), (), ("written-0-0",)]
 
 
+@unseated
 def test_a_worse_program_is_not_kept():
     model = Script(RIGHT, STILL)
     wm, cycle, data, events = loop(model)
@@ -207,6 +219,7 @@ def test_a_worse_program_is_not_kept():
     assert wm.thoughts[-1].adopted is False
 
 
+@unseated
 def test_evidence_that_would_not_fit_the_context_is_dropped_oldest_first(monkeypatch):
     import mind.models.language as wmod
 
@@ -229,6 +242,7 @@ def status(state: str = "NOT_FINISHED", levels: int = 0, action: int = 1) -> Sig
     })
 
 
+@unseated
 def test_the_status_is_the_standing_expectation_and_its_mismatch_sets_the_mind_thinking():
     model = Script()
     wm, cycle, data, events = loop(model)
@@ -243,6 +257,7 @@ def test_the_status_is_the_standing_expectation_and_its_mismatch_sets_the_mind_t
     assert len(model.prompts) == 1 and [t.on for t in wm.thoughts] == ["status"]
 
 
+@unseated
 def test_a_change_of_move_is_not_the_region_resisting():
     model = Script()
     wm, cycle, data, events = loop(model)
@@ -268,6 +283,7 @@ GOAL = {"aim": "a level", "source": "inferred", "reached_when": {"status": {"lev
 '''
 
 
+@unseated
 def test_a_program_that_says_the_status_is_what_meets_the_status_when_it_fails():
     model = Script(SAYS_LEVEL, SAYS_LEVEL)
     wm, cycle, data, events = loop(model)
@@ -311,6 +327,7 @@ GOAL = {"aim": "the lit cell at the far end", "source": "inferred",
 '''
 
 
+@unseated
 def test_what_it_is_told_comes_from_its_store_and_every_program_names_it():
     from dil.store.tagging_gate import HostDatum, admit_host_data
 
@@ -349,6 +366,7 @@ def test_a_block_indented_as_a_whole_still_loads():
     assert fn([[1, 0]], 1) == [[0, 1]] and propose([[1, 0]]) == (1, None, None)
 
 
+@unseated
 def test_the_mind_commands_as_t5s_test_and_the_body_carries_it_out():
     from arc3.command import carry_out
     from dil.loop.cycle import RespondContext  # noqa: F401 — what link 5 reads
@@ -365,6 +383,7 @@ def test_the_mind_commands_as_t5s_test_and_the_body_carries_it_out():
     assert wm.commands == [(1, (1, None, None))]
 
 
+@unseated
 def test_with_no_command_the_mind_thinks_again_while_the_body_waits():
     no_propose = RIGHT  # predicts, proposes nothing
     from arc3.command import carry_out
@@ -427,6 +446,7 @@ def test_propose_reads_the_steps_just_seen_and_may_reset():
 SAME_PREDICT_OTHER_MOVE = PROPOSING.replace("return (1, None, None)", "return (2, None, None)")
 
 
+@unseated
 def test_after_the_onlooker_objects_a_program_that_predicts_as_well_is_kept():
     model = Script(PROPOSING, SAME_PREDICT_OTHER_MOVE)
     wm, cycle, data, events = loop(model)
@@ -438,6 +458,7 @@ def test_after_the_onlooker_objects_a_program_that_predicts_as_well_is_kept():
         "its objection is to how the agent acts: a program that acts otherwise and predicts as well is kept"
 
 
+@unseated
 def test_on_a_frame_mismatch_a_program_that_predicts_only_as_well_is_not_kept():
     model = Script(PROPOSING, SAME_PREDICT_OTHER_MOVE)
     wm, cycle, data, events = loop(model)
@@ -454,6 +475,7 @@ WANTS_THE_CORNER = PROPOSING.replace("return (1, None, None)", 'return (1, None,
 WANTS_NOTHING_ELSE = PROPOSING.replace("return (1, None, None)", "return (2, None, None)")
 
 
+@unseated
 def test_a_command_that_does_not_bring_about_what_it_was_for_sets_the_mind_thinking():
     model = Script(WANTS_THE_CORNER, WANTS_NOTHING_ELSE)
     wm, cycle, data, events = loop(model)
@@ -470,6 +492,7 @@ def test_a_command_that_does_not_bring_about_what_it_was_for_sets_the_mind_think
 RESETTING = PROPOSING.replace("return (1, None, None)", "return (0, None, None)")
 
 
+@unseated
 def test_after_the_game_ends_only_reset_is_a_command_and_the_mind_thinks_for_one():
     from arc3.command import carry_out
 
@@ -484,6 +507,7 @@ def test_after_the_game_ends_only_reset_is_a_command_and_the_mind_thinks_for_one
     assert "The game now offers" not in told, "not what the game's own list still says"
 
 
+@unseated
 def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_in():
     from arc3.observe import ONLOOKER_CHANNEL
 
@@ -498,6 +522,7 @@ def test_the_onlookers_objection_is_thought_on_even_in_a_cycle_already_thought_i
     assert wm.thoughts[-1].adopted and wm.code == SAME_PREDICT_OTHER_MOVE
 
 
+@unseated
 def test_what_the_onlooker_says_is_shown_and_named_in_what_the_answer_was_built_from():
     from arc3.observe import ONLOOKER_CHANNEL
 
@@ -516,6 +541,7 @@ def test_what_the_onlooker_says_is_shown_and_named_in_what_the_answer_was_built_
         "a remark that said nothing was not shown, and is not named"
 
 
+@unseated
 def test_a_repetition_said_again_sets_the_mind_thinking_again():
     from arc3.observe import ONLOOKER_CHANNEL
 
@@ -533,6 +559,7 @@ def test_a_repetition_said_again_sets_the_mind_thinking_again():
     assert [t.on for t in wm.thoughts].count("onlooker") == 2, "said again, it is thought on again"
 
 
+@unseated
 def test_the_model_is_told_propose_may_look_ahead_with_predict_and_the_time_it_has():
     from arc3.mind import PROGRAM_SECONDS
 
@@ -561,6 +588,7 @@ GOAL_SOON = PROPOSING.replace('"within": 50', '"within": 1')
 GOAL_SOON_OTHER = GOAL_SOON.replace("return (1, None, None)", "return (2, None, None)")
 
 
+@unseated
 def test_an_aim_not_reached_when_the_program_said_sets_the_mind_thinking_on_the_goal():
     model = Script(GOAL_SOON, GOAL_SOON_OTHER)
     wm, cycle, data, events = loop(model)
@@ -587,6 +615,7 @@ def test_an_aim_nothing_coming_back_could_show_is_not_one_it_holds():
     assert goal_of({"aim": "x", "reached_when": {"cells": {"0,1": 1}}, "within": 3}, g)["source"] == "inferred"
 
 
+@unseated
 def test_an_aim_that_comes_sooner_than_said_is_thought_on():
     level_later = PROPOSING.replace('"reached_when": {"cells": {"0,2": 1}}, "within": 50',
                                     '"reached_when": {"status": {"levelsDelta": 1}}, "within": 9')
@@ -598,6 +627,7 @@ def test_an_aim_that_comes_sooner_than_said_is_thought_on():
     assert "came sooner than you said" in model.prompts[-1][0]["content"]
 
 
+@unseated
 def test_in_a_cycle_the_body_stood_still_the_mind_commands_after_the_onlooker():
     from arc3.command import carry_out
     from arc3.observe import ONLOOKER_CHANNEL
@@ -623,6 +653,7 @@ def propose(grid):
 '''
 
 
+@unseated
 def test_the_aim_is_the_minds_a_better_program_with_none_does_not_take_it_away():
     model = Script(PROPOSING, NO_GOAL_BETTER)
     wm, cycle, data, events = loop(model)
@@ -653,6 +684,7 @@ def test_an_abandoned_block_before_a_whole_one_is_not_read():
 CLICK_NOWHERE = PROPOSING.replace("return (1, None, None)", "return (6,)")
 
 
+@unseated
 def test_an_action6_with_no_cell_is_no_command_for_the_mind_as_for_the_body():
     from arc3.command import carry_out
 
@@ -668,6 +700,7 @@ def test_an_action6_with_no_cell_is_no_command_for_the_mind_as_for_the_body():
     assert result.response.action.get("actionId") != 6, "no click without a cell reached the body"
 
 
+@unseated
 def test_a_program_the_model_asks_for_it_reads():
     model = Script(RIGHT, RIGHT, RIGHT, RIGHT, asks={1: 'ASK {"kind": "program"}'})
     wm, cycle, data, events = loop(model)
@@ -679,6 +712,7 @@ def test_a_program_the_model_asks_for_it_reads():
     assert "- a program (version 1):" in model.prompts[-1][0]["content"], "asked for, and so read"
 
 
+@unseated
 def test_what_the_mind_just_wrote_is_no_answer_to_what_it_asked():
     model = Script(PROPOSING, PROPOSING, asks={0: 'ASK {"kind": "thought"}\nASK {"kind": "program"}'})
     wm, cycle, data, events = loop(model)
@@ -692,6 +726,7 @@ def test_what_the_mind_just_wrote_is_no_answer_to_what_it_asked():
     assert not any(b.startswith("written-") for bf in written.values() for b in bf)
 
 
+@unseated
 def test_when_how_it_acts_set_it_thinking_the_same_action_again_is_not_kept():
     same = PROPOSING.replace('"aim": "the lit cell at the far end"', '"aim": "the same, again"')
     model = Script(PROPOSING, same)
@@ -706,6 +741,7 @@ def test_when_how_it_acts_set_it_thinking_the_same_action_again_is_not_kept():
 PROPOSES_NOTHING = PROPOSING.replace("return (1, None, None)", "return None")
 
 
+@unseated
 def test_a_candidate_that_proposes_nothing_is_not_said_to_have_proposed_the_same():
     model = Script(PROPOSING, PROPOSES_NOTHING)
     wm, cycle, data, events = loop(model)

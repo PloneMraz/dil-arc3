@@ -49,10 +49,11 @@ ap.add_argument("--concurrency", type=int, default=4)
 ap.add_argument("--deadline", type=float, default=None, help="epoch seconds: start nothing after, stop what runs")
 ap.add_argument("--endpoint", default="")
 ap.add_argument("--model", default="")
-ap.add_argument("--mind", choices=("language", "learning"), default="language",
-                help="the mind run_game.py seats: the language model's, or the one that learns from nothing")
+ap.add_argument("--mind", choices=("learning", "language"), default="learning",
+                help="learning: the one mind with its learning; language: the unfinished language model, "
+                     "not run (LOG.md, 2026-09-28)")
 ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
-                help="for the learning mind: the inducer it computes with")
+                help="the mind's model, what its learning computes with")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
@@ -63,6 +64,9 @@ ap.add_argument("--drop-stores", action="store_true",
                 help="remove a game's store once it has played: a scored rerun's outputs cannot be read, "
                      "and 110 stores do not fit Kaggle's 20 GiB (LOG.md, 2026-09-27)")
 a = ap.parse_args()
+if a.mind == "language" and a.player == "run_game.py":
+    # Its games would each stop before they start (run_game.py).
+    sys.exit("--mind language: the language model is unfinished and not run (LOG.md, 2026-09-28)")
 out = Path(a.out)
 out.mkdir(parents=True, exist_ok=True)
 stores = Path(a.stores) if a.stores else out
