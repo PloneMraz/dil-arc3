@@ -3430,3 +3430,85 @@ Five points, each checked against the code:
 Three tests, each failing on the code before (`git stash` segfaulted on this
 checkout; the check was made by restoring the committed files by hand). 329
 tests.
+
+### Learning moved from the model to the mind: S1 (Plone, same day)
+
+Plone: learning is developing experience into what serves the agent, not storing
+it; and it belongs to the mind, since a model for another task should not have to
+define learning again. His approved design moves the loop to the mind and leaves
+the model only the computing, as an **inducer**:
+- **S1**: the loop moves to the mind, with the exact inducer, and gives the same
+  results;
+- **S2**: curiosity and look-ahead move to the mind;
+- **S2b**: curiosity rates a kind of act by how often it reaches a new state,
+  not how often it changes the state;
+- **S3**: a grid inducer that generalises;
+- **S4 and S5** wait on S3's results.
+
+Plone also settled:
+- it is done in dil-arc3 first;
+- the fit rule: a hypothesis is held while right more often than wrong, and of
+  those that apply, the one right most often is used;
+- "learning model" is renamed; what was the learning model is now the exact
+  inducer.
+
+**What is where now.**
+- `src/mind/learning.py` holds the loop and names no task. It keeps:
+  - experiences;
+  - hypotheses, written as `kind: hypothesis` (it was `transition`);
+  - the expectation, held by the hypothesis it came from;
+  - the counts for and against each hypothesis, with a new datum when whether it
+    holds changes;
+  - curiosity, paths, and the onlooker's word.
+- `src/mind/models/exact.py` holds the inducer:
+  - perception: a state's identity, its situation, the clock, the things;
+  - the acts a state affords;
+  - `induce`, `predict`, `describe`.
+- `src/mind/models/learning.py` is gone.
+- `run_game.py --mind learning` seats `Learning(ExactInducer(...))`.
+
+**The refactor changes nothing.** The old rule dropped a transition at its first
+failure. With that rule in place of the fit rule, the new code and the code
+before it (`4e56bc0`) were each run on ls20 and vc33 for 600 cycles. Their
+reports agree line for line, apart from the run's own key, time and path:
+- every cycle's choice;
+- the moves;
+- the scars by source and datum kind;
+- 38,265 and 37,505 `[event]` records.
+
+The first level came at the same cycle, after 330 actions on ls20 (cycle 333)
+and 81 on vc33 (cycle 84), counting non-RESET moves in `[event]` before the
+first status with `levelsDelta > 0`.
+
+**The fit rule, then.** It differs from the old rule only for a hypothesis that
+was borne out before it failed.
+
+| 600 cycles | actions to level 1 | hypotheses marked no longer held | states met | onlooker collisions |
+|---|---|---|---|---|
+| ls20, old rule | 330 | 2 | 130 | 103 |
+| ls20, fit rule | 330 | 0 | 134 | 112 |
+| vc33, old rule | 81 | 0 | 54 | — |
+| vc33, fit rule | 81 | 0 | 54 | — |
+
+- vc33 is the same in every cycle: no hypothesis there ever failed.
+- ls20 is the same up to cycle 421. At cycle 422 the old rule dropped the
+  hypothesis from `6beb37e9…` by ACTION1, first written at cycle 345. The fit
+  rule kept it, because it had been borne out before, and the two runs part
+  there, after level 1.
+- Neither run reaches level 2.
+- The body carried out no objected act in the cycle of the objection: 0 of 10 on
+  the old rule, 0 of 14 on the fit rule.
+
+One run each.
+
+**What S1 does not yet do.**
+- The exact inducer suggests one hypothesis per situation and act. So "the one
+  right most often" has nothing to choose between until an inducer suggests
+  several (S3).
+- A failure that does not change whether a hypothesis holds is not written as a
+  datum. It shows only as the scar on the hypothesis that held the expectation.
+- The counts are held, not written, as before.
+
+The code is under the next commit. Stores are in `scripts/data/s1-baseline/`,
+`s1-check/` and `s1-fit/` (git-ignored). There are 330 tests; the new one keeps a
+hypothesis right twice and wrong once.

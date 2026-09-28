@@ -8,8 +8,9 @@ when an expectation fails, how to revise itself. The model writes nothing and
 asks nothing itself: it says what should be written and asked, and the mind
 does it, so every write and question goes through the one mind's seams.
 
-A model may be a language model that writes a program (`language.py`) or one
-that learns from nothing (`learning.py`); the mind is the same.
+A model may be a language model that writes a program (`language.py`). Or the
+mind learns from nothing (`../learning.py`), and sits its learning in this seat,
+computing with an inducer (`exact.py`); the mind is the same.
 """
 
 from __future__ import annotations

@@ -118,20 +118,35 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   **Qwen3.8-Flash-Next NVFP4** (`RadixArk/Qwen3.8-Flash-Next-NVFP4` at
   `7b71922`), which submission `56588469` used — and the program it writes,
   `predict(grid, action, x, y)`, `propose(grid, steps)` and `GOAL`
-  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`); or a model
-  that learns from nothing (`src/mind/models/learning.py`), which submission
-  `56623380` used.
+  (`src/mind/models/language.py`, seated by `src/arc3/mind.py`); or it learns
+  from nothing, which submission `56623380` did (LOG.md, 2026-09-28).
+- **Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28:
+  learning is developing experience, not storing it, and another task must not
+  have to define it again). The loop (`src/mind/learning.py`) names no task: it
+  keeps each step as experience; holds what an experience suggests as a
+  hypothesis, written as data (`kind: hypothesis`) built from the step and its
+  report; expects from the applicable hypothesis that fits the store best, which
+  holds that expectation (`held_by`); weighs each by the returns that bore it
+  out and did not — **held while right more often than wrong, and of those that
+  apply, the one right most often** (FIT_LAW, DECIDE@IMPL, tag H: fit against the
+  store); says in a new datum, built from the last, when whether it holds
+  changes; is curious; chooses. The inducer only computes: perception (a state's
+  identity, where the region stands in it), the acts a state affords, `induce`,
+  `predict`, `describe`. The one there is, **exact** (`src/mind/models/exact.py`),
+  suggests one hypothesis per experience, applying where it was met and nowhere
+  else: one hypothesis per situation and act, so "the one right most often" has
+  nothing to choose between yet.
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams
   with the loop — what it expects and which datum that is, when it thinks, what
   it commands, what it writes — and the model is how it predicts, proposes and
-  revises. A model can be replaced (a language model, one that learns from
-  nothing); the mind stays one. The mind's code is to be neutral about the
+  revises. A model can be replaced (a language model, an inducer the mind learns
+  with); the mind stays one. The mind's code is to be neutral about the
   environment: what is particular to one region is data the mind reads (its
   priors), not code. In the code: `src/mind/` imports nothing from `arc3` —
   `mind.py` (the seams), `organs.py` (what a host declares of its eye and body),
-  `models/`; `src/arc3/organs.py` is this host's declaration, every value read
+  `learning.py` (its learning), `models/`; `src/arc3/organs.py` is this host's declaration, every value read
   from its own code. The task's aim reaches a model that reads no text as data
   (`prior:mind-task`'s `aim`). The language model's prompt still speaks of the
   game in its own words, kept word for word (LOG.md, 2026-09-27).
@@ -186,15 +201,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   what the region reported of itself that cycle.
   The mind thinks from what the store answered, those steps, and what the
   onlooker says now — bounded, never the whole history.
-- **The learning model keeps what it learned** (Plone, 2026-09-27, in place of the
+- **The learning mind keeps what it learned** (Plone, 2026-09-27, in place of the
   two rules above for it). It is shown every step as it comes (`observe`) and
   holds all it learned, one step at a time (INV-5: accrued, never loaded). What
-  it learns as data — its transitions, the clock, what the onlooker made it
+  it learns as data — its hypotheses, the clock, what the onlooker made it
   object to, each choice — is in the store and
   `[event]`, written as it was learned. The rest of what it holds is not
-  written: its counts, how often a transition was taken and ended the region,
+  written: its counts, how often a hypothesis was borne out and not, how often an
+  experience was met and ended the region,
   the states it visited. That is derivable from the store only by replaying its
-  observations through the model, in order (not yet done). It does not read
+  observations through the mind's learning, in order (not yet done). It does not read
   back what it holds. The mind's right to
   read the store is the same for it: whatever it asks, the mind asks, and the
   answer reaches it.
@@ -206,7 +222,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   or what the onlooker says — as many times a cycle as the field's alertness
   allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full); what the onlooker
   says is thought on even in a cycle already thought in. The field reaches the
-  mind at T5 as it reaches every layer (INV-7); the learning model reads it (how
+  mind at T5 as it reaches every layer (INV-7); the learning mind reads it (how
   far an objection reaches), the language model's prompt does not show it.
 - **What an Other says strikes the mind as a mismatch** (Plone, 2026-09-27/28):
   a ResistEvent, not plain data (§8.4, "a collision read into coordinates by a
@@ -219,7 +235,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   mind thinks on the collision there and then and, if it thought, commands
   again before the body moves; the body carries out the last command of the
   cycle. Read back: a cycle's T5 tests in `[event]` are its commands, in order,
-  and the last is the one carried out; the learning model's second `choice`
+  and the last is the one carried out; the learning mind's second `choice`
   says which it replaces (`supersedes`). The mind does not wait for the Other. The first time a remark comes
   back, in the cycle right after the answer, the answer's datum id is not yet
   known, and that one collision is not attributed to it.
@@ -295,13 +311,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 
 ### Open in the current design
 
-- **A scar of the learning model is almost always the clock's.** It does not
-  predict the clock, so where a region keeps one, an expectation from a
-  transition fails on the clock's rows alone, and the transition's datum is
+- **A scar of the exact inducer's hypothesis is almost always the clock's.** It
+  does not predict the clock, so where a region keeps one, an expectation from a
+  hypothesis fails on the clock's rows alone, and the hypothesis's datum is
   scarred for it (measured: LOG.md, 2026-09-27). Where there is no clock, most
   scars fall on steps it had no expectation of its own for. So in `[event]` its
   scars do not read as refutations; a refutation is a datum of its own (a
-  transition that no longer holds). Open: learning how the clock runs, and
+  hypothesis that no longer holds). Open: learning how the clock runs, and
   predicting it. The paper is to say so.
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
@@ -320,7 +336,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **The onlooker's remark reaches behaviour only through the mind.** It strikes
   the mind as a collision, and the model is shown what it says. The language
   model: a program that acts otherwise and predicts as well is kept, and is its
-  answer. The learning model (Plone, 2026-09-27/28): the acts the onlooker names
+  answer. The learning mind (Plone, 2026-09-27/28): the acts the onlooker names
   are objected to — for "repeating", where the region stands now; for
   "back-and-forth", at the states the alternation ran through; said again after
   it was answered, over the run the onlooker points at, as far as the field's

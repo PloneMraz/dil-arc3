@@ -2,7 +2,7 @@
 
     $PY scripts/run_game.py GAME CYCLES --endpoint URL [--model NAME]
         [--max-tokens N] [--think] [--alone] [--offline-dir DIR] [--remote HOST:PORT] [--out DIR]
-    $PY scripts/run_game.py GAME CYCLES --mind learning [...]      (the mind that learns from nothing)
+    $PY scripts/run_game.py GAME CYCLES --mind learning [...]      (the mind that learns from nothing, by an inducer)
 
 The host carries the whole frame; the mind predicts it with the program the
 model wrote, and thinks when an expectation meets a mismatch — the frame, the
@@ -35,7 +35,8 @@ from arc3.mind import ModelEndpoint, create_mind, mind_rule
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.mind import Mind, mind_rule as seat_rule
-from mind.models.learning import LearningModel
+from mind.learning import Learning
+from mind.models.exact import ExactInducer
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
@@ -61,7 +62,7 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--mind", choices=("language", "learning"), default="language",
                 help="which mind sits in the one seat: the language model's (mind.py), or the one that "
-                     "learns from nothing (mind/models/learning.py)")
+                     "learns from nothing (mind/learning.py, with the exact inducer)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -90,9 +91,9 @@ host_source = source
 extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
 LEARNING = a.mind == "learning"
 if LEARNING:
-    # The one mind, neutral, thinking with a model that learns from nothing; the
-    # host declares its organs, and the model reads the task for its aim.
-    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    # The one mind, neutral, learning from nothing with the exact inducer; the
+    # host declares its organs, and the mind reads the task for its aim.
+    mind = Mind(Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
     seat = seat_rule(mind)
 else:
     mind = create_mind(ModelEndpoint(url=a.endpoint, model=a.model, max_tokens=a.max_tokens, extra=extra))
@@ -160,10 +161,10 @@ print(f"  answers kept          : {len(answers)}  program not taken: {sum(1 for 
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
 if LEARNING:
-    learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "transition"]
+    learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypothesis"]
     why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
-    print(f"  transitions learned   : {len(learned)}  no longer holding: {sum(1 for d in learned if not d.payload.get('holds'))}")
-    print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.clock)})")
+    print(f"  hypotheses written    : {len(learned)}  saying one no longer holds: {sum(1 for d in learned if not d.payload.get('holds'))}")
+    print(f"  states met            : {len(mind.model._grid_of)} (grids {len(mind.model._raw)}; clock rows {sorted(mind.model.inducer.clock)})")
     print(f"  held off the clock    : {sum(mind.model.holds_off_clock)} of {len(mind.model.holds_off_clock)}")
     print(f"  why it chose          : {dict(why)}")
     print(f"  kinds of act          : {len(mind.model._kinds)}  (tried, changed, levels) most tried "

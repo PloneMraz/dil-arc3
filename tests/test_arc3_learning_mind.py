@@ -12,9 +12,8 @@ from __future__ import annotations
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
-from mind.models.learning import (
-    CHOICE_TAGS, CLOCK_WINDOW, LEARNED_TAGS, LearningModel, grid_key, things,
-)
+from mind.learning import CHOICE_TAGS, HYPOTHESIS_TAGS, Learning
+from mind.models.exact import CLOCK_WINDOW, ExactInducer, grid_key, things
 from mind.organs import Step
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
@@ -52,8 +51,12 @@ def status(state="NOT_FINISHED", levels=0, action=1, affords=(1, 2)) -> Signal:
     })
 
 
+def learning() -> Learning:
+    return Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
+
+
 def create_mind() -> Mind:
-    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)
+    mind = Mind(learning(), ARC_ORGANS)
     # What it reads, handed in as if recalled: the in-memory store admits no prior.
     mind.receive("task", MIND_TASK.payload, None)
     return mind
@@ -84,10 +87,10 @@ def of_kind(data, kind):
 def test_what_it_takes_it_learns_as_data_built_from_the_frame_and_report():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status())
-    learned = of_kind(data, "transition")
+    learned = of_kind(data, "hypothesis")
     assert len(learned) == 1
     datum_id, datum = learned[0]
-    assert datum.open == LEARNED_TAGS and datum.fixed.provenance == "nascent"
+    assert datum.open == HYPOTHESIS_TAGS and datum.fixed.provenance == "nascent"
     assert datum.payload["act"] == [1, None, None] and datum.payload["changed"] is True
     assert datum.payload["status"] == {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
@@ -115,7 +118,7 @@ def test_an_act_taken_again_is_expected_as_learned_and_the_expectation_is_the_da
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(1)), status())          # the same act from the same state
     assert mind.holds == [0, 0, 1], "the third it expected, from what it learned"
-    learned_id = of_kind(data, "transition")[0][0]
+    learned_id = of_kind(data, "hypothesis")[0][0]
     assert data.get(learned_id).fixed.provenance != "scar"
 
 
@@ -124,18 +127,32 @@ def test_the_same_act_giving_something_else_scars_the_datum_and_it_no_longer_hol
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(2)), status())          # the same act, from the same state, elsewhere
-    learned_id = of_kind(data, "transition")[0][0]
+    learned_id = of_kind(data, "hypothesis")[0][0]
     scars = [r for r in events.all() if type(r).__name__ == "EventRecord" and r.datum_id == learned_id]
     assert scars, "the expectation was the datum's, and the region refuted it"
     run(cycle, frame(lit(2), lit(1), action=2), status(action=2))
-    refuted = [(k, d) for k, d in of_kind(data, "transition") if d.payload["holds"] is False]
+    refuted = [(k, d) for k, d in of_kind(data, "hypothesis") if d.payload["holds"] is False]
     assert refuted, "said in a datum of its own: it no longer predicts from it"
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
-    assert learned_id in written[refuted[0][0]], "built from the transition it refutes"
+    assert learned_id in written[refuted[0][0]], "built from the hypothesis it refutes"
     assert data.get(learned_id).payload["holds"] is True, "the first is not rewritten"
     assert [r for r in events.all() if getattr(r, "activity_kind", None) == "revision"] == [], \
         "nothing is revised in place (Plone, 2026-09-27)"
+
+
+def test_a_hypothesis_right_more_often_than_wrong_is_still_held():
+    # FIT_LAW (Plone, 2026-09-28): held while right more often than wrong.
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(1)), status())          # borne out: 2 for, 0 against
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(2)), status())          # not borne out: 2 for, 1 against
+    model = mind.model
+    h = model._edges[(model.inducer.situation(lit(0)), (1, None, None))].hypothesis
+    assert (h.supports, h.fails, h.holds) == (2, 1, True)
+    assert not [d for _, d in of_kind(data, "hypothesis") if d.payload["holds"] is False]
 
 
 def test_the_game_ended_is_met_with_reset():
@@ -146,13 +163,13 @@ def test_the_game_ended_is_met_with_reset():
 
 
 def test_a_row_that_changes_whatever_is_done_is_the_clock_and_not_where_the_game_stands():
-    model = LearningModel(ARC_ORGANS, priors={"task": TASK_CUE})
+    inducer = ExactInducer(ARC_ORGANS)
     grids = [lit(0, clock=i) for i in range(CLOCK_WINDOW + 1)]
     for i in range(CLOCK_WINDOW):
         a = [1, 2, 3][i % 3]
-        model._learn_clock(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a), None)
-    assert model.clock == frozenset({2})
-    assert grid_key(lit(0, 0), model.clock) == grid_key(lit(0, 1), model.clock)
+        inducer.perceive(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
+    assert inducer.clock == frozenset({2})
+    assert inducer.situation(lit(0, 0)) == inducer.situation(lit(0, 1))
 
 
 def test_things_are_regions_of_one_colour_and_the_ground_is_left_out():
@@ -275,14 +292,14 @@ def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
             "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
     model = mind.model
-    s0, s1 = grid_key(lit(0), model.clock), grid_key(lit(1), model.clock)
+    s0, s1 = model.inducer.situation(lit(0)), model.inducer.situation(lit(1))
     got = model.objections()
     assert (s0, (1, None, None)) in got and (s1, (2, None, None)) in got, "each act where it was taken"
     assert (s0, (2, None, None)) not in got, "not the act that leaves the loop from here"
 
 
 def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
-    from mind.models.learning import Edge
+    from mind.learning import Edge
     mind, cycle, data, events = loop()
     model = mind.model
     # A known state a with two known ways out, 1 and 2, both to states with an
@@ -347,7 +364,7 @@ def test_an_objection_survives_the_clock_growing():
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
     before = model.objections()
-    model.clock = frozenset({2})
+    model.inducer.clock = frozenset({2})
     model._reindex(())
     assert {a for _, a in model.objections()} == {a for _, a in before}
     assert all(state in model._state_of.values() for state, _ in model.objections()), "read under the new clock"
@@ -369,7 +386,7 @@ def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
     # mind that held no aim at its first step, and was never asked again, stood
     # for the whole run (LOG.md, 2026-09-28). Once what it reads comes back and it
     # holds an aim, while the body waits, it commands.
-    mind = Mind(LearningModel(ARC_ORGANS, priors={"task": TASK_CUE}), ARC_ORGANS)   # the task not yet recalled
+    mind = Mind(learning(), ARC_ORGANS)   # the task not yet recalled
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(

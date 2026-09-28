@@ -9,8 +9,8 @@ the agent leaves the loop to think.
 
 ## Status, plainly
 
-It runs, with one mind, which thinks with one of two models: a language model,
-or one that learns from nothing (below). What it has done — the scored
+It runs, with one mind, which thinks with a language model, or learns from
+nothing with an inducer (below). What it has done — the scored
 submission, and every run — is in `LOG.md`, with the code each ran; this file
 says only what the agent is.
 
@@ -51,7 +51,7 @@ Settled deliberately, with Plone.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
-| **model** | the mind's computing, inside it — not a second mind — and replaceable: a language model and the program it writes, or a model that learns from nothing. The **mind** is **one** and neutral about its region: it reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `models/`), seated by `src/arc3/mind.py`; `task.py`, `aim.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: a language model and the program it writes, or an inducer the mind learns with. The **mind** is **one** and neutral about its region: it reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `models/`), seated by `src/arc3/mind.py`; `task.py`, `aim.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -74,13 +74,24 @@ the engine returns it; working out what is in it is the mind's program.
 ## What the mind is
 
 One mind, neutral about its region (`src/mind/mind.py`), thinking with a model:
-the part of it that computes (Plone, 2026-09-27). It can think with two models.
-The first, below, is the one submission `56588469` used. The second, which
-submission `56623380` used, learns from nothing
-(`src/mind/models/learning.py`): no weights, no text; it learns each
-transition it takes as data, expects from what it learned, finds the clock a
-region keeps whatever is done, and chooses by curiosity — what it knows least —
-and by the paths it knows.
+the part of it that computes (Plone, 2026-09-27). It can think with a language
+model — below; submission `56588469` used it — or learn from nothing, with no
+weights and no text, which submission `56623380` did (LOG.md, 2026-09-28).
+
+**Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28).
+The loop is the mind's and names no task (`src/mind/learning.py`): it keeps
+every step as experience, holds what an experience suggests as a hypothesis,
+written as data built from the step, expects from the hypothesis that fits the
+store best, which holds that expectation and is scarred when the region returns
+otherwise, weighs each hypothesis by how often the region bore it out (held
+while right more often than wrong), and chooses by the paths it knows and by
+curiosity — what it knows least. The inducer is replaceable and only computes:
+what a state is to it, what can be done in one, what an experience suggests and
+what a hypothesis predicts. The one there is, the exact inducer
+(`src/mind/models/exact.py`), suggests one hypothesis per experience — this act
+from this situation gives that — applying nowhere else; it generalises nothing,
+and is the reference others are measured against. It finds the clock a region
+keeps whatever is done.
 
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the game: what it knows of a game is
@@ -176,7 +187,7 @@ now, in dil-core first and then here.
    held while the onlooker says it and lifted when it stops.
 9. **The language model's prompt does not show the field.** The field reaches
    the mind at T5 and conditions it whatever its model: its alertness sets how
-   often the mind thinks in a cycle, for either model. The learning model reads
+   often the mind thinks in a cycle, for either model. The learning mind reads
    it further (how far an objection reaches); the language model is not shown
    it, so what it writes is not conditioned by the loop's disposition.
 
@@ -216,8 +227,9 @@ records what this host declares for the protocol's deferred constants.
 src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
-src/mind/         the one mind, neutral about its region, and the models it
-                  thinks with (language, learning). Imports nothing from arc3.
+src/mind/         the one mind, neutral about its region; its learning
+                  (learning.py); the models it thinks or learns with (language,
+                  exact). Imports nothing from arc3.
 src/arc3/         the body, its declared organs, what the mind is told, and
                   where this host seats the mind.
 src/world/        what lies outside the agent: the region it acts on, served to
