@@ -3,7 +3,8 @@
 Kept for after the competition (Plone, 2026-09-27): the endpoint names the
 environment variable that holds the key, never the key. Here a real request is
 sent to a local server, which is answered with a program; the key reaches the
-server's header, and nothing the mind writes or keeps holds it.
+server's header, and nothing the mind writes or keeps holds it. The model is
+the language inducer, the mind's model with a served language model behind it.
 """
 
 from __future__ import annotations
@@ -12,12 +13,12 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-import pytest
-
-from arc3.aim import MIND_AIM
-from arc3.mind import UNSEATED, ModelEndpoint, create_mind, mind_rule
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
-from arc3.task import MIND_TASK
+from arc3.organs import ARC_ORGANS
+from arc3.task import MIND_TASK, TASK_CUE
+from mind.mind import Mind, mind_rule
+from mind.models.language import ModelEndpoint
+from mind.models.language_inducer import LanguageInducer
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
@@ -31,10 +32,6 @@ from dil.loop.layers.t8 import create_t8
 from dil.loop.types import Signal
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
-
-# The language model's earlier form is not seated: what goes through its seat is
-# kept, not run (Plone, 2026-09-28; LOG.md).
-unseated = pytest.mark.skip(reason=UNSEATED)
 
 KEY = "sk-test-0123456789-never-to-be-written"
 PROGRAM = "def predict(grid, action, x=None, y=None):\n    return [row[:] for row in grid]\n"
@@ -62,13 +59,14 @@ def serve():
     return server, seen
 
 
-@unseated
 def test_the_key_reaches_the_header_and_nothing_the_mind_keeps(monkeypatch):
     monkeypatch.setenv("DIL_TEST_API_KEY", KEY)
     server, seen = serve()
     try:
         endpoint = ModelEndpoint(url=f"http://127.0.0.1:{server.server_port}/v1", api_key_env="DIL_TEST_API_KEY")
-        mind = create_mind(endpoint, task=MIND_TASK.payload, aim=MIND_AIM.payload)
+        inducer = LanguageInducer(ARC_ORGANS, endpoint)
+        mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+        mind.receive("task", MIND_TASK.payload, None)
         data, events = create_data_store(), create_event_log()
         cycle = create_cycle(
             layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -90,10 +88,11 @@ def test_the_key_reaches_the_header_and_nothing_the_mind_keeps(monkeypatch):
     finally:
         server.shutdown()
     assert seen and all(h == f"Bearer {KEY}" for h in seen), "the key went out in each request's header"
-    assert mind.thoughts and mind.code == PROGRAM, "the answer came back and was kept"
+    answers = [d for _, d in data.entries() if d.open.get("kind") == "thought"]
+    assert answers and PROGRAM in answers[-1].payload["text"], "the answer came back and was kept"
     kept = json.dumps([(k, d.payload, d.open) for k, d in data.entries()], default=str)
     kept += json.dumps([repr(r) for r in events.all()])
-    kept += json.dumps([repr(t) for t in mind.thoughts])
+    kept += json.dumps([repr(t) for t in mind.thoughts] + [repr(a) for a in inducer.answers])
     kept += repr(endpoint)
     assert KEY not in kept, "the key is in nothing the mind wrote, logged or keeps"
 

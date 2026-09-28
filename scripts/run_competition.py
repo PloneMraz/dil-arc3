@@ -49,9 +49,6 @@ ap.add_argument("--concurrency", type=int, default=4)
 ap.add_argument("--deadline", type=float, default=None, help="epoch seconds: start nothing after, stop what runs")
 ap.add_argument("--endpoint", default="")
 ap.add_argument("--model", default="")
-ap.add_argument("--mind", choices=("learning", "language"), default="learning",
-                help="learning: the one mind with its learning; language: the language model's earlier form, "
-                     "not run (LOG.md, 2026-09-28)")
 ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
                 help="the mind's model, what its learning computes with; language: a model served at "
                      "--endpoint")
@@ -67,9 +64,6 @@ ap.add_argument("--drop-stores", action="store_true",
                 help="remove a game's store once it has played: a scored rerun's outputs cannot be read, "
                      "and 110 stores do not fit Kaggle's 20 GiB (LOG.md, 2026-09-27)")
 a = ap.parse_args()
-if a.mind == "language" and a.player == "run_game.py":
-    # Its games would each stop before they start (run_game.py).
-    sys.exit("--mind language: the language model's earlier form is kept and not run (LOG.md, 2026-09-28)")
 out = Path(a.out)
 out.mkdir(parents=True, exist_ok=True)
 stores = Path(a.stores) if a.stores else out
@@ -147,8 +141,8 @@ while queue or running:
         proc = subprocess.Popen(
             [sys.executable, "-u", str(HERE / a.player), g, str(a.cycles),
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
-             "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"), "--mind", a.mind,
-             *(["--inducer", a.inducer, "--curiosity", a.curiosity] if a.mind == "learning" else [])],
+             "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"),
+             "--inducer", a.inducer, "--curiosity", a.curiosity],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()

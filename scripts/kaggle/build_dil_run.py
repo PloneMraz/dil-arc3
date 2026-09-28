@@ -180,7 +180,7 @@ print(sorted(p.name for p in (REPO / "src").iterdir()))''',
 RERUN = bool(os.environ.get("KAGGLE_IS_COMPETITION_RERUN"))
 DEADLINE = T0 + 9 * 3600 - 20 * 60  # nothing starts after, and what runs stops: 20 min kept for the end
 cmd = [sys.executable, "-u", str(REPO / "scripts" / "run_competition.py"),
-       "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS),
+       "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS), "--inducer", "language",
        "--cycles", str(CYCLES), "--concurrency", str(CONCURRENCY), "--deadline", str(DEADLINE), "--out", str(W)]
 if RERUN:
     os.environ.setdefault("ARC_API_KEY", "test-key-123")
@@ -379,8 +379,8 @@ print("server stopped; outputs:", sorted(p.name for p in W.iterdir()))'''
 # game in its own process through world/remote.py — and plays the starter kit's
 # random agent in it (scripts/random_game.py). No model, no GPU (Plone, 2026-09-27).
 PROBE_KERNEL_SLUG = "dil-arc3-gateway-probe"
-# The same CPU notebook seats the learning mind (`--mind learning`): no model to
-# serve, so no GPU (Plone, 2026-09-27).
+# The same CPU notebook plays the mind with a model that is not served (the exact
+# or grid inducer): no GPU (Plone, 2026-09-27).
 LEARNING_KERNEL_SLUG = "dil-arc3-learning"
 PROBE_CELLS = [
     '''# dil-arc3 on CPU, no model: RUN_ARGS seat the learning mind, or — the gateway probe —
@@ -485,18 +485,14 @@ def main() -> None:
     ap.add_argument("--concurrency", type=int, default=4, help="games played at once, on one model server")
     ap.add_argument("--probe", action="store_true",
                     help="the gateway probe: the random agent through the same path, no model, no GPU")
-    ap.add_argument("--mind", choices=("learning", "language"), default="learning",
-                    help="learning: the one mind with its learning, on CPU, no model served; language: the "
-                         "language model's earlier form on a GPU, kept, not built (LOG.md, 2026-09-28)")
+    ap.add_argument("--served", action="store_true",
+                    help="a GPU notebook serving --model for the language inducer (not used for ARC-AGI-3 for "
+                         "now, Plone 2026-09-28); without it, a CPU notebook with --inducer")
     ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
                     help="the mind's model, what its learning computes with")
     ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
     a = ap.parse_args()
-    if a.mind == "language" and not a.probe:
-        # Kept, not run: its notebook would play no game (run_game.py stops).
-        raise SystemExit("--mind language: the language model's earlier form is kept and not run "
-                         "(LOG.md, 2026-09-28)")
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
     for d in (dataset, kernel):
@@ -532,9 +528,9 @@ def main() -> None:
         "cells": [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                    "outputs": [], "source": src} for i, src in enumerate(cells)],
     }
-    cpu = a.probe or a.mind == "learning"
+    cpu = a.probe or not a.served
     if cpu:
-        run_args = ["--player", "random_game.py"] if a.probe else ["--mind", "learning", "--inducer", a.inducer, "--curiosity", a.curiosity]
+        run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]

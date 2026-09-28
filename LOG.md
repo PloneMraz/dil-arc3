@@ -4371,3 +4371,49 @@ Run 2 on the six games of runs 3-5 (ls20, vc33, ar25, lp85, tu93, lf52): 0.57583
   The six under S2c averaged 771 s against run 2's 1,439 s. At that ratio,
   run 2's 25-game mean (1,411 s) would be about 755 s, and 110 games four at once
   about 5.8 h — an estimate from six games, not measured on 110.
+
+### Goal and aim; the language model's earlier form gone; its successor's words name no game (Plone, 2026-09-28)
+
+Point 10 of the measurement's report, part 1, as settled with Plone on
+2026-09-28 (the entry "Goal and aim, settled").
+
+- **The mind holds one aim** (`src/mind/mind.py`). The task prior's `aim`
+  becomes its `goal` (`TASK_GOAL`): an instruction from outside. The mind's aim
+  takes the goal's value; when no goal comes back with what it asked its memory
+  for — it waits `GOAL_WAIT = 1` cycle past the one it asked in — it holds its
+  own, `OWN_AIM`: the region reports something other than what it has been
+  reporting most, in a state it has not ended in (Plone's precision: an aim of
+  its make-up, grounded in what comes back; seeking an end excluded, since the
+  host declares its ended states). The learning holds the same aim, handed by
+  the mind (`hold_aim`), and no longer reads one from the prior: the second copy
+  is gone. Why the wait: the answer to the mind's first question comes back in
+  the next cycle, after the region's report (the commands of every run begin
+  `(2, None), (2, act)`), so a mind that took its own aim at once would act on it
+  where a goal was on its way.
+- **The earlier form removed**: `LanguageModel` and all of `language.py` that
+  only it used (`propose`, `GOAL`, want, `ASK`), its seat `src/arc3/mind.py`,
+  `prior:mind-aim` (`src/arc3/aim.py`), the mind's seams only it used (want, an
+  aim's `within`, the goal come sooner), `Proposal.want`, `Thinking.aim`,
+  `Context.missed`, `--mind` in `run_game.py`, `run_competition.py` and the
+  builder, and its tests: 30 of `test_arc3_mind.py`, `test_arc3_directive.py`.
+  Kept, moved: the body's test (`tests/test_command.py`), two of `extract_code`
+  (to the language inducer's), and the API key's test, rewritten for the
+  language inducer. `3b31806` keeps the earlier form, as submission `56588469`
+  ran it. The builder's GPU notebook now runs the language inducer (`--served`).
+- **The language inducer's words name no game** (Plone: the model only computes;
+  an aim is the mind's to tell it). `prior:mind-task`'s `induce`,
+  `induce_feedback`, `unforeseen` and `aimed` are rewritten: "a region", the
+  acts by the host's names, what came back as the report's fields that are news
+  (through the organs), and "The program is for a mind working toward this:
+  ..." filled with the aim the mind holds. `TASK` and `FEEDBACK` removed. This
+  replaces S5's "word for word", which Plone set aside for it on 2026-09-28.
+- Tests: the aim takes the goal's value and is one; with no goal, the mind waits
+  a cycle, then holds its own aim and acts; its own aim is a report other than
+  the usual, never an end; the model is told what the program is for; its words
+  name no game. 323 pass, none skipped.
+
+**Checked: nothing changes where a goal is given.** ls20, vc33, ar25 and lp85,
+600 cycles, grid, here, against Kaggle's run 2 (`4bbd221`, the same games on
+Kaggle's machine; the mind is deterministic across machines): every choice line
+the same — 2,400 of 2,400 — and the levels the same. Here the four took 263,
+359, 334 and 108 s.

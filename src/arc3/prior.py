@@ -4,7 +4,7 @@ A creature put in a box arrives with a very long history: what its genes carry
 and what others taught it. This agent arrives with none. So what its store holds
 beforehand is the least that lets it know what it is doing here: the rules of
 the place it is in, the competition's own words; what its mind is told its
-thinking is for (`task.py`); and what the mind does with any aim (`aim.py`).
+thinking is for, and the goal the task sets (`task.py`).
 Everything else is left for it to think through and interpret.
 
 **Where it comes from.** Only public documents published by the competition,
@@ -29,11 +29,9 @@ done next, so the first one recalls the directive, the level structure and both
 items about actions; the first thing seen recalls the item about seeing. That
 recall is the protocol's, and the trace records it (`prior → running`).
 
-**What the model reads of it.** Only what the model asks for (Plone,
-2026-09-27). What T3 recalls is not shown to the model; until 2026-09-27 it was,
-and every prompt carried the competition's directive ("You are playing a game.
-Your goal is to win."), unasked. The task and the aim are recalled by the mind
-itself, at its first arrival, and every program names them in `built_from`.
+**What the mind reads of it.** What T3 recalls is the protocol's recall, traced,
+and is not poured into the mind (Plone, 2026-09-27). The task — the goal, and the
+words a language model is told — the mind recalls itself, at its first arrival.
 """
 
 from __future__ import annotations
@@ -43,7 +41,6 @@ from typing import Final
 
 from dil.host import PreexistingItem
 
-from .aim import MIND_AIM
 from .task import MIND_TASK
 
 from .observe import (
@@ -232,10 +229,11 @@ RULES: Final[tuple[PreexistingItem, ...]] = (
     DIRECTIVE, LEVELS, COST, SEEING, ACTIONS_ITEM, WORLD,
 )
 
-# Everything the agent has before it lives: the published rules, quoted; what its
-# mind is told its thinking is for (`task.py`); and what the mind does with any aim
-# (`aim.py`) — the last two this project's own words, tagged as such.
-PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK, MIND_AIM)
+# Everything the agent has before it lives: the published rules, quoted; and what
+# its mind is told (`task.py`) — this project's own words, tagged as such. The
+# words the language model's earlier form was told of any aim (`prior:mind-aim`)
+# went with it (LOG.md, 2026-09-29).
+PRIOR: Final[tuple[PreexistingItem, ...]] = (*RULES, MIND_TASK)
 
 
 class ArcRules:

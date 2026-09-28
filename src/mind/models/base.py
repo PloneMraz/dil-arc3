@@ -43,12 +43,9 @@ class Expectation:
 
 @dataclass
 class Proposal:
-    """What the mind's learning proposes the body do next, and what it is for."""
+    """What the mind's learning proposes the body do next, and why."""
 
     act: Act | None
-    # What the act is for, as what will come back: {"part": a part of the next
-    # state, "fields": fields of the next report}. None: no claim.
-    want: dict[str, Any] | None = None
     why: str | None = None
 
 
@@ -74,10 +71,6 @@ class Thinking:
     # Questions to memory, each a cue by the store's tags; None when it
     # could not think at all (its questions stand as they were).
     asks: list[dict[str, str]] | None = None
-    # An aim it now states: {"aim", "source", "reached_when": {"part",
-    # "fields"}, "within"} (and anything kept with it). None: it
-    # states none, and the mind keeps the aim it held.
-    aim: dict[str, Any] | None = None
     # When it thought on what an Other said: the data that are its answer (its
     # handles, as in `Write.built_from`). The mind then expects the Other to
     # stop saying it, and that expectation is these data: said again, they are
@@ -104,9 +97,7 @@ class Context:
     remark: dict[str, Any] | None
     # The unit the remark came in: what a datum built from the remark names.
     remark_unit: Any
-    # What did not come, when an expectation of a want or an aim failed:
-    # {"what": ..., and the part or fields wanted and what came}.
-    missed: dict[str, Any] | None
+    # The aim the mind holds (`../mind.py`): its own, or a goal's value.
     aim: dict[str, Any] | None
     priors: dict[str, tuple[Any, str | None]]
     # The cycle's field (INV-7), as every layer reads it: how readily a source is
@@ -172,6 +163,10 @@ class Inducer(Protocol):
         """A prior the mind recalled, handed on by the learning: what a language
         model is told is data the mind read (`prior:mind-task`), never code."""
 
+    def hold_aim(self, aim: dict[str, Any]) -> None:
+        """The aim the mind holds, handed on by the learning, so a model that is
+        told what it computes for is told it by the mind. A model has no aim."""
+
     def key(self, form: Any) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""
 
@@ -208,11 +203,8 @@ class Learner(Protocol):
     def receive_prior(self, name: str, payload: Any, datum_id: str) -> None:
         """A prior it reads, recalled by the mind."""
 
-    def stated_aim(self) -> dict[str, Any] | None:
-        """An aim it states outside thinking (read from what it was told), once."""
-
-    def can_propose(self) -> bool:
-        """Whether it has anything to propose from: the mind holds it to an aim then."""
+    def hold_aim(self, aim: dict[str, Any]) -> None:
+        """The aim the mind holds: its own, or a goal's value. It states none."""
 
     def expect(self, step: Step) -> Expectation:
         """What will come back, from where the region stood and the act alone (INV-8)."""

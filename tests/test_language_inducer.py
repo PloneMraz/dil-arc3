@@ -10,7 +10,7 @@ hypothesis held foresaw a step (LOG.md, 2026-09-28).
 from __future__ import annotations
 
 from arc3.organs import ARC_ORGANS
-from arc3.task import FEEDBACK, INDUCE, INDUCE_FEEDBACK, MIND_TASK, TASK, TASK_CUE
+from arc3.task import MIND_TASK, TASK_CUE
 from mind.learning import HYPOTHESIS_TAGS
 from mind.mind import Mind, mind_rule
 from mind.models.exact import grid_key
@@ -181,8 +181,10 @@ def test_what_it_is_told_is_the_prior_and_it_is_asked_nothing_before():
     inducer.receive_prior("task", MIND_TASK.payload)
     inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1), evidence=(step,))
     first = script.shown[0][0]["content"]
-    assert first.startswith(TASK.split("\n\n")[0]), "the earlier form's words, word for word"
-    assert "propose" not in first and "GOAL" not in first and "ASK" not in first
+    assert "region" in first and "game" not in first.lower(), "no word of a game (Plone, 2026-09-28)"
+    assert "ACTION1" in first and "ACTION6 also carries a cell" in first, "the acts, as the host declares them"
+    assert "propose" not in first and "GOAL" not in first and "working toward" not in first, \
+        "no aim told: the mind has told it none yet"
 
 
 def test_its_answers_name_the_prior_among_what_they_were_built_from():
@@ -209,14 +211,25 @@ def test_the_program_it_wrote_last_is_shown_with_how_it_did():
     assert shown[2]["content"].startswith("Your predict was run on those steps. It got 1/2 exactly right.")
 
 
-def test_the_words_differ_from_the_earlier_forms_only_where_declared():
-    # Plone, 2026-09-28 (S5): the prompts that ran are kept word for word; what
-    # had to change is said in arc3/task.py.
-    task, induce = TASK.split("\n\n"), INDUCE.split("\n\n")
-    assert induce[:2] == task[:2], "the game, and the steps"
-    assert induce[2].split("\n")[:2] == task[2].split("\n")[:2] == ["{evidence}", "{also}"]
-    assert induce[2].split("\n")[2] == task[2].split("\n")[2].replace("Write two Python", "Write Python")
-    assert induce[3].split("\n")[:2] == task[3].split("\n")[:2], "predict, as it was"
-    assert induce[-1] == task[-1].split(" To see more")[0], "the last paragraph, but for ASK"
-    assert INDUCE_FEEDBACK.split("\n\n")[0] == FEEDBACK.split("\n\n")[0]
-    assert INDUCE_FEEDBACK.replace("predict, where and targets", "predict, propose and GOAL") == FEEDBACK
+def test_the_mind_tells_the_model_what_the_program_is_for():
+    # Plone, 2026-09-28: the model has no aim; the mind tells it what it computes
+    # for — the aim it holds, which takes the goal's value.
+    script = Script(block(STILL))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    first = script.shown[0][0]["content"]
+    assert "The program is for a mind working toward this: the region reports levelsDelta 1." in first
+
+
+def test_a_fence_inside_a_docstring_does_not_close_the_block():
+    from mind.models.language import extract_code
+    code = 'def predict(grid, action, x=None, y=None):\n    """Like this:\n    ```\n    x\n    ```\n    """\n    return grid\n'
+    assert extract_code(f"Here it is.\n```python\n{code}```\n") == code
+    assert extract_code("    ```python\n    x = 1\n    ```") == "    x = 1\n    ", "all fences indented: read as before"
+
+
+def test_an_abandoned_block_before_a_whole_one_is_not_read():
+    from mind.models.language import extract_code
+    text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
+            "```python\ndef predict(grid, action):\n    return grid\n```\n")
+    assert extract_code(text) == "def predict(grid, action):\n    return grid\n"

@@ -74,15 +74,6 @@ def test_the_mind_holds_its_learning_and_its_models_seat_takes_the_inducer():
     assert mind.learning.inducer is inducer
 
 
-def test_the_language_models_seat_is_kept_and_not_run():
-    # Its earlier form sat in the learning's place (LOG.md, 2026-09-28): kept,
-    # not run; its revision is the language inducer.
-    from arc3.mind import UNSEATED, create_mind as seat_language
-    with pytest.raises(NotImplementedError, match="earlier form"):
-        seat_language()
-    assert "language inducer" in UNSEATED
-
-
 def loop():
     mind = create_mind()
     data, events = create_data_store(), create_event_log()
@@ -555,3 +546,41 @@ def test_the_default_law_is_the_one_measured_before():
         level = (aim + 1) / (tried + 2) if aim else 0.0
         assert learning._curiosity(kind) == (level, (new + 1) / (tried + 2)
                                              + math.sqrt(2 * math.log(total + 1) / (tried + 1)))
+
+
+def test_the_aim_takes_the_goals_value():
+    # Plone, 2026-09-28: a goal is an instruction from outside; the aim is the
+    # mind's, and takes the goal's value when there is one.
+    mind = create_mind()
+    assert mind._aim["source"] == "goal"
+    assert mind._aim["reached_when"] == MIND_TASK.payload["goal"]["reached_when"]
+    assert mind.learning._aim == mind._aim, "one aim: the learning holds the mind's"
+
+
+def test_with_no_goal_the_mind_holds_its_own_aim_and_acts():
+    from mind.mind import OWN_AIM
+    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})   # its task never comes
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+                      t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8()),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(2)), status())
+    assert mind._aim is None and mind.commands[-1][1] is None, "it waits a cycle for what it asked"
+    run(cycle, frame(lit(2), lit(1), action=2), status(action=2))
+    assert mind._aim == OWN_AIM and mind.commands[-1][1] is not None, "then its own aim, and it acts"
+
+
+def test_its_own_aim_is_a_report_other_than_the_one_it_has_been_making_and_not_an_end():
+    from mind.mind import OWN_AIM
+    learning = seated().learning
+    learning.hold_aim(dict(OWN_AIM))
+    usual = {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
+    for _ in range(3):
+        learning._reports[learning._report_key(usual)] = learning._reports.get(learning._report_key(usual), 0) + 1
+    assert not learning._reached(usual), "what it has been reporting"
+    assert learning._reached({**usual, "levelsDelta": 1}), "something else"
+    assert not learning._reached({**usual, "stateTo": "GAME_OVER"}), "an end is no aim"

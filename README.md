@@ -18,38 +18,23 @@ In the code, the mind holds its learning — `Mind(inducer, organs, priors)` —
 and its model's seat takes the inducer, so a model seated there changes how it
 computes, never whether it learns.
 
-**The language model, as submission `56588469` ran it — kept, not run.** It was
-work left inside the model, not a settled branch beside the learning: it sat in
-the learning's place, which left the mind no learning of its own. Its revision is
-an inducer (below); this earlier form is not an inducer, so it is not seated now
-— its code and tests are kept, and not run. As that submission ran it (served
-offline; Qwen3.8-Flash-Next NVFP4), the mind has the model write a program:
-`predict(grid, action, x, y)`, the next grid and what the region will report of
-itself; `propose(grid, steps)`, the next action from where the game stands and
-the steps just seen; and `GOAL`, the aim it holds itself to. All kept as data in
-the store, the prediction tested against the region every cycle. When an
-expectation meets a mismatch — the frame, the region's status, what the program
-said a command or its aim would bring about, or an onlooker's objection to how
-the agent behaves — the program is scarred with it, and the mind has the model
-write a better one from what it has, keeps it only if it explains that evidence
-better (or as well, when the body waits for a command, the onlooker objected, or
-a command or the aim did not bring about what was said), and writes it as a
-revision; the model also chooses what to ask its memory for, and reads only
-that, and each answer it gives is kept whole in the store. Every step of
-that — each question, the program entering at `nascent`, each revision, what
-each version was built from, each scar it met and each return to use — is in
-`[event]`, and a checker reads it back.
+**Goal and aim.** A goal is an instruction from outside; the aim is the mind's
+own, and there is always one (Plone, 2026-09-28). The mind's aim takes the
+goal's value when a goal is given; when none is, it holds its own: that the
+region reports something other than what it has been reporting, in a state it
+has not ended in. No model has an aim: the mind tells its model what it computes
+for.
 
-**What it is told.** Its store holds, before it lives, three things, each as host
-data stamped `prior`: what its mind is told its thinking is for
-(`prior:mind-task`, this project's own words, neutral — the aim is to get
-through the levels, and no kind of game, mechanic or strategy is named; it is told
-that its `propose` may run its own `predict` ahead toward its aim, and the seconds
-each run has); what the
-mind does with any aim (`prior:mind-aim`); and the competition's published
-rules, quoted. The mind recalls the first two itself, and the model reads them.
-The rules are recalled by T3 on a cue, as the protocol does, and the model reads
-them only if it asks.
+**What it is told.** Its store holds, before it lives, two things, each as host
+data stamped `prior`: what its mind is told (`prior:mind-task`, this project's
+own words — the goal, to get through the levels, said as what the region will
+report when it is met; and the words a language model is asked in, which name
+no game); and the competition's published rules, quoted. The mind recalls the
+first itself; the rules are recalled by T3 on a cue, as the protocol does.
+
+The language model's earlier form — which submission `56588469` ran: it wrote
+`predict`, `propose` and a `GOAL` of its own, and sat in the place of the mind's
+learning — is gone; `3b31806` keeps it (LOG.md).
 
 ## The four roles
 
@@ -121,9 +106,10 @@ what a hypothesis predicts. There are three (`--inducer`):
   stands, and where an act that takes a cell is worth putting: its reading of
   the grid. All that reads the grid is the model's; code keeps only records
   beside it, a state's hash and the exact hypothesis. What it is told is the
-  task prior's words — the earlier form's, word for word where they still hold.
-  Each answer is kept whole in the store, built from the prior. Not run against a served model, and not used for ARC-AGI-3
-  for now (Plone, 2026-09-28).
+  task prior's words, which name no game, filled with what the host declares of
+  the region and with the aim the mind holds. Each answer is kept whole in the
+  store, built from the prior. Not run against a served model, and not used for
+  ARC-AGI-3 for now (Plone, 2026-09-28).
 
 Curiosity counts how often a kind of act reached a situation not met before
 (S2b); three other laws — a change (S2), somewhere new then a change (S2c), the
@@ -132,14 +118,11 @@ untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.
 
-**A pretrained language model, used as it is, and the program it writes** —
-as the earlier form above ran it. The language inducer keeps the first two
-points below; for the third, it is shown short-term perception, bounded, asks
-memory nothing yet, and thinks only on a step no hypothesis held foresaw. The
-model is not trained here and does not hold the game: what it knows of a game is
-what the mind shows it — evidence the mind chose from its store and its window —
-and what it produces is a program, which the loop then tests against the region
-like any expectation. Three constraints shape that, and each is met:
+**A pretrained language model, used as it is, and the program it writes.** The
+model is not trained here and does not hold the region: what it knows of one is
+what the mind shows it, and what it produces is a program, which the mind's
+learning then weighs against the region like any hypothesis. Three constraints
+shape that, and each is met:
 
 - the scored games are unseen, so foreign weights would predict the wrong world
   — the model does not predict the world; it writes a program from this game's
@@ -147,10 +130,9 @@ like any expectation. Three constraints shape that, and each is met:
 - Kaggle's evaluation session has no network — the model is served offline, from
   a Kaggle Models mirror checked file by file against Hugging Face's hashes;
 - INV-5: "refeeding the whole game history into a context window each step is a
-  load, not an accrual" — the model is shown what it asked the store for and
-  what T5's window holds, bounded, never the whole history; and it is asked to
-  think only when something comes from outside — a mismatch, the onlooker — or
-  while the body waits for a command.
+  load, not an accrual" — the model is shown short-term perception, as long as
+  T5's window, never the whole history; and it is asked only on a step no
+  hypothesis the mind holds foresaw.
 
 `dependencies = []` holds: the model is reached over HTTP with the
 standard library.
@@ -215,15 +197,10 @@ now, in dil-core first and then here.
 
 ### Gaps in this agent
 
-7. **With the language model's earlier form, what was kept was not what gets
-   through a level.** A rewritten program was kept for predicting better; or for
-   predicting as well and giving a command, when the body waited for one; or for
-   predicting as well and acting otherwise, when the onlooker objected or a
-   command or the aim did not bring about what it was for; or for stating an aim
-   when the mind held none. Nothing in what was kept favoured a program whose
-   acts reach the aim. That form is kept and not run; with every inducer now, a
-   hypothesis is kept by how often the region bore it out, and the way to the
-   aim is the learning's to choose.
+7. **What brings the aim reaches only where the same cells lie again.** The grid
+   inducer's hypothesis about the aim applies where every part it names lies —
+   the cells the act was to change and the ring around them — exactly. A level
+   drawn otherwise, with the same thing in another setting, is not met by it.
 8. **What the onlooker says reaches no further than the acts it names.** It
    strikes the mind as a collision, and the mind answers there and then — it
    objects to the named acts where they were taken and commands again before
@@ -281,10 +258,9 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
                   (learning.py); the models it learns with (exact, grid,
-                  language_inducer) and the language model's earlier form
-                  (language.py), kept, not run. Imports nothing from arc3.
-src/arc3/         the body, its declared organs, what the mind is told, and
-                  where this host seats the mind.
+                  language_inducer), and what a served language model needs
+                  (language.py). Imports nothing from arc3.
+src/arc3/         the body, its declared organs, and what the mind is told.
 src/world/        what lies outside the agent: the region it acts on, served to
                   a game's own process in a scored run, and the onlooker.
 spec/             the DIL protocol and the specification it derives from,

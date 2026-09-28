@@ -30,11 +30,14 @@ shown the steps of short-term perception (`evidence`), the last of them the step
 not foreseen, and the program it wrote last with how it did on those steps.
 
 WHAT IT IS TOLD is data the mind read, never code (Plone, 2026-09-25: a prompt is
-a prior): the words of `prior:mind-task`, which the learning hands on once the
-mind has recalled it (`induce`, `induce_feedback`, `unforeseen`) — the language
-model's earlier words, kept word for word where they still hold (`arc3/task.py`
-says what changed; Plone, 2026-09-28: S5). Until they come it is asked nothing.
-Each answer names the prior among what it was built from. A program is a hypothesis only if it
+a prior): the words of `prior:mind-task` (`induce`, `induce_feedback`,
+`unforeseen`, `aimed`), which the learning hands on once the mind has recalled
+them, filled in with what the host declares of the region (its acts, the fields
+of its report) and with **the aim the mind holds**, which the mind tells it
+(`hold_aim`) — no word of a game, and no aim of the model's own: the model only
+computes, and what for is the mind's to say (Plone, 2026-09-28). Until the
+words come it is asked nothing. Each answer names the prior among what it was
+built from. A program is a hypothesis only if it
 gives, from that step, where the region came to stand: what one experience
 suggests must bear it out. Each answer is kept whole as the mind's datum
 (`said`): its text, its reasoning when the model gives one, the program it
@@ -138,6 +141,7 @@ class LanguageInducer(ExactInducer):
         self._last: ProgramForm | None = None        # the last program that was a hypothesis
         self._said: list[Perceived] = []
         self._words: dict[str, str] | None = None      # what it is told, as the mind recalled it
+        self._aim: dict[str, Any] | None = None        # the mind's aim, as the mind told it
         self._situations: dict[str, str] = {}        # a state's identity -> its situation, under its reading
         self._targets: dict[str, list[tuple[Act, tuple]]] = {}
         # For the run's report: each answer, with what came of it.
@@ -222,8 +226,32 @@ class LanguageInducer(ExactInducer):
 
     def receive_prior(self, name: str, payload: Any) -> None:
         if name == "task" and isinstance(payload, dict) and all(
-                isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen")):
-            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen")}
+                isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen", "aimed")):
+            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed")}
+
+    def hold_aim(self, aim: dict[str, Any]) -> None:
+        """The aim the mind holds: what the mind tells its model the program is
+        for. The model has none of its own (Plone, 2026-09-28)."""
+        self._aim = dict(aim)
+
+    def _aim_said(self) -> str:
+        """The mind's aim, as the model is told it: the goal's fields the region is
+        to report, or the words of the mind's own aim."""
+        if self._aim is None:
+            return ""
+        fields = (self._aim.get("reached_when") or {}).get("fields")
+        said = ("the region reports " + ", ".join(f"{k} {v}" for k, v in fields.items()) if fields
+                else str(self._aim.get("aim") or ""))
+        return self._words["aimed"].format(aim=said) if said else ""
+
+    def _news(self, report: dict[str, Any] | None) -> str:
+        """What the region reported of itself, when it was news: the fields of its
+        report that are not what they would be had nothing changed (its organs)."""
+        if not report:
+            return ""
+        unchanged = self.organs.unchanged(report)
+        news = [f"{k} {report[k]}" for k in self.organs.report_fields if k in report and report[k] != unchanged.get(k)]
+        return f" (it reported: {', '.join(news)})" if news else ""
 
     def _think(self, act: Act, before: Grid, after: Grid, evidence: tuple) -> ProgramForm | None:
         """Have the model write a program from what the mind has seen; the program,
@@ -269,17 +297,22 @@ class LanguageInducer(ExactInducer):
         return form
 
     def _messages(self, steps: list[Transition]) -> list[dict[str, str]]:
-        """What the model is shown, in the words it was told, as its earlier form
-        was: the steps seen (the oldest left out while they do not fit) and why it
-        is asked; then the program it wrote last and how it did on those steps."""
+        """What the model is shown, in the words it was told: the region as its host
+        declares it, the steps seen (the oldest left out while they do not fit),
+        why it is asked and what the mind is working toward; then the program it
+        wrote last and how it did on those steps."""
         words = self._words or {}
         shown = list(steps)
         while len(shown) > 1 and len(render_evidence(shown)) > MAX_EVIDENCE_CHARS:
             shown = shown[1:]
         grid = shown[-1].after if shown else [[]]
-        first = words["induce"].format(rows=len(grid), cols=len(grid[0]) if grid else 0,
-                                       evidence=render_evidence(shown, report=True), also=words["unforeseen"],
-                                       seconds=PROGRAM_SECONDS)
+        o = self.organs
+        acts = ", ".join(n for a, n in sorted(o.acts.items()))
+        placed = ", ".join(o.acts[a] for a in sorted(o.placed))
+        first = words["induce"].format(
+            rows=len(grid), cols=len(grid[0]) if grid else 0, acts=acts, placed=placed,
+            evidence=render_evidence(shown, report=True, name=o.name, news=self._news),
+            also=words["unforeseen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
         messages = [{"role": "user", "content": first}]
         if self._last is not None:
             # Scored on the grid alone, as it is asked to predict it.
@@ -287,7 +320,7 @@ class LanguageInducer(ExactInducer):
             ok, misses = score(self._last.predict, evidence, (), lambda status: status)
             messages.append({"role": "assistant", "content": f"```python\n{self._last.code}```"})
             messages.append({"role": "user", "content": words["induce_feedback"].format(
-                ok=ok, n=len(evidence), misses=misses_text(misses))})
+                ok=ok, n=len(evidence), misses=misses_text(misses, name=self.organs.name))})
         return messages
 
     def said(self) -> list[Perceived]:

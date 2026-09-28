@@ -1,28 +1,29 @@
-"""What the mind is told its thinking is for — host data, and so a `prior`.
+"""What the mind is told — host data, and so a `prior`.
 
-The words the model is given are data the host had before the loop ran, and
-every program the mind writes is built from them. Written into code they would
-be a side door: in no store, under no tag, in no `[event]` line, in no
-`built_from` (Plone, 2026-09-25: "Bản chất prompt cũng có khác gì datum có tag
-'prior' đâu"). So they enter as a `prior` item through the tagging-gate, the
-mind recalls them on a cue, and each program it writes names this datum among
-what it was built from. A third party reads exactly what the mind was told.
+The words a model is given, and the goal the task sets, are data the host had
+before the loop ran. Written into code they would be a side door: in no store,
+under no tag, in no `[event]` line, in no `built_from` (Plone, 2026-09-25: "Bản
+chất prompt cũng có khác gì datum có tag 'prior' đâu"). So they enter as a
+`prior` item through the tagging-gate, and the mind recalls them on a cue. A
+third party reads exactly what the mind was told.
 
-The words are this project's own, not quoted from the competition's documents,
-and the tag says so (`source: dil-arc3`). They are neutral: the scored games are
-unseen, so nothing here names a kind of game, a mechanic or a strategy. They
-give the aim — to get through the levels — and the task that serves it: work the
-rules out as a program that says what the game returns, and give the next action
-toward the aim. The mind commands it as T5's test (§6.4) and the body carries it
-out; the mind acts on nothing. It is told what its program can do with its own
-parts: `propose` may run `predict` ahead toward the `GOAL`'s `reached_when` — a
-capability of the program, not a strategy for a kind of game (Plone,
-2026-09-27) — and the time each run has. Curiosity, want and expectation are left to the
-thinking: nothing here names them.
+They are this project's own words, and the tag says so (`source: dil-arc3`).
 
-`{rows}`, `{cols}`, `{evidence}`, `{also}` and `{seconds}` are filled when the mind thinks.
-TASK, FEEDBACK and the aim prior are the words the language model's earlier form
-was told, kept word for word; INDUCE and INDUCE_FEEDBACK, the language inducer's.
+- **The goal** (`goal`): an instruction from outside — to get through the
+  levels — said as what will come back when it is met, in the fields of the
+  region's report. It is not the mind's aim: the mind's aim takes the goal's
+  value, and without a goal the mind holds its own (`mind/mind.py`, Plone,
+  2026-09-28).
+- **What a language model is asked** (`induce`, `induce_feedback`, `unforeseen`,
+  `aimed`): to work out how the region behaves and write it as a program. They
+  name no game and give the model no aim: it only computes, and the mind tells it
+  what the program is for (`aimed`, filled with the aim the mind holds). What
+  the region is like is filled in from what the host declares of it: `{rows}`,
+  `{cols}`, `{acts}`, `{placed}`; and `{evidence}`, `{also}`, `{aim}`,
+  `{seconds}` when the mind asks (`mind/models/language_inducer.py`).
+
+The words the language model's earlier form was told (`TASK`, `FEEDBACK`, and
+`prior:mind-aim`) went with it; `3b31806` keeps them (LOG.md, 2026-09-29).
 """
 
 from __future__ import annotations
@@ -34,62 +35,30 @@ from dil.host import PreexistingItem
 TASK_DOMAIN: Final = "mind-task"
 TASK_SOURCE: Final = "dil-arc3"
 
-TASK: Final = """You are meeting a game you have not seen before. The aim is to find how to get through its levels. Nobody has told you its rules: work them out from what you have seen.
+# The task's goal, in the form a mind that reads no text can hold its aim to:
+# what will come back when it is met, in the fields of the region's report
+# (Plone, 2026-09-27: what is particular to the region is data the mind reads).
+TASK_GOAL: Final = {"aim": "get through the levels", "reached_when": {"fields": {"levelsDelta": 1}}}
 
-Each step shows the game's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what the game returned. Actions are RESET (0) and ACTION1 to ACTION7; ACTION6 also carries a cell (x = column, y = row). Only the actions the game offers at a step can be taken there.
+INDUCE: Final = """You are shown what was seen of a region: its states, the actions taken on it, and what came back. Work out, from what was seen, the rules by which it behaves.
 
-{evidence}
-{also}
-Write two Python functions, using only the standard library:
-
-    def predict(grid, action, x=None, y=None):
-        # the grid the game will return for this state and this action
-    def propose(grid, steps):
-        # the action to take next, from this state, to get through the level: (action, x, y),
-        # or (action, x, y, want): want says what the action is for, as what the game will
-        # return if it does it — {{"cells": {{"row,col": colour}}, "status": {{"levelsDelta": 1}}}}
-        # steps: the steps you have just seen, oldest first, each a dict with
-        # before, action, x, y, after, and the game's state and levels gained when it said them
-
-propose may call your own predict to look ahead, several actions on, for actions whose predicted returns come to what your GOAL (below) says will come back when the aim is reached. Each run of predict or of propose must end within {seconds} seconds.
-
-State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block. To see more of what you have met before you think again, add lines such as ASK {{"kind": "frame", "provenance": "scar"}} (kinds: frame, status, remark, program, thought; provenance: scar or running)."""
-
-FEEDBACK: Final = """Your predict was run on those steps. It got {ok}/{n} exactly right.
-Some it got wrong (expected vs yours, as changed cells relative to the grid before):
-{misses}
-
-Revise your program — predict, propose and GOAL — so it explains all the evidence. Return one ```python code block."""
-
-# What a language model the mind learns with is told (`mind/models/language_inducer.py`):
-# the words of TASK and FEEDBACK above, word for word, but where it is asked for
-# what it no longer does — propose an action, hold a GOAL, ask memory — and for
-# what it now does: read the grid (`where`, `targets`). Changed from TASK: "two
-# Python functions" becomes "Python functions"; the `propose` block becomes the
-# `where` and `targets` blocks; the paragraph on `propose` looking ahead toward the
-# GOAL becomes its last sentence, on the time each run has, naming the three
-# functions; the ASK sentence is gone. From FEEDBACK: "predict, propose and GOAL"
-# becomes "predict, where and targets". UNFORESEEN is new: why it is asked
-# (Plone, 2026-09-28: S5, the prompts kept word for word where they can be).
-INDUCE: Final = """You are meeting a game you have not seen before. The aim is to find how to get through its levels. Nobody has told you its rules: work them out from what you have seen.
-
-Each step shows the game's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what the game returned. Actions are RESET (0) and ACTION1 to ACTION7; ACTION6 also carries a cell (x = column, y = row). Only the actions the game offers at a step can be taken there.
+Each step shows the region's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what came back. The actions are {acts}; {placed} also carries a cell (x = column, y = row).
 
 {evidence}
-{also}
+{also}{aim}
 Write Python functions, using only the standard library:
 
     def predict(grid, action, x=None, y=None):
-        # the grid the game will return for this state and this action
+        # the grid that comes back for this state and this action
     def where(grid):
-        # if you can: the grid as it bears on where the game stands, a copy with every
+        # if you can: the grid as it bears on where the region stands, a copy with every
         # cell that changes whatever is done (a counter, a timer) set to -1
     def targets(grid):
-        # if you can: the cells (x, y) worth taking ACTION6 on
+        # if you can: the cells (x, y) worth taking an action that carries a cell on
 
 Each run of predict, where or targets must end within {seconds} seconds.
 
-State the game's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block."""
+State the region's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block."""
 
 INDUCE_FEEDBACK: Final = """Your predict was run on those steps. It got {ok}/{n} exactly right.
 Some it got wrong (expected vs yours, as changed cells relative to the grid before):
@@ -99,15 +68,13 @@ Revise your program — predict, where and targets — so it explains all the ev
 
 UNFORESEEN: Final = "\nNo program you wrote foresaw the last step.\n"
 
-# The task's aim, stated in the form a mind that reads no text can hold itself to:
-# what will come back when it is reached, in the fields of the region's report
-# (Plone, 2026-09-27: what is particular to the region is data the mind reads).
-TASK_AIM: Final = {"aim": "get through the levels", "reached_when": {"fields": {"levelsDelta": 1}}}
+# What the mind says the program is for, filled with the aim it holds.
+AIMED: Final = "The program is for a mind working toward this: {aim}.\n"
 
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
-    payload={"task": TASK, "feedback": FEEDBACK, "aim": TASK_AIM,
-             "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK, "unforeseen": UNFORESEEN},
+    payload={"goal": TASK_GOAL, "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK,
+             "unforeseen": UNFORESEEN, "aimed": AIMED},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 
@@ -115,5 +82,5 @@ MIND_TASK: Final = PreexistingItem(
 # what it is for from its own memory, as it reads anything else.
 TASK_CUE: Final = {"domain": TASK_DOMAIN}
 
-__all__ = ["FEEDBACK", "INDUCE", "INDUCE_FEEDBACK", "MIND_TASK", "TASK", "TASK_AIM", "TASK_CUE", "TASK_DOMAIN",
+__all__ = ["AIMED", "INDUCE", "INDUCE_FEEDBACK", "MIND_TASK", "TASK_CUE", "TASK_DOMAIN", "TASK_GOAL",
            "TASK_SOURCE", "UNFORESEEN"]

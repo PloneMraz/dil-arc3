@@ -214,6 +214,9 @@ class ExactInducer:
     def receive_prior(self, name: str, payload: Any) -> None:
         """A prior the mind recalled: it reads no words."""
 
+    def hold_aim(self, aim: dict[str, Any]) -> None:
+        """The aim the mind holds: it computes the same whatever it is for."""
+
     def key(self, form: ExactForm) -> tuple:
         """What a hypothesis says, as one value: two that say the same are one."""
         return ("exact", form.source, form.act, grid_key(form.to))

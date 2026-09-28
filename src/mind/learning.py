@@ -186,7 +186,9 @@ class Learning:
         self.version = 0                  # hypotheses written
         self.code = None                  # it writes no program
         self._aim: dict[str, Any] | None = None
-        self._aim_new = False
+        # What the region has reported, and how often: the mind's own aim is a
+        # report other than the one it has been making (`mind.OWN_AIM`).
+        self._reports: dict[tuple, int] = {}
         self._raw: dict[str, Any] = {}                      # a state, by its own identity
         self._state_of: dict[str, str] = {}                 # identity -> where the region stood
         self._grid_of: dict[str, str] = {}                  # a situation -> a state of it
@@ -238,20 +240,12 @@ class Learning:
 
     def receive_prior(self, name: str, payload: Any, datum_id: str) -> None:
         self.inducer.receive_prior(name, payload)
-        aim = payload.get("aim") if isinstance(payload, dict) else None
-        if name == "task" and isinstance(aim, dict) and isinstance(aim.get("reached_when"), dict):
-            self._aim = {"aim": str(aim.get("aim") or ""), "source": "stated",
-                         "reached_when": dict(aim["reached_when"]), "within": None}
-            self._aim_new = True
 
-    def stated_aim(self) -> dict[str, Any] | None:
-        if self._aim_new:
-            self._aim_new = False
-            return dict(self._aim)
-        return None
-
-    def can_propose(self) -> bool:
-        return True
+    def hold_aim(self, aim: dict[str, Any]) -> None:
+        """The aim the mind holds — its own, or a goal's value (`mind.py`): what
+        it goes toward and weighs hypotheses about the aim by. Its model is told."""
+        self._aim = dict(aim)
+        self.inducer.hold_aim(self._aim)
 
     def held(self) -> tuple[object, ...]:
         return ()
@@ -453,10 +447,24 @@ class Learning:
 
     # ── where the region stands ──
 
+    def _report_key(self, report: dict[str, Any]) -> tuple:
+        return tuple(report.get(k) for k in self.organs.report_fields)
+
     def _reached(self, report: dict[str, Any] | None) -> bool:
-        """Whether a report shows the aim reached."""
-        fields = ((self._aim or {}).get("reached_when") or {}).get("fields") or {}
-        return bool(fields) and bool(report) and all(report.get(k) == v for k, v in fields.items())
+        """Whether a report shows the aim reached: a goal's fields, as they came;
+        or, for the mind's own aim, a report other than the one the region has
+        been making most, in a state it has not ended in (`mind.OWN_AIM`)."""
+        if not report:
+            return False
+        reached_when = (self._aim or {}).get("reached_when") or {}
+        fields = reached_when.get("fields") or {}
+        if fields:
+            return all(report.get(k) == v for k, v in fields.items())
+        if reached_when.get("new") and self._reports:
+            ordinary = max(self._reports, key=self._reports.get)
+            return self._report_key(report) != ordinary and \
+                report.get(self.organs.state_field) not in self.organs.ended
+        return False
 
     def _meet(self, state: Any) -> str:
         raw = self.inducer.identity(state)
@@ -610,6 +618,8 @@ class Learning:
             return []
         writes: list[Write] = []
         said = {k: report.get(k) for k in self.organs.report_fields}
+        key = self._report_key(said)
+        self._reports[key] = self._reports.get(key, 0) + 1
         if edge.status is None:
             edge.status = said
             if hasattr(edge.hypothesis.form, "status"):

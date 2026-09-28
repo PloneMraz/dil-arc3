@@ -12,8 +12,7 @@ kept apart:
     (`mind/`); this host declares its eye and body to it (`organs.py`) and tells
     it its task (`task.py`). It reads, expects, is curious and wants, and
     constructs the next action, commanding it as T5's test (§6.4). It acts on
-    nothing. `mind.py` here is where the language model's earlier form was
-    seated: kept, not run (LOG.md, 2026-09-28).
+    nothing.
 
 Nothing here is the agent's first person: that is what the loop produces when it
 runs (§7), located in no file.
@@ -55,7 +54,6 @@ from .frame import (
     read_frame,
 )
 from .command import WAIT, carry_out
-from .mind import Mind, ModelEndpoint, create_mind, mind_rule
 from .observe import (
     FRAME_CHANNEL,
     REGION_ENTITY,
@@ -97,15 +95,11 @@ __all__ = [
     "FrameViolation",
     "Grid",
     "IllegalMove",
-    "Mind",
-    "ModelEndpoint",
     "Move",
     "action_context",
     "admit",
     "carry_out",
     "check_afforded",
-    "create_mind",
-    "mind_rule",
     "move_from_value",
     "move_value",
     "observe",
