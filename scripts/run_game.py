@@ -176,7 +176,7 @@ print(f"  commits               : {len(commits)}")
 learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypothesis"]
 why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
 print(f"  hypotheses written    : {len(learned)}  saying one no longer holds: {sum(1 for d in learned if not d.payload.get('holds'))}")
-print(f"  states met            : {len(mind.learning._raw_of)} (grids {len(mind.learning._raw)}; clock rows {sorted(mind.learning.inducer.clock)})")
+print(f"  states met            : {len(mind.learning._raw_of)} (grids {len(mind.learning._raw)}; clock rows {sorted(mind.learning.inducer.clock)}, columns {sorted(mind.learning.inducer.clock_columns)})")
 print(f"  held off the clock    : {sum(mind.learning.holds_by_situation)} of {len(mind.learning.holds_by_situation)}")
 held = sum(1 for h in mind.learning._hypotheses if h.holds)
 print(f"  inducer               : {mind.learning.inducer.kind}  hypotheses {len(mind.learning._hypotheses)} (held {held})")

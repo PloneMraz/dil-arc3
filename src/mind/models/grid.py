@@ -158,7 +158,7 @@ class GridInducer(ExactInducer):
         forms: list[Any] = [ExactForm(source=source, act=act, to=after)]
         rows = min(len(before), len(after))
         changed = [(r, c) for r in range(rows) if r not in self.clock
-                   for c in range(min(len(before[r]), len(after[r]))) if before[r][c] != after[r][c]]
+                   for c in range(min(len(before[r]), len(after[r]))) if before[r][c] != after[r][c] and c not in self.clock_columns]
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if not changed:
             forms.append(StillForm(act[0], before[act[2]][act[1]] if placed else None))
@@ -169,9 +169,10 @@ class GridInducer(ExactInducer):
         for part in parts(changed):
             r0, r1 = min(r for r, _ in part), max(r for r, _ in part)
             c0, c1 = min(c for _, c in part), max(c for _, c in part)
-            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)]
+            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)
+                   if c not in self.clock_columns]
             ring = [(r, c) for r in range(r0 - 1, r1 + 2) if r not in self.clock for c in range(c0 - 1, c1 + 2)
-                    if not (r0 <= r <= r1 and c0 <= c <= c1)]
+                    if not (r0 <= r <= r1 and c0 <= c <= c1) and c not in self.clock_columns]
             size += len(box)
 
             def at(r: int, c: int) -> int:
@@ -214,7 +215,7 @@ class GridInducer(ExactInducer):
                 return []
             rows = min(len(before), len(expected))
             cells = [(r, c) for r in range(rows) if r not in self.clock
-                     for c in range(min(len(before[r]), len(expected[r]))) if before[r][c] != expected[r][c]]
+                     for c in range(min(len(before[r]), len(expected[r]))) if before[r][c] != expected[r][c] and c not in self.clock_columns]
         if not cells or len(cells) > MAX_REWRITE_CELLS:
             return []
         found = []
@@ -224,9 +225,10 @@ class GridInducer(ExactInducer):
 
             def at(r: int, c: int) -> int:
                 return before[r][c] if 0 <= r < len(before) and 0 <= c < len(before[r]) else OFF_GRID
-            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)]
+            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)
+                   if c not in self.clock_columns]
             ring = [(r, c) for r in range(r0 - 1, r1 + 2) if r not in self.clock for c in range(c0 - 1, c1 + 2)
-                    if not (r0 <= r <= r1 and c0 <= c <= c1)]
+                    if not (r0 <= r <= r1 and c0 <= c <= c1) and c not in self.clock_columns]
             seen: dict[int, int] = {}
             for r, c in box:
                 seen[before[r][c]] = seen.get(before[r][c], 0) + 1
@@ -332,7 +334,7 @@ class GridInducer(ExactInducer):
         ar, ac = anchor
         for dr, dc, colour in cells:
             r, c = ar + dr, ac + dc
-            if r in self.clock:
+            if r in self.clock or c in self.clock_columns:
                 continue
             inside = 0 <= r < len(state) and 0 <= c < len(state[r])
             if (state[r][c] if inside else OFF_GRID) != colour:
@@ -353,7 +355,8 @@ class GridInducer(ExactInducer):
                 if r in self.clock:
                     continue
                 for c, v in enumerate(row):
-                    where.setdefault(v, []).append((r, c))
+                    if c not in self.clock_columns:
+                        where.setdefault(v, []).append((r, c))
             self._where[situation] = where
         # Sought from its cell of the colour the grid holds fewest of.
         pr, pc, colour = min(lhs, key=lambda cell: len(where.get(cell[2], ())))

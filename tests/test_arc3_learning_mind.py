@@ -729,3 +729,40 @@ def test_what_a_colour_did_carries_to_a_thing_of_that_colour_at_another_size():
     learning._kinds = {("click", 8, 40): [5, 4, 0], ("click", 5, 4): [20, 0, 0]}
     learning._coarse = {("click", 8): [5, 4, 0], ("click", 5): [20, 0, 0]}
     assert max((("click", 5, 1), ("click", 8, 10)), key=learning._curiosity) == ("click", 8, 10)
+
+
+def _stepped(inducer, grids, act=(6, 5, 5)):
+    got = None
+    for before, after in zip(grids, grids[1:]):
+        got = inducer.perceive(Step(before=before, act=act, after=after), ("click", 1, 1)) or got
+    return got
+
+
+def test_a_column_that_counts_a_cell_at_a_time_is_the_clock_whatever_the_act():
+    # lp85's second level (2026-09-29): one cell of column 0 changed colour at
+    # each step, top to bottom, under one act only — never a row changed at
+    # every step, so the rows' rule never saw it.
+    grids = []
+    for step in range(8):
+        g = [[0] * 8 for _ in range(8)]
+        for r in range(step):
+            g[r][0] = 5
+        for r in range(step, 8):
+            g[r][0] = 14
+        g[4][4] = step % 2 + 1                    # and what the act does, elsewhere
+        grids.append(g)
+    inducer = ExactInducer(ARC_ORGANS)
+    said = _stepped(inducer, grids)
+    assert inducer.clock_columns == frozenset({0}) and said.payload["columns"] == [0]
+    assert inducer.situation(grids[2]) == inducer.situation(grids[4]), "off the clock, where it stands is one"
+
+
+def test_a_thing_moving_along_a_line_is_not_taken_for_a_clock():
+    grids = []
+    for step in range(8):
+        g = [[0] * 8 for _ in range(8)]
+        g[step][0] = 3                             # one cell moving down column 0
+        grids.append(g)
+    inducer = ExactInducer(ARC_ORGANS)
+    _stepped(inducer, grids)
+    assert inducer.clock_columns == frozenset() and inducer.clock == frozenset()

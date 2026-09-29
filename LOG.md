@@ -4683,3 +4683,29 @@ cycles, four at once. All 25 exited 0, no traceback.
 - Time: 531 s (ft09) to 1,831 s (sp80), a mean of 1,036 s a game. At that pace
   110 games four at once take about 7.9 hours, against the notebook's 8 h 40 min
   deadline: a thin margin, from 25 games, not 110.
+
+### The clock read in columns too, and by how a counter counts (Plone, 2026-09-29)
+
+**Correction.** The entries above say lp85's second level was stuck on "the
+counter row". It was a column: at each click one cell of column 0 (the left
+edge, colour e) turned 5, top to bottom — row 0 at cycle 19, row 63 at 78 — and
+at the end of the column the level ended (GAME_OVER every 61 cycles). Row 1
+hardly changed. The rows' rule could never take it for the clock: each step
+changed a different row.
+
+- **The rule** (`exact.py`; grid inherits): besides the rows' rule as it was, a
+  row or a column that, in each of the last CLOCK_WINDOW steps and whatever the
+  act, changed by 1 to CLOCK_CELLS cells, always one colour into one other, next
+  to the cells it changed the step before, is the clock — a bar counting a cell
+  at a time. A thing moving along a line changes it two ways and is not taken.
+  The clock's columns are left out wherever its rows are: a situation's
+  identity, similarity, the things, grid's hypotheses. A clock datum names its
+  `columns` when it has some.
+- Tests: a column counting a cell at a time is the clock under one act, and two
+  grids that differ only there are one situation; a cell moving down a column
+  is not. 334 pass.
+- Here: ls20 300 cycles, the clock rows 61-62 and the same commands as before;
+  vc33 300, row 0; lp85 600, column 0 — and still no second level: off column
+  0, its first 60 clicks gave 60 grids, none again. The arrow drives a belt of
+  tiles longer than the level's budget of moves, so no state comes back within
+  one try; curiosity for somewhere new has nothing to tire of there.

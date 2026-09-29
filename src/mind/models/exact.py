@@ -31,12 +31,18 @@ ITS PERCEPTION OF A GRID — declared, not measured, naming no game:
   coarser kind of its colour (`coarse`): what a colour did is read first, so
   what was learned of it carries to a thing of that colour at another size
   (Plone, 2026-09-29).
-- **The clock.** A row that changed in every one of the last CLOCK_WINDOW steps,
-  under CLOCK_KINDS kinds of act or more, by no more than CLOCK_CELLS cells each
-  time, is a clock the region keeps whatever is done — a bar that counts steps
-  (ls20's rows 61-62, vc33's row 0; LOG.md) — not where it stands. Two grids are
-  one situation when they agree off the clock. The clock only grows; when it
-  does, every situation is read again under it. The clock is not predicted.
+- **The clock.** A bar the region keeps whatever is done — it counts steps — is
+  not where it stands (ls20's rows 61-62, vc33's row 0, lp85's column 0; LOG.md).
+  A line is taken for it two ways. A row that changed in every one of the last
+  CLOCK_WINDOW steps, under CLOCK_KINDS kinds of act or more, by no more than
+  CLOCK_CELLS cells each time. Or a row or a column that, in every one of those
+  steps, whatever the act, changed by 1 to CLOCK_CELLS cells, each time the same
+  way (one colour into one other) and next to the cells it changed the step
+  before: a bar growing or shrinking a cell at a time. A thing that moves along
+  a line changes it two ways (its colour into the ground's, and back), so it is
+  not taken for one (Plone, 2026-09-29). Two grids are one situation when they
+  agree off the clock's rows and columns. The clock only grows; when it does,
+  every situation is read again under it. The clock is not predicted.
 """
 
 from __future__ import annotations
@@ -63,10 +69,11 @@ CLOCK_CELLS: Final = 2
 BIG_CHANGE: Final = 64 * 64 // 4
 
 
-def grid_key(grid: Grid, clock: frozenset[int] = frozenset()) -> str:
+def grid_key(grid: Grid, clock: frozenset[int] = frozenset(), columns: frozenset[int] = frozenset()) -> str:
     """A grid's identity: two grids are one situation when every cell off the
-    clock's rows is the same."""
-    cells = bytes(0 if r in clock else v & 0xFF for r, row in enumerate(grid) for v in row)
+    clock's rows and columns is the same."""
+    cells = bytes(0 if r in clock or c in columns else v & 0xFF
+                  for r, row in enumerate(grid) for c, v in enumerate(row))
     return hashlib.blake2b(cells + bytes([len(grid)]), digest_size=12).hexdigest()
 
 
@@ -142,8 +149,11 @@ class ExactInducer:
 
     def __init__(self, organs: Organs) -> None:
         self.organs = organs
-        self.clock: frozenset[int] = frozenset()
+        self.clock: frozenset[int] = frozenset()             # the clock's rows
+        self.clock_columns: frozenset[int] = frozenset()     # and its columns
         self._recent: deque = deque(maxlen=CLOCK_WINDOW)   # (kind, rows changed) per step
+        # Per step, each line changed by 1 to CLOCK_CELLS cells: where along it, and how.
+        self._lines: deque = deque(maxlen=CLOCK_WINDOW)
         self._things: dict[str, list[tuple[int, int, int, int]]] = {}
         self._masks: dict[str, tuple[int, tuple[int, ...]]] = {}   # identity -> (cells, a bit mask per colour)
 
@@ -155,7 +165,7 @@ class ExactInducer:
 
     def situation(self, state: Grid) -> str:
         """Where the region stands in a state, read by its perception now."""
-        return grid_key(state, self.clock)
+        return grid_key(state, self.clock, self.clock_columns)
 
     def perceive(self, step: Step, kind: tuple) -> Perceived | None:
         """What its perception learns from a step: the clock, when it grows."""
@@ -166,14 +176,49 @@ class ExactInducer:
                 or sum(per_row.values()) > BIG_CHANGE:
             return None
         self._recent.append((kind, frozenset(r for r, n in per_row.items() if n <= CLOCK_CELLS)))
-        if len(self._recent) < CLOCK_WINDOW or len({k for k, _ in self._recent}) < CLOCK_KINDS:
+        self._lines.append(self._changed_lines(before, after, per_row))
+        rows, columns = frozenset(), self._counters("c")
+        if len(self._recent) == CLOCK_WINDOW and len({k for k, _ in self._recent}) >= CLOCK_KINDS:
+            rows = frozenset.intersection(*(r for _, r in self._recent))
+        rows = rows | self._counters("r")
+        if rows <= self.clock and columns <= self.clock_columns:
             return None
-        always = frozenset.intersection(*(r for _, r in self._recent))
-        if not always or always <= self.clock:
-            return None
-        self.clock = self.clock | always
+        self.clock, self.clock_columns = self.clock | rows, self.clock_columns | columns
         self._things, self._masks = {}, {}
-        return Perceived(payload={"rows": sorted(self.clock)}, tags=dict(CLOCK_TAGS))
+        payload: dict[str, Any] = {"rows": sorted(self.clock)}
+        if self.clock_columns:
+            payload["columns"] = sorted(self.clock_columns)
+        return Perceived(payload=payload, tags=dict(CLOCK_TAGS))
+
+    @staticmethod
+    def _changed_lines(before: Grid, after: Grid, per_row: dict[int, int]) -> dict[tuple, tuple]:
+        """Each row and column a step changed by 1 to CLOCK_CELLS cells: where along
+        it, and how (one colour into another)."""
+        cells = [(r, c, before[r][c], after[r][c]) for r in per_row
+                 for c in range(min(len(before[r]), len(after[r]))) if before[r][c] != after[r][c]]
+        lines: dict[tuple, list] = {}
+        for r, c, a, b in cells:
+            lines.setdefault(("r", r), []).append((c, (a, b)))
+            lines.setdefault(("c", c), []).append((r, (a, b)))
+        return {line: (frozenset(p for p, _ in got), frozenset(t for _, t in got))
+                for line, got in lines.items() if len(got) <= CLOCK_CELLS}
+
+    def _counters(self, axis: str) -> frozenset[int]:
+        """The lines of an axis that counted a cell at a time in every one of the
+        last CLOCK_WINDOW steps: one change of colour, each next to the last."""
+        if len(self._lines) < CLOCK_WINDOW:
+            return frozenset()
+        out = set()
+        for line in self._lines[-1]:
+            if line[0] != axis or any(line not in step for step in self._lines):
+                continue
+            ways = frozenset().union(*(step[line][1] for step in self._lines))
+            if len(ways) != 1:
+                continue
+            spots = [step[line][0] for step in self._lines]
+            if all(min(abs(p - q) for p in now for q in last) == 1 for last, now in zip(spots, spots[1:])):
+                out.add(line[1])
+        return frozenset(out)
 
     def _mask(self, state: Grid) -> tuple[int, tuple[int, ...]]:
         """A grid off the clock as one bit mask per colour, and how many cells it has."""
@@ -186,10 +231,11 @@ class ExactInducer:
                 if r in self.clock:
                     bit <<= len(row)
                     continue
-                for v in row:
-                    masks[v & 15] |= bit
+                for c, v in enumerate(row):
+                    if c not in self.clock_columns:
+                        masks[v & 15] |= bit
+                        cells += 1
                     bit <<= 1
-                    cells += 1
             kept = (cells, tuple(masks))
             self._masks[raw] = kept
         return kept
