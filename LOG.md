@@ -4647,3 +4647,24 @@ code changed since `f76ff5f` in every game early; resources; and a new dataset
 and notebook version (13) pushed to the same notebook at about 02:07 UTC while
 the rerun ran. The six games offline and here (with sb26 and sk48) do not break
 it.
+
+### The 25 games at 60 cycles: tn36 filled memory; the submitted code did not break (same day)
+
+Two Save & Runs of the competition's 25 games, 60 cycles, grid, attention:
+- **`3fa6836`** (version 14): 24 exited 0; tn36 was killed (-9) at its 37th
+  cycle. Here, with tn36's environment files downloaded from the competition
+  (`environment_files/`, ignored): `MemoryError` at 4.9 GB, in the search for a
+  way to where a held hypothesis says an act brings the aim — every imagined
+  situation asked of every act that can be put on a thing, each prediction a
+  grid, all kept in `_applies`, never dropped. With 64 things at most, the m25
+  series' tn36 played 600 cycles (922 s): the cause is (a′).
+- **`a33d954`** (version 15, the code submitted as `56658708`): all 25 exited
+  0, no traceback. The submission's 0.00 is still unexplained.
+
+Fixed: what the learning predicts for a situation it has not stood in is kept
+for that choice only (`_imagined` cleared at each choice; `_applies` holds only
+situations stood in), and a choice makes at most `MAX_IMAGINED_PREDICTIONS =
+20,000` predictions there (declared, a bound on work), past which it looks no
+further past where it has stood. Here: tn36 60 cycles at 287 MB, exit 0 (and its
+first level); ls20 300 and lp85 600 cycles the same commands as before (lp85
+1.4 GB at most, ls20 0.7 GB). 332 tests pass.

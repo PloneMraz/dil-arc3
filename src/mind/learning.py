@@ -98,6 +98,12 @@ MAX_PATH_NODES: Final = 20_000
 # How many steps it looks ahead past the situations it has stood in, on what its
 # hypotheses predict. DECLARED: a bound on work.
 MAX_IMAGINED_STEPS: Final = 3
+# How many predictions one search for a way may make for situations it has not
+# stood in; past it, it looks no further past where it has stood. What it
+# predicts there is kept for that choice only, never after (tn36, 2026-09-29:
+# kept, the predictions of every imagined situation for every act filled 5 GB in
+# 37 cycles). DECLARED: a bound on work.
+MAX_IMAGINED_PREDICTIONS: Final = 20_000
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
 # ATTENTION (idea (a), Plone, 2026-09-29): with it, how much an act is wanted is
 # read not from all it did everywhere but from what it did in the situations most
@@ -243,7 +249,8 @@ class Learning:
         # how many of those it expected right — what it learned, reaching further.
         self.unseen = [0, 0, 0]
         self._unseen_expected: str | None = None
-        self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in
+        self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in: this choice's
+        self._imagined_left = MAX_IMAGINED_PREDICTIONS
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
         self.steps = 0
@@ -308,7 +315,10 @@ class Learning:
         """The hypotheses that apply to a situation and act, each with what it
         predicts and the situation that is: worked out once, and again only for
         hypotheses induced since."""
-        cached = self._applies.get((situation, act))
+        stood = situation in self._raw_of
+        if not stood and self._imagined_left <= 0:
+            return []          # it has looked as far past where it stood as a choice may
+        cached = self._applies.get((situation, act)) if stood else None
         checked, found = cached if cached is not None else ({}, [])
         for scope in self.inducer.scopes(situation, act):
             held = self._scoped.get(scope, ())
@@ -318,13 +328,16 @@ class Learning:
                     state = self._state(situation)
                 for h in held[start:]:
                     said = self.inducer.predict(h.form, situation, state, act, self._situation_of)
+                    if not stood:
+                        self._imagined_left -= 1
                     if said is not None:
                         # A prediction with no state says only what the region will
                         # report: a hypothesis about the aim (S4).
                         to = self.inducer.situation(said.state) if said.state is not None else None
                         found.append((h, said, to))
                 checked[scope] = len(held)
-        self._applies[(situation, act)] = (checked, found)
+        if stood:
+            self._applies[(situation, act)] = (checked, found)
         return found
 
     def _best(self, situation: str, act: Act, state: Any = None) -> tuple[Hypothesis, Any, str] | None:
@@ -890,6 +903,8 @@ class Learning:
         return path, bool(path)
 
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
+        # What it imagined for the last choice is not kept: each choice looks ahead anew.
+        self._imagined, self._imagined_left = {}, MAX_IMAGINED_PREDICTIONS
         here = self._here
         if here is None:
             return Proposal(None, why="nowhere yet"), []

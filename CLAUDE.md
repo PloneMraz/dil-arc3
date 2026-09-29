@@ -142,7 +142,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   DECIDE@IMPL, tag H: fit against the store; Plone, 2026-09-28: a rate, not a
   count); says in a new datum, built from the last, when whether it holds
   changes; is curious; chooses, looking ahead by what its held hypotheses
-  predict (at most `MAX_IMAGINED_STEPS` past where it has stood). **Reaching
+  predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
+  `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
+  only). **Reaching
   the aim is an experience too** (S4, Plone, 2026-09-28): the inducer, asked
   with the step's report and what the mind expected of it, says what brings the
   aim — a hypothesis that predicts only the report — held, written and weighed
