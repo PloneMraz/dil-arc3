@@ -11,7 +11,8 @@ bind it:
     different field receives a different valence. The verdict is a ↔ — revisable
     — never a `=`.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import dataclass, field as dc_field

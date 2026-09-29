@@ -5,7 +5,8 @@ The canonical loop is six links over eight layers closing into a cycle: T1→T2�
 some layer's input — no dead branches, no terminal sink. T8 closes back into the
 loop, not into a sink.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from ..invariants.guards import assert_closed_loop

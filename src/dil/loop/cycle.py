@@ -23,7 +23,8 @@ append-only `[event]` log, and GLOB-MOD advanced to N+1.
 
 This module runs one cycle correctly; it makes no self-continuity claim.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

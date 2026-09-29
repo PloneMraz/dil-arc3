@@ -9,7 +9,8 @@ T8-INV (INV-2): an `=` appears only when cognition has stopped. T8's output is a
 relative, revisable correlation, never a frozen identity — wired by asserting the
 output register is correlational.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

@@ -17,9 +17,13 @@ through T1 next cycle like any other query-return.
 
 T3 asks about a description it has not asked about before. Memory is recalled
 by the character on a cue, never poured in: the store does not flood the loop,
-and a cue already asked about has already been answered.
+and a cue already asked about has already been answered — so at NEUTRAL
+exploration or below T3 never asks one again. Leaning to explore, it asks again
+one it asked long enough ago (`T3_REASK_AFTER`), since the store may hold more
+under it by now (`T3`'s docstring: the field).
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 import json

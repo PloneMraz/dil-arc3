@@ -9,7 +9,8 @@ Each field maps to exactly one precondition checked by the gate (protocol §4):
 the gate's job is to read these structural facts — all answerable *before* the
 loop runs — and answer qualify or non-start.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from collections.abc import Iterable

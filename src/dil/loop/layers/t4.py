@@ -11,7 +11,8 @@ NEUTRAL, the reference; more with less trust. The arrival is registered either
 way. It votes `trust` from what only it sees: the share of this cycle's
 arrivals it could bind to a known entity.
 
-Ported from dil-core against DIL protocol v0.3.3; the field from dil-core 1e0a22a.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`); the field from dil-core 1e0a22a.
 """
 
 from collections.abc import Callable, Sequence

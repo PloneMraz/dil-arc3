@@ -7,7 +7,8 @@ no "work around": the only responses are pass or halt.
 These are structural laws, not tunable policy: no guard reads a threshold, and
 none touches a DECIDE@IMPL constant.
 
-Ported from dil-core (TypeScript) against DIL protocol v0.3.3.
+Ported from dil-core (TypeScript), first against DIL protocol v0.3.3 (the
+package implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from collections.abc import Sequence

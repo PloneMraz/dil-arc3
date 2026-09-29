@@ -17,7 +17,8 @@ Order at startup, and none of it is optional:
   4. **Recovery**, when asked: restore the full accrued state before the cycle
      runs, then stamp the fork immediately.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

@@ -11,7 +11,8 @@ code judging its behaviour (`world/onlooker.py`). Its remark enters through the
 host's own transducer on the `onlooker` channel; it does not use `reflection.py`, which is kept as
 ported from dil-core and not used here.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from typing import Final

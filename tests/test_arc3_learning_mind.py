@@ -652,3 +652,51 @@ def test_the_choice_names_the_experiences_it_went_by(monkeypatch):
                for w in r.activity.written}
     hypotheses = {k for k, _ in of_kind(data, "hypothesis")}
     assert hypotheses & set(written[key]), "what each suggested, it was built from"
+
+
+def test_a_frame_fits_by_the_last_grid_of_its_stack_as_the_mind_reads_it():
+    # Tag H (arc3/decisions.py): the mind expects the last grid of a stack, and
+    # T5 is told so; the rest of what arrived is compared as it came.
+    from arc3.decisions import situation_fit
+    from dil.loop.types import InfoUnit, RefFrame
+
+    def unit(grids, move=1):
+        return InfoUnit(content={"channel": "frame", "value": {"before": [lit(0)], "grids": grids,
+                                                                "move": {"actionId": move}}},
+                        ref_frame=RefFrame(bound_layer=4, ref="t"), t=1)
+
+    expected = unit([lit(1)])
+    assert situation_fit(unit([lit(2), lit(2), lit(1)]), expected), "the animation before the last grid is not read"
+    assert not situation_fit(unit([lit(1), lit(2)]), expected), "the last grid is what is expected"
+    assert not situation_fit(unit([lit(1)], move=2), expected), "the rest of the frame as it came"
+    status = InfoUnit(content={"channel": "status", "value": {"stateTo": "WIN"}}, ref_frame=expected.ref_frame, t=1)
+    assert not situation_fit(status, InfoUnit(content={"channel": "status", "value": {"stateTo": "NOT_FINISHED"}},
+                                              ref_frame=expected.ref_frame, t=1))
+
+
+def test_what_the_mind_expected_rightly_of_a_deep_stack_is_not_recorded_a_mismatch():
+    # ls20, 2026-09-29: the mind foresaw the last grid of a six-grid stack, and
+    # T5, comparing the whole stack, recorded a mismatch and scarred the frame.
+    from arc3.decisions import situation_fit
+    mind = create_mind()
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(
+            t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(),
+            t8=create_t8(),
+        ),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    deep = Signal(source_id=FRAME_CHANNEL, t=1, raw_payload={
+        "entity": "frame", "before": [lit(0)], "grids": [lit(2), lit(2), lit(1)],
+        "move": {"kind": "move", "actionId": 1, "x": None, "y": None}, "context": "action:1",
+    })
+    run(cycle, deep, status())
+    assert mind.holds[-1] == 1, "the mind foresaw the last grid"
+    frame_fits = [r.delta for r in events.all() if getattr(r, "entity", None) == "frame"
+                  and type(r).__name__ == "ExpectationActivity"]
+    assert frame_fits and frame_fits[-1] == 0.0, "and T5 records the fit"

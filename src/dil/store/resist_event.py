@@ -8,7 +8,8 @@ Each [event] record additionally anchors the FULL field-state of its cycle
 (DECIDE@IMPL tag G = full-field-state), so a third party can re-appraise the
 event later under its original context (protocol §8.5, §9).
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import dataclass, field

@@ -26,7 +26,8 @@ implementation is readable and verifiable by the other. Key ORDER is equally
 load-bearing, because the hash covers the serialized text; each builder below
 emits its keys in the reference's order.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

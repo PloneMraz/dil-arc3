@@ -13,7 +13,8 @@ behaviour. A silence against a background of returns is a mismatch (§4), not th
 environment gone. It votes `trust` from what only it sees: whether the region
 said anything at all this cycle.
 
-Ported from dil-core against DIL protocol v0.3.3; the field from dil-core 1e0a22a.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`); the field from dil-core 1e0a22a.
 """
 
 from collections.abc import Sequence

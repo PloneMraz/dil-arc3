@@ -19,7 +19,8 @@ So each criterion decomposes into claims, each carrying its basis — `trace`,
 from them. This keeps the report from overstating what the traces alone prove: an
 auditor can recompute a trace-only conformance by reading only the `trace` claims.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

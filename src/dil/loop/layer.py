@@ -18,7 +18,8 @@ The modulatory field is passed to `process` as read-only background — the
 down-channel, INV-7 — and is a separate argument from the meaning-channel inputs,
 the up-channel, INV-3. The two channels are never collapsed.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

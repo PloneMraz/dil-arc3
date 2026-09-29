@@ -184,8 +184,10 @@ now, in dil-core first and then here.
    `exploration`. Every scar's context anchor records the field it was met under.
 5. **What is admitted is asked for.** Host data enters through the tagging-gate
    stamped `prior`, and §9 has it move to `running` "once it has run". T3 asks
-   the store, once, with the description of each kind of arrival on the
-   open-tag keys (§6.4: "T3 emits a *query*"); the answer comes back through T1,
+   the store with the description of each kind of arrival on the open-tag keys
+   (§6.4: "T3 emits a *query*") — once, unless the field leans to explore, when
+   it asks again one asked `T3_REASK_AFTER` cycles ago or more (16, shortened as
+   exploration grows); the answer comes back through T1,
    runs every layer, and moves `prior → running`. Recalled on a cue, never
    poured in.
 
@@ -211,9 +213,10 @@ now, in dil-core first and then here.
    the body moves. It learns nothing wider from being told: an objection is
    held while the onlooker says it and lifted when it stops.
 9. **The language model's prompt does not show the field.** The field reaches
-   the mind at T5 and conditions it whatever its model: its alertness sets how
-   often the mind thinks in a cycle. The learning reads it further (how far an
-   objection reaches); a language model is not shown it — neither the earlier
+   the mind at T5 and conditions it whatever its model: its alertness bounds how
+   often in a cycle the mind hands a mismatch to its learning to think on (a
+   seam: the learning thinks further only on the onlooker's word), and the
+   learning reads it (how far an objection reaches); a language model is not shown it — neither the earlier
    form nor the language inducer — so what it writes is not conditioned by the
    loop's disposition.
 

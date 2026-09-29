@@ -3,9 +3,11 @@
 The host is the body. Like an eye it takes the signal in — the frame the engine
 returns, read and gated by `frame.py` — and carries it inward; it computes
 nothing from it. Working out what the grid means is the mind's, and the mind is
-one: the program the model writes (`mind.py`).
+one: it learns, and its model computes for it (`mind/`).
 
-Two signals travel each cycle, on two channels, through T3:
+Each cycle's signals travel on three channels, through T3 — the frame and the
+region's status every cycle the body acted, and, when the world has an
+onlooker, what it says of the agent (`onlooker_transducer`):
 
   - **the frame** — the stack of grids before the move and the stack after, and
     the move between, exactly as the engine returned them. It is what the mind

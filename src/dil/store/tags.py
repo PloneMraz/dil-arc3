@@ -12,7 +12,8 @@ MAY mint further OPEN tags denoting *what* the datum is (format, platform,
 object) — but never its quality, correctness, or value. Open tags never
 overwrite the fixed layer.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import dataclass, field

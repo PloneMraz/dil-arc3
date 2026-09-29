@@ -3,7 +3,8 @@
 It perceives a grid as the exact inducer does (`exact.py`: the clock, the things
 an act that takes a place may be put on) and suggests, from each experience, the
 exact hypothesis and one that generalises. The mind holds them all, weighs them
-against the store, and expects from the one right most often (`mind/learning.py`).
+against the store, and expects from the one right at the highest rate
+(`mind/learning.py`, FIT_LAW).
 
 ITS HYPOTHESES, in a language declared, not measured, naming no game:
 

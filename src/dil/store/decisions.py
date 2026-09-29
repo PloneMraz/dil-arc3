@@ -11,7 +11,8 @@ changing the protocol. Where this implementation's declaration differs from
 dil-core's, the difference is marked — it is a different host, so it is entitled
 to differ, but not to differ silently.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from typing import Final

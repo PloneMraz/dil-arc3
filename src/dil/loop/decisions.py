@@ -15,7 +15,8 @@ ARC-AGI-3.** The tag A entries in particular describe a host-shaped payload; the
 ARC declarations — a stack of 64×64 grids with cells 0–15 — are the host's, in
 `src/arc3/decisions.py`.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from typing import Final

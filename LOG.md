@@ -4102,7 +4102,10 @@ The criterion — ls20 and vc33 through level 2 — is to be measured with the
 rest on the 25 games. ls20 does not reach level 1 on this code now (since
 S2b), so ls20 can show nothing for S4 until it does.
 
-### Learning notebook version 5 scored: 0.05 (same day)
+### Learning notebook version 5 scored: 0.05, recorded again (same day)
+
+The same result as the entry of this name above, recorded a second time on the
+same day; kept as written (noted 2026-09-29).
 
 Submission `56623380` (`dil-arc3-learning` version 5, code `f76ff5f`: the
 learning model, before the learning moved to the mind; 600 cycles a game, four
@@ -4474,3 +4477,62 @@ playing six games against 25, alongside other games. The port's gain is small
 for these two (13 % and 3 %) against ls20 and tu93, where commits cost most;
 the memory it holds — the store decoded, the texts of the last commit — is
 18 % more.
+
+### The repository checked for agreement: code with itself, texts with each other, texts with code (Plone, 2026-09-29)
+
+Plone brought a list of sixteen points, from a check against an earlier state
+of the repository (its line numbers were those before `a2e307f`). Each was
+checked against `0bda6d8`; two had been fixed by `a2e307f` (the API key's test
+no longer skipped; the README's recall of the task alone), one half (the
+language model's earlier form is gone, but `base.py` still described it).
+The rest held, and are fixed here.
+
+- **T5 compared a frame's whole stack; the mind expects its last grid.** The
+  expectation carries one grid (`organs._expected_payload`), so any stack
+  deeper than one never fitted. Seen in a run: ls20, 300 cycles, grid — the mind
+  foresaw the last grid of a six-grid stack at cycle 34, and T5 recorded a
+  mismatch and scarred the frame (the mind counted 6 hits, T5 5). Fixed by a
+  fifth declared deviation: T5 takes a host-declared `fit` (`FitRule`,
+  defaulting to dil-core's whole-content equality), and the host declares Tag H
+  as it stood in the text: the last grid of the stack, the rest of the frame as
+  it came (`arc3.decisions.situation_fit`, passed by `run_game.py`). The same
+  run again: T5 fits at the mind's six cycles (0, 1, 7, 34, 137, 271), one frame
+  scar fewer, the same 300 commands. The observation keeps its whole stack.
+- **The mind's thinking, as the texts told it, did nothing here.** The learning
+  thinks only on the onlooker's word; on a failed expectation it has learned
+  from the return already, and a body waiting gets no second proposal. The
+  bounds (`MIND_THOUGHTS_PER_CYCLE`, `MAX_WAIT_THOUGHTS`) are seams no learning
+  here uses. The texts now say so (CLAUDE, README, `mind.py`); no behaviour was
+  added, which would be a design choice.
+- **T3 asks the store again** when the field leans to explore
+  (`T3_REASK_AFTER`, dil-core `1e0a22a`); CLAUDE and README said once, and
+  `t3.py`'s own docstrings disagreed. Corrected.
+- **The protocol version**: `DIL_PROTOCOL_VERSION` said 0.3.2 and was read by
+  nothing, 47 headers said "against v0.3.3", the store's claim said 0.3.5. It is
+  now 0.3.5, and the claim reads it; each header says the file was first ported
+  against v0.3.3 and that the package implements the pinned version.
+- **Docstrings of designs gone**: `grid.py` (the rule by count), `decisions.py`
+  (`mind.transition_of`, "program"), `observe.py` (the program, two channels —
+  there are three), `action.py` (no answer yet on what forms a move), `frame.py`
+  (the stack's reading "not settled"), `host.py` (an `action:0` entity — it is a
+  context), `mind.py` (it waits for its priors — it needs none), `dil/__init__.py`
+  ("only the first ring"), `base.py` (the language model's earlier form kept).
+- **Texts**: the protocol's size, 60 and 55 KB, is 63 KB (62,972 bytes);
+  `scripts/README.md` said every current script was run on 2026-09-24, and did
+  not list `level_steps.py` or `check_fast_paths.py`; the second entry
+  "Learning notebook version 5 scored: 0.05" is marked as the same result
+  recorded again; `organs.py` names where its 159 and 157 come from
+  (`scripts/data/frames.pkl`, counted again: 157 single grids, two stacks of six).
+- **377 and 379, 83 and 85** (version 5's level 1 in ls20 and vc33): the first
+  are `level_steps.py`'s, which counts RESET apart; the second the scorecard's,
+  which counts a RESET as an action (`Card.inc_reset_count`) except one that
+  begins a play — two of the four RESETs before each level began one (the card's
+  first two plays hold no action).
+- Checked and sound: every module under `src/` imports, every `__all__` names
+  what exists, `mind` imports nothing of `arc3`, `dil` nothing of `arc3`, `mind`
+  or `world`; the 22 scripts that no longer import are those
+  `scripts/README.md` declares; `run_agent.py:91` is dead code behind
+  `if False`, in one of them.
+- Tests: a frame fits by the last grid of its stack; what the mind expected
+  rightly of a deep stack is not recorded a mismatch (it fails without the
+  fit). 329 pass.

@@ -8,7 +8,8 @@ the actor: `deliver` is the host's channel, not DIL speaking to the world.
 A scripted source stands in for tests; a real deployment supplies a live source,
 the Mode-B Other of decisions.py tag D.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

@@ -50,9 +50,10 @@ class Frame:
     def top(self) -> Grid:
         """The last grid in the stack.
 
-        WHICH grid of the stack is "the" current view is NOT settled here. This
-        accessor exists for probes and reporting, and nothing in the loop may
-        depend on it until the stack's meaning is decided.
+        Which grid of the stack is read is not decided here: the body carries
+        every grid (`observe.frame_payload`), and the mind's reading — the last
+        grid — is the host's declaration of its organs (`organs.py`) and of Tag H
+        (`decisions.situation_fit`). This accessor serves probes and reporting.
         """
         return self.grids[-1]
 

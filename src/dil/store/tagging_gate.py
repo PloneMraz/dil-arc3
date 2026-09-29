@@ -16,7 +16,8 @@ There is no other way in. What a datum is stamped depends on where it comes from
 Admission failure is a halt (a raised exception), not a silent drop: data that
 cannot be admitted cleanly must not slip into the store half-stamped.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import dataclass, field

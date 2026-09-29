@@ -5,7 +5,8 @@ The checker verifies criteria from evidence a third party can read — the
 diversity-loss) is therefore DERIVED from the recorded resistance-source
 distribution, not attested. This file declares the derivation rule.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from typing import Final

@@ -8,7 +8,10 @@ of an observation turned out to differ from what the documentation implied.
 Ported nothing: this is the host's own declaration.
 """
 
-from typing import Final
+import json
+from typing import Any, Final
+
+from dil.loop.types import InfoUnit
 
 # ── Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment ──
 #
@@ -84,13 +87,29 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 # ── Tag H — situation fit ──
 #
 # DECLARED: the frame's fit is exact equality, cell for cell, of the grid the
-# mind's program predicted with the grid the region returned — the last of each
-# stack, which is the mind's reading (`mind.transition_of`). Nothing looser: a
-# program that is right on most cells is still wrong, and the mismatch is what
-# the mind thinks from. The region's status fits when the region reports what it
+# mind expected with the grid the region returned — the last of each stack,
+# which is the mind's reading (`organs.ARC_ORGANS`, `_step`) — and the rest of
+# the frame as it came; T5 is told so (`situation_fit`). Nothing looser: an
+# expectation right on most cells is still wrong, and the mismatch is what the
+# mind learns from. The region's status fits when the region reports what it
 # reported last; its `context`, the action just taken, is the agent's own act and is
 # not expected back (`mind.Mind.on_status`). Never against a correct answer:
 # none is revealed in a run.
 # The earlier declaration (equality of an effect signature, `effect.py`) and its
 # measurements are in LOG.md.
-TAG_H_STATUS: Final = "declared — exact equality of the predicted and returned grid"
+TAG_H_STATUS: Final = "declared — exact equality of the expected and returned grid, the last of the stack"
+
+
+def _as_read(content: Any) -> Any:
+    """What arrived, as the mind reads it: a frame with the last grid of its stack."""
+    value = content.get("value") if isinstance(content, dict) else None
+    if isinstance(value, dict) and isinstance(value.get("grids"), list):
+        return {**content, "value": {**value, "grids": value["grids"][-1:]}}
+    return content
+
+
+def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
+    """Tag H, told to T5 (its `fit`): the expectation fits when what arrived, read
+    as the mind reads it, is what it expected, exactly."""
+    return json.dumps(_as_read(observed.content), sort_keys=True, default=str) == \
+        json.dumps(_as_read(predicted.content), sort_keys=True, default=str)

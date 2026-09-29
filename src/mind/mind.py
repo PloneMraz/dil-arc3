@@ -16,17 +16,21 @@ WHAT IT DOES:
   is `held_by` (v0.3.5). Where its learning says nothing, the standing
   expectation holds: nothing changes, and the region reports what it reported
   last.
-- **Thinks when an expectation fails** — the step, or the region's report — as
-  often a cycle as alertness allows; on a change of the onlooker's word in its
-  own right; and while the body waits for a command. It hands its learning what it has: short-term perception (as long as
-  T5's window), what memory answered to what was asked, what the onlooker says,
-  what the region offers, why it is thinking. Its learning is also shown every
-  return.
+- **Has its learning think when an expectation fails** — the step, or the
+  region's report — as often a cycle as alertness allows; on a change of the
+  onlooker's word in its own right; and while the body waits for a command. It
+  hands its learning what it has: short-term perception (as long as T5's
+  window), what memory answered to what was asked, what the onlooker says, what
+  the region offers, why it is thinking. Its learning is also shown every
+  return, and learns from it there; it thinks further only on the onlooker's
+  word (`learning.Learning.think`), so the other occasions are seams it leaves
+  unused.
 - **Commands.** When the region has said all it says in a cycle, it asks its
   learning what to do next and, if the body can carry it out (the body's own
   rule), pushes it as T5's test (§6.4); the body carries it out. With no command
-  it thinks again while the body waits, at most MAX_WAIT_THOUGHTS times; then the
-  body stands still. It commands nothing while it holds no aim (Plone,
+  it has its learning think again while the body waits, at most MAX_WAIT_THOUGHTS
+  times, and stops asking as soon as its learning does not; then the body stands
+  still. It commands nothing while it holds no aim (Plone,
   2026-09-25) — and it always comes to hold one (below).
 - **Writes** what its learning says to write — anew or as a revision — each with
   what it was built from, ids only (v0.3.4); it learns each datum's id when the
@@ -34,7 +38,8 @@ WHAT IT DOES:
 - **Asks** its memory what its learning asks, and hands it only what answers a
   question asked (Plone, 2026-09-27): what T3 recalls by description is the
   protocol's recall, traced, and not poured in. Its priors — what its learning
-  says it reads — it recalls itself, at its first arrival, and waits for them.
+  says it reads — it recalls itself, at its first arrival; it waits for those its
+  learning says it cannot think without (`required`: none, as it stands).
 - **Holds the aim** (Plone, 2026-09-28). A goal is an instruction from
   outside: a prior it reads, which says what will come back when it is met
   (`goal`, with `reached_when`). The aim is the mind's own: it takes the goal's

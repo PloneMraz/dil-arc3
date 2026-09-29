@@ -12,7 +12,8 @@ entity the prediction matches and the error falls to zero with repetition. State
 accrues per entity across cycles (INV-5); the window is bounded by
 BASELINE_WINDOW and confidence ramps over SUFFICIENT_RECURRENCE.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations
@@ -188,6 +189,16 @@ def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
     )
 
 
+# Whether an observation fits its expectation (DECIDE@IMPL tag H, host-declared).
+#
+# DEVIATION from dil-core, declared, additive and defaulted: dil-core compares the
+# whole content, which is what holds here when a host declares nothing. A host
+# whose expectation is of one reading of what arrives — this one expects the last
+# grid of a frame's stack, not the stack — declares that reading here, so the
+# mismatch T5 records is the one its thinking organ met (dil-arc3, 2026-09-29).
+FitRule = Callable[[InfoUnit, InfoUnit], bool]
+
+
 class T5(BaseLayer):
     index = 5
     consumes: tuple[int, ...] = (4,)
@@ -197,8 +208,10 @@ class T5(BaseLayer):
         baseline_window: int | None = None,
         sufficient_recurrence: int | None = None,
         predict: PredictRule | None = None,
+        fit: FitRule | None = None,
     ) -> None:
         self._predict = predict if predict is not None else persistence
+        self._fit = fit if fit is not None else _content_equal
         self._predict_tests = _takes_test(self._predict)
         self._predict_field = _takes_field(self._predict)
         self._window_size = (
@@ -282,7 +295,7 @@ class T5(BaseLayer):
             predicted = out.predicted if declared else out
             confidence = min(1.0, count / self._recurrence)
 
-            matched = _content_equal(observed, predicted)
+            matched = self._fit(observed, predicted)
             pred_err = PredErr(
                 observed=observed,
                 predicted=predicted,
@@ -337,9 +350,11 @@ def create_t5(
     baseline_window: int | None = None,
     sufficient_recurrence: int | None = None,
     predict: PredictRule | None = None,
+    fit: FitRule | None = None,
 ) -> T5:
     return T5(
         baseline_window=baseline_window,
         sufficient_recurrence=sufficient_recurrence,
         predict=predict,
+        fit=fit,
     )

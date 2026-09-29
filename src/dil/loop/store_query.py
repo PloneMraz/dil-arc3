@@ -17,7 +17,8 @@ cycle like any query-return (§6: "input channels: query returns"). Nothing is
 read into any layer here, and nothing is changed in `[data]`: the provenance move
 happens when the datum actually runs, and the driver records it then.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

@@ -218,9 +218,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   pushes the next action as T5's `test`, if the body can carry it out: RESET
   always, any other action the region offers unless the game has ended.
   `src/arc3/command.py` carries it out and weighs nothing. With no such command
-  the mind thinks again while the body waits (`MAX_WAIT_THOUGHTS = 2`, declared,
-  not measured); then the body stands still, and in an informational region the
-  run ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
+  the mind asks its learning to think again while the body waits, at most
+  `MAX_WAIT_THOUGHTS = 2` times (declared, not measured); the learning thinks
+  only on the onlooker's word, so as it stands none comes, and the body stands
+  still at once. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
   để đợi"). Cycle 0's RESET is the host's start-up (§4). What else the mind
   sends out is a question to its own memory: `ask(cue)`, a store query, traced
   to T5 with register ↔.
@@ -264,12 +265,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   report, from the held hypothesis that applies and fits the store best. Where
   it holds none, the standing expectation holds: nothing changes, and the region
   reports what it reported last.
-- **A mismatch on any channel sets the mind thinking** — the frame, the status,
-  or what the onlooker says — as many times a cycle as the field's alertness
-  allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full); what the onlooker
-  says is thought on even in a cycle already thought in. The field reaches the
-  mind at T5 as it reaches every layer (INV-7), and the mind reads it (how far
-  an objection reaches).
+- **A mismatch on any channel is handed to the learning to think on** — the
+  frame, the status, or what the onlooker says — as many times a cycle as the
+  field's alertness allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full);
+  what the onlooker says, even in a cycle already thought in. The learning
+  learns from every return as it comes (`observe`) and thinks further only on
+  the onlooker's word: for the frame and the status, the bound is a seam no
+  learning here uses. The field reaches the mind at T5 as it reaches every layer
+  (INV-7), and the learning reads it (how far an objection reaches).
 - **What an Other says strikes the mind as a mismatch** (Plone, 2026-09-27/28):
   a ResistEvent, not plain data (§8.4, "a collision read into coordinates by a
   third party"). The mind expects the Other to say what it said — or, once it
@@ -445,9 +448,11 @@ are below.
 
 - **Tag H — situation fit.** The frame fits when the grid the mind expected
   equals, cell for cell, the grid the region returned (the last of each
-  stack); the region's status, when the region reports what it reported last —
-  its `context`, the action just taken, is the agent's own and is not expected back.
-  Not against a correct answer: no answer is ever revealed during a run.
+  stack), the rest of the frame as it came; T5 compares so, told by the host
+  (`arc3.decisions.situation_fit`, deviation 5). The region's status fits
+  when the region reports what it reported last — its `context`, the action
+  just taken, is the agent's own and is not expected back. Not against a
+  correct answer: no answer is ever revealed during a run.
 - **Tag F — open-tag keys.** Declared in `src/arc3/decisions.py`
   (`OPEN_TAG_KEYS`): `domain`, `kind`, `source`, `object`, `sense`, each naming
   one dimension wherever it appears, which is what lets an arrival's description
@@ -476,13 +481,22 @@ own form (a `present` set, a `predict` rule for T5).
    the mind keeps dil-core's scar rhythm alone (Plone, 2026-09-27), since it
    revises nothing in place and every hypothesis and choice is a new datum in
    `[event]`.
+5. **T5's `FitRule`** (`create_t5(fit=...)`): whether an observation fits its
+   expectation, declared by the host (tag H). dil-core compares the whole
+   content, which holds when a host declares none. This host's mind expects the
+   last grid of a frame's stack; compared whole, a stack deeper than one grid
+   never fitted, and an expectation that foresaw the last grid was recorded a
+   mismatch and its return scarred (LOG.md, 2026-09-29). `scripts/run_game.py` declares `situation_fit`.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a
 commit is the costliest thing a cycle does); the resistance-retrieval channel (`recollection`) is not wired —
 the channel exists, off by default, and is not recommended as a predictor. T3
-asks the store once per description: re-asking returns the same data, and asking
-every cycle would crowd T2's matching window of 8.
+asks the store once per description while exploration is at NEUTRAL or below:
+re-asking returns the same data, and asking every cycle would crowd T2's
+matching window of 8. Leaning to explore, it asks again a description asked
+`T3_REASK_AFTER` cycles ago or more (16, shortened as exploration grows; ported
+from dil-core `1e0a22a`), since the store may hold more under it by then.
 
 ## What the benchmark actually measures
 
@@ -584,7 +598,7 @@ scored better would work against the paper, not for it.
 3. Every change is a law of the mind or of a model, named for no game.
 4. When the six are met, the 25 games are run once, to confirm.
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.5.md` is 60 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.5.md` is 63 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their
@@ -842,7 +856,7 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
 
 - **The 1,500-word limit is real.** "Your Writeup should not exceed 1,500
   words. Submissions over this limit may be subject to penalty." So the paper is
-  1,500 words set against a 55 KB specification: it states the claim, the
+  1,500 words set against a 63 KB specification: it states the claim, the
   evidence and the limits, and points to the repository for the rest.
 - **The score is a mean.** "Each criterion is scored on a scale from 0 (lowest)
   to 5 (highest), with the final score calculated as the average of all six."

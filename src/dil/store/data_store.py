@@ -14,7 +14,8 @@ The four fixed tags are never overwritten as a schema: advancing provenance
 produces a new datum value carrying the same four tags in order, with the
 cycle-mark/provenance advanced — never stripped, reordered, or dropped.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import replace

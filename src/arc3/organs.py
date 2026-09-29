@@ -2,8 +2,9 @@
 
 The eye delivers a frame as the stacks of grids the engine returned and the move
 between (`observe.frame_payload`); the mind reads the last grid of each stack —
-a reading declared here, as it was in the language mind: of 159 recorded ls20
-transitions, 157 were single grids. A grid is rows of cells, each a colour 0-15.
+a reading declared here, as it was in the language mind: of the 159 recorded
+ls20 transitions (`scripts/data/frames.pkl`), 157 came back as a single grid,
+two as a stack of six. A grid is rows of cells, each a colour 0-15.
 The region reports its state, its level count and its stack depth
 (`observe.region_status`), and what it offers next. The body carries out RESET
 always, and any other act the region offers unless the game has ended

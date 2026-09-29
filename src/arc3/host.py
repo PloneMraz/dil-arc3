@@ -13,9 +13,10 @@ closing against a real region rather than against a script.
 there is no earlier frame to difference it against, so cycle 0 reports the RESET
 with a null effect. That is not a placeholder standing in for a real observation:
 the agent has not yet done anything observable, and saying so is accurate. It
-costs one cycle, and it binds an `action:0` entity the game never affords —
-which is also the check that T7's presence filter works, since an affordance the
-region does not offer must never be registered absent.
+costs one cycle, and its context is `action:0`, the RESET, which the game never
+lists among what it offers. That is a context, not an entity: the entities are
+the frame and the region (`observe.py`), and T7 registers an absence only
+against those the region says are there.
 
 The SDK is not imported here. The environment and the engine's action class both
 arrive as arguments, so the body stays testable with the game uninstalled — the

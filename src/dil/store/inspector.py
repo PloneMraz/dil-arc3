@@ -8,7 +8,8 @@ alter the store or an `[event]` record.
 This renders to a string; the caller decides where to send it. It is a standalone
 read-only view; the loop itself never depends on it.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations

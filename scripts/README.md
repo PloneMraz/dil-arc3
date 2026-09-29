@@ -28,7 +28,10 @@ from where it sits, so nothing depends on where the workspace is mounted.
 
 ## Scripts that run against the current code
 
-Each was run on 2026-09-24 and completed.
+Each imports only what the code has now (checked 2026-09-29). Those from
+`wm_probe.py` to `run_game.py`, and the last six but `readlog.py` (as its row
+says), were run on 2026-09-24 and completed; the others were added or changed
+after, each on the days its git history gives.
 
 | script | what it measures | args |
 |---|---|---|
@@ -41,6 +44,8 @@ Each was run on 2026-09-24 and completed.
 | `onlooker_answers.py` | how the learning mind answered the onlooker, read from a run's store and `[event]` alone: the body's move in an objection's cycle, choices at objected states, answers scarred, collisions and cycles commanded twice | `STORE_DIR` (a `run_game.py --out` directory) |
 | `replay_inducer.py` | how far an inducer's hypotheses reach: a run's steps replayed, in order, through the mind's learning with each inducer; per inducer, the steps it expected and got right, and of the steps from a situation and act never met, how many it expected and got right; `--inducer language` answers every question with a probe's program (a fixture for the mechanism, not a model), and `--propose` times the learning's choices | `STORE_DIR [--inducer exact grid language] [--program PROBE.json] [--propose]` |
 | `read_scorecard.py` | what an offline scorecard (`competition.json`) says, for one run or several side by side: the score, levels completed, and each game's score and levels — the toolkit's own scoring, read only | `OUTPUT_DIR [OUTPUT_DIR ...]` |
+| `level_steps.py` | when a run's levels came and how many actions each took, read from its store's reports; RESET is counted apart (the scorecard counts a RESET as an action, except one that begins a play) | `STORE_DIR ...` |
+| `check_fast_paths.py` | the port's fast paths against the code they replaced, call by call, over a live game (the optimization of 2026-09-28) | `GAME CYCLES [run_game.py options...]` |
 | `steps_of.py` | reads the steps a run took back from its store's frame signals: (cycle, grid before, act, grid after); imported by `replay_inducer.py` | — |
 | `random_game.py` | the starter kit's random agent, played through `run_competition.py`'s road (`world/remote.py`) in place of the agent: a probe of that road, no model, no DIL | `GAME CYCLES --remote HOST:PORT` (launched by `run_competition.py --player random_game.py`) |
 | `kaggle/build_dil_run.py` | builds the Kaggle dataset (dil-arc3's source) and notebook that run `run_competition.py`: offline from the competition's `environment_files` on Save & Run, through the gateway in a scored rerun | `[--game ls20,vc33] [--cycles 60] [--concurrency N] [--probe] [--inducer exact\|grid] [--curiosity LAW] [--attention] [--served --model 35b-a3b\|27b\|flash-next]` — builds `dil-arc3-learning`, the mind with its learning on CPU; `--served` builds the GPU notebook serving `--model` for the language inducer (not used for ARC-AGI-3 for now); `--probe` builds the gateway probe instead: the random agent on that road, CPU, no model. The learning notebook's scored rerun keeps each store in scratch space and drops it once the game has played. A Save & Run of either notebook packs every store into one `stores.tar.gz` (Kaggle hands outputs back one file at a time): `kaggle kernels output <kernel> -p DIR`, then `tar -xzf DIR/stores.tar.gz -C DIR` |

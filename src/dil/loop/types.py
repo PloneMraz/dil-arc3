@@ -19,7 +19,8 @@ has none at all. That difference is the type-level enforcement of "meaning is a
 function of (signal, lower-layer context)": a signal without a frame is simply
 not yet an InfoUnit.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from dataclasses import dataclass, field

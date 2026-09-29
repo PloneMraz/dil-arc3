@@ -19,7 +19,8 @@ The physical operations sit behind a small injectable `Substrate` seam so a
 non-filesystem host (a partition, an object store) can back it differently; the
 default is the local filesystem.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from __future__ import annotations
@@ -31,6 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Protocol
 
+from .. import DIL_PROTOCOL_VERSION
 from .decisions import SCHEMA_VERSION, SCHEMA_VERSIONED_SINCE
 
 # The law DIL stamps onto a substrate. A resume whose stored claim does not match
@@ -38,7 +40,7 @@ from .decisions import SCHEMA_VERSION, SCHEMA_VERSIONED_SINCE
 # different law). Bump a version only on a real, intended change to that facet.
 DIL_CLAIM: Final[dict[str, Any]] = {
     # The protocol version whose law governs this store.
-    "protocol": "0.3.5",
+    "protocol": DIL_PROTOCOL_VERSION,
     # The fixed-tag + open-tag schema version.
     "tagSchema": SCHEMA_VERSION,
     # The on-substrate layout version (the three store kinds below).

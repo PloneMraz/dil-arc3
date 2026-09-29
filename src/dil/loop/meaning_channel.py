@@ -8,7 +8,8 @@ index; reading a higher layer halts the loop.
 This is deliberately separate from the modulatory field, the down-channel of
 INV-7. The two channels are never collapsed into one.
 
-Ported from dil-core against DIL protocol v0.3.3.
+Ported from dil-core, first against DIL protocol v0.3.3 (the package
+implements `dil.DIL_PROTOCOL_VERSION`).
 """
 
 from typing import Any
