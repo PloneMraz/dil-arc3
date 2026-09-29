@@ -4605,3 +4605,22 @@ Plone chose (a′) and (b) together:
 - Here, lp85, 600 cycles, grid, attention: level 1 at 17 actions as before; in
   level 2 the arrows of colour 8 were clicked 572 times, 561 reaching a state
   not met; the level's moves ran out 12 times, and no second level. 559 s.
+
+### The learning made neutral in its code and words (Plone, 2026-09-29)
+
+Plone: `learning.py` is the mind's, and must be absolutely neutral — for every
+environment and situation; a model may be changed for a particular problem, the
+learning may not. Checked against that, and changed with the same behaviour:
+
+- It copied a state as rows (`[row[:] for row in ...]`): now `Inducer.copy`.
+- It wrote the region's report into a hypothesis's form (`hasattr(form,
+  "status")`): now `Inducer.reported`.
+- A hypothesis's tag `object: "frame"` was this host's word: now the host's
+  declaration, `Organs.state_object` (arc3: `"frame"`, as before).
+- Words and names of one region: "colour" and "size" in the curiosity's
+  docstring, "the clock's doing (a budget of acts)" in a comment; `level` (the
+  odds of the aim) → `aim`, `_grid_of` → `_raw_of`, `holds_off_clock` →
+  `holds_by_situation`, `frame_calls` → `steps`, `Choice.frame_call` → `step`.
+- Checked: ls20, 300 cycles, grid, attention, at `e7eb812` and after: the same
+  300 commands, the same 21,680 `[event]` records. 332 tests pass.
+- Noted, not done: `Act` is (id, x, y) in the mind's organs (CLAUDE.md, open).

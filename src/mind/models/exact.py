@@ -212,6 +212,16 @@ class ExactInducer:
     def default_kind(self, act: Act) -> tuple:
         return ("act", act[0])
 
+    def copy(self, state: Grid) -> Grid:
+        """A state of its own, as the learning keeps what it expects."""
+        return [row[:] for row in state]
+
+    def reported(self, form: Any, said: dict[str, Any]) -> None:
+        """What the region reported the first time a hypothesis's step was met: a
+        form that says what the region reports takes it."""
+        if hasattr(form, "status"):
+            form.status = said
+
     def coarse(self, kind: tuple) -> tuple | None:
         """The coarser kind a kind falls in, read first: putting an act on a thing
         of a colour, whatever its size. None for a kind with none."""

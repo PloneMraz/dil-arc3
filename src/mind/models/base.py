@@ -146,6 +146,12 @@ class Inducer(Protocol):
     def candidates(self, situation: str, state: State, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state, each with its kind."""
 
+    def copy(self, state: State) -> State:
+        """A state of its own, as the learning keeps what it expects."""
+
+    def reported(self, form: Any, said: dict[str, Any]) -> None:
+        """What the region reported the first time a hypothesis's step was met."""
+
     def coarse(self, kind: tuple) -> tuple | None:
         """The coarser kind a kind falls in, which the learning reads first — what
         was learned of it carries to every kind within it; None for none."""

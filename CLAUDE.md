@@ -195,6 +195,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   inducer's, and so grid's, is the share of cells equal off the clock). The
   choice it made so names the experiences it went by (`attended`, each with its
   weight) and is built from their hypotheses. Off by default.
+- **The learning is absolutely neutral** (Plone, 2026-09-29).
+  `src/mind/learning.py` belongs to the mind and serves its learning in every
+  environment and every situation — not games, not work, not any particular
+  problem — in its code, its names and its words. What knows what a state, an
+  act or a region is (grids, rows, colours, clicks, clocks, levels) belongs to
+  a model or to the host's organs, and the learning asks through a neutral seam
+  (`Inducer.copy`, `reported`, `coarse`; `Organs.state_object`). A model may be
+  changed or replaced for a particular problem; the learning may not.
 - **A foreseen act is put last, never out of reach** (2026-09-28): an untried
   act whose held hypothesis says it leads where the mind has stood is tried
   after the acts it cannot foresee, here and by the ways to them. A hypothesis
@@ -335,6 +343,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   cycle's start and the seal adds `closedAt`.
 
 ### Open in the current design
+
+- **An act is not yet opaque to the mind.** `Act` is (id, x, y), declared in
+  `src/mind/organs.py`, and the learning reads `act[0]` throughout: that an act
+  may carry a place is an assumption about space, in the mind's own organs.
+  Made opaque, it would be the host's or the model's to say what an act is —
+  a change across organs, learning, inducers and the body; noted, not done
+  (Plone, 2026-09-29).
 
 - **A scar of the exact inducer's hypothesis is almost always the clock's.** It
   does not predict the clock, so where a region keeps one, an expectation from a

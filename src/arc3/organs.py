@@ -24,7 +24,7 @@ from .action import COMPLEX_ACTION, RESET, SIMPLE_ACTIONS
 from .command import can_carry_out
 from .decisions import OPEN_TAG_KEYS
 from .frame import TERMINAL_STATES
-from .observe import FRAME_CHANNEL, ONLOOKER_CHANNEL, STATUS_CHANNEL
+from .observe import FRAME_CHANNEL, FRAME_ENTITY, ONLOOKER_CHANNEL, STATUS_CHANNEL
 
 Grid = list[list[int]]
 
@@ -97,6 +97,7 @@ ARC_ORGANS: Final = Organs(
     can_carry_out=can_carry_out,
     command=_command,
     tag_keys=frozenset(OPEN_TAG_KEYS),
+    state_object=FRAME_ENTITY,
     channels={"frame": FRAME_CHANNEL, "report": STATUS_CHANNEL, "others": ONLOOKER_CHANNEL},
     own_keys=("context",),
     quiet=_quiet,

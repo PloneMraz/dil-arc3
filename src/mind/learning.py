@@ -54,8 +54,8 @@ of it. What most often brought the aim first; then the odds of somewhere new
 change: an act that only takes it back where it stood (an undo) changes the
 state every time and teaches it nothing (Plone, 2026-09-28: S2b). A kind the
 inducer puts within a coarser one (`Inducer.coarse`) is read coarse first: how
-much the coarser kind is wanted, then the kind itself — what a colour did
-carries to a thing of that colour at another size (Plone, 2026-09-29).
+much the coarser kind is wanted, then the kind itself — what was learned of
+the coarser kind carries to every kind within it (Plone, 2026-09-29).
 
 A step ends one of three ways: nothing changed (blocked), it changed but came
 back to a situation met before, or it reached one not met before. Which of them
@@ -87,7 +87,9 @@ from dil.loop.field import ALERTNESS, axis, rising, shifted_count
 from .models.base import Context, Expectation, Inducer, Proposal, Thinking, Write
 from .organs import Act, Organs, Step
 
-HYPOTHESIS_TAGS: Final = {"domain": "mind", "kind": "hypothesis", "object": "frame", "source": "mind"}
+# A hypothesis's tags; its `object`, what it is about, is what the host calls a
+# step's state (`Organs.state_object`).
+HYPOTHESIS_TAGS: Final = {"domain": "mind", "kind": "hypothesis", "source": "mind"}
 CHOICE_TAGS: Final = {"domain": "mind", "kind": "choice", "source": "mind"}
 THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
@@ -164,7 +166,7 @@ class Answer:
 class Choice:
     """One command, for the run's report (the trace is `[event]` and the store)."""
 
-    frame_call: int
+    step: int
     act: Act | None
     why: str
     odds: float | None = None
@@ -182,6 +184,7 @@ class Learning:
         self.inducer = inducer
         self.organs = organs
         self.curiosity = curiosity
+        self._hypothesis_tags = {**HYPOTHESIS_TAGS, "object": organs.state_object}
         self.attention = attention
         # For a choice being made: how alike each state met is to where it stands
         # (attention), and what the chosen act was weighed by.
@@ -206,7 +209,7 @@ class Learning:
         self._answers: dict[tuple, list[Answer]] = {}
         self._cues = dict(priors)        # it reads the task, for its aim
         self.thoughts: list[Choice] = []
-        self.holds_off_clock: list[int] = []
+        self.holds_by_situation: list[int] = []
         self.version = 0                  # hypotheses written
         self.code = None                  # it writes no program
         self._aim: dict[str, Any] | None = None
@@ -215,7 +218,7 @@ class Learning:
         self._reports: dict[tuple, int] = {}
         self._raw: dict[str, Any] = {}                      # a state, by its own identity
         self._state_of: dict[str, str] = {}                 # identity -> where the region stood
-        self._grid_of: dict[str, str] = {}                  # a situation -> a state of it
+        self._raw_of: dict[str, str] = {}                  # a situation -> a state of it
         self._learned: list[Edge] = []                      # every experience, in the order met
         self._edges: dict[tuple[str, Act], Edge] = {}
         self._out: dict[str, dict[Act, Edge]] = {}
@@ -243,7 +246,7 @@ class Learning:
         self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
-        self.frame_calls = 0
+        self.steps = 0
         # The mind's short-term perception at the step being learned: what an
         # inducer is shown when it is asked what the step suggests.
         self._seen_now: list = []
@@ -349,7 +352,7 @@ class Learning:
 
     def _state(self, situation: str) -> Any:
         """A state of a situation: one it stood in, or one it predicted."""
-        raw = self._grid_of.get(situation)
+        raw = self._raw_of.get(situation)
         return self._raw[raw] if raw is not None else self._imagined[situation]
 
     def acknowledge(self, handle: object, datum_id: str) -> None:
@@ -496,7 +499,7 @@ class Learning:
             self._raw[raw] = state
             situation = self.inducer.situation(state)
             self._state_of[raw] = situation
-            self._grid_of.setdefault(situation, raw)
+            self._raw_of.setdefault(situation, raw)
         return raw
 
     def _situation_of(self, raw: str) -> str:
@@ -507,9 +510,9 @@ class Learning:
         experiences are now one situation and act, the hypothesis of the first
         counts the other against it if they disagree."""
         self._state_of = {raw: self.inducer.situation(g) for raw, g in self._raw.items()}
-        self._grid_of = {}
+        self._raw_of = {}
         for raw, situation in self._state_of.items():
-            self._grid_of.setdefault(situation, raw)
+            self._raw_of.setdefault(situation, raw)
         self._edges, self._out = {}, {}
         self._scoped, self._applies, self._imagined = {}, {}, {}
         for h in self._hypotheses:
@@ -531,7 +534,7 @@ class Learning:
     # ── expecting, and learning ──
 
     def expect(self, step: Step) -> Expectation:
-        self.frame_calls += 1
+        self.steps += 1
         source = self.inducer.situation(step.before)
         act = self.inducer.learnable(step.act)
         best = self._best(source, act, step.before)
@@ -544,12 +547,12 @@ class Learning:
             if unseen:
                 self.unseen[1] += 1
                 self._unseen_expected = to
-            state = [row[:] for row in said.state]
+            state = self.inducer.copy(said.state)
             fields = self.inducer.fields(h.form)
             self._expected = state
             return Expectation(state=state, fields=dict(fields) if fields else None,
                                held=(("handle", h),), by_model=True)
-        self._expected = [row[:] for row in step.before] if isinstance(step.before, list) else step.before
+        self._expected = self.inducer.copy(step.before)
         return Expectation(state=self._expected, by_model=False)
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
@@ -579,9 +582,9 @@ class Learning:
         source = self._state_of[source_raw]
         known = self._edges.get((source, act))
         applied = list(self._applicable(source, act, step.before))
-        new = self.inducer.situation(step.after) not in self._grid_of
+        new = self.inducer.situation(step.after) not in self._raw_of
         to_raw = self._meet(step.after)
-        self.holds_off_clock.append(int(self.inducer.situation(self._expected) == self._state_of[to_raw])
+        self.holds_by_situation.append(int(self.inducer.situation(self._expected) == self._state_of[to_raw])
                                     if self._expected is not None else 0)
         kind = known.kind if known is not None else (self._kind_of.get((source, act)) or self.inducer.default_kind(act))
         to = self._state_of[to_raw]
@@ -625,7 +628,7 @@ class Learning:
         # What the inducer said in computing — a language model's answers — kept
         # whole, built from the step it was asked on and the words it was told.
         for said in self.inducer.said():
-            writes.append(Write(payload={**said.payload, "cycle": self.frame_calls}, tags=dict(said.tags),
+            writes.append(Write(payload={**said.payload, "cycle": self.steps}, tags=dict(said.tags),
                                 built_from=(unit, ("prior", "task"))))
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
@@ -637,7 +640,7 @@ class Learning:
         perceived = self.inducer.perceive(step, kind)
         if perceived is not None:
             writes += self._reindex((unit,))
-            writes.append(Write(payload={**perceived.payload, "cycle": self.frame_calls},
+            writes.append(Write(payload={**perceived.payload, "cycle": self.steps},
                                 tags=dict(perceived.tags), built_from=(unit,)))
         return writes
 
@@ -651,12 +654,11 @@ class Learning:
         self._reports[key] = self._reports.get(key, 0) + 1
         if edge.status is None:
             edge.status = said
-            if hasattr(edge.hypothesis.form, "status"):
-                edge.hypothesis.form.status = said
+            self.inducer.reported(edge.hypothesis.form, said)
         elif self._reached(edge.status) != self._reached(said):
             # The aim from one and not from the other: the hypothesis did not bear
-            # out. The region ending one time and not another is the clock's doing
-            # (a budget of acts), not the act's.
+            # out. Whether the region ended is not weighed here: a region may end
+            # for what the act did not do.
             writes += self._weigh(edge.hypothesis, False, units)
         # Each hypothesis that said this act, there, brings the aim is borne out
         # by the report, or not (S4).
@@ -694,7 +696,7 @@ class Learning:
         for h in self._new:
             h.written = True
             self.version += 1
-            writes.append(Write(payload=self._describe(h), tags=dict(HYPOTHESIS_TAGS), handle=h,
+            writes.append(Write(payload=self._describe(h), tags=self._hypothesis_tags, handle=h,
                                 built_from=built_from))
         self._new = []
         return writes
@@ -704,7 +706,7 @@ class Learning:
         from the one before — added, not revised in place."""
         if not h.written:
             return []
-        return [Write(payload=self._describe(h), tags=dict(HYPOTHESIS_TAGS),
+        return [Write(payload=self._describe(h), tags=self._hypothesis_tags,
                       built_from=(*built_from, ("handle", h)))]
 
     # ── what to do next ──
@@ -722,17 +724,17 @@ class Learning:
         """How much it wants what `counts` counts: the odds of the aim first; then,
         by its law of curiosity, the odds of somewhere new, of a change, or both,
         raised by how little it has been tried (UCB1)."""
-        level, new = self._odds_of(counts)
+        aim, new = self._odds_of(counts)
         tried = counts[0]
         more = math.sqrt(2 * math.log(total + 1) / (tried + 1))
         change = (changes + 1) / (tried + 2)
         if self.curiosity == "changed":
-            return level, change + more
+            return aim, change + more
         if self.curiosity == "new-then-changed":
-            return level, new + more, change
+            return aim, new + more, change
         if self.curiosity == "new-plus-changed":
-            return level, new + change + more
-        return level, new + more
+            return aim, new + change + more
+        return aim, new + more
 
     def _change_odds(self, kind: tuple) -> float:
         """The odds it gives a kind of act of a change."""
@@ -782,7 +784,7 @@ class Learning:
     def _look_alike(self, here: str) -> None:
         """How alike each state met is to where it stands, for a choice (attention)."""
         self._alike, self._attended, self._last_attended = {}, [], []
-        if not self.attention or here not in self._grid_of:
+        if not self.attention or here not in self._raw_of:
             return
         now = self._state(here)
         for raw in {e.source for e in self._learned}:
@@ -805,7 +807,7 @@ class Learning:
         if not self.inducer.general:
             return False
         best = self._best(here, act)
-        return best is not None and best[2] in self._grid_of
+        return best is not None and best[2] in self._raw_of
 
     def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
         """From a situation, where each act leads, by the hypothesis it holds best
@@ -850,7 +852,7 @@ class Learning:
             for act, to, h, said in self._ways(node, offers):
                 if to in prev or (node == start and (start, act) in avoid):
                     continue
-                if to not in self._grid_of:
+                if to not in self._raw_of:
                     self._imagined.setdefault(to, said.state)
                     past[to] = past[node] + 1
                 else:
@@ -932,11 +934,11 @@ class Learning:
                 # it has not stood in is itself such a place; then what it can
                 # foresee, here; then, anywhere.
                 def fresh_at(n: str) -> bool:
-                    return n not in self._grid_of or any(not self._foreseen(n, a)
+                    return n not in self._raw_of or any(not self._foreseen(n, a)
                                                          for a, _ in self._open_here(n, offers, objected))
 
                 def open_at(n: str) -> bool:
-                    return n in self._grid_of and bool(self._open_here(n, offers, objected))
+                    return n in self._raw_of and bool(self._open_here(n, offers, objected))
 
                 path, over = self._way(here, fresh_at, offers, objected)
                 foreseen = False
@@ -967,8 +969,8 @@ class Learning:
                         act, why = self.organs.reset, "standing still, and nothing else it can do here"
                     else:
                         why = "nothing it can do here"
-        self.thoughts.append(Choice(self.frame_calls, act, why, odds))
-        choice: dict[str, Any] = {"cycle": self.frame_calls, "here": here, "chose": list(act) if act else None,
+        self.thoughts.append(Choice(self.steps, act, why, odds))
+        choice: dict[str, Any] = {"cycle": self.steps, "here": here, "chose": list(act) if act else None,
                                   "why": why, "aim": (self._aim or {}).get("aim")}
         if odds is not None:
             if self.curiosity == "changed":
@@ -988,7 +990,7 @@ class Learning:
         if lifted:
             choice["lifted"] = lifted
         if context.on == "command again" and self._last_choice is not None \
-                and self._last_choice.get("cycle") == self.frame_calls:
+                and self._last_choice.get("cycle") == self.steps:
             choice["supersedes"] = {"chose": self._last_choice.get("chose"), "why": self._last_choice.get("why")}
         self._last_choice = choice
         if context.remark and context.remark.get("remark"):

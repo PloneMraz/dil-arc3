@@ -95,9 +95,9 @@ def test_the_model_writes_a_program_only_on_a_step_no_hypothesis_held_foresaw():
     run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2))    # and this
     assert len(script.shown) == 1, "asked once: every later step was foreseen by what it wrote"
     programs = [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"]
-    assert programs and programs[0].open == HYPOTHESIS_TAGS
+    assert programs and programs[0].open == {**HYPOTHESIS_TAGS, "object": "frame"}
     assert programs[0].payload["code"] == RIGHT, "the program is data, whole"
-    assert mind.learning.holds_off_clock[1:] == [1, 1], \
+    assert mind.learning.holds_by_situation[1:] == [1, 1], \
         "the mind expected by the program, where it had never stood, as its where reads the grid"
     assert mind.holds[1:] == [0, 0], "the whole grid did not hold: this program does not predict the clock"
 

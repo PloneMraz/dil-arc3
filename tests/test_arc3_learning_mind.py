@@ -102,7 +102,7 @@ def test_what_it_takes_it_learns_as_data_built_from_the_frame_and_report():
     learned = of_kind(data, "hypothesis")
     assert len(learned) == 1
     datum_id, datum = learned[0]
-    assert datum.open == HYPOTHESIS_TAGS and datum.fixed.provenance == "nascent"
+    assert datum.open == {**HYPOTHESIS_TAGS, "object": "frame"} and datum.fixed.provenance == "nascent"
     assert datum.payload["act"] == [1, None, None] and datum.payload["changed"] is True
     assert datum.payload["status"] == {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"

@@ -71,6 +71,9 @@ class Organs:
     # The store's open-tag keys: what a question to memory may be asked by.
     tag_keys: frozenset[str]
 
+    # What the host calls a step's state: the `object` a datum about it is tagged
+    # with.
+    state_object: str
     # The host's channels, by what arrives on them: "frame" (a step), "report"
     # (the region's report of itself), "others" (what an Other says of the agent).
     channels: dict[str, str]
