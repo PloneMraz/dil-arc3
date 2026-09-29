@@ -4624,3 +4624,26 @@ learning may not. Checked against that, and changed with the same behaviour:
 - Checked: ls20, 300 cycles, grid, attention, at `e7eb812` and after: the same
   300 commands, the same 21,680 `[event]` records. 332 tests pass.
 - Noted, not done: `Act` is (id, x, y) in the mind's organs (CLAUDE.md, open).
+
+### Every thing offered and coarse kinds, measured on the six (version 13, `e7eb812`)
+
+Kaggle, `dil-arc3-learning` version 13, grid, S2b, attention, 600 cycles, four
+at once. Against version 12 (`a33d954`): the same 8 levels; 0.573 → 0.677 on the
+six. lf52's first level 61 → 41 actions (baseline 32); vc33's 74 → 71 and 288 vs
+384 for its second (baselines 7, 18); the other four as before. lp85's second
+level still not reached, as here (the counter row taken for where it stands:
+LOG above). Time: lp85 987 s (324), vc33 1,000 s (776), ar25 995 s (1,178), the
+rest 490-842 s.
+
+### Submission `56658708` scored 0.00 (same day)
+
+COMPLETE with 0.00 by 02:36 UTC, submitted 01:33: under 63 minutes, where some
+110 games take 5-6 hours by the offline pace and `56623380` took about nine. So
+the scored rerun ended early. Its Save & Run (the same version, arguments and
+code) played six games without error; the rerun's own path (the gateway, the
+scratch stores) is unchanged since `56623380`'s 0.05. Kaggle shows no log of
+the rerun, and the cause is not known. Suspects: a hidden game that breaks the
+code changed since `f76ff5f` in every game early; resources; and a new dataset
+and notebook version (13) pushed to the same notebook at about 02:07 UTC while
+the rerun ran. The six games offline and here (with sb26 and sk48) do not break
+it.
