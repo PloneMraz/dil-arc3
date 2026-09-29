@@ -146,6 +146,10 @@ class Inducer(Protocol):
     def candidates(self, situation: str, state: State, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state, each with its kind."""
 
+    def coarse(self, kind: tuple) -> tuple | None:
+        """The coarser kind a kind falls in, which the learning reads first — what
+        was learned of it carries to every kind within it; None for none."""
+
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: State, after: State, *, foreseen: bool = False,

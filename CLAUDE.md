@@ -179,6 +179,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   included); **S2c**, somewhere new, then a change between kinds as likely to;
   **S2d**, both odds added. A step is blocked, back where it stood, or somewhere
   new: S2 counts the last two alike, S2b the first two.
+- **What may be tried is every thing seen; which, curiosity says** (Plone,
+  2026-09-29). An act that takes a place is offered on every region of one
+  colour the inducer sees, the ground left out — no cap: at 64, smallest first,
+  lp85's second level's arrows were never offered. A kind within a coarser one
+  (`Inducer.coarse`: a click's colour, over its colour and size) is wanted by the
+  coarser first, so what a colour did carries to that colour at another size.
 - **Attention, an option** (idea (a), after self-attention; Plone, 2026-09-29:
   the idea kept, the design mine, for review): with `--attention`, how much an
   act is wanted is read from what it did in the situations most like where the

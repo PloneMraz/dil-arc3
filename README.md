@@ -112,7 +112,9 @@ what a hypothesis predicts. There are three (`--inducer`):
   ARC-AGI-3 for now (Plone, 2026-09-28).
 
 Curiosity counts how often a kind of act reached a situation not met before
-(S2b); three other laws — a change (S2), somewhere new then a change (S2c), the
+(S2b). An act that takes a place may be put on any thing the inducer sees — a
+region of one colour, every one — and its kind is the thing's colour first,
+then its size, so what a colour did carries to a thing of it at another size; three other laws — a change (S2), somewhere new then a change (S2c), the
 two added (S2d) — are kept to be measured against it (`--curiosity`). With
 `--attention` (off by default), what an act did is read not from everywhere but
 from the sixteen situations most like where the mind stands, each weighed by how

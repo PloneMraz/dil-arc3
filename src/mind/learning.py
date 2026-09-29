@@ -52,7 +52,10 @@ tried, how often it reached a situation not met before, how often the aim came
 of it. What most often brought the aim first; then the odds of somewhere new
 (Laplace), raised by how little it has been tried (UCB1). Somewhere new, not a
 change: an act that only takes it back where it stood (an undo) changes the
-state every time and teaches it nothing (Plone, 2026-09-28: S2b).
+state every time and teaches it nothing (Plone, 2026-09-28: S2b). A kind the
+inducer puts within a coarser one (`Inducer.coarse`) is read coarse first: how
+much the coarser kind is wanted, then the kind itself — what a colour did
+carries to a thing of that colour at another size (Plone, 2026-09-29).
 
 A step ends one of three ways: nothing changed (blocked), it changed but came
 back to a situation met before, or it reached one not met before. Which of them
@@ -189,6 +192,9 @@ class Learning:
         # How often each kind of act, and each act, changed the state (for the
         # laws that count a change: S2, S2c, S2d).
         self._kind_changes: dict[tuple, int] = {}
+        # The same counts for the coarser kinds the inducer puts kinds in.
+        self._coarse: dict[tuple, list[int]] = {}
+        self._coarse_changes: dict[tuple, int] = {}
         self._action_changes: dict[int, int] = {}
         self._now_raw: str | None = None                       # the latest state's own identity
         self._last_choice: dict[str, Any] | None = None        # the choice it wrote last
@@ -581,11 +587,15 @@ class Learning:
         to = self._state_of[to_raw]
         changed = to != source
         if act[0] != o.reset[0]:
-            for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0])):
+            coarse = self.inducer.coarse(kind)
+            for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0]),
+                           *([self._coarse.setdefault(coarse, [0, 0, 0])] if coarse is not None else [])):
                 counts[0] += 1
                 counts[1] += int(new)
             if changed:
                 self._kind_changes[kind] = self._kind_changes.get(kind, 0) + 1
+                if coarse is not None:
+                    self._coarse_changes[coarse] = self._coarse_changes.get(coarse, 0) + 1
                 self._action_changes[act[0]] = self._action_changes.get(act[0], 0) + 1
         self._last_new = known is None
         if self._unseen_expected is not None:
@@ -666,6 +676,9 @@ class Learning:
         if self._reached(said) and edge.act[0] != self.organs.reset[0]:
             edge.reached += 1
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
+            coarse = self.inducer.coarse(edge.kind)
+            if coarse is not None:
+                self._coarse.setdefault(coarse, [0, 0, 0])[2] += 1
             self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
         if self._new:
             writes += self._write(units)
@@ -734,12 +747,19 @@ class Learning:
         return self._wanted(self._actions.get(act, (0, 0, 0)), self._action_changes.get(act, 0), total)
 
     def _curiosity(self, kind: tuple) -> tuple[float, ...]:
-        """How much it wants a kind of act, by its law of curiosity."""
+        """How much it wants a kind of act, by its law of curiosity: the coarser
+        kind it falls in first, when it has one, then the kind itself."""
         total = sum(k[0] for k in self._kinds.values())
         attended = self._attend(lambda e: e.kind == kind)
-        if attended is not None:
-            return self._wanted(*attended, total)
-        return self._wanted(self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0), total)
+        fine = self._wanted(*attended, total) if attended is not None else \
+            self._wanted(self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0), total)
+        coarse = self.inducer.coarse(kind)
+        if coarse is None:
+            return fine
+        attended = self._attend(lambda e: self.inducer.coarse(e.kind) == coarse)
+        wide = self._wanted(*attended, total) if attended is not None else \
+            self._wanted(self._coarse.get(coarse, (0, 0, 0)), self._coarse_changes.get(coarse, 0), total)
+        return (*wide, *fine)
 
     def _attend(self, which: Callable[[Edge], bool]) -> tuple[tuple[float, float, float], float] | None:
         """What an act did in the situations most like where it stands (ATTENTION):

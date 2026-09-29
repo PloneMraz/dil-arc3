@@ -23,9 +23,14 @@ others are measured against.
 ITS PERCEPTION OF A GRID — declared, not measured, naming no game:
 
 - **Things.** A region of one colour joined side to side, at its cell nearest its
-  middle — at most MAX_CLICK_TARGETS, smallest first, none larger than
-  MAX_THING_SHARE of the grid (that large is taken for the ground). They are
-  where an act that takes a place may be put.
+  middle — every one, smallest first, none larger than MAX_THING_SHARE of the
+  grid (that large is taken for the ground). They are where an act that takes a
+  place may be put; which to try is the mind's curiosity, not a cut made here
+  (Plone, 2026-09-29: a cap of 64 left lp85's second level's arrows unseen).
+- **Kinds.** Putting an act on a thing is of the kind (colour, size), within the
+  coarser kind of its colour (`coarse`): what a colour did is read first, so
+  what was learned of it carries to a thing of that colour at another size
+  (Plone, 2026-09-29).
 - **The clock.** A row that changed in every one of the last CLOCK_WINDOW steps,
   under CLOCK_KINDS kinds of act or more, by no more than CLOCK_CELLS cells each
   time, is a clock the region keeps whatever is done — a bar that counts steps
@@ -47,8 +52,8 @@ Grid = list[list[int]]
 
 CLOCK_TAGS: Final = {"domain": "mind", "kind": "clock", "object": "frame", "source": "mind"}
 
-# What an act that takes a place may be put on. DECLARED, not measured.
-MAX_CLICK_TARGETS: Final = 64
+# What an act that takes a place may be put on: no thing larger than this share
+# of the grid, which is the ground. DECLARED, not measured.
 MAX_THING_SHARE: Final = 0.5
 # The clock. DECLARED, not measured: on ls20 a looser rule took the rows a moving
 # piece crossed for the clock (LOG.md).
@@ -95,7 +100,7 @@ def things(grid: Grid) -> list[tuple[int, int, int, int]]:
             r, c = min(cells, key=lambda rc: ((rc[0] - mr) ** 2 + (rc[1] - mc) ** 2, rc))
             out.append((colour, len(cells), c, r))
     out.sort(key=lambda t: (t[1], t[3], t[2]))
-    return out[:MAX_CLICK_TARGETS]
+    return out
 
 
 @dataclass(frozen=True)
@@ -207,6 +212,11 @@ class ExactInducer:
     def default_kind(self, act: Act) -> tuple:
         return ("act", act[0])
 
+    def coarse(self, kind: tuple) -> tuple | None:
+        """The coarser kind a kind falls in, read first: putting an act on a thing
+        of a colour, whatever its size. None for a kind with none."""
+        return kind[:2] if kind[0] == "click" and len(kind) > 2 else None
+
     def candidates(self, situation: str, state: Grid, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state, each with its kind: an act, or for an
         act that takes a place, the colour and size of the thing it is put on."""
@@ -274,5 +284,4 @@ class ExactInducer:
         return {"from": source, "act": list(form.act), "to": to, "changed": to != source, "status": form.status}
 
 
-__all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "MAX_CLICK_TARGETS",
-           "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]
+__all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]

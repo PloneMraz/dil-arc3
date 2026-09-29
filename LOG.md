@@ -4583,3 +4583,25 @@ The Save & Run played the six games offline: no error, each exited 0, and the
 same levels and actions as version 11 (`e348d9e`, before T5's fit) — 8 levels
 of 49, 3,594 actions, 0.57295 on the toolkit's scale. T5's fit changed no
 choice, as on ls20 here. Outputs in `scripts/data/kaggle/dil-run/output-submit-v12/`.
+
+### Every thing offered; a click's kind read by its colour first (Plone, 2026-09-29)
+
+lp85's second level, traced in version 12's store: 581 clicks on 65 cells, not
+one changed a cell, one state all level. Checked with the inducer's own
+`things()`: level 1 had 40 regions, all offered, its two arrows (colour 8 and e,
+40 cells each) 35th and 36th — found at the 9th action; level 2 had 74, and 64
+were offered, all of 1, 2 or 4 cells; its six arrows (10 cells each) were 67th
+to 72nd, cut. And a click's kind was (colour, size): the arrows of level 1,
+(8, 40), taught nothing of level 2's, (8, 10).
+
+Plone chose (a′) and (b) together:
+- **(a′)** `things()` returns every region, the ground left out
+  (`MAX_CLICK_TARGETS` removed); which to try is the mind's curiosity.
+- **(b)** `Inducer.coarse`: the exact inducer (and so grid) puts a click's kind
+  (colour, size) within (colour). The learning keeps the same counts for the
+  coarser kinds and wants a kind by its coarser one first, then itself.
+- Tests: every thing is offered beyond 64; a click is of its colour first; what
+  a colour did carries to a thing of that colour at another size. 332 pass.
+- Here, lp85, 600 cycles, grid, attention: level 1 at 17 actions as before; in
+  level 2 the arrows of colour 8 were clicked 572 times, 561 reaching a state
+  not met; the level's moves ran out 12 times, and no second level. 559 s.

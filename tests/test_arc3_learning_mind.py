@@ -700,3 +700,32 @@ def test_what_the_mind_expected_rightly_of_a_deep_stack_is_not_recorded_a_mismat
     frame_fits = [r.delta for r in events.all() if getattr(r, "entity", None) == "frame"
                   and type(r).__name__ == "ExpectationActivity"]
     assert frame_fits and frame_fits[-1] == 0.0, "and T5 records the fit"
+
+
+def test_every_thing_is_offered_not_the_smallest_64():
+    # lp85's second level (2026-09-29): 74 things, and its arrows were 67th to
+    # 72nd, smallest first; cut at 64, the mind could never put an act on them.
+    grid = [[0] * 64 for _ in range(64)]
+    for i in range(70):
+        grid[2 * (i // 30)][2 * (i % 30)] = 1 + i % 9      # 70 things of one cell
+    for r in range(10, 13):
+        for c in range(10, 14):
+            grid[r][c] = 8                                  # and a larger one
+    found = things(grid)
+    assert len(found) == 71 and found[-1][:2] == (8, 12), "every thing, the largest last"
+
+
+def test_a_click_is_of_its_colour_first_then_its_size():
+    inducer = ExactInducer(ARC_ORGANS)
+    assert inducer.coarse(("click", 8, 40)) == ("click", 8)
+    assert inducer.coarse(("act", 1)) is None
+
+
+def test_what_a_colour_did_carries_to_a_thing_of_that_colour_at_another_size():
+    # Clicking colour 8 at size 40 reached somewhere new; colour 5 at size 4 never
+    # did. Offered colour 8 at size 10 and colour 5 at size 1, both untried, it
+    # wants colour 8 — what it learned of the colour, not of the size.
+    learning = seated().learning
+    learning._kinds = {("click", 8, 40): [5, 4, 0], ("click", 5, 4): [20, 0, 0]}
+    learning._coarse = {("click", 8): [5, 4, 0], ("click", 5): [20, 0, 0]}
+    assert max((("click", 5, 1), ("click", 8, 10)), key=learning._curiosity) == ("click", 8, 10)
