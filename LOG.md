@@ -4668,3 +4668,18 @@ situations stood in), and a choice makes at most `MAX_IMAGINED_PREDICTIONS =
 further past where it has stood. Here: tn36 60 cycles at 287 MB, exit 0 (and its
 first level); ls20 300 and lp85 600 cycles the same commands as before (lp85
 1.4 GB at most, ls20 0.7 GB). 332 tests pass.
+
+### The 25 games at 600 cycles on the latest code (notebook `dil-arc3-mind`, `f27606c`)
+
+A notebook of its own (`--notebook dil-arc3-mind`, version 1), grid, S2b,
+attention, every thing offered, coarse kinds, imagined predictions bounded; 600
+cycles, four at once. All 25 exited 0, no traceback.
+
+- **13 levels of 183, 0.320** on the toolkit's scale, against the m25 series'
+  grid S2b (`4bbd221`): 9 levels, 0.141. New first levels: tn36 (35 actions,
+  baseline 32 — 2.99 for the game), r11l (53 / 22), bp35 (273 / 21), ar25
+  (472 / 32). Faster: lf52 (41 / 32), sp80 (243 / 39). Slower: su15 (481 / 22).
+  Still none in 14 games.
+- Time: 531 s (ft09) to 1,831 s (sp80), a mean of 1,036 s a game. At that pace
+  110 games four at once take about 7.9 hours, against the notebook's 8 h 40 min
+  deadline: a thin margin, from 25 games, not 110.
