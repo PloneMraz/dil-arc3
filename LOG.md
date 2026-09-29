@@ -4536,3 +4536,37 @@ The rest held, and are fixed here.
 - Tests: a frame fits by the last grid of its stack; what the mind expected
   rightly of a deep stack is not recorded a mismatch (it fails without the
   fit). 329 pass.
+
+### Attention measured on the six games (point 10, part 2)
+
+Kaggle, notebook `dil-arc3-learning` version 11, code `e348d9e` (before T5's
+fit), grid, S2b, `--attention`, 600 cycles, the six games four at once
+(`run_series.py a6 --start 1`). Against grid S2b without it: the m25 series'
+run (`4bbd221`, the same mind; the code since chooses alike, checked on ls20).
+
+| game | without: levels, (actions, baseline) | with attention |
+|---|---|---|
+| ar25 | 0 | 1: (472, 32) |
+| lf52 | 1: (61, 32) | 1: (61, 32) |
+| lp85 | 1: (17, 17) | 1: (17, 17) |
+| ls20 | 1: (347, 22) | 1: (342, 22) |
+| tu93 | 2: (453, 19), (108, 16) | 2: (446, 19), (119, 16) |
+| vc33 | 2: (74, 7), (282, 18) | 2: (74, 7), (384, 18) |
+
+- Levels 7 → 8 (ar25's first, at 15 times its baseline); the six's mean score
+  0.576 → 0.573 (the toolkit's scale, 0-100). vc33's second level took 102
+  actions more, tu93's second 11 more; ls20's first 5 fewer, tu93's first 7.
+  One run each: no difference here is shown to be more than chance.
+- **Attention was used, and could not tell situations apart.** Most choices by
+  curiosity went by it (ar25 609 of 627, ls20 437 of 445, tu93 325 of 333; lp85
+  59 of 83). But the experiences it attended to were nearly all alike to where
+  the mind stood: in ls20 their similarity ran 0.985-0.988 (10th to 90th
+  percentile), in ar25 0.87-0.97, in tu93 0.82-0.995. The share of equal cells
+  off the clock is carried by what never changes — most of a 64×64 grid — so
+  every state is like every other, and the 16 "most alike" are close to any 16.
+  Raised to the 4th power, 0.988 is still 0.95.
+- Time: ar25 took 1,214 s against the fast port's 777 s under S2c (runs 3-5; not
+  the same law, so not a clean comparison); the other five 381-955 s. The
+  sorting over every experience at each choice is the likely cost; not traced.
+- So, as it stands, attention changes little because its measure of alike does
+  not discriminate, not because weighing by situation was tried and failed.
