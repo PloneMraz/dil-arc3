@@ -4570,3 +4570,16 @@ run (`4bbd221`, the same mind; the code since chooses alike, checked on ls20).
   sorting over every experience at each choice is the likely cost; not traced.
 - So, as it stands, attention changes little because its measure of alike does
   not discriminate, not because weighing by situation was tried and failed.
+
+### Submitted: `56658708`, notebook `dil-arc3-learning` version 12 (Plone, 2026-09-29)
+
+Plone: the latest code, with T5's fix and with attention. Code `a33d954` (the
+dataset's served `decisions.py`, `t5.py`, `learning.py` and `run_game.py`
+compared with the repository's before the notebook ran: the same); arguments
+`--inducer grid --curiosity new --attention`, 600 cycles a game, four at once,
+CPU. Submitted 01:33:30 UTC, PENDING; the day's one submission.
+
+The Save & Run played the six games offline: no error, each exited 0, and the
+same levels and actions as version 11 (`e348d9e`, before T5's fit) — 8 levels
+of 49, 3,594 actions, 0.57295 on the toolkit's scale. T5's fit changed no
+choice, as on ls20 here. Outputs in `scripts/data/kaggle/dil-run/output-submit-v12/`.

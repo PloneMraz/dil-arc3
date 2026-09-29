@@ -733,7 +733,10 @@ ref `56588469`, serving Qwen3.8-Flash-Next NVFP4. A second submission,
 `56600038`, is not the agent: the starter kit's random agent on the same road
 (`scripts/random_game.py`). A third, `56623380`, is notebook
 `plonemraz/dil-arc3-learning` **version 5**, code `f76ff5f`: the learning mind
-(no weights), 600 cycles a game, four at once, on CPU. What each scored, and
+(no weights), 600 cycles a game, four at once, on CPU. A fourth, `56658708`,
+is the same notebook's **version 12**, code `a33d954`: the mind with its
+learning, the grid inducer, S2b curiosity with attention, T5 fitting a frame by
+its last grid; 600 cycles a game, four at once, on CPU. What each scored, and
 what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 
