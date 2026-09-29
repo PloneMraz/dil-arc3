@@ -492,6 +492,9 @@ def main() -> None:
                     help="the mind's model, what its learning computes with")
     ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
+    ap.add_argument("--notebook", default=LEARNING_KERNEL_SLUG,
+                    help="the CPU notebook's slug: another than the one a scored rerun is running from, so a "
+                         "measurement never pushes to it (2026-09-29)")
     ap.add_argument("--attention", action="store_true",
                     help="the mind attends to the experiences most like where it stands (mind/learning.py)")
     a = ap.parse_args()
@@ -540,7 +543,7 @@ def main() -> None:
     (kernel / "run.ipynb").write_text(json.dumps(nb, indent=1))
     if cpu:
         slug, title = ((PROBE_KERNEL_SLUG, "dil-arc3 gateway probe") if a.probe
-                       else (LEARNING_KERNEL_SLUG, "dil-arc3 learning"))
+                       else (a.notebook, a.notebook.replace("-", " ").replace("dil arc3", "dil-arc3")))
         (kernel / "kernel-metadata.json").write_text(json.dumps({
             "id": f"{OWNER}/{slug}", "title": title,
             "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
