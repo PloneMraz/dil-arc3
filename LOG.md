@@ -4709,3 +4709,17 @@ changed a different row.
   0, its first 60 clicks gave 60 grids, none again. The arrow drives a belt of
   tiles longer than the level's budget of moves, so no state comes back within
   one try; curiosity for somewhere new has nothing to tire of there.
+
+### The clock in columns, measured on the six (notebook `dil-arc3-mind` version 3, `560f667`)
+
+Against version 13 (`e7eb812`): 8 → 7 levels, 0.677 → 0.675. The five others
+played as before, level for level and action for action; lp85's second level
+still not reached (its column 0 now the clock). **ar25 lost its first level**
+(472 actions before): its column 63 is a counter too — one cell b → 5 at each
+act but 6 and 7, top to bottom — taken for the clock at cycle 105. Off it, ar25
+met 260 situations, not 568: before, the counter had made nearly every step
+somewhere new, and the first level came of that. Now the mind revisits, its
+choices differ (act 5 tried 17 times, not 125; 92 choices toward a state with an
+act not yet taken, not 2), and no level came in 600 cycles. Its expectations
+held 110 times, not 414: the clock is not predicted (open), and a hypothesis
+met again now expects the counter as it was. Time 747-1,148 s a game.
