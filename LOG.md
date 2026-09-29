@@ -4454,3 +4454,23 @@ the one it stands in. The design is mine, put to him for review.
   did where the mind stood alike, and without it by all; too little alike, as
   without it; the choice names the experiences and is built from their
   hypotheses. 327 pass.
+
+### ar25 and lp85 slower on Kaggle with the faster port: traced here (Plone asked, 2026-09-29)
+
+The measurement's entry above took ar25 (567 → 777 s) and lp85 (294 → 460 s)
+as the machine's, untraced. Traced on one machine: ar25 and lp85, 600 cycles,
+grid, S2c, at `4bbd221` (run 2's code) and at `e348d9e`, the four at once on
+this machine's 24 cores. The same commands in each pair, the same levels (ar25
+none, lp85 one).
+
+| | `4bbd221` | `e348d9e` | memory (max RSS) |
+|---|---|---|---|
+| ar25 | 378 s | 329 s | 877 → 1,036 MB |
+| lp85 | 118 s | 114 s | 195 → 228 MB |
+
+So the code is not slower for either; the slowdown on Kaggle is not in it. What
+it is there stays untraced: one run each, on a machine not seen, in a notebook
+playing six games against 25, alongside other games. The port's gain is small
+for these two (13 % and 3 %) against ls20 and tu93, where commits cost most;
+the memory it holds — the store decoded, the texts of the last commit — is
+18 % more.
