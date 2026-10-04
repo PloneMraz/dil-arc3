@@ -1251,7 +1251,7 @@ class Cycle:
         self._emit(directive.issuing_layer, directive.committed_action)
 
         # ── Activity record: the cycle's trace, sealing the cycle (§9) ──
-        # Trace, not experience: no layer learns from it. It keeps the audit
+        # Trace, not experience: it never becomes a scar. It keeps the audit
         # trail complete across quiet stretches (E4) — one record per cycle.
         self._events.append(
             record_activity(

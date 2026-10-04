@@ -86,7 +86,7 @@ class ActivityEvent:
     """One cycle's activity, for the log's AUDIT role (§9 "completeness of trace").
 
     What was emitted, what returned, in which flow mode. Trace, not experience —
-    no layer learns from it.
+    it never becomes a scar; like all the store, it is the agent's memory.
     """
 
     cycle: int
@@ -154,7 +154,7 @@ class WrittenTags:
 
 
 # Activity records — the log's TRACE lines (§9: "an activity record is trace, not
-# experience"; no layer learns from any of them). Every movement of a datum is a
+# experience"; none becomes a scar). Every movement of a datum is a
 # line, written as it occurs: it is only a log, dense but only a log.
 #
 # `layer-exit`/`provenance` are lean (a `datum_id` + the move) — they carry no

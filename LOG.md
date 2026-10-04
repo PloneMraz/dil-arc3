@@ -4958,3 +4958,25 @@ code comments that repeat the claim (dil-core's `recollection.ts`, `cycle.ts`,
 `resist-event.ts`, and this port's), and `recollection`'s reasoning that "the log
 is an Other and not a memory" (§7: an agent treating the log as its own past
 would claim continuity), which stands against the new rule.
+
+### recollection: the log is memory, read back as an Other (Plone)
+
+Plone settled the clash between the new rule and `recollection`'s reasoning ("the
+log is an Other and not a memory", from §7): memory here is the real past of what
+happened — a trace that can be followed and inspected as computer science and
+programming inspect a trace — and claims nothing about a self that continues;
+reading it back is a meeting with an Other in Mode-A, not the agent meeting
+itself. Here first (Plone: dil-arc3 before dil-core), comments only, no change in
+behaviour:
+
+- `recollection.py`: the section rewritten as "THE LOG IS MEMORY, READ BACK AS AN
+  OTHER"; only scars are recallable because §10 names retrieval of resistance,
+  and an activity record never becomes a scar (no longer by "no layer learns from
+  it"); its resistance is Mode-A — the agent's own record through its own lens —
+  so it stands beside a live Mode-B source, never in its place (it had said "a
+  genuine Mode-B channel").
+- `cycle.py`, `resist_event.py` (two): "no layer learns from it" → it never
+  becomes a scar.
+- dil-core: queued in its CLAUDE.md, to be ported back (`45a782f`, changelog
+  `d2a38ad`); its v0.3.6 commits pushed (`6f96857` to `d2a38ad`), as Plone said,
+  with nothing changed for the commits' author field. 337 tests pass.
