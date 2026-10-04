@@ -4870,5 +4870,4 @@ act did not hold: a third thing clicked turned the mark both ways too.
   no clock. 337 pass.
 - Here, 600 cycles: ls20 with attention the same commands as before; r11l's
   first level in 19 actions with attention, 115 without, as before — the rows
-  were taken after it — and 299 and 202 situations met where the board was read
-  whole (before: fewer, rows masked).
+  were taken after it; situations met 299 and 202 (before the fix 291 and 209).
