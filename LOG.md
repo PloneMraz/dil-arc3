@@ -4794,3 +4794,26 @@ Time: 519 s to 2,043 s a game (sp80; bp35 1,777 s), a mean of 1,054 s; the run
 took 7,154 s for 25 games four at once, 286 s a game. At that pace 110 games take
 about 31,500 s, against the deadline's 31,200 (9 h less 20 min) and before the
 notebook's own start-up: some games would not be played.
+
+### Version 17 (`04d610a`, no attention): an empty scorecard, the faster run, and three levels slower
+
+Notebook `dil-arc3-learning` version 17, grid, S2b, no attention, 600 cycles,
+the 25 games. All exited 0, no traceback; 3,691 s in all (version 16: 7,154 s),
+560 s a game on average, 932 s at most (bp35): 110 games four at once about 4.5
+hours.
+
+- **The scorecard came back empty** (no environment, no action) — caused by
+  `ONLY_RESET_LEVELS`, set this morning. The toolkit opens a play on its
+  scorecard only on a RESET that is a full reset (`Scorecard.update_scorecard` →
+  `new_play`); with the variable every RESET is a level reset, the first one
+  too, so no play is ever opened and every action is dropped. The games were
+  played all the same (the runs' own reports and stores). In a scored rerun the
+  games and the scorecard are the gateway's, so the variable set here likely
+  neither helps nor harms there; offline it breaks the scorecard. To be undone.
+- From the stores (actions per level without RESET, the same reading for both;
+  scores estimated with the baselines, as the toolkit computes them): the same
+  12 levels, about 0.27 against version 16's 0.51. Slower: r11l 20 → 115 actions
+  (its baseline 22), lf52 41 → 139 (32), sp80 236 → 564 (39). Faster: bp35 266 →
+  164, tu93 438 → 288 and 116 → 104, tn36 35 → 33, vc33 70 → 64 and 283 → 277.
+  Two changes stand between the versions — attention off, and the edge bar
+  counted by its changes — and which slowed which game is not known.
