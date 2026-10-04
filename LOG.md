@@ -4817,3 +4817,7 @@ hours.
   164, tu93 438 → 288 and 116 → 104, tn36 35 → 33, vc33 70 → 64 and 283 → 277.
   Two changes stand between the versions — attention off, and the edge bar
   counted by its changes — and which slowed which game is not known.
+
+`ONLY_RESET_LEVELS` taken out of both runners again (Plone approved): it emptied
+the offline scorecard. The engine's reset as it is stands; a RESET at a level's
+count of 0 still goes back to the first level — not met in 81 stored runs.
