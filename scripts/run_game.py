@@ -129,6 +129,10 @@ daemon = Daemon(
     # The learning mind writes every cycle and adds data rather than revising
     # one: the scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE).
     commit_on_write=False,
+    # `[data]` and `[event]` synced to disk once a cycle, not each write (Plone,
+    # 2026-10-04: a machine's crash loses at most the cycle running; recovery is
+    # the commits'). The syncs of each were about 60% of a run (LOG.md).
+    sync_each_cycle=True,
     # A commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28): a commit is
     # the costliest thing a cycle does (decisions.COMMIT_EVERY; LOG.md).
     commit_every=COMMIT_EVERY_HERE,

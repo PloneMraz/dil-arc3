@@ -533,6 +533,15 @@ own form (a `present` set, a `predict` rule for T5).
    last grid of a frame's stack; compared whole, a stack deeper than one grid
    never fitted, and an expectation that foresaw the last grid was recorded a
    mismatch and its return scarred (LOG.md, 2026-09-29). `scripts/run_game.py` declares `situation_fit`.
+6. **`SYNC_CADENCE`** (`Daemon(sync_each_cycle=True)`; Plone, 2026-10-04): the
+   store synced to disk once a cycle, at its close and before any commit
+   marker, not at each write. Each `[event]` record is still written to its
+   file as it comes, the log still append-only and hash-chained; `[data]`'s
+   writes go in one transaction a cycle. dil-core syncs each record and commits
+   each write, which holds when a host declares none. What a crash of the
+   machine could lose is the cycle running; recovery is what the commits are
+   for. The syncs of each were about 60% of a run (LOG.md, 2026-10-04).
+   `scripts/run_game.py` declares it; queued in dil-core.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a

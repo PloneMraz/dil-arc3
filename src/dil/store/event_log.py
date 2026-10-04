@@ -203,6 +203,14 @@ class DurableEventLog:
         """The current tamper-evidence chain head (for external anchoring)."""
         return self._sink.head()
 
+    def sync_each_cycle(self) -> None:
+        """Sync to disk once a cycle, not each record (SYNC_CADENCE, declared)."""
+        self._sink.sync_each = False
+
+    def sync(self) -> None:
+        """Sync what was appended to disk."""
+        self._sink.sync()
+
     def close(self) -> None:
         """Close the underlying file handle."""
         self._sink.close()

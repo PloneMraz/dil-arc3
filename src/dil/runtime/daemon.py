@@ -77,7 +77,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
-        "_respond", "_recollection", "_admit", "_commit_on_write",
+        "_respond", "_recollection", "_admit", "_commit_on_write", "_sync_each_cycle",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -103,8 +103,13 @@ class Daemon:
         recollection: Any = None,
         admit: AdmitPolicy | None = None,
         commit_on_write: bool = True,
+        sync_each_cycle: bool = False,
     ) -> None:
         self._recollection = recollection
+        # DEVIATION (SYNC_CADENCE, dil-arc3, 2026-10-04): sync `[data]` and
+        # `[event]` to disk once a cycle, at its close and before any commit
+        # marker, not each write. False keeps dil-core's sync of each.
+        self._sync_each_cycle = sync_each_cycle
         # DEVIATION (COMMIT_CADENCE): whether a cycle in which the agent wrote is
         # committed too. False keeps dil-core's scar rhythm alone.
         self._commit_on_write = commit_on_write
@@ -201,6 +206,9 @@ class Daemon:
             self._data = self._requisitioned.data
             self._events = self._requisitioned.events
             self._commits = self._requisitioned.commits
+            if self._sync_each_cycle:
+                self._data.sync_each_cycle()
+                self._events.sync_each_cycle()
             if self._chain_head is None:
                 self._chain_head = self._requisitioned.events.head
         else:
@@ -249,6 +257,7 @@ class Daemon:
 
         # Recovery stamps the fork instantly: parent = the marker restored from.
         if self._commits is not None and recovered_hash is not None and recovered_marker is not None:
+            self._sync()
             self._write_marker(
                 recovered_from=recovered_hash, state_hash=recovered_marker.state_hash
             )
@@ -275,8 +284,9 @@ class Daemon:
         # host turns it off (`commit_on_write`), it also
         # fires at the close of every cycle in which the agent wrote a datum, so
         # each version of what it wrote is in a snapshot the marker ties to its
-        # place in `[event]` (v0.3.3 §9: a revision's content is read from the
-        # snapshot; how finely is the cadence, DECIDE@IMPL).
+        # place in `[event]` — kept for recovery: what a datum holds is in
+        # `[data]` (v0.3.6 §9).
+        self._sync()
         if self._commits is not None and (
             self._scars_since_commit >= self._commit_every
             or (self._commit_on_write and result.written > 0)
@@ -292,7 +302,16 @@ class Daemon:
                 break  # source idle
             ran += 1
 
+    def _sync(self) -> None:
+        """At a cycle's close: sync the store to disk, when it is synced once a cycle."""
+        if self._sync_each_cycle:
+            for store in (self._data, self._events):
+                sync = getattr(store, "sync", None)
+                if sync is not None:
+                    sync()
+
     def stop(self) -> None:
+        self._sync()
         self._running = False
 
     def is_running(self) -> bool:
@@ -326,6 +345,7 @@ class Daemon:
     def commit(self) -> str | None:
         """Manual, out-of-loop commit trigger; returns the marker hash, or None."""
         if self._running and self._commits is not None:
+            self._sync()
             return self._write_marker()
         return None
 

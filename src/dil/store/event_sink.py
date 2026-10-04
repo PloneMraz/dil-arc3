@@ -512,6 +512,7 @@ class JsonlFileSink:
 
     __slots__ = (
         "_cap",
+        "sync_each",
         "_stamp",
         "_dir",
         "_seq",
@@ -551,6 +552,11 @@ class JsonlFileSink:
                 self._prev = last.hash
 
         self._fh: Any = None
+        # DEVIATION (SYNC_CADENCE, declared by the host; dil-arc3, 2026-10-04):
+        # True syncs each record to disk before `write` returns, as dil-core does.
+        # False writes each record to its file at once (flushed to the system) and
+        # syncs to disk only on `sync()`, which the daemon calls once a cycle.
+        self.sync_each = True
         self._current_date = ""
         self._current_seq = 0
         self._current_bytes = 0
@@ -602,13 +608,21 @@ class JsonlFileSink:
             self._open_segment(today, line_bytes)
         self._fh.write(encoded)
         self._fh.flush()
-        os.fsync(self._fh.fileno())  # durability: flush to disk before returning
+        if self.sync_each:
+            os.fsync(self._fh.fileno())  # durability: flush to disk before returning
         self._current_bytes += line_bytes
         self._prev = chained.hash
         self._seq += 1
 
+    def sync(self) -> None:
+        """Sync what was written to disk (SYNC_CADENCE: once a cycle)."""
+        if self._fh is not None:
+            self._fh.flush()
+            os.fsync(self._fh.fileno())
+
     def close(self) -> None:
         if self._fh is not None:
+            self.sync()
             self._fh.close()
         self._fh = None
 

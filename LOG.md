@@ -5046,3 +5046,24 @@ the same commands. Before (A), with every sync: 683 s (same day). The sync of
 each record is dil-core's guarantee — when an append returns, the record is on
 disk — part of the log being a black box; to sync less is to change that
 mechanism (dil-core first, Plone's call). Not changed.
+
+### The store synced to disk once a cycle (SYNC_CADENCE, a declared deviation; Plone)
+
+Plone approved, for dil-arc3 first (dil-core queued, `dd6cfdc`): sync `[data]`
+and `[event]` to disk once a cycle. His reasons: a large system has backup
+power; above all, the commits are there for that very case — the snapshots
+before stand, and what is lost is a stretch of data at the moment the
+infrastructure fails, a recovery more likely than after an attack.
+
+- `JsonlFileSink.sync_each` (default True, dil-core's): False writes and flushes
+  each record as it comes and syncs on `sync()`; `DurableEventLog.sync_each_cycle`
+  and `sync`. `SqliteDataStore` likewise commits once on `sync()` (reads in the
+  process see every write). `Daemon(sync_each_cycle=True)` syncs both at each
+  cycle's close and before any commit marker, and on `stop`; `run_game.py`
+  declares it. CLAUDE.md: deviation 6. Tests: the default syncs each record and
+  commits each write; once a cycle, every record is written and readable,
+  synced on `sync()`; the data read at once and committed on `sync()`. 343 pass.
+- ls20, 600 cycles, attention, with (A), side by side: each record 1,358 s, once
+  a cycle **571 s** — the same commands, the same 133,702 `[event]` records (by
+  form), the same 4,310 data, payloads, tags, provenance and cycle marks equal.
+  Before (A), with each record synced, it had taken 683 s.

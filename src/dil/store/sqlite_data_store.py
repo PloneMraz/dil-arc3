@@ -69,13 +69,18 @@ class SqliteDataStore:
     decoded it — the more a run had stored, the more each commit cost. What a
     read returns is what the table holds, decoded from the text written to it."""
 
-    __slots__ = ("_db", "_held")
+    __slots__ = ("_db", "_held", "_each")
 
     def __init__(self, db_path: str | os.PathLike[str]) -> None:
         self._db = sqlite3.connect(db_path)
         self._db.execute("CREATE TABLE IF NOT EXISTS data (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
         self._db.commit()
         self._held: dict[str, TaggedDatum] | None = None
+        # DEVIATION (SYNC_CADENCE, declared by the host; dil-arc3, 2026-10-04):
+        # True commits each write, as dil-core does; False keeps a cycle's writes
+        # in one transaction, committed on `sync()` (once a cycle, by the daemon).
+        # Reads in this process see every write either way.
+        self._each = True
 
     def _all(self) -> dict[str, TaggedDatum]:
         if self._held is None:
@@ -91,7 +96,8 @@ class SqliteDataStore:
             "INSERT INTO data(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v",
             (id, text),
         )
-        self._db.commit()
+        if self._each:
+            self._db.commit()
         if self._held is not None:
             self._held[id] = _decode(text)
 
@@ -103,14 +109,16 @@ class SqliteDataStore:
 
     def delete(self, id: str) -> bool:
         cur = self._db.execute("DELETE FROM data WHERE k = ?", (id,))
-        self._db.commit()
+        if self._each:
+            self._db.commit()
         if self._held is not None:
             self._held.pop(id, None)
         return cur.rowcount > 0
 
     def clear(self) -> None:
         self._db.execute("DELETE FROM data")
-        self._db.commit()
+        if self._each:
+            self._db.commit()
         self._held = {}
 
     def size(self) -> int:
@@ -119,8 +127,17 @@ class SqliteDataStore:
     def entries(self) -> list[tuple[str, TaggedDatum]]:
         return list(self._all().items())
 
+    def sync_each_cycle(self) -> None:
+        """Commit once a cycle, not each write (SYNC_CADENCE, declared)."""
+        self._each = False
+
+    def sync(self) -> None:
+        """Commit the writes not yet committed."""
+        self._db.commit()
+
     def close(self) -> None:
         """Close the underlying database handle."""
+        self._db.commit()
         self._db.close()
 
 
