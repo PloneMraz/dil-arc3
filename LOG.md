@@ -4780,3 +4780,17 @@ asked for a change at every one of 6 steps. sp80's own (row 0) was already found
 - Here, 600 cycles, the seven games on this machine, actions per level counted
   without RESET: vc33 70 → 68 for its first level (283 its second, as before),
   tn36 35 → 33, lp85 17, ls20 340, as before; ar25, sb26, sk48 none, as before.
+
+### Version 16 of `dil-arc3-learning` (`5511bfb`): the candidate's Save & Run, 25 games at 600 cycles
+
+Built for a submission Plone is to review; code `5511bfb` (the clock in columns,
+before the RESET and edge-bar changes of later the same day). All 25 exited 0, no
+traceback, the scorecard closed. **12 levels, 0.477** (the 25 at 600 cycles on
+`f27606c`: 13, 0.320). r11l's first level in 20 actions, under its baseline of
+22 (53 before): 4.76 for the game. ar25's first level lost, as on the six (its
+counter now the clock). The other ten levels as before, action for action.
+
+Time: 519 s to 2,043 s a game (sp80; bp35 1,777 s), a mean of 1,054 s; the run
+took 7,154 s for 25 games four at once, 286 s a game. At that pace 110 games take
+about 31,500 s, against the deadline's 31,200 (9 h less 20 min) and before the
+notebook's own start-up: some games would not be played.
