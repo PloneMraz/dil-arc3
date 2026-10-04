@@ -739,6 +739,17 @@ Three traps, each of which would cost a day at the deadline:
    another interpreter is not the graded one; this machine's `python3` and the
    starter kit's venv are 3.12.3.
 
+**While a submission is being scored, nothing is pushed to Kaggle** (Plone,
+2026-10-04): no notebook version, no dataset version, to any notebook.
+Measurements in that time run on this machine. Once Kaggle has scored it, Kaggle
+is used again. Why: submission `56658708` was scored while a new dataset and
+notebook version were pushed to the notebook it ran from, and ended early with
+0.00 (LOG.md, 2026-09-29) — not shown to be the cause, not ruled out; and a
+dataset all notebooks share is not kept apart by keeping notebooks apart. Times
+measured here are not Kaggle's (lp85: 114 s here, 297 s there, on the same
+commands): whether 110 games fit the deadline is measured on Kaggle, outside a
+scoring.
+
 **Grading runs in two phases.** Phase A is the commit run, which emits a dummy
 parquet — "1 row: row_id=1_0, game_id=1, score=1" — and that is not a fault.
 Phase B is the real evaluation: a sidecar resolves `gateway:8001` and the agent

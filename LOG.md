@@ -4723,3 +4723,15 @@ choices differ (act 5 tried 17 times, not 125; 92 choices toward a state with an
 act not yet taken, not 2), and no level came in 600 cycles. Its expectations
 held 110 times, not 414: the clock is not predicted (open), and a hypothesis
 met again now expects the counter as it was. Time 747-1,148 s a game.
+
+## 2026-10-04
+
+### Nothing pushed to Kaggle while a submission is scored (Plone)
+
+Proposed after `56658708`: a notebook of its own for submissions, another for
+measurements. Plone: not needed — while a submission is being scored, push
+nothing to Kaggle and measure here; that leaves nothing to conflict, the shared
+dataset included, which separate notebooks would not have covered. Written in
+CLAUDE.md, the submission pipeline. `dil-arc3-mind` stays for measurements that
+need Kaggle's own times. Also noted: on 2026-09-29 Gem wrote that Plone had
+approved the separate notebook; he had approved only the 25-game check (a).
