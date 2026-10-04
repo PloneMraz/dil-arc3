@@ -5032,3 +5032,17 @@ Measured here, 600 cycles, attention:
   appends 192 s (layer-exit records 141 s — each revision arrives at T1 and runs
   every layer); the commit snapshots 112 s; SQLite's commit of each write
   64 s (9,680 writes, one transaction each).
+
+### What (A) costs is the disk: every [event] record and every [data] write is synced
+
+Profiled with (A), ls20, 250 cycles, 427 s: `os.fsync` 171 s (40%) — the durable
+`[event]` sink syncs each record to disk before returning (42,947 records) —
+and SQLite's commit of each write 64 s (15%). (A) adds records (each revision
+runs every layer, a layer-exit record each) and writes, so it adds syncs.
+
+Measured, ls20 600 cycles with (A), side by side: with every sync, 1,316 s;
+with no `fsync` and SQLite unsynchronised (an experiment, not kept), **539 s**,
+the same commands. Before (A), with every sync: 683 s (same day). The sync of
+each record is dil-core's guarantee — when an append returns, the record is on
+disk — part of the log being a black box; to sync less is to change that
+mechanism (dil-core first, Plone's call). Not changed.
