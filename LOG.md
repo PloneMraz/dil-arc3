@@ -4895,3 +4895,18 @@ act did not hold: a third thing clicked turned the mark both ways too.
   with, before these changes), not the doubling between versions 16 and 17 on
   Kaggle — those differ in the clock rule too, and the old one left the clock
   unfound in 11 games, every step a new situation.
+
+### Version 18 (`1bbd7e2`, attention, the clock rules of today, faster code): 15 levels, 0.502
+
+Notebook `dil-arc3-learning` version 18, grid, S2b, attention, 600 cycles, the 25
+games. All exited 0, no traceback, the scorecard full again.
+
+- **15 levels of 183, 0.502** (version 16: 12, 0.477). New first levels: m0r0
+  (74 actions, baseline 30: 0.78 for the game), cd82 (513 / 55), sc25 (557 / 36).
+  tu93's second level in 50 actions, not 119 (0.46 for the game); bp35 144, not
+  273; tn36 33, not 35; vc33's first 69, not 71. Slower: lf52 138, not 41 (as on
+  the four combinations), sp80 271, not 243. r11l 19 (its baseline 22), lp85 17,
+  ls20 342 as before.
+- Time: 5,171 s for the 25 four at once (version 16: 7,154 s), a mean of 767 s a
+  game, 1,222 s at most (sp80; bp35 1,155 s): 207 s a game in all, so 110 games
+  about 6.3 hours against the deadline's 8 h 40 min — from 25 games, not 110.
