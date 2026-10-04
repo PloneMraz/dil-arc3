@@ -4980,3 +4980,28 @@ behaviour:
 - dil-core: queued in its CLAUDE.md, to be ported back (`45a782f`, changelog
   `d2a38ad`); its v0.3.6 commits pushed (`6f96857` to `d2a38ad`), as Plone said,
   with nothing changed for the commits' author field. 337 tests pass.
+
+### What a revised datum holds is in [data]; the snapshot is for recovery (Plone)
+
+Gem's design for (A) had said that the contents of revisions between two commits
+would not be kept, since a revision's content "is read from the commit
+snapshot". Plone: a commit is there to keep data from loss and to roll back when
+the system is attacked — a virus, a sybil attack, an injected prompt; it is not
+in the store and not part of reading to learn or enrich, the store is; `[event]`
+carries no content, `[data]` does. And the snapshot holds the store's content
+not by chance but by design, against a direct attack on DIL: content-addressed,
+kept outside the store, never overwritten. The misreading came from the
+documents: protocol §9's revision clause ("What a datum held is read from the
+full-system snapshot … how finely successive revisions are captured follows the
+commit cadence") and the specification's ("What D held before is not lost: it is
+in the snapshot …").
+
+- dil-core `68d948d` (changelog `c55a0ed`), pushed: both clauses now say what a
+  datum holds is in `[data]`, where the agent reads it, `[event]` records that it
+  was revised, and the snapshot keeps the store's content by design for
+  recovery, not for the agent's reading; the v0.3.6 changes line says so.
+  Copied here byte for byte; `spec/README.md`'s table updated.
+- `resist_event.py` (the written tags, `RevisionActivity`) brought to it here;
+  dil-core's `resist-event.ts` queued in its CLAUDE.md.
+- So (A) loses nothing the mind reads: a revised datum's present content is in
+  `[data]`; what a revision did is recorded in `[event]`.
