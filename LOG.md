@@ -4910,3 +4910,9 @@ games. All exited 0, no traceback, the scorecard full again.
 - Time: 5,171 s for the 25 four at once (version 16: 7,154 s), a mean of 767 s a
   game, 1,222 s at most (sp80; bp35 1,155 s): 207 s a game in all, so 110 games
   about 6.3 hours against the deadline's 8 h 40 min — from 25 games, not 110.
+
+### Submitted: `56820389`, notebook `dil-arc3-learning` version 18 (Plone, same day)
+
+Code `1bbd7e2`, `--inducer grid --curiosity new --attention`, 600 cycles a game,
+four at once, CPU; submitted 09:43:54 UTC, PENDING; the day's one submission.
+Its Save & Run: the entry above. Nothing is pushed to Kaggle until it is scored.

@@ -790,8 +790,11 @@ ref `56588469`, serving Qwen3.8-Flash-Next NVFP4. A second submission,
 (no weights), 600 cycles a game, four at once, on CPU. A fourth, `56658708`,
 is the same notebook's **version 12**, code `a33d954`: the mind with its
 learning, the grid inducer, S2b curiosity with attention, T5 fitting a frame by
-its last grid; 600 cycles a game, four at once, on CPU. What each scored, and
-what the run did, is in LOG.md. The paper must name the submission it
+its last grid; 600 cycles a game, four at once, on CPU. A fifth, `56820389`,
+is the same notebook's **version 18**, code `1bbd7e2`: as the fourth, with every
+thing offered to click, coarse kinds, the clock read in rows and columns (edge
+bars by their changes, no blinking cell), imagined predictions bounded, and
+faster code. What each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 
 The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
