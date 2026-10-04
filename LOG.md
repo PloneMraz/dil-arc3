@@ -4735,3 +4735,23 @@ dataset included, which separate notebooks would not have covered. Written in
 CLAUDE.md, the submission pipeline. `dil-arc3-mind` stays for measurements that
 need Kaggle's own times. Also noted: on 2026-09-29 Gem wrote that Plone had
 approved the separate notebook; he had approved only the 25-game check (a).
+
+### A RESET at a level's start lost every level gained; now the runners keep RESET to the level
+
+From a public notebook (scottlegrand, `taaf-flashnext-sheetu12b-0922`, a fork of
+Tufa Labs' Duck), which sets `ONLY_RESET_LEVELS=true`. Read in the engine
+(`arcengine/base_game.py`, `handle_reset`): without it, a RESET is a full reset —
+back to the first level — when the level's action count is 0, and the count is
+zeroed at every `set_level`: on entering a level and after a level's restart.
+Checked here on lp85 with the 17 clicks this agent's run took to level 1: then a
+RESET at once — without the variable, levels 0; with it, levels 1.
+
+- In the stored runs (81 games: the 25 at 600 cycles on `f27606c`, the two
+  25-game checks, the six on `560f667`) no RESET came at a count of 0: 231
+  followed the region's end, 11 came mid-level after another act. No level was
+  ever lost; the risk was there all the same (the mind resets when every act
+  known is objected to, or nothing is left to try).
+- `run_competition.py` and `run_game.py` set `ONLY_RESET_LEVELS=true` (unless
+  set otherwise) before the toolkit loads. It reaches the games their process
+  holds — the offline runs and Save & Run. A scored rerun's games are the
+  gateway's; whether it reads the variable is not known. 334 tests pass.

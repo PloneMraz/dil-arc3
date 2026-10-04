@@ -28,6 +28,14 @@ from pathlib import Path
 sys.path.insert(0, str(STARTER)); sys.path.insert(0, str(STARTER / "vendor" / "ARC-AGI-3-Agents"))
 sys.path.insert(0, str(SRC))
 
+# A RESET restarts the level the region stands in, never the whole game (but after
+# a win): the engine otherwise restarts the game when no action has been taken in
+# the level yet — at a level's start, or after a RESET — and every level gained is
+# lost (`arcengine.base_game.handle_reset`; LOG.md, 2026-10-04). It reaches the
+# games this process holds; a scored rerun's gateway holds its own, and whether it
+# reads this is not known.
+os.environ.setdefault("ONLY_RESET_LEVELS", "true")
+
 import arc_agi
 from arc_agi import OperationMode
 from arcengine import GameAction
