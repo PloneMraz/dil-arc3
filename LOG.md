@@ -4849,3 +4849,26 @@ The three games' environment files downloaded (`environment_files/`, ignored);
   the mind reads past part of what it plays on. Not traced yet.
 - Attention doubles a run's time (version 16: 7,154 s for the 25; version 17:
   3,691 s): with it, 110 games overrun the deadline as it is.
+
+### A cell blinking as the acts alternate was taken for the clock (r11l); now a clock row counts each cell once
+
+Traced on r11l's stores: clicking one thing and another in turn, the mark of
+what is chosen turned 0 → 3 and back at every step (rows 13-14, columns 56-57;
+row 38, column 49), under three kinds of click; the rows' rule (a row changed at
+every one of 6 steps, by 1 or 2 cells, under 3 kinds) took those rows for the
+clock — up to 28 rows of the board with the old rules, 4 to 8 with the new — and
+the mind read past them. Asking that each way of change come under two kinds of
+act did not hold: a third thing clicked turned the mark both ways too.
+
+- The rule now asks that no cell of the row change twice within the window: a
+  bar counts a cell and moves on; a blinking cell is not a clock. The counter
+  rules already ask one colour change, each next to the last.
+- Replayed: r11l's three stored runs keep only column 0; the 25 games a clock in
+  24 as before; re86 keeps row 63 and loses rows 53-55, which the rows' rule had
+  added at its 91st step; sb26 keeps row 53 only. The clock test rewritten as a
+  counting bar (it used a blinking cell); a blinking cell under three kinds is
+  no clock. 337 pass.
+- Here, 600 cycles: ls20 with attention the same commands as before; r11l's
+  first level in 19 actions with attention, 115 without, as before — the rows
+  were taken after it — and 299 and 202 situations met where the board was read
+  whole (before: fewer, rows masked).

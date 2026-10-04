@@ -33,9 +33,11 @@ ITS PERCEPTION OF A GRID — declared, not measured, naming no game:
   (Plone, 2026-09-29).
 - **The clock.** A bar the region keeps whatever is done — it counts steps — is
   not where it stands (ls20's rows 61-62, vc33's row 0, lp85's column 0; LOG.md).
-  A line is taken for it two ways. A row that changed in every one of the last
+  A line is taken for it three ways. A row that changed in every one of the last
   CLOCK_WINDOW steps, under CLOCK_KINDS kinds of act or more, by no more than
-  CLOCK_CELLS cells each time. Or a row or a column that, in every one of those
+  CLOCK_CELLS cells each time, no cell of it twice: a bar counts a cell once and
+  moves on, and a cell that blinks back and forth as the acts alternate —
+  r11l's mark of what is chosen — is not one (2026-10-04). Or a row or a column that, in every one of those
   steps, whatever the act, changed by 1 to CLOCK_CELLS cells, each time the same
   way and next to the cells it changed the step before. Or a row or a column within COUNTER_EDGE lines of
   the grid's edge whose last COUNTER_TICKS changes — the steps it changed in,
@@ -160,7 +162,7 @@ class ExactInducer:
         self.organs = organs
         self.clock: frozenset[int] = frozenset()             # the clock's rows
         self.clock_columns: frozenset[int] = frozenset()     # and its columns
-        self._recent: deque = deque(maxlen=CLOCK_WINDOW)   # (kind, rows changed) per step
+        self._recent: deque = deque(maxlen=CLOCK_WINDOW)   # (kind, {row changed: its cells changed}) per step
         # Per line at the edge, its last changes of 1 to COUNTER_CELLS cells: where along it, and how.
         self._ticks: dict[tuple, deque] = {}
         # Per step, each line changed by 1 to CLOCK_CELLS cells: where along it, and how.
@@ -186,13 +188,17 @@ class ExactInducer:
         if step.act == self.organs.reset or step.act[0] == self.organs.reset[0] \
                 or sum(per_row.values()) > BIG_CHANGE:
             return None
-        self._recent.append((kind, frozenset(r for r, n in per_row.items() if n <= CLOCK_CELLS)))
+        self._recent.append((kind, {r: frozenset(c for c, (a, b) in enumerate(zip(before[r], after[r])) if a != b)
+                                    for r, n in per_row.items() if n <= CLOCK_CELLS}))
         counters = self._tick(before, after, per_row)
         self._lines.append(self._changed_lines(before, after, per_row))
         counters |= {("r", i) for i in self._counters("r")} | {("c", i) for i in self._counters("c")}
         rows, columns = frozenset(), frozenset(i for axis, i in counters if axis == "c")
         if len(self._recent) == CLOCK_WINDOW and len({k for k, _ in self._recent}) >= CLOCK_KINDS:
-            rows = frozenset.intersection(*(r for _, r in self._recent))
+            rows = frozenset.intersection(*(frozenset(r) for _, r in self._recent))
+            rows = frozenset(r for r in rows
+                             if sum(len(cells[r]) for _, cells in self._recent)
+                             == len(frozenset().union(*(cells[r] for _, cells in self._recent))))
         rows = rows | frozenset(i for axis, i in counters if axis == "r")
         if rows <= self.clock and columns <= self.clock_columns:
             return None

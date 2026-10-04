@@ -174,14 +174,36 @@ def test_the_game_ended_is_met_with_reset():
     assert mind.thoughts[-1].why.startswith("the region has ended")
 
 
+def _counting(step: int, piece: int = 0) -> list[list[int]]:
+    """An 8x8 grid: a piece in the top row, and row 3 a bar a cell shorter each step."""
+    g = [[0] * 8 for _ in range(8)]
+    g[0][piece] = 1
+    for c in range(step, 8):
+        g[3][c] = 5
+    return g
+
+
 def test_a_row_that_changes_whatever_is_done_is_the_clock_and_not_where_the_game_stands():
+    inducer = ExactInducer(ARC_ORGANS)
+    grids = [_counting(i) for i in range(CLOCK_WINDOW + 1)]
+    for i in range(CLOCK_WINDOW):
+        a = [1, 2, 3][i % 3]
+        inducer.perceive(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
+    assert inducer.clock == frozenset({3})
+    assert inducer.situation(_counting(1)) == inducer.situation(_counting(4))
+    assert inducer.situation(_counting(1)) != inducer.situation(_counting(1, piece=2))
+
+
+def test_a_cell_that_blinks_as_the_acts_alternate_is_not_the_clock():
+    # r11l (2026-10-04): clicking one thing and another in turn, the mark of what
+    # is chosen turned 0 -> 3 and back at every step, under three kinds of click;
+    # the rows' rule took its rows for the clock, and the mind read past them.
     inducer = ExactInducer(ARC_ORGANS)
     grids = [lit(0, clock=i) for i in range(CLOCK_WINDOW + 1)]
     for i in range(CLOCK_WINDOW):
         a = [1, 2, 3][i % 3]
         inducer.perceive(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
-    assert inducer.clock == frozenset({2})
-    assert inducer.situation(lit(0, 0)) == inducer.situation(lit(0, 1))
+    assert inducer.clock == frozenset()
 
 
 def test_things_are_regions_of_one_colour_and_the_ground_is_left_out():
