@@ -4947,3 +4947,14 @@ in the store".
   goes into `[data]`, as revisions, with the snapshot's size measured first; (B)
   what any inducer computes from, the mind reads back from the store — for every
   inducer, not the language one alone. Design to come.
+
+The claim that no layer learns from an activity record withdrawn (Plone: the
+mind can read what the store holds and hand it to its learning, a way of
+learning). In dil-core `0b9c766` (changelog `74c85b1`, not pushed): out of the
+protocol's §6.4 and §9, the specification and AGENTS.md; the record stays trace,
+not experience, never a scar; the changes line counts two corrected readings,
+not three. Copied here again, byte for byte. Not yet changed, for Plone: the
+code comments that repeat the claim (dil-core's `recollection.ts`, `cycle.ts`,
+`resist-event.ts`, and this port's), and `recollection`'s reasoning that "the log
+is an Other and not a memory" (§7: an agent treating the log as its own past
+would claim continuity), which stands against the new rule.

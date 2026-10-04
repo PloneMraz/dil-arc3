@@ -5,8 +5,8 @@ look for them elsewhere.
 
 | file | what it is | words |
 |---|---|---|
-| `DIL-protocol-v0.3.6.md` | **the protocol** — normative: the invariants, the eight layers, the store, conformance. What an implementation MUST do. | 10,459 |
-| `DIL-en-v8.md` | **the specification** it was derived from — the reasoning, the sources, the convergences with existing work, the author's note. | 25,082 |
+| `DIL-protocol-v0.3.6.md` | **the protocol** — normative: the invariants, the eight layers, the store, conformance. What an implementation MUST do. | 10,479 |
+| `DIL-en-v8.md` | **the specification** it was derived from — the reasoning, the sources, the convergences with existing work, the author's note. | 25,076 |
 
 Read the protocol to check the code; read the specification to understand why
 the protocol is shaped as it is. Section numbers cited in the code, in
@@ -19,12 +19,12 @@ These are copies. The canonical versions live in
 implementation, and are revised there.
 
 Both copied on 2026-10-04 from dil-core at commit
-`6f968575e43b0982a52050f66d5a1ba7f6be1123`, byte for byte:
+`0b9c7668a63bc1032523272948808107d7b5c224`, byte for byte:
 
 | file | last changed in dil-core | SHA-256 |
 |---|---|---|
-| `DIL-protocol-v0.3.6.md` | `6f96857`, 2026-10-04 | `8010d2f3a2834b95a70899aad7acd2eb0feec13816134c0b1b0ff748e834ea96` |
-| `DIL-en-v8.md` | `6f96857`, 2026-10-04 | `32df6334d99cc1dc7186bd846276de95bec5f7d644c8637c954459ab21fab11e` |
+| `DIL-protocol-v0.3.6.md` | `0b9c766`, 2026-10-04 | `7c42b254cdec75a88b92d0ce9ed9dc16613bfbd2c4ef33c1f9fa6439e8027ecb` |
+| `DIL-en-v8.md` | `0b9c766`, 2026-10-04 | `25e0c7dd2ac0dfe8bb28818e619885dda6be3fda1052e48c2deb647800a90b8e` |
 
 To check a copy still matches: `sha256sum spec/*.md`. If dil-core publishes a new
 version, it is copied here again and this table updated; the copies are never
