@@ -4916,3 +4916,34 @@ games. All exited 0, no traceback, the scorecard full again.
 Code `1bbd7e2`, `--inducer grid --curiosity new --attention`, 600 cycles a game,
 four at once, CPU; submitted 09:43:54 UTC, PENDING; the day's one submission.
 Its Save & Run: the entry above. Nothing is pushed to Kaggle until it is scored.
+
+### The whole store is the agent's memory: protocol v0.3.6 and specification v8 (Plone)
+
+Plone: "Toàn bộ store/ của dil là trí nhớ của agent. Trong đó, [event] không thể
+bị sửa hay ghi đè mà chỉ được ghi mới và được đọc, còn [data] thì có thể." — to be
+written into the specification and the protocol, not CLAUDE.md alone, and the
+readings that mislead on it corrected. Before, Gem had cited a rule "memory is the
+store" that is written nowhere: the phrase appears once, in quotes, in this log
+(2026-09-24); what is written is CLAUDE.md's "Memory is what the store held
+before the cycle that asks" (when a query is answered) and "it may read anything
+in the store".
+
+- In dil-core, where the documents live (Plone chose it): protocol v0.3.6 and
+  specification v8 (`6f96857`, changelog `c45cff4`; not pushed yet). The rule in
+  the protocol's terminology (§3) and as a §9 item, and in the specification.
+  Corrected: the activity record "kept out of the agent's memory" → kept out of
+  experience, part of the memory that is only appended to (§9); "[data] is
+  mutable, overwritten each cycle" → its content may be rewritten and its
+  position moves (§9, the specification, dil-core's AGENTS.md); "an [event] item
+  carries no knowledge at all" → no working knowledge, still memory. No
+  requirement on an implementation changes: the code of either repository is
+  untouched and the store's claim stays 0.3.5.
+- Here: both copied byte for byte (SHA-256 checked against dil-core), the old
+  copies moved by `git mv`; `spec/README.md`'s table, CLAUDE.md (the rule, the
+  protocol's file name), README.md's citation, and the note on
+  `DIL_PROTOCOL_VERSION`. Code comments citing the specification's sections are
+  left as dil-core leaves its own.
+- Decided with Plone for what follows: (A) every change in what the mind learns
+  goes into `[data]`, as revisions, with the snapshot's size measured first; (B)
+  what any inducer computes from, the mind reads back from the store — for every
+  inducer, not the language one alone. Design to come.

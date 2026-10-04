@@ -164,7 +164,7 @@ now, in dil-core first and then here.
    loses (6).
 2. **The field reaches every layer, and every layer reads it.** INV-7 has it
    reach every layer as background — "same data plus a different field yields
-   different meaning". It carries dispositions, never what was read (DIL-en-v7
+   different meaning". It carries dispositions, never what was read (DIL-en-v8
    §2: "how to read, never what is read"): three axes, the specification's own
    examples — `trust`, `alertness`, `exploration`. Each layer reads the one that
    bears on its operation and shifts a declared threshold or gain by ½ to 1½:

@@ -17,4 +17,7 @@ __version__ = "0.0.1"
 # deliberately: the reference implementation may move on, and a second
 # implementation that silently tracks a moving target can no longer be checked
 # against anything. The store's claim is stamped with it (`store/substrate.py`).
+# The text in `spec/` is v0.3.6, whose change from v0.3.5 is to the text alone
+# (the whole store is the agent's memory), so the claim stays at 0.3.5, as
+# dil-core's does.
 DIL_PROTOCOL_VERSION = "0.3.5"

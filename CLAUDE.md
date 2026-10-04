@@ -258,6 +258,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **What the body can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
   proposal as a command.
+- **The whole store is the agent's memory** (Plone, 2026-10-04: "Toàn bộ
+  store/ của dil là trí nhớ của agent. Trong đó, [event] không thể bị sửa hay ghi
+  đè mà chỉ được ghi mới và được đọc, còn [data] thì có thể."; protocol v0.3.6
+  §3, §9, and the specification v8). `[event]` cannot be altered or
+  overwritten, only appended to and read; `[data]` can be altered. What the mind
+  learns, and each change in it, belongs in `[data]`; what its model computes
+  from, it reads back from the store (being designed: LOG.md, 2026-10-04).
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it.
 - **Short-term perception is as long as T5's window**: `BASELINE_WINDOW = 16`
@@ -641,7 +648,7 @@ scored better would work against the paper, not for it.
 3. Every change is a law of the mind or of a model, named for no game.
 4. When the six are met, the 25 games are run once, to confirm.
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.5.md` is 63 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.6.md` is 63 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their
