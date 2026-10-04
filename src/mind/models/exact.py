@@ -83,9 +83,21 @@ BIG_CHANGE: Final = 64 * 64 // 4
 def grid_key(grid: Grid, clock: frozenset[int] = frozenset(), columns: frozenset[int] = frozenset()) -> str:
     """A grid's identity: two grids are one situation when every cell off the
     clock's rows and columns is the same."""
-    cells = bytes(0 if r in clock or c in columns else v & 0xFF
-                  for r, row in enumerate(grid) for c, v in enumerate(row))
-    return hashlib.blake2b(cells + bytes([len(grid)]), digest_size=12).hexdigest()
+    h = hashlib.blake2b(digest_size=12)
+    for r, row in enumerate(grid):
+        if r in clock:
+            h.update(bytes(len(row)))
+            continue
+        try:
+            cells = bytearray(row)              # a row of 0-255 at C speed: the same bytes
+        except (ValueError, TypeError):
+            cells = bytearray(v & 0xFF for v in row)
+        for c in columns:
+            if c < len(cells):
+                cells[c] = 0
+        h.update(cells)
+    h.update(bytes([len(grid)]))
+    return h.hexdigest()
 
 
 def things(grid: Grid) -> list[tuple[int, int, int, int]]:

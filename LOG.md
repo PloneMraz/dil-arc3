@@ -4871,3 +4871,27 @@ act did not hold: a third thing clicked turned the mark both ways too.
 - Here, 600 cycles: ls20 with attention the same commands as before; r11l's
   first level in 19 actions with attention, 115 without, as before — the rows
   were taken after it; situations met 299 and 202 (before the fix 291 and 209).
+
+### Attention made faster, and where the time of a run goes
+
+- **Attention**: within a choice the experiences are ranked once by how alike
+  and what each act, kind or coarser kind weighed is kept (the sort is stable,
+  so ranking all and keeping those a kind holds is what sorting those alone
+  gave); before, every candidate thing re-sorted every experience twice.
+  r11l, ls20 and lf52 at 600 cycles with attention: the same commands as before.
+  The time hardly moved (r11l 1,058 → 1,068 s, ls20 992 → 992 s): the sort was
+  not where the time went.
+- **Profiled** (r11l, 200 cycles, attention, 236 s): `grid_key` 68 s (29%), most
+  of attention's 44 s inside it (`_mask` keys each state by it); a commit's
+  snapshot 42 s (18%). Since the clock's columns, `grid_key` built its bytes cell
+  by cell through a generator.
+- **`grid_key` row by row**: each row's bytes made at C speed (`bytearray(row)`,
+  the clock's columns zeroed in it; a value outside 0-255 masked as before). The
+  same key as the old one on 8,000 random grids (sizes 1-64, clock rows and
+  columns, columns past the edge, negative and large values). The same commands
+  on r11l, ls20, lf52 and ar25 at 600 cycles; r11l 1,068 → 794 s, ls20 992 →
+  866 s, lf52 1,011 → 1,019 s, ar25 845 s (two runs at once here). 337 pass.
+- Also seen: here attention adds about 12% to a run (r11l 940 s without, 1,058 s
+  with, before these changes), not the doubling between versions 16 and 17 on
+  Kaggle — those differ in the clock rule too, and the old one left the clock
+  unfound in 11 games, every step a new situation.

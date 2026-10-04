@@ -198,6 +198,10 @@ class Learning:
         self._attended: list[tuple[Edge, float]] = []
         self._last_attended: list[tuple[Edge, float]] = []
         self._attended_change = 0.0
+        # For a choice being made with attention: the experiences ranked by how
+        # alike, once, and what each kind or act was found to weigh.
+        self._ranked: list[tuple[float, Edge]] | None = None
+        self._attend_memo: dict[tuple, tuple] = {}
         # How often each kind of act, and each act, changed the state (for the
         # laws that count a change: S2, S2c, S2d).
         self._kind_changes: dict[tuple, int] = {}
@@ -756,7 +760,7 @@ class Learning:
     def _action_curiosity(self, act: int) -> tuple[float, ...]:
         """How much it wants an act at all, over every kind of it."""
         total = sum(a[0] for a in self._actions.values())
-        attended = self._attend(lambda e: e.act[0] == act)
+        attended = self._attend(lambda e: e.act[0] == act, ("act", act))
         if attended is not None:
             return self._wanted(*attended, total)
         return self._wanted(self._actions.get(act, (0, 0, 0)), self._action_changes.get(act, 0), total)
@@ -765,25 +769,49 @@ class Learning:
         """How much it wants a kind of act, by its law of curiosity: the coarser
         kind it falls in first, when it has one, then the kind itself."""
         total = sum(k[0] for k in self._kinds.values())
-        attended = self._attend(lambda e: e.kind == kind)
+        attended = self._attend(lambda e: e.kind == kind, ("kind", kind))
         fine = self._wanted(*attended, total) if attended is not None else \
             self._wanted(self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0), total)
         coarse = self.inducer.coarse(kind)
         if coarse is None:
             return fine
-        attended = self._attend(lambda e: self.inducer.coarse(e.kind) == coarse)
+        attended = self._attend(lambda e: self.inducer.coarse(e.kind) == coarse, ("coarse", coarse))
         wide = self._wanted(*attended, total) if attended is not None else \
             self._wanted(self._coarse.get(coarse, (0, 0, 0)), self._coarse_changes.get(coarse, 0), total)
         return (*wide, *fine)
 
-    def _attend(self, which: Callable[[Edge], bool]) -> tuple[tuple[float, float, float], float] | None:
+    def _attend(self, which: Callable[[Edge], bool], key: tuple | None = None
+                ) -> tuple[tuple[float, float, float], float] | None:
         """What an act did in the situations most like where it stands (ATTENTION):
         (tried, somewhere new, aim) and changes, each weighed by how alike; None
-        without attention, or when too little alike to go by."""
+        without attention, or when too little alike to go by.
+
+        Within a choice (`_look_alike`), the experiences are ranked once and what
+        each `key` gave is kept: the sort is stable, so ranking all and then
+        keeping those `which` holds gives what sorting those alone gave."""
         if not self.attention or not self._alike:
             return None
+        if self._ranked is not None and key is not None:
+            kept = self._attend_memo.get(key)
+            if kept is not None:
+                self._last_attended = kept[1]
+                return kept[0]
+            met = []
+            for se in self._ranked:
+                if which(se[1]):
+                    met.append(se)
+                    if len(met) == ATTENTION_K:
+                        break
+            got = self._attended_from(met)
+            self._attend_memo[key] = (got, self._last_attended)
+            return got
         met = sorted(((self._alike.get(e.source, 0.0), e) for e in self._learned
                       if e.act[0] != self.organs.reset[0] and which(e)), key=lambda se: -se[0])[:ATTENTION_K]
+        return self._attended_from(met)
+
+    def _attended_from(self, met: list[tuple[float, Edge]]) -> tuple[tuple[float, float, float], float] | None:
+        """The counts of the experiences attended to, each weighed by how alike."""
+        self._last_attended = []
         weighed = [(e, a ** ATTENTION_SHARPNESS) for a, e in met if a > 0]
         tried = sum(w * e.seen for e, w in weighed)
         if tried < ATTENTION_MIN_WEIGHT:
@@ -802,6 +830,9 @@ class Learning:
         now = self._state(here)
         for raw in {e.source for e in self._learned}:
             self._alike[raw] = self.inducer.similarity(now, self._raw[raw])
+        self._ranked = sorted(((self._alike.get(e.source, 0.0), e) for e in self._learned
+                               if e.act[0] != self.organs.reset[0]), key=lambda se: -se[0])
+        self._attend_memo = {}
 
     def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         return self.inducer.candidates(here, self._state(here), offers)
@@ -878,11 +909,17 @@ class Learning:
         """Of the acts in `pool`, the one it is most curious about: first which act,
         over every kind of it; then which of its kinds. With the odds it gives it."""
         self._look_alike(here)
+        try:
+            return self._most_curious(here, pool)
+        finally:
+            self._ranked, self._attend_memo = None, {}
+
+    def _most_curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
         chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
         best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
         self._kind_of[(here, best[0])] = best[1]
         self._chosen_kind = best[1]
-        attended = self._attend(lambda e: e.kind == best[1])     # what the chosen kind was weighed by
+        attended = self._attend(lambda e: e.kind == best[1], ("kind", best[1]))     # what the chosen kind was weighed by
         if attended is not None:
             self._attended = list(self._last_attended)
             (tried, new, aim), changes = attended
