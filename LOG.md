@@ -4821,3 +4821,31 @@ hours.
 `ONLY_RESET_LEVELS` taken out of both runners again (Plone approved): it emptied
 the offline scorecard. The engine's reset as it is stands; a RESET at a level's
 count of 0 still goes back to the first level — not met in 81 stored runs.
+
+### What slowed r11l, lf52 and sp80: attention, and the edge-bar rule (four combinations, here)
+
+The three games' environment files downloaded (`environment_files/`, ignored);
+600 cycles each, here; the old clock from a worktree at `560f667`, the new at
+`10ad969`. Actions to the first level, RESET not counted:
+
+| | old clock + attention | old clock | new clock + attention | new clock |
+|---|---|---|---|---|
+| r11l (baseline 22) | 20 | 174 | 19 | 115 |
+| lf52 (32) | 41 | 41 | 138 | 139 |
+| sp80 (39) | 236 | 368 | 263 | 564 |
+
+- The first column is version 16 to the action, the last version 17 (without
+  `ONLY_RESET_LEVELS`, which so changed nothing it did): the mind chooses alike
+  here and on Kaggle, and the variable did not touch play.
+- **Attention** carried r11l (174 → 20, 115 → 19) and sp80 (368 → 236, 564 →
+  263); lf52 alike either way. Turning it off is what lost r11l's level under
+  its baseline.
+- **The edge-bar rule** cost lf52 (41 → 138 with attention or without), though
+  both rules took the same row 0 for its clock — the new one by the 5th step,
+  the old by the 7th — so its run went another way from there; with attention,
+  r11l was the same and sp80 27 actions slower.
+- Seen on the way: in r11l the rows' rule takes rows in the middle of the board
+  for the clock — 6 to 23 and more with the old rules, 8 rows with the new — so
+  the mind reads past part of what it plays on. Not traced yet.
+- Attention doubles a run's time (version 16: 7,154 s for the 25; version 17:
+  3,691 s): with it, 110 games overrun the deadline as it is.
