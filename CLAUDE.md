@@ -583,6 +583,12 @@ fewest moves.
   `vc33`, which needs RESET sent as an action before the game starts. The
   boundary gate (`frame.py`) refuses a frame outside the declaration rather
   than coercing it.
+- **A RESET with no action yet taken in the level restarts the whole game**,
+  and every level gained is lost (`arcengine/base_game.py`, `handle_reset`): the
+  level's action count is zeroed on entering a level and on its restart, so a
+  RESET right after either goes back to the first level. With
+  `ONLY_RESET_LEVELS=true` a RESET restarts the level only (but after a win);
+  both runners set it for the games their process holds (LOG.md, 2026-10-04).
 - `vc33` reaches `GAME_OVER` and **keeps reporting `available_actions == (6,)`**.
   Stepping that action in a terminal state returns an empty frame. So the
   policy reads the state, not the afforded list, and commits RESET from a
