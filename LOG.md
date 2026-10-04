@@ -5005,3 +5005,30 @@ in the snapshot …").
   dil-core's `resist-event.ts` queued in its CLAUDE.md.
 - So (A) loses nothing the mind reads: a revised datum's present content is in
   `[data]`; what a revision did is recorded in `[event]`.
+
+### (A): what the mind learns, and each change in it, written to [data]
+
+As designed and approved (Plone): each experience a datum (`kind: experience`) —
+from where, by what act, to where, how often met, how often it reached somewhere
+new, the aim, or ended the region, what the region reported — written once its
+step's report has come and revised in place as it changes; each weighing
+revises the hypothesis's datum in place (supports, fails, holds); and, Plone's
+choice (b), when whether a hypothesis holds changes, a datum of its own says so
+too, built from it — the rule of 2026-09-27 ("nothing is revised in place", made
+because a revision's content was thought kept only in snapshots) replaced. When
+the clock grows, every written experience and hypothesis is revised with the
+situations read again. 339 tests pass (the refutation test rewritten; two new).
+
+Measured here, 600 cycles, attention:
+
+- **The same commands** as before (A) in r11l, lp85 and ls20.
+- Revisions: r11l 710 (1.2 a cycle: 700 hypotheses, 10 experiences), lp85 294,
+  ls20 **8,706** (14.5 a cycle, each a different datum: grid's general
+  hypotheses apply everywhere and are weighed at every step).
+- ls20 before and after, run side by side: **683 → 1,478 s**, commits 215 →
+  319 MB (+48%). lp85 side by side: 1,202 → 1,384 s, commits 183 → 220 MB. r11l
+  commits 210 → 263 MB; [data] about the same size.
+- Profiled (ls20, 250 cycles, 427 s): the learning about 13 s; the `[event]`
+  appends 192 s (layer-exit records 141 s — each revision arrives at T1 and runs
+  every layer); the commit snapshots 112 s; SQLite's commit of each write
+  64 s (9,680 writes, one transaction each).

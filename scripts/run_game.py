@@ -175,7 +175,8 @@ print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('re
 print(f"  commits               : {len(commits)}")
 learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypothesis"]
 why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
-print(f"  hypotheses written    : {len(learned)}  saying one no longer holds: {sum(1 for d in learned if not d.payload.get('holds'))}")
+print(f"  hypotheses written    : {len(learned)}  not holding now: {sum(1 for d in learned if not d.payload.get('holds'))}; "
+      f"experiences {len([d for _, d in daemon._data.entries() if d.open.get('kind') == 'experience'])}")
 print(f"  states met            : {len(mind.learning._raw_of)} (grids {len(mind.learning._raw)}; clock rows {sorted(mind.learning.inducer.clock)}, columns {sorted(mind.learning.inducer.clock_columns)})")
 print(f"  held off the clock    : {sum(mind.learning.holds_by_situation)} of {len(mind.learning.holds_by_situation)}")
 held = sum(1 for h in mind.learning._hypotheses if h.holds)

@@ -24,9 +24,15 @@ THE LOOP, one step at a time:
 - **Weighing.** Each return that a hypothesis predicted counts for it, each it
   did not counts against: a hypothesis is held while it has been right more
   often than wrong, and the one right at the highest rate is preferred (DECIDE@IMPL
-  FIT_LAW; tag H: fit against the store, never a scored standard). When that
-  changes, a new datum says so, built from the one before: nothing is revised
-  in place.
+  FIT_LAW; tag H: fit against the store, never a scored standard). Each weighing
+  revises the hypothesis's datum in place — how often it was borne out and
+  whether it holds are in `[data]` as they change — and when whether it holds
+  changes, a datum of its own says so too, built from it (Plone, 2026-10-04).
+- **Experience.** Each experience is a datum (`kind: experience`): from where,
+  by what act, to where, how often met, how often it reached somewhere new or
+  the aim or ended the region, what the region reported. Written once the step's
+  report has come, and revised in place as it changes. The whole store is the
+  agent's memory (protocol v0.3.6).
 - **The aim.** Reaching it is an experience too (S4, Plone, 2026-09-28): asked
   with the step's report and what it expected of the step, the inducer says
   what brings the aim — hypotheses that predict no state, only the report —
@@ -68,11 +74,11 @@ against it (Plone, 2026-09-28):
   new-then-changed  S2c  somewhere new; between kinds as likely to, a change
   new-plus-changed  S2d  the odds of somewhere new and of a change, added
 
-What it holds but does not write — its counts, how often an experience was met
-and ended the region, the situations it visited — follows from the observations
-in the store only when those are replayed through it, in order. So does
-`unseen`: of the steps from a situation and act never met, how many it expected
-and how many of those it expected right — what it learned, reaching further.
+What it holds and does not write as such — the counts its curiosity weighs
+with, the situations it visited — follows from its experiences in `[data]`. Not
+written: `unseen` (of the steps from a situation and act never met, how many it
+expected and how many of those it expected right), a measure for the run's
+report, not something it learned.
 """
 
 from __future__ import annotations
@@ -91,6 +97,9 @@ from .organs import Act, Organs, Step
 # step's state (`Organs.state_object`).
 HYPOTHESIS_TAGS: Final = {"domain": "mind", "kind": "hypothesis", "source": "mind"}
 CHOICE_TAGS: Final = {"domain": "mind", "kind": "choice", "source": "mind"}
+# An experience's tags; its `object`, as a hypothesis's, is what the host calls a
+# step's state.
+EXPERIENCE_TAGS: Final = {"domain": "mind", "kind": "experience", "source": "mind"}
 THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
 # How far it searches the situations it knows for a way. DECLARED: a bound on work.
@@ -160,6 +169,7 @@ class Edge:
     seen: int = 1
     new: int = 0                 # how many times it reached a situation not met before
     reached: int = 0             # how many times the aim came of it
+    written: bool = False        # its datum entered the store
 
 
 class Answer:
@@ -191,6 +201,10 @@ class Learning:
         self.organs = organs
         self.curiosity = curiosity
         self._hypothesis_tags = {**HYPOTHESIS_TAGS, "object": organs.state_object}
+        self._experience_tags = {**EXPERIENCE_TAGS, "object": organs.state_object}
+        # The experiences changed since their datum was last written (the whole
+        # store is the agent's memory: every change in what it learned is written).
+        self._pending: list[Edge] = []
         self.attention = attention
         # For a choice being made: how alike each state met is to where it stands
         # (attention), and what the chosen act was weighed by.
@@ -546,6 +560,13 @@ class Learning:
                 writes += self._weigh(first.hypothesis, False, built_from)
         if self._here is not None and self._now_raw is not None:
             self._here = self._state_of[self._now_raw]
+        # What it wrote of its experiences and hypotheses named situations as its
+        # perception read them: read again, each written one is revised.
+        for edge in self._learned:
+            if edge.written:
+                self._touch(edge)
+        writes += [Write(payload=self._describe(h), revises=h, built_from=built_from)
+                   for h in self._hypotheses if h.written]
         return writes
 
     # ── expecting, and learning ──
@@ -580,19 +601,52 @@ class Learning:
         return self._learn_step(step, unit)
 
     def _weigh(self, h: Hypothesis, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
-        """Count a return for or against a hypothesis; when whether it holds
-        changes, a datum of its own says so."""
+        """Count a return for or against a hypothesis and revise its datum: how
+        often it was borne out, and whether it holds, are in the store as they
+        change (a hypothesis not yet written enters with them). When whether it
+        holds changes, a datum of its own says so too, built from it: a refutation
+        is an event a reader looks for (Plone, 2026-10-04)."""
         before = h.holds
         if borne_out:
             h.supports += 1
         else:
             h.fails += 1
-        return self._revise(h, built_from) if h.holds != before else []
+        if not h.written:
+            return []
+        writes = [Write(payload=self._describe(h), revises=h, built_from=built_from)]
+        if h.holds != before:
+            writes.append(Write(payload=self._describe(h), tags=self._hypothesis_tags,
+                                built_from=(*built_from, ("handle", h))))
+        return writes
+
+    def _touch(self, edge: Edge) -> None:
+        """An experience changed: its datum is written, or revised, once the step's
+        report has come."""
+        if edge not in self._pending:
+            self._pending.append(edge)
+
+    def _experiences(self, built_from: tuple[object, ...]) -> list[Write]:
+        """The experiences changed in this step, each written anew or revised."""
+        writes = []
+        for edge in self._pending:
+            payload = {"from": self._state_of[edge.source], "act": list(edge.act), "to": self._state_of[edge.to],
+                       "kind": list(edge.kind), "changed": edge.changed, "seen": edge.seen, "new": edge.new,
+                       "reached": edge.reached, "ended": edge.ended, "status": edge.status}
+            if edge.written:
+                writes.append(Write(payload=payload, revises=edge, built_from=built_from))
+            else:
+                edge.written = True
+                writes.append(Write(payload=payload, tags=self._experience_tags, handle=edge,
+                                    built_from=(*built_from, ("handle", edge.hypothesis))))
+        self._pending = []
+        return writes
 
     def _learn_step(self, step: Step, unit: Any) -> list[Write]:
         writes: list[Write] = []
         if self._new:
             writes += self._write(())  # a step whose report never came
+        if self._pending:
+            writes += self._experiences(())
         o = self.organs
         act: Act = self.inducer.learnable(step.act)
         source_raw = self._meet(step.before)
@@ -642,6 +696,7 @@ class Learning:
                 # What came, no hypothesis it holds foresaw: it asks what this suggests.
                 self._new = self._induce(source_raw, act, step, foreseen)
         edge.new += int(new)
+        self._touch(edge)
         # What the inducer said in computing — a language model's answers — kept
         # whole, built from the step it was asked on and the words it was told.
         for said in self.inducer.said():
@@ -701,6 +756,8 @@ class Learning:
             self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
         if self._new:
             writes += self._write(units)
+        self._touch(edge)
+        writes += self._experiences(units)
         return writes
 
     def _describe(self, h: Hypothesis) -> dict[str, Any]:
@@ -717,14 +774,6 @@ class Learning:
                                 built_from=built_from))
         self._new = []
         return writes
-
-    def _revise(self, h: Hypothesis, built_from: tuple[object, ...]) -> list[Write]:
-        """Whether a hypothesis holds has changed: said in a datum of its own, built
-        from the one before — added, not revised in place."""
-        if not h.written:
-            return []
-        return [Write(payload=self._describe(h), tags=self._hypothesis_tags,
-                      built_from=(*built_from, ("handle", h)))]
 
     # ── what to do next ──
 
@@ -1054,5 +1103,5 @@ class Learning:
         return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]
 
 
-__all__ = ["CHOICE_TAGS", "CURIOSITY", "FIT_LAW", "HYPOTHESIS_TAGS", "MAX_PATH_NODES", "THOUGHT_TAGS",
+__all__ = ["CHOICE_TAGS", "CURIOSITY", "EXPERIENCE_TAGS", "FIT_LAW", "HYPOTHESIS_TAGS", "MAX_PATH_NODES", "THOUGHT_TAGS",
            "Answer", "Choice", "Edge", "Hypothesis", "Learning"]

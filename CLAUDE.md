@@ -140,8 +140,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   out and did not — **held while right more often than wrong, and of those that
   apply, the one right at the highest rate**, (right + 1) / (tried + 2) (FIT_LAW,
   DECIDE@IMPL, tag H: fit against the store; Plone, 2026-09-28: a rate, not a
-  count); says in a new datum, built from the last, when whether it holds
-  changes; is curious; chooses, looking ahead by what its held hypotheses
+  count); revises a hypothesis's datum in place at each weighing, and says in
+  a new datum, built from it, when whether it holds changes; keeps each
+  experience as a datum (`kind: experience`), revised in place as it changes
+  (Plone, 2026-10-04: the whole store is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
   predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
   `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
   only). **Reaching
@@ -277,12 +279,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   holds all it learned, one step at a time (INV-5: accrued, never loaded). What
   it learns as data — its hypotheses, the clock, what the onlooker made it
   object to, each choice — is in the store and
-  `[event]`, written as it was learned. The rest of what it holds is not
-  written: its counts, how often a hypothesis was borne out and not, how often an
-  experience was met and ended the region,
-  the states it visited. That is derivable from the store only by replaying its
-  observations through the mind's learning, in order (not yet done). It does not read
-  back what it holds. It may read anything in the store: whatever it asks, the
+  `[event]`, written as it was learned. So, since 2026-10-04, is every change
+  in it: each experience is a datum, and how often a hypothesis was borne out,
+  how often an experience was met, reached somewhere new or the aim, or ended
+  the region, are revised in place in `[data]` as they change; the counts its
+  curiosity weighs with follow from the experiences. It does not yet read back
+  what it holds (being designed: what its model computes from, read from the
+  store). It may read anything in the store: whatever it asks, the
   answer reaches it.
 - **The mind expects what the region returns**: the next state and the region's
   report, from the held hypothesis that applies and fits the store best. Where
@@ -521,9 +524,9 @@ own form (a `present` set, a `predict` rule for T5).
    the daemon can also commit at the close of every cycle in which the agent
    wrote a datum (`commit_on_write`), which served the language model's earlier
    form, whose program was revised in place. No run of this host uses it now:
-   the mind keeps dil-core's scar rhythm alone (Plone, 2026-09-27), since it
-   revises nothing in place and every hypothesis and choice is a new datum in
-   `[event]`.
+   the mind keeps dil-core's scar rhythm alone (Plone, 2026-09-27). Its learning
+   revises data in place (2026-10-04); what a datum holds is in `[data]`, and a
+   commit's snapshot is for recovery, not for reading (protocol v0.3.6 §9).
 5. **T5's `FitRule`** (`create_t5(fit=...)`): whether an observation fits its
    expectation, declared by the host (tag H). dil-core compares the whole
    content, which holds when a host declares none. This host's mind expects the

@@ -147,10 +147,12 @@ def test_the_same_act_giving_something_else_scars_the_datum_and_it_no_longer_hol
     assert refuted, "said in a datum of its own: it no longer predicts from it"
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
-    assert learned_id in written[refuted[0][0]], "built from the hypothesis it refutes"
-    assert data.get(learned_id).payload["holds"] is True, "the first is not rewritten"
-    assert [r for r in events.all() if getattr(r, "activity_kind", None) == "revision"] == [], \
-        "nothing is revised in place (Plone, 2026-09-27)"
+    refutation = [k for k, d in refuted if k != learned_id]
+    assert refutation and learned_id in written[refutation[0]], "said in a datum of its own, built from it"
+    first = data.get(learned_id).payload
+    assert first["holds"] is False and first["fails"] >= 1, "and the hypothesis's own datum revised in place"
+    revised = [r for r in events.all() if getattr(r, "activity_kind", None) == "revision"]
+    assert any(r.datum_id == learned_id for r in revised), "each revision recorded in [event]"
 
 
 def test_a_hypothesis_right_more_often_than_wrong_is_still_held():
@@ -821,3 +823,33 @@ def test_an_inner_line_that_counts_only_some_acts_is_not_taken_for_the_clock():
     inducer = ExactInducer(ARC_ORGANS)
     _stepped(inducer, grids)
     assert 8 not in inducer.clock
+
+
+def test_an_experience_is_a_datum_written_once_and_revised_as_it_changes():
+    # The whole store is the agent's memory (protocol v0.3.6; Plone, 2026-10-04):
+    # what the mind learned, and each change in it, is in [data].
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    experiences = of_kind(data, "experience")
+    assert len(experiences) == 2 and all(d.payload["seen"] == 1 for _, d in experiences)
+    first_id = [k for k, d in experiences if d.payload["act"][0] == 1][0]
+    run(cycle, frame(lit(0), lit(1)), status())                      # the first again
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert len(of_kind(data, "experience")) == 2, "met again, not written again"
+    assert data.get(first_id).payload["seen"] >= 2, "revised in place"
+    assert data.get(first_id).payload["status"] is not None, "with what the region reported"
+    revised = {r.datum_id for r in events.all() if getattr(r, "activity_kind", None) == "revision"}
+    assert first_id in revised, "the revision recorded in [event]"
+
+
+def test_each_weighing_revises_the_hypothesis_datum():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(1)), status())                      # borne out
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    run(cycle, frame(lit(0), lit(1)), status())
+    held = [d for _, d in of_kind(data, "hypothesis") if d.payload["supports"] >= 2]
+    assert held, "how often it was borne out is in [data] as it changes"
