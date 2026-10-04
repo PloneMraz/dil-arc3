@@ -766,3 +766,36 @@ def test_a_thing_moving_along_a_line_is_not_taken_for_a_clock():
     inducer = ExactInducer(ARC_ORGANS)
     _stepped(inducer, grids)
     assert inducer.clock_columns == frozenset() and inducer.clock == frozenset()
+
+
+def test_a_bar_at_the_edge_that_counts_only_some_acts_is_the_clock():
+    # cd82, ka59, tr87 and others (2026-10-04): the bar on the bottom row moves a
+    # cell only on the acts that do something; between, steps leave it alone.
+    grids, cell = [], 15
+    for step in range(12):
+        g = [[0] * 16 for _ in range(16)]
+        if step % 2:
+            cell -= 1                              # a tick every other step
+        for c in range(cell, 16):
+            g[15][c] = 5
+        g[8][8] = step % 3 + 1                     # what the act does, elsewhere
+        grids.append(g)
+    inducer = ExactInducer(ARC_ORGANS)
+    _stepped(inducer, grids)
+    assert 15 in inducer.clock
+
+
+def test_an_inner_line_that_counts_only_some_acts_is_not_taken_for_the_clock():
+    # Away from the edge, a thing growing a cell now and then is a thing (s5i5's
+    # rows 9 and 11 would have been taken, 2026-10-04).
+    grids, cell = [], 12
+    for step in range(12):
+        g = [[0] * 16 for _ in range(16)]
+        if step % 2:
+            cell -= 1
+        for c in range(cell, 13):
+            g[8][c] = 5
+        grids.append(g)
+    inducer = ExactInducer(ARC_ORGANS)
+    _stepped(inducer, grids)
+    assert 8 not in inducer.clock

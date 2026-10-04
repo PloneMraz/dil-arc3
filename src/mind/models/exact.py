@@ -37,10 +37,14 @@ ITS PERCEPTION OF A GRID — declared, not measured, naming no game:
   CLOCK_WINDOW steps, under CLOCK_KINDS kinds of act or more, by no more than
   CLOCK_CELLS cells each time. Or a row or a column that, in every one of those
   steps, whatever the act, changed by 1 to CLOCK_CELLS cells, each time the same
-  way (one colour into one other) and next to the cells it changed the step
-  before: a bar growing or shrinking a cell at a time. A thing that moves along
-  a line changes it two ways (its colour into the ground's, and back), so it is
-  not taken for one (Plone, 2026-09-29). Two grids are one situation when they
+  way and next to the cells it changed the step before. Or a row or a column within COUNTER_EDGE lines of
+  the grid's edge whose last COUNTER_TICKS changes — the steps it changed in,
+  not every step: a bar may count only some acts — were each of 1 to
+  COUNTER_CELLS cells, all the same way (one colour into one other), each next
+  to the cells of the change before: a bar growing or shrinking at the edge
+  (Plone, 2026-09-29; every public game draws one, by a public notebook's survey
+  — LOG.md, 2026-10-04). A thing that moves along a line changes it two ways
+  (its colour into the ground's, and back), so it is not taken for one. Two grids are one situation when they
   agree off the clock's rows and columns. The clock only grows; when it does,
   every situation is read again under it. The clock is not predicted.
 """
@@ -66,6 +70,11 @@ MAX_THING_SHARE: Final = 0.5
 CLOCK_WINDOW: Final = 6
 CLOCK_KINDS: Final = 3
 CLOCK_CELLS: Final = 2
+# A bar at the edge: how near the edge its line lies, how many cells a change of
+# it may be (sp80's moves 3 at a time), how many changes in a row show it. DECLARED.
+COUNTER_EDGE: Final = 2
+COUNTER_CELLS: Final = 3
+COUNTER_TICKS: Final = 4
 BIG_CHANGE: Final = 64 * 64 // 4
 
 
@@ -152,6 +161,8 @@ class ExactInducer:
         self.clock: frozenset[int] = frozenset()             # the clock's rows
         self.clock_columns: frozenset[int] = frozenset()     # and its columns
         self._recent: deque = deque(maxlen=CLOCK_WINDOW)   # (kind, rows changed) per step
+        # Per line at the edge, its last changes of 1 to COUNTER_CELLS cells: where along it, and how.
+        self._ticks: dict[tuple, deque] = {}
         # Per step, each line changed by 1 to CLOCK_CELLS cells: where along it, and how.
         self._lines: deque = deque(maxlen=CLOCK_WINDOW)
         self._things: dict[str, list[tuple[int, int, int, int]]] = {}
@@ -176,11 +187,13 @@ class ExactInducer:
                 or sum(per_row.values()) > BIG_CHANGE:
             return None
         self._recent.append((kind, frozenset(r for r, n in per_row.items() if n <= CLOCK_CELLS)))
+        counters = self._tick(before, after, per_row)
         self._lines.append(self._changed_lines(before, after, per_row))
-        rows, columns = frozenset(), self._counters("c")
+        counters |= {("r", i) for i in self._counters("r")} | {("c", i) for i in self._counters("c")}
+        rows, columns = frozenset(), frozenset(i for axis, i in counters if axis == "c")
         if len(self._recent) == CLOCK_WINDOW and len({k for k, _ in self._recent}) >= CLOCK_KINDS:
             rows = frozenset.intersection(*(r for _, r in self._recent))
-        rows = rows | self._counters("r")
+        rows = rows | frozenset(i for axis, i in counters if axis == "r")
         if rows <= self.clock and columns <= self.clock_columns:
             return None
         self.clock, self.clock_columns = self.clock | rows, self.clock_columns | columns
@@ -204,8 +217,8 @@ class ExactInducer:
                 for line, got in lines.items() if len(got) <= CLOCK_CELLS}
 
     def _counters(self, axis: str) -> frozenset[int]:
-        """The lines of an axis that counted a cell at a time in every one of the
-        last CLOCK_WINDOW steps: one change of colour, each next to the last."""
+        """The lines of an axis that counted in every one of the last CLOCK_WINDOW
+        steps: one change of colour, each next to the last."""
         if len(self._lines) < CLOCK_WINDOW:
             return frozenset()
         out = set()
@@ -219,6 +232,34 @@ class ExactInducer:
             if all(min(abs(p - q) for p in now for q in last) == 1 for last, now in zip(spots, spots[1:])):
                 out.add(line[1])
         return frozenset(out)
+
+    def _tick(self, before: Grid, after: Grid, per_row: dict[int, int]) -> set[tuple]:
+        """Keep each edge line's change of 1 to COUNTER_CELLS cells (a larger change
+        ends its run); the lines whose last COUNTER_TICKS changes count like a bar."""
+        rows = min(len(before), len(after))
+        cols = min(len(before[0]), len(after[0])) if rows else 0
+        lines: dict[tuple, list] = {}
+        for r in per_row:
+            for c in range(min(len(before[r]), len(after[r]))):
+                if before[r][c] != after[r][c]:
+                    lines.setdefault(("r", r), []).append((c, (before[r][c], after[r][c])))
+                    lines.setdefault(("c", c), []).append((r, (before[r][c], after[r][c])))
+        out = set()
+        for line, got in lines.items():
+            size = rows if line[0] == "r" else cols
+            if not (line[1] < COUNTER_EDGE or line[1] >= size - COUNTER_EDGE):
+                continue
+            if len(got) > COUNTER_CELLS:
+                self._ticks.pop(line, None)
+                continue
+            ticks = self._ticks.setdefault(line, deque(maxlen=COUNTER_TICKS))
+            ticks.append((frozenset(p for p, _ in got), frozenset(t for _, t in got)))
+            if len(ticks) < COUNTER_TICKS or len(frozenset().union(*(w for _, w in ticks))) != 1:
+                continue
+            spots = [p for p, _ in ticks]
+            if all(min(abs(p - q) for p in now for q in last) == 1 for last, now in zip(spots, spots[1:])):
+                out.add(line)
+        return out
 
     def _mask(self, state: Grid) -> tuple[int, tuple[int, ...]]:
         """A grid off the clock as one bit mask per colour, and how many cells it has."""
@@ -340,4 +381,5 @@ class ExactInducer:
         return {"from": source, "act": list(form.act), "to": to, "changed": to != source, "status": form.status}
 
 
-__all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]
+__all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
+           "COUNTER_TICKS", "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]

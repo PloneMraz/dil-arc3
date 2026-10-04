@@ -4755,3 +4755,28 @@ RESET at once — without the variable, levels 0; with it, levels 1.
   set otherwise) before the toolkit loads. It reaches the games their process
   holds — the offline runs and Save & Run. A scored rerun's games are the
   gateway's; whether it reads the variable is not known. 334 tests pass.
+
+### The clock: an edge bar counted by its changes, not by every step
+
+The same public notebook's survey says every public game draws a bar counting
+actions at the edge, some moving 3 cells at a time (sp80). Replayed through the
+perception of `2ce3b1b`, the 25 games' stored steps (the 600-cycle run on
+`f27606c`) gave a clock in 14. In the other 11 the bar moves on some acts only
+(cd82, cn04, dc22, g50t, ka59, tr87, wa30: a cell at a time, the same colour
+change, each next to the last; m0r0 two bars; sc25 two columns), and the rule
+asked for a change at every one of 6 steps. sp80's own (row 0) was already found.
+
+- Added (`exact.py`; grid inherits): a row or column within COUNTER_EDGE = 2
+  lines of the edge whose last COUNTER_TICKS = 4 changes were each 1 to
+  COUNTER_CELLS = 3 cells, all one colour change, each next to the one before,
+  is the clock — however many steps between. The rows' rule and the per-step
+  counter rule stay. Declared, not measured.
+- Replayed: a clock in 24 of 25, most by the 5th to 12th step; sk48's bar (row
+  53, moving on some acts) still not found. Without the edge condition, 25 — and
+  a growing thing taken for the clock inside s5i5 (rows 9, 11) and vc33
+  (columns 6, 7): the condition kept.
+- Tests: an edge bar that counts every other step is the clock; an inner line
+  growing every other step is not. 336 pass.
+- Here, 600 cycles, the seven games on this machine, actions per level counted
+  without RESET: vc33 70 → 68 for its first level (283 its second, as before),
+  tn36 35 → 33, lp85 17, ls20 340, as before; ar25, sb26, sk48 none, as before.
