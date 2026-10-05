@@ -202,6 +202,12 @@ class Inducer(Protocol):
     def describe(self, form: Any, situation_of: Any) -> dict[str, Any]:
         """A hypothesis, said as data."""
 
+    def keep(self, form: Any, recall: Any) -> None:
+        """A form it said is a hypothesis the mind holds: `recall()` gives it back
+        as the mind's memory holds it — in hand while new, read from the store
+        once its datum is there. An inducer that computes with a form it said
+        again (as its perception, say) keeps `recall`, never the form."""
+
     def restore(self, payload: dict[str, Any], step: Step) -> Any:
         """A hypothesis again, from its datum as the store holds it (`payload`,
         what `describe` said) and the step it was induced from, read from the

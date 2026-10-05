@@ -398,6 +398,9 @@ class ExactInducer:
         to = self.situation(form.to)
         return {"from": source, "act": list(form.act), "to": to, "changed": to != source, "status": form.status}
 
+    def keep(self, form: Any, recall: Any) -> None:
+        """It computes with no form it said again: the mind's memory holds them."""
+
     def restore(self, payload: dict[str, Any], step: Step) -> ExactForm:
         """An exact hypothesis from its datum, which names situations only: the
         state it came from and the grid it says comes are the step's."""

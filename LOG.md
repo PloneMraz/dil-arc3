@@ -5131,3 +5131,29 @@ Measured here, grid, attention, 600 cycles, side by side with `6ac993c`:
 Every other `[event]` record the same in number by form; the commits the same
 size; conformance the same (C6 pass). Most of the growth in `built_from` is the
 choices: a choice names every state and hypothesis its search read or used.
+
+### (B) for the language inducer: its programs had back from memory, restored only when said anew
+
+Plone asked whether (B) holds for the language inducer. It did for its
+hypotheses' forms and short-term perception, but not for two programs it kept
+in itself — the one it reads the grid with (`where`, `targets`) and the last it
+wrote, shown to the model again — and every revision of a program's datum (each
+step: it applies everywhere) restored it, loading its code again. Fixed, as he
+asked, before talking further:
+
+- `Inducer.keep(form, recall)`: each form an inducer says, now a hypothesis the
+  mind holds (or one it held already, by its key), is handed back with how to
+  have it from the mind's memory — in hand while new, read from the store once
+  its datum is there. The language inducer keeps that for those two programs,
+  never the program; the others keep nothing.
+- A hypothesis is restored again only when what its inducer said in its datum
+  changes, not the learning's tallies beside it (`TALLIES`: holds, supports,
+  fails).
+- Tests: a program written once, weighed and revised at every step, is loaded
+  twice — when written and once from its datum — and its two holds are recalls;
+  exact hypotheses revised again and again are each restored once. With the
+  comparison switched off both fail. 353 pass.
+- ls20 and r11l, 600 cycles, grid, attention, against `c3c29a9`'s runs: the same
+  choices, the same `[data]`; `built_from` a little shorter (ls20 415,955 →
+  407,304), the step's frame read no more for a restore that does not happen.
+  Times not compared: two runs here at once, against six then.

@@ -110,6 +110,9 @@ CHOICE_TAGS: Final = {"domain": "mind", "kind": "choice", "source": "mind"}
 EXPERIENCE_TAGS: Final = {"domain": "mind", "kind": "experience", "source": "mind"}
 THOUGHT_TAGS: Final = {"domain": "mind", "kind": "thought", "source": "mind"}
 
+# What the learning writes in a hypothesis's datum beside what its inducer said:
+# how it weighs it. A revision of these alone changes nothing the inducer said.
+TALLIES: Final = ("holds", "supports", "fails")
 # How far it searches the situations it knows for a way. DECLARED: a bound on work.
 MAX_PATH_NODES: Final = 20_000
 # How many steps it looks ahead past the situations it has stood in, on what its
@@ -310,7 +313,7 @@ class Learning:
         self._scoped: dict[tuple, list[Hypothesis]] = {}
         self._applies: dict[tuple[str, Act], tuple[dict, list]] = {}
         self._new: list[Hypothesis] = []                     # induced, not yet written
-        self._keys: set = set()                              # what each hypothesis says, as the inducer keys it
+        self._keys: dict[tuple, Hypothesis] = {}             # what each hypothesis says, as the inducer keys it
         # Steps from a situation and act never met: how many, how many it expected,
         # how many of those it expected right — what it learned, reaching further.
         self.unseen = [0, 0, 0]
@@ -391,19 +394,24 @@ class Learning:
 
     def _recall(self, h: Hypothesis) -> Any:
         """A hypothesis's form, read from its datum and its step's. Restored again
-        only when its datum has changed — and the form kept when what it says has
-        not, so what its model has computed with it holds."""
+        only when what its inducer said in it has changed — not the tallies the
+        learning keeps in it — and the form kept when it still says the same, so
+        what its model has computed with it holds."""
         payload = self._view.read(h.datum_id, "hypothesis").payload
         self._used[h.datum_id] = None
         kept = self._restored.get(h.datum_id)
         if kept is not None and kept[0] is payload:
+            return kept[1]
+        said = {k: v for k, v in payload.items() if k not in TALLIES}
+        if kept is not None and kept[2] == said:
+            self._restored[h.datum_id] = (payload, kept[1], said)
             return kept[1]
         self._used[h.step] = None
         step = self.organs.step(self._view.read(h.step, "hypothesis").payload)
         form = self.inducer.restore(payload, step)
         if kept is not None and self.inducer.key(form) == self.inducer.key(kept[1]):
             form = kept[1]
-        self._restored[h.datum_id] = (payload, form)
+        self._restored[h.datum_id] = (payload, form, said)
         return form
 
     def _stood(self, raw: str) -> Any:
@@ -466,12 +474,14 @@ class Learning:
         self._used = dict.fromkeys(used)
         for form in forms:
             key = self.inducer.key(form)
-            if key in self._keys:
-                continue
-            self._keys.add(key)
-            h = Hypothesis(form, unit=unit, read=read)
-            self._add(h)
-            out.append(h)
+            h = self._keys.get(key)
+            if h is None:
+                h = self._keys[key] = Hypothesis(form, unit=unit, read=read)
+                self._add(h)
+                out.append(h)
+            # What the inducer said is a hypothesis the mind holds: an inducer that
+            # computes with it again has it back from the mind's memory.
+            self.inducer.keep(form, lambda h=h: h.form)
         return out
 
     def _applicable(self, situation: str, act: Act, state: Any = None) -> list[tuple[Hypothesis, Any, str]]:
@@ -930,7 +940,7 @@ class Learning:
 
     def _describe(self, h: Hypothesis) -> dict[str, Any]:
         return {"inducer": self.inducer.kind, **self.inducer.describe(h.form, self._situation_of),
-                "holds": h.holds, "supports": h.supports, "fails": h.fails}
+                **dict(zip(TALLIES, (h.holds, h.supports, h.fails)))}
 
     def _write(self, built_from: tuple[object, ...]) -> list[Write]:
         """The hypotheses the last experience suggested, each a datum built from it."""

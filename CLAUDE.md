@@ -273,8 +273,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   memory; from the next, the mind reads it through T5's view of `[data]`
   (deviation 7) and no longer holds its content: each state it has stood in,
   from the frame it came in; each hypothesis's form, restored by its inducer
-  from its datum and the step it came from (`Inducer.restore`); the steps of
-  short-term perception, read only when the model looks at them. Each cycle's
+  from its datum and the step it came from (`Inducer.restore`) — again only
+  when what its inducer said in it changes, not the learning's tallies beside
+  it; the steps of short-term perception, read only when the model looks at
+  them. An inducer that computes again with a form it said — the language
+  inducer's program it reads the grid with, and the last it wrote — holds it
+  only while new, and then has it back from the mind's memory (`Inducer.keep`). Each cycle's
   reads are recorded in `[event]` (`read`, a line for each purpose: `state`,
   `hypothesis`, `evidence`), and what is written from what was read — a
   hypothesis, its revision, a choice — names it among what it was built from,

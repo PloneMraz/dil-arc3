@@ -131,3 +131,37 @@ def test_short_term_perception_is_read_only_when_the_model_looks_at_it():
     assert set(reads(events)["evidence"]) == {(1, "signal-0-0"), (1, "signal-0-1")}, "the step and its report"
     program = next(k for k, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program")
     assert {"signal-0-0", "signal-0-1"} <= set(written(events)[program]), "built from what it was shown"
+
+
+def test_a_revision_of_its_tallies_alone_restores_nothing():
+    inducer = ExactInducer(ARC_ORGANS)
+    restored: list = []
+    real = inducer.restore
+    inducer.restore = lambda payload, step: (restored.append(payload.get("act")), real(payload, step))[1]
+    mind, cycle, data, events = loop(inducer)
+    for _ in range(4):
+        run(cycle, frame(lit(0), lit(1)), status())
+        run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    revised = [r.datum_id for r in events.all() if getattr(r, "activity_kind", None) == "revision"]
+    assert len(revised) > len(set(revised)), "each weighed again and again"
+    assert len(restored) == len(set(map(str, restored))) == 2, "each restored once: its inducer said the same"
+
+
+def test_the_program_the_model_reads_the_grid_with_is_had_back_from_memory(monkeypatch):
+    import mind.models.language_inducer as language
+    compiled: list = []
+    real = language.compile_program
+    monkeypatch.setattr(language, "compile_program", lambda code: (compiled.append(code), real(code))[1])
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT)))
+    mind, cycle, data, events = loop(inducer)
+    run(cycle, frame(lit(0), lit(1)), status())                        # it writes the program
+    run(cycle, frame(lit(1), lit(2, 1)), status())
+    run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2))
+    run(cycle, frame(lit(1), lit(0, 1), action=2), status(action=2))
+    run(cycle, frame(lit(0, 1), lit(1)), status())
+    program = next(k for k, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program")
+    assert inducer._seeing[0] is None and inducer._last[0] is None, "not held: had back from the mind's memory"
+    assert any(i == program for _, i in reads(events)["hypothesis"]), "read from the store"
+    revised = [r for r in events.all() if getattr(r, "activity_kind", None) == "revision" and r.datum_id == program]
+    assert len(revised) >= 2, "weighed at every step, its datum revised"
+    assert compiled == [RIGHT, RIGHT], "loaded when written, and once from its datum: its code never changed"

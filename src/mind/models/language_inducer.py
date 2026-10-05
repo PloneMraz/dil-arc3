@@ -19,7 +19,10 @@ model's, not code beside it):
 
 Its perception is that of the latest program it wrote that is a hypothesis and
 defines `where` or `targets` (declared): what it reads into a grid changes as its
-thinking does, and the learning reads every situation again when it does. Before
+thinking does, and the learning reads every situation again when it does. That
+program, and the last it wrote, it holds only while new: once the mind holds
+them as hypotheses it has them back from the mind's memory (`keep`), read from
+the store as every form is (Plone, 2026-10-05). Before
 any, a situation is the grid as it came, and no cell is a target. What code keeps
 beside it are records, never a reading of the grid: a state's identity (its
 hash), and the exact hypothesis — "from here, this act gave that" (`exact.py`).
@@ -136,9 +139,12 @@ class LanguageInducer(ExactInducer):
         super().__init__(organs)
         self.endpoint = endpoint or ModelEndpoint()
         self._chat = chat_fn
-        self._seeing: ProgramForm | None = None      # whose where/targets it reads the grid with
+        # The program whose where/targets it reads the grid with, and the last
+        # program that was a hypothesis: each in hand while new, then — once the
+        # mind holds it (`keep`) — only how to have it back from the mind's memory.
+        self._seeing: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
         self._perceived = False                      # its reading changed since the learning last asked
-        self._last: ProgramForm | None = None        # the last program that was a hypothesis
+        self._last: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
         self._said: list[Perceived] = []
         self._words: dict[str, str] | None = None      # what it is told, as the mind recalled it
         self._aim: dict[str, Any] | None = None        # the mind's aim, as the mind told it
@@ -147,6 +153,22 @@ class LanguageInducer(ExactInducer):
         # For the run's report: each answer, with what came of it.
         self.answers: list[dict[str, Any]] = []
 
+    # ── the programs it computes with again ──
+
+    def keep(self, form: Any, recall: Callable[[], Any]) -> None:
+        """A program it wrote is a hypothesis the mind holds: what it reads the
+        grid with, and shows the model again, it has back from the mind's memory."""
+        for name in ("_seeing", "_last"):
+            held = getattr(self, name)
+            if held is not None and held[0] is form:
+                setattr(self, name, (None, recall))
+
+    @staticmethod
+    def _now(held: tuple[ProgramForm | None, Callable[[], Any] | None] | None) -> ProgramForm | None:
+        if held is None:
+            return None
+        return held[0] if held[1] is None else held[1]()
+
     # ── perception: the program's ──
 
     def situation(self, state: Grid) -> str:
@@ -154,7 +176,7 @@ class LanguageInducer(ExactInducer):
         known = self._situations.get(raw)
         if known is not None:
             return known
-        situation = self._read(self._seeing, state) if self._seeing is not None else raw
+        situation = self._read(self._now(self._seeing), state) if self._seeing is not None else raw
         self._situations[raw] = situation
         return situation
 
@@ -176,7 +198,7 @@ class LanguageInducer(ExactInducer):
         if not self._perceived:
             return None
         self._perceived = False
-        form = self._seeing
+        form = self._now(self._seeing)
         return Perceived(payload={"program": form.digest, "where": form.where is not None,
                                   "targets": form.targets is not None}, tags=dict(PERCEPTION_TAGS))
 
@@ -196,7 +218,7 @@ class LanguageInducer(ExactInducer):
     def _cells(self, situation: str, state: Grid, a: int) -> list[tuple[Act, tuple]]:
         if situation not in self._targets:
             cells: list[tuple[Act, tuple]] = []
-            form = self._seeing
+            form = self._now(self._seeing)
             if form is not None and form.targets is not None:
                 try:
                     named = _bounded(form.targets, [row[:] for row in state])
@@ -276,7 +298,7 @@ class LanguageInducer(ExactInducer):
                     got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
                     # Read as it would be read with this program held: by its own
                     # `where`, or else by the reading it has now.
-                    reader = form if form.where is not None else self._seeing
+                    reader = form if form.where is not None else self._now(self._seeing)
                     if self._read(reader, got) != self._read(reader, after):
                         why = "its predict does not give, from the step it was asked on, where the region came to"
                         form = None
@@ -284,9 +306,9 @@ class LanguageInducer(ExactInducer):
                     why = str(exc)
                     form = None
         if form is not None:
-            self._last = form
+            self._last = (form, None)
             if form.where is not None or form.targets is not None:
-                self._seeing, self._perceived = form, True
+                self._seeing, self._perceived = (form, None), True
                 self._situations, self._targets = {}, {}
         answer = {"on": "not foreseen", "steps": len(steps), "text": text, "program": form.digest if form else None,
                   "why_not": why, "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
@@ -314,11 +336,12 @@ class LanguageInducer(ExactInducer):
             evidence=render_evidence(shown, report=True, name=o.name, news=self._news),
             also=words["unforeseen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
         messages = [{"role": "user", "content": first}]
-        if self._last is not None:
+        last = self._now(self._last)
+        if last is not None:
             # Scored on the grid alone, as it is asked to predict it.
             evidence = [Transition(t.before, t.action, t.x, t.y, t.after) for t in shown]
-            ok, misses = score(self._last.predict, evidence, (), lambda status: status)
-            messages.append({"role": "assistant", "content": f"```python\n{self._last.code}```"})
+            ok, misses = score(last.predict, evidence, (), lambda status: status)
+            messages.append({"role": "assistant", "content": f"```python\n{last.code}```"})
             messages.append({"role": "user", "content": words["induce_feedback"].format(
                 ok=ok, n=len(evidence), misses=misses_text(misses, name=self.organs.name))})
         return messages
