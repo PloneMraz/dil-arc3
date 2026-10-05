@@ -470,10 +470,11 @@ class Learning:
         inducer is told whether a hypothesis held foresaw the step, and shown
         short-term perception: one whose computing is costly computes only what
         was not foreseen. With the step's `report`, when the aim came: what
-        brings the aim, from what the mind expected of the step (S4)."""
+        brings the aim, from what the mind expected of the step and what the
+        region showed between (S4)."""
         out = []
         evidence = Evidence(self, self._seen_now)
-        extra = {"report": report, "expected": self._expected} if report is not None else {}
+        extra = {"report": report, "expected": self._expected, "through": step.through} if report is not None else {}
         used = self._take_used()
         forms = self.inducer.induce(source_raw, act, step.before, step.after, foreseen=foreseen,
                                     evidence=evidence, **extra)

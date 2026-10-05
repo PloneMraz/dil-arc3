@@ -164,16 +164,18 @@ class Inducer(Protocol):
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: State, after: State, *, foreseen: bool = False,
-               evidence: tuple = (), report: dict | None = None, expected: State | None = None) -> list[Any]:
+               evidence: tuple = (), report: dict | None = None, expected: State | None = None,
+               through: tuple = ()) -> list[Any]:
         """What one experience suggests: hypotheses, in its own forms. The
         learning says whether a hypothesis it holds foresaw the step, and shows
         the steps of short-term perception as `evidence` ((step, report) pairs,
         oldest first, the step itself last): an inducer whose computing is
         costly computes only what the step was not foreseen by.
 
-        Asked again with the step's `report` when the aim came (S4), and the
-        state the mind `expected` of it: what brings the aim — hypotheses whose
-        prediction has no state (None) and says what the region will report."""
+        Asked again with the step's `report` when the aim came (S4), the state
+        the mind `expected` of it, and what the region showed between (`through`,
+        the step's): what brings the aim — hypotheses whose prediction has no
+        state (None) and says what the region will report."""
 
     def said(self) -> list[Any]:
         """What it said in computing since last asked, each a datum to keep whole

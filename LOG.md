@@ -5253,3 +5253,38 @@ same code otherwise):
 Levels 8 → 9; the six's scores summed 3.414 → 3.560. Situations met: ls20 191
 → 155, the others within a few. Far still from what the six ask (each in few
 actions against its baseline): ls20's first level is six times its baseline.
+
+### Point 2: why what brought a level does not carry to the next (Plone)
+
+Measured on version 19's stores and on the six here (`made`, attention):
+
+- **No aim hypothesis at all in six of the thirteen games that ended a level**
+  (bp35, ls20, m0r0, sc25, sp80, tu93). For an act that takes no place the grid
+  inducer read what the act was to change from what the mind expected of the
+  step, and the step that ends a level is one nothing foresaw (the piece lands
+  where it never stood), so the mind expected no change and nothing was said.
+  Yet every level ended in version 19 came as a stack of 2 to 27 grids, the last
+  the next level and those before it the act's doing: ls20's first grid differs
+  from the grid before in 49 cells, its last in 1,493; tu93's 8, 13, 19 … then
+  769.
+- **Where one was induced, it seldom applied again.** Of eleven, four never did
+  (s1/f0: lp85, r11l, su15, vc33); lf52's applied 62 times and was wrong each
+  time. No choice in version 19 went "toward where its hypotheses say an act
+  brings the aim".
+
+**C1, done**: `Step.through`, the grids the region returned before its last, as
+the eye delivers them (`arc3.organs`); the learning hands them on with the
+step's report when the aim came (`induce(..., through=)`), and for an act that
+takes no place the grid inducer reads what it was to change from the last of
+them, else from what the mind expected, as before. 357 pass (aim from what was
+shown between, with nothing expected; the eye carries it). On the six with
+`made`: an aim hypothesis now in ar25 (4 parts), ls20 and tu93 (two) — and the
+scorecard identical to `made` without it (8 levels, 0.593 on the toolkit's
+scale, the same actions): none applied again.
+
+**What keeps them from applying** (the later levels' grids, one in ten): a
+part's box, as it was, lies again often — vc33 27 of 54 grids, tu93 15 of 15,
+lf52 29 of 46, ar25's first part 12 of 36 — but with its ring too, seldom (vc33
+0, tu93 0 and 1, lf52 12, ar25 7); and every part must lie (ar25's second never
+does). In ls20 and lp85 not even the box lies again (ls20's is 10 by 5: the
+piece and the exit as they lay); its colours are all on every later grid.

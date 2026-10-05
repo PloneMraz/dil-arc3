@@ -60,6 +60,29 @@ def test_what_the_act_was_to_change_and_what_lay_around_it_bring_the_aim():
         "nothing expected to change, and no place: nothing to say where"
 
 
+def test_with_nothing_expected_what_the_region_showed_before_its_last_grid():
+    # The step that brought the aim was foreseen by nothing: the mind expected no
+    # change. The region returned a stack: the piece next to the exit, then the
+    # next level. What the act was to change is read from the grid before the last.
+    grid = GridInducer(ARC_ORGANS)
+    before, shown = board((2, 3), (2, 5)), board((2, 4), (2, 5))
+    nothing = grid.induce("s", (4, None, None), before, board((1, 1), (3, 3), 7), report=LEVELLED, expected=before)
+    assert nothing == [], "nothing expected, nothing shown between: nothing to say where"
+    forms = grid.induce("s", (4, None, None), before, board((1, 1), (3, 3), 7), report=LEVELLED, expected=before,
+                        through=(shown,))
+    assert len(forms) == 1 and isinstance(forms[0], AimForm)
+    elsewhere = board((1, 2), (1, 4), 7)
+    said = grid.predict(forms[0], grid_key(elsewhere), elsewhere, (4, None, None), lambda raw: raw)
+    assert said is not None and said.fields == LEVELLED, "where the same cells lie again, the aim"
+
+
+def test_the_eye_carries_what_the_region_showed_between():
+    payload = {"before": [board((2, 3), (2, 5))], "grids": [board((2, 4), (2, 5)), board((1, 1), (3, 3), 7)],
+               "move": {"actionId": 4, "x": None, "y": None}}
+    step = ARC_ORGANS.step(payload)
+    assert step.after == board((1, 1), (3, 3), 7) and step.through == (board((2, 4), (2, 5)),)
+
+
 def test_for_an_act_that_takes_a_place_the_thing_it_was_put_on():
     grid = GridInducer(ARC_ORGANS)
     before = board((2, 3), (2, 5))

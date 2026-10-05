@@ -236,7 +236,8 @@ class LanguageInducer(ExactInducer):
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
-               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None) -> list[Any]:
+               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None,
+               through: tuple = ()) -> list[Any]:
         if report is not None:
             return []   # its programs predict no report of the region (declared, for now)
         forms: list[Any] = [ExactForm(source=source, act=act, to=after)]

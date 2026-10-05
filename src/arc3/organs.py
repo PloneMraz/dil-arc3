@@ -4,7 +4,9 @@ The eye delivers a frame as the stacks of grids the engine returned and the move
 between (`observe.frame_payload`); the mind reads the last grid of each stack —
 a reading declared here, as it was in the language mind: of the 159 recorded
 ls20 transitions (`scripts/data/frames.pkl`), 157 came back as a single grid,
-two as a stack of six. A grid is rows of cells, each a colour 0-15.
+two as a stack of six — and the step carries the grids before the last, which
+the region showed between: at a level's end, what the act did before the next
+level came (every level ended in version 19 came as a stack of 2 to 27). A grid is rows of cells, each a colour 0-15.
 The region reports its state, its level count and its stack depth
 (`observe.region_status`), and what it offers next. The body carries out RESET
 always, and any other act the region offers unless the game has ended
@@ -33,7 +35,9 @@ REPORT_FIELDS: Final = ("stateTo", "levelsDelta", "depthDelta")
 
 
 def _step(payload: dict[str, Any]) -> Step | None:
-    """The step a frame payload records: the last grid of each stack, and the move."""
+    """The step a frame payload records: the last grid of each stack, and the move;
+    and the grids the region returned before its last, which it showed between
+    (at a level's end, the act's doing before the next level: LOG.md, 2026-10-05)."""
     try:
         move = payload["move"]
         action = int(move["actionId"])
@@ -42,6 +46,7 @@ def _step(payload: dict[str, Any]) -> Step | None:
             before=[list(r) for r in payload["before"][-1]],
             act=(action, x, y),
             after=[list(r) for r in payload["grids"][-1]],
+            through=tuple([list(r) for r in g] for g in payload["grids"][:-1]),
         )
     except (KeyError, IndexError, TypeError, ValueError):
         return None

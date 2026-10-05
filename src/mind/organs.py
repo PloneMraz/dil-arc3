@@ -27,11 +27,14 @@ Act = tuple[int, "int | None", "int | None"]
 
 @dataclass(frozen=True, slots=True)
 class Step:
-    """One step as the eye delivers it: where the region stood, the act, where it stands."""
+    """One step as the eye delivers it: where the region stood, the act, where it
+    stands — and what the region showed between, as it returned it, oldest first
+    (none when it returned one state)."""
 
     before: State
     act: Act
     after: State
+    through: tuple = ()
 
 
 @dataclass(frozen=True)

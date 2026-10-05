@@ -387,7 +387,8 @@ class ExactInducer:
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
-               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None) -> list[ExactForm]:
+               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None,
+               through: tuple = ()) -> list[ExactForm]:
         """What one experience suggests: that it will happen again, exactly. It
         costs nothing, so whether the step was foreseen, and the steps before it,
         change nothing here. Asked again when the aim came (`report`), it has

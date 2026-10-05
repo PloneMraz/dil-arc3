@@ -127,9 +127,10 @@ class GridInducer(ExactInducer):
     # ── hypotheses ──
 
     def induce(self, source: str, act: Act, before: Grid, after: Grid, *, foreseen: bool = False,
-               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None) -> list[Any]:
+               evidence: tuple = (), report: dict | None = None, expected: Grid | None = None,
+               through: tuple = ()) -> list[Any]:
         if report is not None:
-            return self._aim(act, before, expected, report)
+            return self._aim(act, before, expected, report, through)
         forms: list[Any] = [ExactForm(source=source, act=act, to=after)]
         rows = min(len(before), len(after))
         changed = [(r, c) for r in range(rows) if r not in self.clock
@@ -171,14 +172,16 @@ class GridInducer(ExactInducer):
                                  colour=before[act[2]][act[1]] if placed else None))
         return forms
 
-    def _aim(self, act: Act, before: Grid, expected: Grid | None, report: dict) -> list[Any]:
+    def _aim(self, act: Act, before: Grid, expected: Grid | None, report: dict, through: tuple = ()) -> list[Any]:
         """What reaching the aim suggests (S4, Plone, 2026-09-28): that this act,
-        taken where the same cells lie again, brings it again. The step itself
-        says nothing of where: the region comes back changed nearly whole (a
+        taken where the same cells lie again, brings it again. The step's last
+        grid says nothing of where: the region comes back changed nearly whole (a
         level over, 715 to 2,872 of 4,096 cells in the runs measured). So what
-        the act was to change is read from what the mind expected of the step,
-        and for an act that takes a place, from the thing it was put on; with
-        neither, nothing is suggested."""
+        the act was to change is, for an act that takes a place, the thing it was
+        put on; for another, what the region showed last before its last grid —
+        the act's doing before the next level came (2026-10-05) — or, where it
+        showed nothing between, what the mind expected of the step; with none of
+        them, nothing is suggested."""
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if placed:
             x, y = act[1], act[2]
@@ -186,11 +189,12 @@ class GridInducer(ExactInducer):
                 return []
             cells = self._thing_at(before, x, y)
         else:
-            if expected is None:
+            done = through[-1] if through else expected
+            if done is None:
                 return []
-            rows = min(len(before), len(expected))
+            rows = min(len(before), len(done))
             cells = [(r, c) for r in range(rows) if r not in self.clock
-                     for c in range(min(len(before[r]), len(expected[r]))) if before[r][c] != expected[r][c] and c not in self.clock_columns]
+                     for c in range(min(len(before[r]), len(done[r]))) if before[r][c] != done[r][c] and c not in self.clock_columns]
         if not cells or len(cells) > MAX_REWRITE_CELLS:
             return []
         found = []
