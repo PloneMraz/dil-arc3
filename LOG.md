@@ -5344,3 +5344,21 @@ On the six and ft09, `made`, attention, against C1 (ft09 against `293f9b6`):
 
 Kept (Plone): what it cuts is the waste measured, and nothing got worse to speak
 of. 357 pass.
+
+## 2026-10-06
+
+### Version 20 (`e0dabfe`: `made`, C1, FORESEEN_LAW): 15 levels, 0.488 — not submitted
+
+Notebook `dil-arc3-learning` version 20, grid, `--curiosity made`, attention,
+600 cycles, the 25 games four at once; pushed 2026-10-05 16:11 UTC, COMPLETE
+17:45. 25 of 25 exited 0, no traceback; 4,930 s (version 19: 4,468 s).
+
+- **15 levels, 0.48834** on the toolkit's scale (version 19: 15, 0.50169).
+- Better: ar25's first level (242 actions, baseline 32), ls20 342 → 128, su15
+  463 → 270, bp35 144 → 111, lf52 138 → 132, vc33 69/288 → 62/282. Worse: cd82's
+  first level lost (version 19: 513 actions), m0r0 74 → 109 (0.78 → 0.36 for the
+  game), sp80 271 → 411, sc25 557 → 584.
+- The criteria set before the result for submitting it the same day (all 25
+  clean; levels and score at least version 19's; 110 games inside the deadline):
+  the score fell short, so it was not submitted; the day's submission went unused
+  (Plone).
