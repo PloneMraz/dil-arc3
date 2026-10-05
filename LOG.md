@@ -5177,3 +5177,21 @@ inducer tried in dil-arc3, wired to the mind, not apart — and is corrected.
 - Here first, with no model (an endpoint that refuses): ls20, 8 cycles through
   `run_competition.py`, exit 0; six answers "the model did not answer", the
   steps it was shown read from the store (`evidence`), C6 pass.
+
+### Version 19 (`c3c29a9`: (A), SYNC_CADENCE, (B)): the same 15 levels, 0.502, faster
+
+Notebook `dil-arc3-learning` version 19, configured as version 18 (grid, S2b,
+attention, 600 cycles, the 25 games four at once), its code `c3c29a9` against
+version 18's `1bbd7e2`: what the mind learns written to `[data]` as it changes
+(A), the store synced once a cycle (SYNC_CADENCE), what the model computes from
+read from the store (B). Every game exited 0, no traceback.
+
+- **The scorecard identical to version 18's**: 15 levels of 183, 0.50169, 14,975
+  actions; every game's score and levels the same.
+- **Time**: 4,468 s for the 25 (version 18: 5,171 s); a game 672 s on mean, not
+  765. Faster in 20 games (ft09 482 → 176 s, dc22 589 → 398 s), slower in five:
+  bp35 1,152 → 1,524 s, ls20 753 → 962 s, sp80 1,220 → 1,336 s, vc33 846 →
+  887 s, ar25 955 → 998 s. At this pace 110 games four at once take about 5.5
+  hours, from 25 games, not 110.
+- `stores.tar.gz` 638 MB. Outputs in `scripts/data/kaggle/dil-run/submit-c3c29a9/`
+  (git-ignored).
