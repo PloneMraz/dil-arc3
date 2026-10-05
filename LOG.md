@@ -5288,3 +5288,20 @@ lf52 29 of 46, ar25's first part 12 of 36 — but with its ring too, seldom (vc3
 0, tu93 0 and 1, lf52 12, ar25 7); and every part must lie (ar25's second never
 does). In ls20 and lp85 not even the box lies again (ls20's is 10 by 5: the
 piece and the exit as they lay); its colours are all on every later grid.
+
+### C2b tried and removed: a ladder of aim hypotheses (Plone: "kém hoặc không có tiến triển thì ta gỡ ra")
+
+From one step that brought the aim the grid inducer suggested three ways — every
+part with its ring (as before), every part with its box alone (the ring only
+telling one place from another), and each part alone where there were several —
+the region to weigh them. On the six, `made`, attention, against C1:
+
+- No level more (8), the same 3,594 actions; vc33's second level a little worse
+  (0.0758 → 0.0716); the six 0.59339 → 0.59269 on the toolkit's scale.
+- The looser ones applied, and were wrong nearly every time: vc33's borne out
+  once and failed 195 times, lf52's 138, ar25's 30, tu93's 19. Choices "an act
+  its hypotheses say brings the aim here": tu93 5, ar25 1, vc33 1; none ended a
+  level. ls20 and lp85 unchanged: their box lies nowhere later.
+
+Removed before it was committed; the code is C1's. What a part looks like is
+not what brought the aim, so a looser match of it is wrong more often, not right.
