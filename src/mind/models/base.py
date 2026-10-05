@@ -126,6 +126,11 @@ class Inducer(Protocol):
     def situation(self, state: State) -> str:
         """Where the region stands in a state, read by its perception now."""
 
+    def made(self, step: Step) -> frozenset:
+        """What a step made, as values: two steps that made the same give the same
+        value; a step that changed nothing, none. What a law of curiosity may
+        count as new (`learning.CURIOSITY`: made)."""
+
     def similarity(self, a: State, b: State) -> float:
         """How alike two states are, 0 to 1, as its perception reads them: what
         the learning weighs one experience against another by (attention)."""

@@ -39,10 +39,8 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 from ..organs import Act, Step
-from .exact import BIG_CHANGE, ExactForm, ExactInducer, Grid, Perceived, Prediction, grid_key
+from .exact import BIG_CHANGE, PART_GAP, ExactForm, ExactInducer, Grid, Perceived, Prediction, grid_key, parts
 
-# Two changed cells this close or closer are one part of what changed. DECLARED.
-PART_GAP: Final = 2
 # A rewrite over more cells than this is not suggested: it would be the grid
 # itself, met again or not at all. DECLARED, a bound on work.
 MAX_REWRITE_CELLS: Final = 1024
@@ -106,29 +104,6 @@ class AimForm:
     @property
     def key(self) -> tuple:
         return ("aim", self.act, self.placed, self.colour, self.parts)
-
-
-def parts(cells: list[tuple[int, int]], gap: int = PART_GAP) -> list[list[tuple[int, int]]]:
-    """The cells grouped into parts: two in one part when a chain of cells, each
-    within `gap` rows and columns of the next, joins them."""
-    left = set(cells)
-    out = []
-    for cell in cells:
-        if cell not in left:
-            continue
-        left.discard(cell)
-        part, stack = [], [cell]
-        while stack:
-            r, c = stack.pop()
-            part.append((r, c))
-            for dr in range(-gap, gap + 1):
-                for dc in range(-gap, gap + 1):
-                    q = (r + dr, c + dc)
-                    if q in left:
-                        left.discard(q)
-                        stack.append(q)
-        out.append(part)
-    return out
 
 
 class GridInducer(ExactInducer):

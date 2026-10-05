@@ -96,3 +96,32 @@ def test_an_act_foreseen_to_lead_where_it_stood_is_put_last_not_out_of_reach():
     assert (3, None, None) in opened, "never out of reach"
     assert model._foreseen(here, (3, None, None)), "foreseen: it changes nothing"
     assert not model._foreseen(here, (1, None, None)), "foreseen to lead somewhere not stood in"
+
+
+def test_what_a_step_made_is_each_part_it_changed_where_it_lies_as_left():
+    from mind.models.exact import ExactInducer
+    inducer = ExactInducer(ARC_ORGANS)
+    there = inducer.made(Step(board((1, 1)), (1, None, None), board((1, 2))))
+    assert there == inducer.made(Step(board((1, 1)), (2, None, None), board((1, 2)))), "whatever the act"
+    assert there != inducer.made(Step(board((4, 1)), (1, None, None), board((4, 2)))), "elsewhere, something else"
+    assert len(inducer.made(Step(board((0, 0), (5, 5)), (1, None, None), board((0, 1), (5, 4))))) == 2, "two parts"
+    assert inducer.made(Step(board((1, 1)), (1, None, None), board((1, 1)))) == frozenset(), "nothing changed"
+
+
+def test_by_the_law_made_a_whole_never_met_is_not_new_when_each_part_was_made_before():
+    def two(a, b):
+        g = board()
+        g[0][a], g[5][b] = 9, 9
+        return g
+    def counted(law):
+        model = Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=law)
+        # Each piece moves right and back; then the top right and the bottom right:
+        # a whole never met, each part as it was made before.
+        for before, after in ((two(0, 0), two(1, 0)), (two(1, 0), two(0, 0)), (two(0, 0), two(0, 1)),
+                              (two(0, 1), two(0, 0)), (two(0, 0), two(1, 0)), (two(1, 0), two(1, 1))):
+            step = Step(before=before, act=(1, None, None), after=after)
+            model.expect(step)
+            model.observe(step, None, None, (), False)
+        return model._kinds[("act", 1)][:2]
+    assert counted("new") == [6, 3], "somewhere new: two pieces, then the last whole, never met"
+    assert counted("made") == [6, 4], "made: each way of each piece once; the last whole made nothing new"

@@ -80,6 +80,10 @@ against it (Plone, 2026-09-28):
   changed           S2   a change: somewhere new or back where it stood
   new-then-changed  S2c  somewhere new; between kinds as likely to, a change
   new-plus-changed  S2d  the odds of somewhere new and of a change, added
+  made              B1   something made not made before: where the parts of a
+                         whole change apart, the whole seldom comes again, and
+                         somewhere new is everywhere (LOG.md, 2026-10-05); what
+                         a step made is its model's to say (`Inducer.made`)
 
 What it holds and does not write as such — the counts its curiosity weighs
 with, the situations it visited — follows from its experiences in `[data]`. Not
@@ -136,7 +140,7 @@ ATTENTION_SHARPNESS: Final = 4
 ATTENTION_MIN_WEIGHT: Final = 1.0
 # What the mind counts as worth trying (the docstring's CURIOSITY), by name; the
 # first is the default (S2b).
-CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed")
+CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed", "made")
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
                   "the one right at the highest rate, (supports + 1) / (supports + fails + 2), is the "
                   "expectation; at an equal rate, the one right more often")
@@ -220,6 +224,7 @@ class Edge:
     seen: int = 1
     new: int = 0                 # how many times it reached a situation not met before
     reached: int = 0             # how many times the aim came of it
+    made: int = 0                # how many times it made something not made before
     written: bool = False        # its datum entered the store
 
 
@@ -297,6 +302,8 @@ class Learning:
         self._learned: list[Edge] = []                      # every experience, in the order met
         self._edges: dict[tuple[str, Act], Edge] = {}
         self._out: dict[str, dict[Act, Edge]] = {}
+        # What every step has made, for the law that counts something made as new.
+        self._made: set = set()
         self._kinds: dict[tuple, list[int]] = {}   # kind -> [tried, somewhere new, aim]
         self._actions: dict[int, list[int]] = {}   # act -> [tried, somewhere new, aim], every kind of it
         self._kind_of: dict[tuple[str, Act], tuple] = {}
@@ -803,6 +810,7 @@ class Learning:
         for edge in self._pending:
             payload = {"from": self._state_of[edge.source], "act": list(edge.act), "to": self._state_of[edge.to],
                        "kind": list(edge.kind), "changed": edge.changed, "seen": edge.seen, "new": edge.new,
+                       **({"made": edge.made} if self.curiosity == "made" else {}),
                        "reached": edge.reached, "ended": edge.ended, "status": edge.status}
             if edge.written:
                 writes.append(Write(payload=payload, revises=edge, built_from=built_from))
@@ -826,6 +834,12 @@ class Learning:
         known = self._edges.get((source, act))
         applied = list(self._applicable(source, act, step.before))
         new = self.inducer.situation(step.after) not in self._raw_of
+        made = False
+        if self.curiosity == "made":
+            things = self.inducer.made(step)
+            made = not things <= self._made
+            self._made |= things
+        novel = made if self.curiosity == "made" else new   # what its law of curiosity counts as new
         to_raw = self._meet(step.after, unit, "after")
         self.holds_by_situation.append(int(self.inducer.situation(self._expected) == self._state_of[to_raw])
                                     if self._expected is not None else 0)
@@ -837,7 +851,7 @@ class Learning:
             for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0]),
                            *([self._coarse.setdefault(coarse, [0, 0, 0])] if coarse is not None else [])):
                 counts[0] += 1
-                counts[1] += int(new)
+                counts[1] += int(novel)
             if changed:
                 self._kind_changes[kind] = self._kind_changes.get(kind, 0) + 1
                 if coarse is not None:
@@ -870,6 +884,7 @@ class Learning:
                 # What came, no hypothesis it holds foresaw: it asks what this suggests.
                 self._new = self._induce(source_raw, act, step, foreseen, unit)
         edge.new += int(new)
+        edge.made += int(made)
         self._touch(edge)
         # What the inducer said in computing — a language model's answers — kept
         # whole, built from the step it was asked on and the words it was told.
@@ -1046,7 +1061,7 @@ class Learning:
         if tried < ATTENTION_MIN_WEIGHT:
             return None
         self._last_attended = weighed
-        new = sum(w * e.new for e, w in weighed)
+        new = sum(w * (e.made if self.curiosity == "made" else e.new) for e, w in weighed)
         aim = sum(w * e.reached for e, w in weighed)
         changes = sum(w * e.seen for e, w in weighed if e.changed)
         return (tried, new, aim), changes

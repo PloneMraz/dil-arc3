@@ -78,6 +78,31 @@ COUNTER_EDGE: Final = 2
 COUNTER_CELLS: Final = 3
 COUNTER_TICKS: Final = 4
 BIG_CHANGE: Final = 64 * 64 // 4
+# Two changed cells this close or closer are one part of what changed. DECLARED.
+PART_GAP: Final = 2
+
+
+def parts(cells: list[tuple[int, int]], gap: int = PART_GAP) -> list[list[tuple[int, int]]]:
+    """The cells grouped into parts: two in one part when a chain of cells, each
+    within `gap` rows and columns of the next, joins them."""
+    left = set(cells)
+    out = []
+    for cell in cells:
+        if cell not in left:
+            continue
+        left.discard(cell)
+        part, stack = [], [cell]
+        while stack:
+            r, c = stack.pop()
+            part.append((r, c))
+            for dr in range(-gap, gap + 1):
+                for dc in range(-gap, gap + 1):
+                    q = (r + dr, c + dc)
+                    if q in left:
+                        left.discard(q)
+                        stack.append(q)
+        out.append(part)
+    return out
 
 
 def grid_key(grid: Grid, clock: frozenset[int] = frozenset(), columns: frozenset[int] = frozenset()) -> str:
@@ -299,6 +324,17 @@ class ExactInducer:
             self._masks[raw] = kept
         return kept
 
+    def made(self, step: Step) -> frozenset:
+        """What a step made: each part of the cells it changed off the clock (cells
+        PART_GAP or closer, one part), as those cells, where they lie, in the
+        colours the step left them. Two steps that left a part alike made the
+        same; a step that changed nothing made nothing (B1, Plone, 2026-10-05)."""
+        before, after = step.before, step.after
+        cells = [(r, c) for r in range(min(len(before), len(after))) if r not in self.clock and before[r] != after[r]
+                 for c in range(min(len(before[r]), len(after[r])))
+                 if c not in self.clock_columns and before[r][c] != after[r][c]]
+        return frozenset(tuple(sorted((r, c, after[r][c]) for r, c in part)) for part in parts(cells))
+
     def similarity(self, a: Grid, b: Grid) -> float:
         """How alike two states are, 0 to 1: the share of their cells, off the clock,
         of one colour in both (idea (a), Plone, 2026-09-29)."""
@@ -408,5 +444,5 @@ class ExactInducer:
                          status=payload.get("status"))
 
 
-__all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
+__all__ = ["BIG_CHANGE", "PART_GAP", "parts", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
            "COUNTER_TICKS", "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]

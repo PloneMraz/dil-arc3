@@ -5222,3 +5222,34 @@ stores, read off the clock each run found (`scripts/situations.py`):
   one: ACTION1 and ACTION2 turn a symbol in one of several slots (rows 52-56),
   ACTION3 and ACTION4 move what is chosen (28-29 cells). A situation is the whole
   grid, so where several parts change apart, their combinations seldom repeat.
+
+### B1: curiosity for something made not made before, measured on the six (Plone)
+
+Point 1's measurement found that where the parts of a grid change apart, a whole
+seldom comes again, so S2b's "somewhere new" is everywhere. B1, as Plone chose
+to try first: a law of curiosity, `made`, beside the others — a step is new when
+it made something not made before, and what a step made is the model's to say:
+`Inducer.made(step)`, in the exact inducer (and so grid's) each part of the cells
+it changed off the clock (cells `PART_GAP = 2` or closer, one part; `parts`
+moved from grid to exact), as those cells, where they lie, in the colours the
+step left them. The learning keeps what every step made, counts a step new by
+it for each kind and act, and attention weighs experiences by it; the experience
+datum carries `made` under this law only. S2b unchanged. 355 tests pass (what a
+step made; a whole never met but made of parts made before is new by S2b, not by
+`made`).
+
+The six games, 600 cycles, grid, attention, here, against version 19 (S2b, the
+same code otherwise):
+
+| game | S2b (version 19) | `made` |
+|---|---|---|
+| ar25 | 0 levels | **1 level, 242 actions** (baseline 32): 0.0486 |
+| ls20 | level 1 in 342 (22): 0.0148 | **128**: 0.1055 |
+| vc33 | 69 (7), 288 (18): 0.0647 | 63, 270: 0.0758 |
+| lf52 | 138 (32): 0.0978 | 141: 0.0936 |
+| lp85 | 17 (17): 2.7778 | 17: the same |
+| tu93 | 454 (19), 50 (16): 0.4590 | the same |
+
+Levels 8 → 9; the six's scores summed 3.414 → 3.560. Situations met: ls20 191
+→ 155, the others within a few. Far still from what the six ask (each in few
+actions against its baseline): ls20's first level is six times its baseline.

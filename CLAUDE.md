@@ -177,12 +177,16 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   word"); each answer names the prior.
 - **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
   wanted by how often it reached a situation not met before, not by how often it
-  changed the state. Three other laws are kept beside it to be measured, and the
+  changed the state. Four other laws are kept beside it to be measured, and the
   one that does best across the games chosen after (Plone, 2026-09-28;
   `--curiosity`, `learning.CURIOSITY`): **S2**, a change (back where it stood
   included); **S2c**, somewhere new, then a change between kinds as likely to;
-  **S2d**, both odds added. A step is blocked, back where it stood, or somewhere
-  new: S2 counts the last two alike, S2b the first two.
+  **S2d**, both odds added; **B1** (`made`, Plone, 2026-10-05), something made
+  not made before — where the parts of a whole change apart the whole seldom
+  comes again, and what a step made is its model's to say (`Inducer.made`: each
+  part of the cells it changed off the clock, where it lies, as left). A step is
+  blocked, back where it stood, or somewhere new: S2 counts the last two alike,
+  S2b the first two.
 - **What may be tried is every thing seen; which, curiosity says** (Plone,
   2026-09-29). An act that takes a place is offered on every region of one
   colour the inducer sees, the ground left out — no cap: at 64, smallest first,
