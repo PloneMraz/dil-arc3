@@ -103,6 +103,25 @@ class WriteRequest:
 WriteFn = Callable[[WriteRequest], None]
 
 
+# It can READ. DEVIATION from dil-core, declared, additive and defaulted
+# (dil-arc3, 2026-10-05; queued for dil-core). The whole store is the agent's
+# memory (v0.3.6 §9), and what a model computes from, the mind takes from it.
+# `ask` answers a cycle later and runs every layer; `read` is a view of `[data]`
+# the rule reads directly, in the cycle. It is memory alone: a datum admitted in
+# the cycle reading is perceived in it, not recalled, and the view does not
+# return it — nor anything written in the cycle, which the driver takes after
+# the pass. The driver records each cycle's reads in `[event]`, one `read` line
+# for each purpose. `id_of` names the datum an observation unit of an earlier
+# cycle came from, so the rule can read it later by its id.
+@dataclass(frozen=True, slots=True)
+class StoreView:
+    """The rule's read-only view of `[data]`, for one cycle."""
+
+    # read(datum_id, purpose) -> the datum as `[data]` holds it, or None.
+    read: Callable[[str, str], Any]
+    id_of: Callable[[InfoUnit], "str | None"]
+
+
 def persistence(
     entity_id: str,
     window: HistoryWindow,
@@ -132,6 +151,8 @@ class T5Result:
 @dataclass(frozen=True, slots=True)
 class T5Input:
     bound: tuple[BoundInfo, ...] = dc_field(default_factory=tuple)
+    # The cycle's view of `[data]`, from the driver (DEVIATION: READ, above).
+    view: StoreView | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,6 +204,15 @@ def _takes_field(rule: Callable[..., Any]) -> str | None:
     return None
 
 
+def _takes_read(rule: Callable[..., Any]) -> bool:
+    """Whether a rule receives the store's view, by name (DEVIATION: READ)."""
+    try:
+        params = inspect.signature(rule).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(p.kind is p.VAR_KEYWORD or p.name == "read" for p in params)
+
+
 def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
     return json.dumps(a.content, sort_keys=True, default=str) == json.dumps(
         b.content, sort_keys=True, default=str
@@ -214,6 +244,7 @@ class T5(BaseLayer):
         self._fit = fit if fit is not None else _content_equal
         self._predict_tests = _takes_test(self._predict)
         self._predict_field = _takes_field(self._predict)
+        self._predict_read = _takes_read(self._predict)
         self._window_size = (
             baseline_window if baseline_window is not None else BASELINE_WINDOW
         )
@@ -283,14 +314,15 @@ class T5(BaseLayer):
             # bound to T5, since it is T5's declared rule that made it. It may
             # also ask the store; the query is traced to T5 for the same reason.
             args: tuple[Any, ...] = (entity_id, tuple(window), observed, contribute, ask, write)
+            more: dict[str, Any] = {"read": input.view} if self._predict_read else {}
             if self._predict_field == "keyword":
-                out = self._predict(*args, test, field=field)
+                out = self._predict(*args, test, field=field, **more)
             elif self._predict_field == "positional":
-                out = self._predict(*args, test, field)
+                out = self._predict(*args, test, field, **more)
             elif self._predict_tests:
-                out = self._predict(*args, test)
+                out = self._predict(*args, test, **more)
             else:
-                out = self._predict(*args)
+                out = self._predict(*args, **more)
             declared = isinstance(out, Expecting)
             predicted = out.predicted if declared else out
             confidence = min(1.0, count / self._recurrence)

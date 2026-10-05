@@ -124,6 +124,14 @@ untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.
 
+The whole store is the agent's memory, and what a model computes from, the mind
+reads there: what came in a cycle is in hand in that cycle, and from the next it
+is read from `[data]` through T5's view — the states the mind has stood in,
+each hypothesis's form (restored by its inducer from its datum and its step),
+the steps of short-term perception when the model looks at them. Each cycle's
+reads are a `read` line in `[event]`, and what is written from them names them
+among what it was built from.
+
 **A pretrained language model, used as it is, and the program it writes.** The
 model is not trained here and does not hold the region: what it knows of one is
 what the mind shows it, and what it produces is a program, which the mind's

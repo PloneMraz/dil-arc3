@@ -358,5 +358,12 @@ class LanguageInducer(ExactInducer):
                     "where": form.where is not None, "targets": form.targets is not None}
         return {"form": "exact", **super().describe(form, situation_of)}
 
+    def restore(self, payload: dict[str, Any], step: Step) -> Any:
+        """A program from its datum, which holds its code: loaded again. An exact
+        hypothesis from its datum and its step."""
+        if payload.get("form") == "program":
+            return compile_program(payload["code"])
+        return super().restore(payload, step)
+
 
 __all__ = ["PERCEPTION_TAGS", "LanguageInducer", "ProgramForm", "compile_program"]

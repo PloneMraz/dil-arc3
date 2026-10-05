@@ -349,6 +349,13 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
     assert path is None or path[0][0] != (1, None, None)
 
 
+def within_a_cycle(model, data):
+    """For a test that asks the mind between cycles: the store's view it reads its
+    memory through in a cycle (DEVIATION 7), over the store as it stands."""
+    from dil.loop.layers.t5 import StoreView
+    model.recall_from(StoreView(read=lambda datum, purpose: data.get(datum), id_of=lambda unit: None))
+
+
 def test_every_known_act_objected_to_the_act_that_is_always_open():
     # Every act at every state known: lit(0) and lit(1), ACTION1 and ACTION2 each.
     mind, cycle, data, events = loop()
@@ -359,6 +366,7 @@ def test_every_known_act_objected_to_the_act_that_is_always_open():
     run(cycle, frame(lit(0), lit(0), action=2), status(action=2), _remark(QUIET))
     model._learned_since_reset = False
     here_raw = model._now_raw
+    within_a_cycle(model, data)
     said = ("repeating", (1, None, None))
     model._objected[said] = {(here_raw, (1, None, None)), (here_raw, (2, None, None))}
     ctx = mind._context("command")
@@ -376,6 +384,7 @@ def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_
     said = ("repeating", (1, None, None))
     model._objected[said] = {(model._now_raw, (1, None, None)), (model._now_raw, (2, None, None))}
     ctx = mind._context("command")
+    within_a_cycle(model, data)
     ctx.remark = {"remark": "repeating", "act": {"act": "ACTION1"}}
     proposal, _ = model.propose(ctx)
     assert proposal.act == (1, None, None) and "no other way" in proposal.why, proposal
@@ -401,6 +410,7 @@ def test_an_objection_survives_the_clock_growing():
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
     before = model.objections()
     model.inducer.clock = frozenset({2})
+    within_a_cycle(model, data)
     model._reindex(())
     assert {a for _, a in model.objections()} == {a for _, a in before}
     assert all(state in model._state_of.values() for state, _ in model.objections()), "read under the new clock"

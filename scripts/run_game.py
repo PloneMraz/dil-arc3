@@ -177,6 +177,9 @@ print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) fo
 print(f"  answers kept          : {len(answers)}  program not taken: {sum(1 for d in answers if not d.payload.get('kept'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
+read_lines = kind("read")
+print(f"  read of [data]        : by purpose, lines and data named "
+      f"{ {p: (sum(1 for r in read_lines if r.purpose == p), sum(len(r.read) for r in read_lines if r.purpose == p)) for p in sorted({r.purpose for r in read_lines})} }")
 learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypothesis"]
 why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
 print(f"  hypotheses written    : {len(learned)}  not holding now: {sum(1 for d in learned if not d.payload.get('holds'))}; "

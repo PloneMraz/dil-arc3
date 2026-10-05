@@ -63,6 +63,7 @@ from .resist_event import (
     ProvenanceActivity,
     ResistanceReadingActivity,
     ResistEvent,
+    ReadActivity,
     RevisionActivity,
     WrittenTags,
 )
@@ -244,6 +245,17 @@ def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
             "t": rec.t,
         }
 
+    if isinstance(rec, ReadActivity):
+        return {
+            "form": "read",
+            "datumId": rec.datum_id,
+            "cycleMark": rec.cycle_mark,
+            "issuingLayer": rec.issuing_layer,
+            "for": rec.purpose,
+            "read": list(rec.read),
+            "t": rec.t,
+        }
+
     if isinstance(rec, CrystallizationActivity):
         return {
             "form": "crystallization",
@@ -321,6 +333,13 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
         return RevisionActivity(
             datum_id=rec["datumId"], cycle_mark=rec["cycleMark"],
             issuing_layer=rec["issuingLayer"], t=rec["t"],
+        )
+
+    if form == "read":
+        return ReadActivity(
+            datum_id=rec["datumId"], cycle_mark=rec["cycleMark"],
+            issuing_layer=rec["issuingLayer"], purpose=rec["for"],
+            read=tuple(rec["read"]), t=rec["t"],
         )
 
     if form == "crystallization":

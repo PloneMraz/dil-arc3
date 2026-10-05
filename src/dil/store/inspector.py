@@ -23,6 +23,7 @@ from .data_store import DataStore
 from .display_name import display_name, event_display_name
 from .event_log import ReadableEventLog
 from .resist_event import (
+    ReadActivity,
     RevisionActivity,
     CrystallizationActivity,
     CycleSealActivity,
@@ -108,6 +109,11 @@ def inspect_event_log(log: ReadableEventLog) -> str:
             lines.append(
                 f"  #{i}  [revision] {r.datum_id} @T{r.issuing_layer} "
                 f"(c{r.cycle_mark}) {_clock(r.t)}"
+            )
+        elif isinstance(r, ReadActivity):
+            lines.append(
+                f"  #{i}  [read] {r.datum_id} @T{r.issuing_layer} for {r.purpose}: "
+                f"{len(r.read)} datum(s) (c{r.cycle_mark}) {_clock(r.t)}"
             )
         elif isinstance(r, CrystallizationActivity):
             lines.append(

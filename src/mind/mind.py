@@ -123,7 +123,8 @@ class Mind:
         self._priors_asked = False
         self._pending: str | None = None
         self._command_due = False
-        # Short-term perception: [step, unit, report or None], as long as T5's window.
+        # Short-term perception: [step, unit, report or None, the report's unit or
+        # None], as long as T5's window.
         self._seen: list[list[Any]] = []
         self._status_seen_at: int | None = None
         self._said: dict[str, Any] | None = None
@@ -311,7 +312,7 @@ class Mind:
         # 2. Then look: this step joins short-term perception.
         # Kept as long as the longest window the field can ask of T5; read as long
         # as the one it asks now (`_perception`).
-        self._seen = [*self._seen, [step, observed, None]][-2 * BASELINE_WINDOW:]
+        self._seen = [*self._seen, [step, observed, None, None]][-2 * BASELINE_WINDOW:]
         hit = expected == step.after
         self.holds.append(int(hit))
         self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
@@ -332,7 +333,7 @@ class Mind:
         self._offers = tuple(int(a) for a in payload.get(o.offers_key) or ())
         # The step just seen gets what the region reported of itself.
         if self._seen and self._status_seen_at != self.frame_calls and report is not None:
-            self._seen[-1][2] = report
+            self._seen[-1][2], self._seen[-1][3] = report, observed
             self._status_seen_at = self.frame_calls
         # The expectation: what the region reported last, the agent's own act as
         # it is — or, where its learning said the report, what it said, the fields it
@@ -359,7 +360,7 @@ class Mind:
         if value != payload:
             self.think("status", ask, write)
         if self._seen and report is not None:
-            step, unit, _ = self._seen[-1]
+            step, unit, _, _ = self._seen[-1]
             self._write(write, self.learning.observe(step, unit, report, (unit, observed), on_report=True))
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
@@ -421,7 +422,7 @@ class Mind:
         report = self._seen[-1][2] if self._seen else None
         state = (report or {}).get(self.organs.state_field)
         return Context(
-            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r in self._perception()],
+            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r, _ in self._perception()],
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
             remark=self._remark, remark_unit=self._remark_unit, aim=self._aim,
@@ -498,9 +499,11 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     channels = mind.organs.channels
 
     def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None,
-             field=None):
-        # The cycle's field reaches the mind as it reaches every layer (INV-7).
+             field=None, read=None):
+        # The cycle's field reaches the mind as it reaches every layer (INV-7);
+        # and the store's view, what it reads its memory through (DEVIATION 7).
         mind._field = field
+        mind.learning.recall_from(read)
         content = observed.content if isinstance(observed.content, dict) else {}
         channel = content.get("channel")
         payload = _content_value(observed)

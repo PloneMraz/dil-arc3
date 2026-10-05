@@ -63,6 +63,7 @@ from ..store.resist_event import (
     record_expectation,
     record_layer_exit,
     record_provenance,
+    record_read,
     record_resistance_reading,
     record_revision,
     record_scar,
@@ -91,7 +92,7 @@ from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
 from .layers.t3 import STORE_CHANNEL, is_store_query, store_query
 from .layers.t4 import T4Input
-from .layers.t5 import T5Input, T5Output
+from .layers.t5 import StoreView, T5Input, T5Output
 from .layers.t6 import T6Input
 from .layers.t7 import ExpectedEntity, T7Input, T7Output
 from .layers.t8 import ObservedInteraction, T8Input
@@ -302,7 +303,7 @@ class Cycle:
         "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
         "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
         "_admit", "_running_admitted", "_pending_writes", "_running_written",
-        "_unit_datum",
+        "_unit_datum", "_view", "_reads",
     )
 
     def __init__(
@@ -336,6 +337,9 @@ class Cycle:
         # written datum was built from can be recorded by id (v0.3.4 §9). Keyed
         # by the unit's identity; each entry leaves with its unit.
         self._unit_datum: dict[int, str] = {}
+        # The cycle's view of `[data]` for T5, and what it read (DEVIATION: READ).
+        self._view: StoreView | None = None
+        self._reads: dict[str, dict[str, None]] | None = None
         # The host's resistance-retrieval channel (§10), if one is declared. The
         # driver does not call it — T5 does, through its declared PredictRule.
         # The driver only asks which scars it returned, so their return can be
@@ -398,6 +402,31 @@ class Cycle:
             return
         self._unit_datum[key] = datum_id
         weakref.finalize(unit, self._unit_datum.pop, key, None)
+
+    def _store_view(self, admitted_now: frozenset[str]) -> StoreView:
+        """The cycle's read-only view of `[data]`, for T5 (DEVIATION: READ).
+
+        Memory alone: what was admitted this cycle is perceived, not recalled,
+        and is not returned. Each read is kept, by purpose, for the cycle's
+        `read` lines."""
+        reads: dict[str, dict[str, None]] = {}
+        self._reads = reads
+        data, unit_datum = self._data, self._unit_datum
+
+        def read(datum_id: str, purpose: str) -> TaggedDatum | None:
+            if self._reads is not reads:
+                raise RuntimeError("the store's view is read within its cycle only")
+            if datum_id in admitted_now:
+                return None
+            held = data.get(datum_id)
+            if held is not None:
+                reads.setdefault(purpose, {})[datum_id] = None
+            return held
+
+        def id_of(unit: InfoUnit) -> str | None:
+            return unit_datum.get(id(unit))
+
+        return StoreView(read=read, id_of=id_of)
 
     def _datum_id(self) -> str:
         """The id the cycle datum takes in `[data]`; also its key in the path."""
@@ -471,7 +500,7 @@ class Cycle:
         datum = t4.datum
         self._log_exit(4)
 
-        t5 = run_layer(L.t5, T5Input(bound=t4.output.bound), field, datum)
+        t5 = run_layer(L.t5, T5Input(bound=t4.output.bound, view=self._view), field, datum)
         datum = t5.datum
         self._log_exit(5)
 
@@ -559,7 +588,7 @@ class Cycle:
         self._log_exit(4)
         ch.publish(4, t4.output)
 
-        t5 = run_layer(L.t5, gather_t5(ch), field, datum)
+        t5 = run_layer(L.t5, replace(gather_t5(ch), view=self._view), field, datum)
         datum = t5.datum
         self._log_exit(5)
         ch.publish(5, t5.output)
@@ -735,6 +764,7 @@ class Cycle:
             admitted_ids[i] = datum_id
         self._running_admitted = tuple(admitted_ids.values())
         admitted_now = frozenset(self._running_admitted)
+        self._view = self._store_view(admitted_now)
 
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
@@ -804,6 +834,16 @@ class Cycle:
         # region to push to, the buffer is empty.
         for e in pass_.emissions:
             self._emit(e.issuing_layer, e.action)
+
+        # ── What T5 read of `[data]` (DEVIATION: READ, declared) ──
+        # One line for each purpose, naming the data read, in the order first read.
+        # The view closes with the pass: a read after it is no read of this cycle.
+        self._view = None
+        reads, self._reads = self._reads, None
+        for purpose, ids in (reads or {}).items():
+            self._events.append(
+                record_read(self._datum_id(), self._cycle, 5, purpose, tuple(ids), self._now())
+            )
 
         # ── The store answers the queries raised this cycle (§6.4, §9 open layer) ──
         # Answered now, ingested at T1 next cycle. Answering changes nothing in

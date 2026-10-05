@@ -109,7 +109,11 @@ def test_a_hypothesis_about_the_aim_that_does_not_bring_it_is_counted_against():
     run(cycle, frame(board((2, 2), (2, 5)), board((2, 3), (2, 5)), action=4), status(action=4, affords=moves))
     level2 = board((1, 2), (1, 4), 7)
     run(cycle, frame(board((2, 3), (2, 5)), level2, action=4), status(levels=1, action=4, affords=moves))
-    aim = next(h for h in mind.learning._hypotheses if isinstance(h.form, AimForm))
+    # Outside a cycle the mind reads nothing: a hypothesis in hand is looked at
+    # there, one in the store in the store, as a third party reads it.
+    aim = next(h for h in mind.learning._hypotheses
+               if (isinstance(h.held, AimForm) if h.recall is None
+                   else data.get(h.datum_id).payload.get("form") == "aim"))
     # At the next level the same act, where the same cells lie, does not bring it.
     run(cycle, frame(level2, board((1, 3), (1, 4), 7), action=4), status(action=4, affords=moves))
     assert (aim.supports, aim.fails) == (1, 1) and not aim.holds, "right once, wrong once: no longer held"

@@ -398,6 +398,12 @@ class ExactInducer:
         to = self.situation(form.to)
         return {"from": source, "act": list(form.act), "to": to, "changed": to != source, "status": form.status}
 
+    def restore(self, payload: dict[str, Any], step: Step) -> ExactForm:
+        """An exact hypothesis from its datum, which names situations only: the
+        state it came from and the grid it says comes are the step's."""
+        return ExactForm(source=self.identity(step.before), act=tuple(payload["act"]), to=step.after,
+                         status=payload.get("status"))
+
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
            "COUNTER_TICKS", "MAX_THING_SHARE", "ExactForm", "ExactInducer", "Perceived", "Prediction", "grid_key", "things"]

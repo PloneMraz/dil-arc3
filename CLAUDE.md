@@ -266,9 +266,27 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   §3, §9, and the specification v8). `[event]` cannot be altered or
   overwritten, only appended to and read; `[data]` can be altered. What the mind
   learns, and each change in it, belongs in `[data]`; what its model computes
-  from, it reads back from the store (being designed: LOG.md, 2026-10-04).
+  from, it reads back from the store (next).
+- **What its model computes from, the mind reads from its memory** (Plone,
+  2026-10-05: (B), for every inducer; each read recorded; the model's inputs
+  only). What came in a cycle is in hand in that cycle — perceived, not yet
+  memory; from the next, the mind reads it through T5's view of `[data]`
+  (deviation 7) and no longer holds its content: each state it has stood in,
+  from the frame it came in; each hypothesis's form, restored by its inducer
+  from its datum and the step it came from (`Inducer.restore`); the steps of
+  short-term perception, read only when the model looks at them. Each cycle's
+  reads are recorded in `[event]` (`read`, a line for each purpose: `state`,
+  `hypothesis`, `evidence`), and what is written from what was read — a
+  hypothesis, its revision, a choice — names it among what it was built from,
+  as does what uses a prediction kept from an earlier cycle. The learning's own
+  working state (its experiences, counts, the hypotheses' tallies) stays its
+  own, written to `[data]` as it changes; what a model keeps of what it
+  computed from a state (a grid's things, where a part lies) is its computing.
+  A hypothesis new in a cycle stays in hand until its datum's id comes back,
+  after the next cycle's command.
 - **Memory is what the store held before the cycle that asks.** A query is
-  answered without the data admitted in the cycle that raised it.
+  answered without the data admitted in the cycle that raised it, and the view
+  returns nothing admitted in the cycle that reads.
 - **Short-term perception is as long as T5's window**: `BASELINE_WINDOW = 16`
   when the field has not leaned, shifted by exploration as T5's is (½–1½, 8 to
   24; the mind keeps 32 and reads that many): the steps just seen, each with
@@ -283,10 +301,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   in it: each experience is a datum, and how often a hypothesis was borne out,
   how often an experience was met, reached somewhere new or the aim, or ended
   the region, are revised in place in `[data]` as they change; the counts its
-  curiosity weighs with follow from the experiences. It does not yet read back
-  what it holds (being designed: what its model computes from, read from the
-  store). It may read anything in the store: whatever it asks, the
-  answer reaches it.
+  curiosity weighs with follow from the experiences. What its model computes
+  from, it reads back from the store (above). It may read anything in the
+  store: whatever it asks, the answer reaches it.
 - **The mind expects what the region returns**: the next state and the region's
   report, from the held hypothesis that applies and fits the store best. Where
   it holds none, the standing expectation holds: nothing changes, and the region
@@ -542,6 +559,17 @@ own form (a `present` set, a `predict` rule for T5).
    machine could lose is the cycle running; recovery is what the commits are
    for. The syncs of each were about 60% of a run (LOG.md, 2026-10-04).
    `scripts/run_game.py` declares it; queued in dil-core.
+7. **READ: T5's view of `[data]`** (`T5Input.view`, a `StoreView`; Plone,
+   2026-10-05). The rule receives `read` beside `ask`, `write` and `test`:
+   `read(datum, purpose)` returns a datum as `[data]` holds it, in the cycle,
+   with no query and no pass through the layers; `id_of(observation)` names the
+   datum an observation of an earlier cycle came from. Memory alone: a datum
+   admitted in the cycle reading is not returned, and what the rule writes is
+   taken after the pass. The driver records each cycle's reads in `[event]`
+   (`ReadActivity`, form `read`: the cycle datum, the layer, the purpose, the
+   data read, in the order first read), and the checker holds each to have
+   entered before the cycle that read it. dil-core has no such view, which holds
+   when a rule takes no `read`; queued in dil-core.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a

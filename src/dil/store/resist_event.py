@@ -322,6 +322,28 @@ class RevisionActivity:
     activity_kind: Literal["revision"] = "revision"
 
 
+@dataclass(frozen=True, slots=True)
+class ReadActivity:
+    """A read of `[data]` (DEVIATION from dil-core, declared; dil-arc3, 2026-10-05).
+
+    The whole store is the agent's memory (v0.3.6 §9), and what a model computes
+    from, the mind takes from it: at T5, beside `ask`, `write` and `test`, a view
+    of `[data]` it reads directly — no query, no cycle's delay. Each cycle's reads
+    are recorded here, one line for each purpose: which data, in which cycle, by
+    which layer, for what. Like an emission's, the line is the cycle datum's. It
+    carries no content: what was read is in `[data]`.
+    """
+
+    datum_id: str
+    cycle_mark: int
+    issuing_layer: LayerIndex
+    purpose: str
+    read: tuple[str, ...]
+    t: int
+    kind: Literal["activity"] = "activity"
+    activity_kind: Literal["read"] = "read"
+
+
 ActivityRecord: TypeAlias = (
     CycleSealActivity
     | LayerExitActivity
@@ -331,6 +353,7 @@ ActivityRecord: TypeAlias = (
     | ExpectationActivity
     | ResistanceReadingActivity
     | RevisionActivity
+    | ReadActivity
 )
 
 
@@ -386,6 +409,17 @@ def record_revision(
     """A `revision` line: datum D was revised at cycle N by layer L (no content)."""
     return RevisionActivity(
         datum_id=datum_id, cycle_mark=cycle_mark, issuing_layer=issuing_layer, t=t
+    )
+
+
+def record_read(
+    datum_id: str, cycle_mark: int, issuing_layer: LayerIndex, purpose: str,
+    read: tuple[str, ...], t: int,
+) -> ReadActivity:
+    """A `read` line: at cycle N, layer L read these data for this purpose (no content)."""
+    return ReadActivity(
+        datum_id=datum_id, cycle_mark=cycle_mark, issuing_layer=issuing_layer,
+        purpose=purpose, read=tuple(read), t=t,
     )
 
 

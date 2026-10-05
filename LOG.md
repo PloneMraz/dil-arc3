@@ -5078,3 +5078,56 @@ this agent's submissions (`56623380` 0.05, `56658708` 0.00) and above the random
 agent's two draws (0.02, 0.06). Its Save & Run, on the 25 public games: 15
 levels, 0.502 on the toolkit's scale. Which hidden games it completed levels in
 is not shown. Kaggle is free to use again.
+
+### (B): what the model computes from, the mind reads from its memory (DEVIATION 7, READ)
+
+As designed and approved (Plone): B2 with a read record, done here first and
+queued in dil-core (`b8eb4e0`), scope B-light — only the model's inputs.
+
+- **The view.** `T5Input.view`, a `StoreView` the driver builds each cycle and
+  T5 hands a rule that takes `read`: `read(datum, purpose)` returns the datum as
+  `[data]` holds it, in the cycle; `id_of(observation)` names the datum an
+  observation of an earlier cycle came from. Memory alone: nothing admitted in
+  the reading cycle is returned (what the rule writes is taken after the pass
+  anyway); a read after the pass raises. Each cycle's reads become `read` lines
+  in `[event]` (`ReadActivity`: the cycle datum, layer 5, the purpose, the data
+  in the order first read), serialized losslessly, shown by the inspector; the
+  checker's C6 adds a claim that every datum read entered before the cycle that
+  read it.
+- **Restoring a hypothesis.** `Inducer.restore(payload, step)`: exact from its
+  datum and its step's frame (its datum names situations only); grid's still,
+  rewrite and aim forms from the datum alone; a program loaded again from its
+  code. Round trip through JSON tested for each: the same key, the same
+  predictions.
+- **The learning.** What came in a cycle is in hand in that cycle; from the
+  next, a state met is held as where memory holds it (`Recalled`: a frame datum
+  and its side) and read through the view; a hypothesis, once its datum's id
+  comes back, is read from its datum and its step's (restored only when its
+  datum changed, and the form kept when its key is the same, so a model's own
+  memo of it holds); short-term perception is shown to the inducer as
+  `Evidence`, read from the store only when the inducer looks at it. A write
+  names what was read for it: a new hypothesis, what the inducer read; a
+  weighing's revision and a refutation, what the expectation was computed from
+  (save the datum revised); a choice, everything read or used to choose,
+  including predictions kept from earlier cycles; revisions after the clock
+  grows, every state read again. When a hypothesis's first report comes after
+  it was written, its datum is revised to say it. The mind keeps the report's
+  observation in short-term perception, to read the report back.
+- Tests: 351 pass (restore round trips; the view holds memory alone; states and
+  hypotheses no longer held but read; the trace's reads are memory and C6
+  passes; a choice names the state it read; the exact inducer reads no evidence,
+  the language inducer reads the step before and its report, and its program is
+  built from them). Three tests that ask the mind between cycles give it a view
+  of the store; one reads a hypothesis's datum from the store as a third party.
+
+Measured here, grid, attention, 600 cycles, side by side with `6ac993c`:
+
+| game | choices | `[data]` payloads | `read` lines (state / hypothesis data named) | time | `[event]` bytes | `built_from` ids |
+|---|---|---|---|---|---|---|
+| ls20 | 697, the same | 4,310, all equal | 1,188 (86,277 / 57,751) | 650 → 679 s | 96.3 → 104.8 MB | 19,495 → 415,955 |
+| r11l | 599, the same | 4,651, all equal | 1,167 (167,554 / 112,573) | 370 → 428 s | 113.9 → 122.9 MB | 11,880 → 301,241 |
+| lp85 | 731, the same | 5,029, all equal | 1,171 (165,858 / 166,614) | 408 → 470 s | 48.7 → 59.9 MB | 16,002 → 398,886 |
+
+Every other `[event]` record the same in number by form; the commits the same
+size; conformance the same (C6 pass). Most of the growth in `built_from` is the
+choices: a choice names every state and hypothesis its search read or used.

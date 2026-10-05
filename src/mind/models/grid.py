@@ -385,5 +385,26 @@ class GridInducer(ExactInducer):
                            "to": [list(c) for c in p.rhs], "place": list(p.place) if p.place else None}
                           for p in form.parts]}
 
+    def restore(self, payload: dict[str, Any], step: Step) -> Any:
+        """A still, rewrite or aim hypothesis from its datum alone; an exact one
+        from its datum and its step (`ExactInducer.restore`)."""
+        form = payload.get("form")
+        if form == "exact":
+            return super().restore(payload, step)
+        if form == "still":
+            return StillForm(act=payload["act"], colour=payload["colour"])
+        parts_ = tuple(_part(p) for p in payload["parts"])
+        if form == "aim":
+            return AimForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"],
+                           status=dict(payload["status"]))
+        return RewriteForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"])
+
+
+def _part(said: dict[str, Any]) -> Part:
+    """A part as `describe` said it."""
+    return Part(lhs=tuple(tuple(c) for c in said["from"]), ring=tuple(tuple(c) for c in said["ring"]),
+                rhs=tuple(tuple(c) for c in said.get("to", ())),
+                place=tuple(said["place"]) if said["place"] is not None else None)
+
 
 __all__ = ["MAX_REWRITE_CELLS", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer", "Part", "RewriteForm", "StillForm", "parts"]

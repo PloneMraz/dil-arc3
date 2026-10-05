@@ -43,6 +43,7 @@ from ..store.resist_event import (
     LogRecord,
     ManifestRecord,
     ProvenanceActivity,
+    ReadActivity,
     RevisionActivity,
 )
 from ..store.tags import TaggedDatum, invalid_open_tag_reason
@@ -272,6 +273,7 @@ def check_conformance(
     cycle_seals = [r for r in records if isinstance(r, CycleSealActivity)]
     provenance_lines = [r for r in records if isinstance(r, ProvenanceActivity)]
     revisions = [r for r in records if isinstance(r, RevisionActivity)]
+    reads = [r for r in records if isinstance(r, ReadActivity)]
     emissions = [r for r in records if isinstance(r, EmissionActivity)]
     crystallizations = [r for r in records if isinstance(r, CrystallizationActivity)]
     expectations = [r for r in records if isinstance(r, ExpectationActivity)]
@@ -843,6 +845,18 @@ def check_conformance(
             ),
             None,
         )
+        # DEVIATION 7 (dil-arc3, 2026-10-05): what the agent read of `[data]` was
+        # memory — data whose entry the trace shows before the cycle that read
+        # them. What arrives in a cycle is perceived in it, not recalled.
+        unremembered = next(
+            (
+                (r, i)
+                for r in reads
+                for i in r.read
+                if i not in entered or entered[i] >= r.cycle_mark
+            ),
+            None,
+        )
         # v0.3.5 §9: every datum an expectation named as what it is shows its
         # entry by then, and — when that expectation mismatched against what the
         # region returned — met the mismatch: a scar naming it at that cycle.
@@ -907,6 +921,12 @@ def check_conformance(
                 "fail" if unbuilt else "pass",
             ),
             _claim(
+                "every datum the agent read of `[data]` shows its entry in the trace "
+                "before the cycle that read it (DEVIATION 7)",
+                "trace",
+                "fail" if unremembered else "pass",
+            ),
+            _claim(
                 "every datum an expectation was (held_by) shows its entry, and met "
                 "its mismatch against the region as a scar (§9, v0.3.5)",
                 "trace",
@@ -947,6 +967,11 @@ def check_conformance(
                 f"datum {unbuilt[0].datum_id}, written at cycle {unbuilt[1]}, does "
                 "not say what it was built from, or names data with no recorded "
                 "entry (§9)"
+            )
+        elif unremembered:
+            detail = (
+                f"datum {unremembered[1]}, read at cycle {unremembered[0].cycle_mark}, "
+                "shows no entry in the trace before that cycle"
             )
         elif unheld:
             detail = (

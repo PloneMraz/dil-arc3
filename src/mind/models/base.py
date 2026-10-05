@@ -202,6 +202,13 @@ class Inducer(Protocol):
     def describe(self, form: Any, situation_of: Any) -> dict[str, Any]:
         """A hypothesis, said as data."""
 
+    def restore(self, payload: dict[str, Any], step: Step) -> Any:
+        """A hypothesis again, from its datum as the store holds it (`payload`,
+        what `describe` said) and the step it was induced from, read from the
+        store: the mind reads what its model computes from in its memory (Plone,
+        2026-10-05). What `describe` leaves out, the step holds. The form
+        restored is the form described: `key` says the same of both."""
+
 
 class Learner(Protocol):
     """The mind's learning, as its seams ask it (`../mind.py`)."""
@@ -225,11 +232,11 @@ class Learner(Protocol):
         """What will come back, from where the region stood and the act alone (INV-8)."""
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
-                on_report: bool, seen: list[tuple[Step, Any, dict[str, Any] | None]] | None = None
-                ) -> list[Write]:
+                on_report: bool, seen: list[list[Any]] | None = None) -> list[Write]:
         """What came back — the step, then its report: it learns from every
-        return. With a step, the mind's short-term perception (`seen`: step, unit,
-        report or None, oldest first, this step last)."""
+        return. With a step, the mind's short-term perception (`seen`: step, its
+        observation, the report or None, the report's observation or None; oldest
+        first, this step last)."""
 
     def propose(self, context: Context) -> tuple[Proposal, list[Write]]:
         """What to do next, from where the region stands and what it has seen."""
@@ -240,6 +247,9 @@ class Learner(Protocol):
 
     def held(self) -> tuple[object, ...]:
         """The data its expectations are, when it made them (its handles)."""
+
+    def recall_from(self, view: Any) -> None:
+        """The store as the mind reads it this cycle (DEVIATION 7), or None."""
 
     def acknowledge(self, handle: object, datum_id: str) -> None:
         """The datum a write became, now that it is known."""
