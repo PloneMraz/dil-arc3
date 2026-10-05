@@ -5195,3 +5195,30 @@ read from the store (B). Every game exited 0, no traceback.
   hours, from 25 games, not 110.
 - `stores.tar.gz` 638 MB. Outputs in `scripts/data/kaggle/dil-run/submit-c3c29a9/`
   (git-ignored).
+
+### Why situations explode: measured on version 19's stores (Plone: point 1 of the review)
+
+In many games nearly every step reached a situation not met before (situations
+against grids: sk48 504/504, lp85 569/571, tr87 486/591, wa30 516/575, bp35
+489/562, re86 454/566), so curiosity found somewhere new everywhere and
+hypotheses were seldom tried again. Measured from the frames in version 19's
+stores, read off the clock each run found (`scripts/situations.py`):
+
+- **A counter the clock rules missed, in two games of 25.** Masking one more line
+  cuts sk48's situations 504 → 141 (row 53) and tn36's 63 → 31 (row 33); in the
+  other 23, any one line cuts 0-4%. sk48's row 53: one cell 2 → 3, moving on one
+  cell left (columns 63, 62, 61, 60…), every five acts or so, whatever the act.
+  tn36's row 33: segments of three cells 1 → 5 (columns 38-40, 43-45, 48-50,
+  53-55), one a click that changed something, set back by RESET. Neither line
+  lies within `COUNTER_EDGE = 2` of the edge, and tn36's segments are two cells
+  apart, not next to each other; sk48's ticks too seldom for the rules that ask
+  for a change at every step.
+- **Elsewhere the explosion is real.** No cell changes in a quarter of the
+  changing steps under every act (save in games with one act, where it is that
+  act's doing: lp85's belt). Masking the 128 cells most often among those that
+  made a grid new collapses some (tr87 486 → 5, dc22 91 → 5, s5i5 81 → 4, cd82
+  151 → 30, ka59 251 → 39, sc25 256 → 38) and not others (ar25, cn04, sp80,
+  wa30, r11l: none or a little): those cells are what the acts move. tr87, for
+  one: ACTION1 and ACTION2 turn a symbol in one of several slots (rows 52-56),
+  ACTION3 and ACTION4 move what is chosen (28-29 cells). A situation is the whole
+  grid, so where several parts change apart, their combinations seldom repeat.
