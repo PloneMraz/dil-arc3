@@ -389,8 +389,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   own — and on Kaggle by Save & Run, since this machine cannot serve the model
   (it runs only Qwen3.6-35B-A3B IQ4_XS on llama.cpp, minutes a call;
   Qwen3.8-Flash-Next's smallest GGUF is 72.5 GB, larger than its memory and
-  free disk). Step by step: (1) a notebook of its own, `dil-arc3-language`
-  (`build_dil_run.py --served --notebook dil-arc3-language`), serving the model
+  free disk). Step by step: (1) a notebook of its own, `dil-arc3-language-inducer`
+  (`build_dil_run.py --served --notebook dil-arc3-language-inducer`), serving the model
   last served, Qwen3.8-Flash-Next NVFP4, one game, about 100 cycles; (2) pushed
   once the Save & Run running before it has finished, to see whether the
   language inducer as it stands works in the loop — how right its `predict`

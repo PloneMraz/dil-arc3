@@ -5305,3 +5305,17 @@ the region to weigh them. On the six, `made`, attention, against C1:
 
 Removed before it was committed; the code is C1's. What a part looks like is
 not what brought the aim, so a looser match of it is wrong more often, not right.
+
+### The language notebook: cancelled, queued, deleted, made again (Plone)
+
+- `dil-arc3-language` version 1 (code `d130ee6`), pushed 2026-10-05, ran at once
+  (02:26:56 UTC) and was cancelled within 36 minutes by a click on the session
+  that opened it in the editor (Plone); Kaggle kept no output or log.
+- Version 2, pushed about 03:35, stayed `QUEUED` until Plone cancelled it about
+  12:20 — nearly nine hours, where earlier GPU runs started at once. No other
+  session was active. From the editor's click on, the notebook showed "draft".
+  Not established what held it.
+- At Plone's word the notebook was deleted (`kaggle kernels delete`; it had never
+  been submitted and kept no output) and made again under another slug,
+  `dil-arc3-language-inducer`, the same build (the dataset still `d130ee6`):
+  version 1 pushed 12:24 UTC, `QUEUED` at once.
