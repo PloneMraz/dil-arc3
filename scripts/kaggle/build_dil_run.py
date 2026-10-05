@@ -492,9 +492,10 @@ def main() -> None:
                     help="the mind's model, what its learning computes with")
     ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
-    ap.add_argument("--notebook", default=LEARNING_KERNEL_SLUG,
-                    help="the CPU notebook's slug: another than the one a scored rerun is running from, so a "
-                         "measurement never pushes to it (2026-09-29)")
+    ap.add_argument("--notebook", default=None,
+                    help="the notebook's slug (default: dil-arc3-learning on CPU, dil-arc3-run with --served): "
+                         "another than one a scored rerun is running from, so a measurement never pushes to it "
+                         "(2026-09-29), and for the language inducer a notebook of its own (2026-10-05)")
     ap.add_argument("--attention", action="store_true",
                     help="the mind attends to the experiences most like where it stands (mind/learning.py)")
     a = ap.parse_args()
@@ -534,6 +535,7 @@ def main() -> None:
                    "outputs": [], "source": src} for i, src in enumerate(cells)],
     }
     cpu = a.probe or not a.served
+    a.notebook = a.notebook or (LEARNING_KERNEL_SLUG if cpu else KERNEL_SLUG)
     if cpu:
         run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity,
                                                                         *(["--attention"] if a.attention else [])]
@@ -554,7 +556,7 @@ def main() -> None:
         print(f"dataset -> {dataset}\nkernel  -> {kernel}\n{title}: {run_args}, game {a.game}, cycles {a.cycles}")
         return
     (kernel / "kernel-metadata.json").write_text(json.dumps({
-        "id": f"{OWNER}/{KERNEL_SLUG}", "title": "dil-arc3 run",
+        "id": f"{OWNER}/{a.notebook}", "title": a.notebook.replace("-", " ").replace("dil arc3", "dil-arc3"),
         "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
         "is_private": True, "enable_gpu": True, "enable_tpu": False, "enable_internet": False,
         "machine_shape": "NvidiaRtxPro6000", "keywords": [],
@@ -562,7 +564,7 @@ def main() -> None:
                             f"{OWNER}/{DATASET_SLUG}"],
         "competition_sources": [COMPETITION], "kernel_sources": [], "model_sources": [handle],
     }, indent=1))
-    print(f"dataset -> {dataset}\nkernel  -> {kernel}\n"
+    print(f"dataset -> {dataset}\nkernel  -> {kernel}\n{a.notebook}: "
           f"model {a.model}, game {a.game}, cycles {a.cycles}, max tokens {a.max_tokens}, "
           f"context {a.max_model_len}")
 

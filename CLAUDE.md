@@ -375,18 +375,23 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **Every record takes the clock when it happens**; the cycle datum keeps its
   cycle's start and the seal adds `closedAt`.
 
-### Queued, not started (Plone, 2026-10-04)
+### In hand (Plone, 2026-10-05; queued 2026-10-04)
 
 - **The language inducer computing a way to the aim; the mind deciding.** The
   model's program says, from a state, which run of acts brings the aim; the
   learning holds that as a hypothesis (S4's single act widened to a run), writes
   it, and weighs it by what the region returns; the mind follows a way only while
-  it holds one. Step by step on one game: (1) the model alone on a game's real
-  steps — how right its `predict` is, whether it finds the run to the aim, how
-  long it takes; (2) wired to the mind for some tens of cycles, read back from
-  `[event]`; (3) only then Kaggle with a served model. This machine runs only
-  Qwen3.6-35B-A3B IQ4_XS on llama.cpp (minutes a call); Qwen3.8-Flash-Next's
-  smallest GGUF is 72.5 GB, larger than its memory and free disk.
+  it holds one. Tried in dil-arc3, wired to the mind — never the model on its
+  own — and on Kaggle by Save & Run, since this machine cannot serve the model
+  (it runs only Qwen3.6-35B-A3B IQ4_XS on llama.cpp, minutes a call;
+  Qwen3.8-Flash-Next's smallest GGUF is 72.5 GB, larger than its memory and
+  free disk). Step by step: (1) a notebook of its own, `dil-arc3-language`
+  (`build_dil_run.py --served --notebook dil-arc3-language`), serving the model
+  last served, Qwen3.8-Flash-Next NVFP4, one game, about 100 cycles; (2) pushed
+  once the Save & Run running before it has finished, to see whether the
+  language inducer as it stands works in the loop — how right its `predict`
+  is, whether it finds the way to the aim, how long it takes — read back from
+  `[event]`.
 
 ### Open in the current design
 

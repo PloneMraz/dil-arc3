@@ -5157,3 +5157,23 @@ asked, before talking further:
   choices, the same `[data]`; `built_from` a little shorter (ls20 415,955 →
   407,304), the step's frame read no more for a restore that does not happen.
   Times not compared: two runs here at once, against six then.
+
+### The language inducer's trial, out of the queue: on Kaggle, in dil-arc3 (Plone)
+
+Plone took the queued item in hand and set its steps: tried on Kaggle by Save &
+Run, this machine not having what serving the model needs; (1) a new notebook
+with the model last served, one game, about 100 cycles; (2) pushed once the Save
+& Run running now (`dil-arc3-learning` version 19) has finished, to check that the
+language inducer's mechanism works. The queued text's first step, "the model
+alone on a game's real steps", went against what he had settled — the language
+inducer tried in dil-arc3, wired to the mind, not apart — and is corrected.
+
+- `build_dil_run.py --notebook` names the GPU notebook too (default
+  `dil-arc3-run`, the notebook of submission `56588469`, left as it is).
+- Built, not pushed: `dil-arc3-language`, code `d130ee6`, Qwen3.8-Flash-Next
+  NVFP4 (the Kaggle copy checked file by file against Hugging Face, as before),
+  ls20, 100 cycles, one game at once, S2b, no attention, 12,288 tokens an answer,
+  65,536 of context.
+- Here first, with no model (an endpoint that refuses): ls20, 8 cycles through
+  `run_competition.py`, exit 0; six answers "the model did not answer", the
+  steps it was shown read from the store (`evidence`), C6 pass.
