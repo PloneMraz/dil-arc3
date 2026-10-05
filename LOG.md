@@ -5319,3 +5319,28 @@ not what brought the aim, so a looser match of it is wrong more often, not right
   been submitted and kept no output) and made again under another slug,
   `dil-arc3-language-inducer`, the same build (the dataset still `d130ee6`):
   version 1 pushed 12:24 UTC, `QUEUED` at once.
+
+### Point 3: of acts all foreseen, the one foreseen least surely first (FORESEEN_LAW; Plone: kept)
+
+Measured on version 19's ft09: 13 situations, 599 clicks, 15 that changed
+anything — one every 47 cycles. Two groups of things of colour 9 and 36 cells:
+those on the right and below (x, y 38/46/54) turn 9 ↔ 8 when clicked, those on
+the left and above do nothing. Curiosity by kind (colour, size) holds them one,
+so the kind's odds fell (0.15 → 0.056), and in each new situation the mind tried
+some 47 things, all foreseen, in near-even order — many foreseen to do nothing
+by hypotheses right every time (still on colour 2: 141 for, 0 against; colour
+0: 132, 0), the colour-9 one right less often (128, 11).
+
+The law: when every act left here is foreseen, curiosity chooses among those
+foreseen least surely — by the hypothesis right at the lowest rate; none is put
+out of reach (S3 stands). The learning's own measure, naming nothing.
+
+On the six and ft09, `made`, attention, against C1 (ft09 against `293f9b6`):
+
+- ft09: steps that changed something 15 → 49, one every 11 cycles, not 47;
+  situations 13 → 29; still no level (its first asks for a pattern of tiles).
+- lf52 141 → 132 actions; vc33 63, 270 → 62, 282; the rest the same. Levels 8;
+  the six's scores summed +0.012.
+
+Kept (Plone): what it cuts is the waste measured, and nothing got worse to speak
+of. 357 pass.
