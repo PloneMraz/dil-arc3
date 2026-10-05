@@ -490,7 +490,7 @@ def main() -> None:
                          "now, Plone 2026-09-28); without it, a CPU notebook with --inducer")
     ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
                     help="the mind's model, what its learning computes with")
-    ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed"),
+    ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed", "made"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
     ap.add_argument("--notebook", default=None,
                     help="the notebook's slug (default: dil-arc3-learning on CPU, dil-arc3-run with --served): "
