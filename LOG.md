@@ -5403,3 +5403,13 @@ Notebook `dil-arc3-learning` version 22, grid, `made`, attention, 600 cycles, th
   others: a change in the order of trying moves which first levels are reached.
   None of the four versions is better than version 19 on the 25. Not submitted
   (Plone: the result reported before any submission).
+
+### The language notebook queued again
+
+`dil-arc3-language-inducer` version 1 (pushed 2026-10-05 12:24 UTC) stayed
+`QUEUED` until Plone cancelled it about 16:10; version 2 (the dataset then served,
+`101e93b`; S2b, as the GPU notebook passes no curiosity), pushed 2026-10-06 03:09,
+stayed `QUEUED` past 05:10 and was cancelled. The "draft" Kaggle showed on the
+notebook came on one never opened in the editor, so it is how a notebook with no
+version run shows, not what held it (corrects the entry above that tied it to
+the click).
