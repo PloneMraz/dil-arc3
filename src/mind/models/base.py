@@ -9,13 +9,14 @@ seams ask what will come back, show what came back, and ask what to do next
 
 Its model is what is replaceable: the part of the one mind that computes — not a
 second mind beside it, not a second brain (Plone, 2026-09-27). It is an inducer
-(`Inducer`: `exact.py`, `grid.py`), which only computes for the learning. Its
+(`Inducer`: `grid.py`, `language_inducer.py`), which only computes for the
+learning; each stands on its own (Plone, 2026-10-06). Its
 learning writes nothing and asks nothing itself: it says what should be written
 and asked, and the mind does it, so every write and question goes through the
 one mind's seams.
 
-A language model is an inducer too (`language_inducer.py`; its shared parts,
-the endpoint and the program's run, are in `language.py`). Its earlier form,
+A language model is an inducer too (`language_inducer.py`; the endpoint and the
+program's run are in `language.py`). Its earlier form,
 which submission `56588469` ran, sat where the learning sits and is gone:
 `3b31806` keeps it (LOG.md, 2026-09-29).
 """
@@ -26,6 +27,24 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from ..organs import Act, State, Step
+
+
+@dataclass(frozen=True)
+class Prediction:
+    """What a hypothesis says will come back: the state, and what the region will
+    report of itself (None: it says nothing of it)."""
+
+    state: Any
+    fields: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class Note:
+    """A datum an inducer asks to be written as it computes: what its reading of
+    states learned, or what a language model answered."""
+
+    payload: dict[str, Any]
+    tags: dict[str, str]
 
 
 @dataclass
@@ -88,7 +107,7 @@ class Context:
     on: str
     # How many steps the mind has seen: the cycle a thought belongs to.
     frame_calls: int
-    # Short-term perception: (step, unit, report fields or None), oldest first.
+    # The recent steps: (step, unit, report fields or None), oldest first.
     seen: list[tuple[Step, Any, dict[str, Any] | None]]
     # What memory answered to what was asked: (datum id, step or None, open
     # tags, payload), oldest first.
@@ -110,7 +129,9 @@ class Inducer(Protocol):
     """The mind's model: what its learning computes with (`../learning.py`). It
     declares where a hypothesis applies and only computes — never the learning
     itself: the learning holds the experiences and the hypotheses, weighs them,
-    expects, is curious and chooses."""
+    expects, is curious and chooses. What an experience says — that the act gives
+    there what it gave — is the learning's own, from its memory; a model's
+    hypotheses are what reaches past it."""
 
     # Its name, for the run's report.
     kind: str
@@ -118,13 +139,13 @@ class Inducer(Protocol):
     # looks ahead past the situations it has stood in.
     general: bool
 
-    # ── perception ──
+    # ── reading a state ──
 
     def identity(self, state: State) -> str:
         """A state's own identity, as it came."""
 
     def situation(self, state: State) -> str:
-        """Where the region stands in a state, read by its perception now."""
+        """Where the region stands in a state, as it reads states now."""
 
     def made(self, step: Step) -> frozenset:
         """What a step made, as values: two steps that made the same give the same
@@ -132,13 +153,14 @@ class Inducer(Protocol):
         count as new (`learning.CURIOSITY`: made)."""
 
     def similarity(self, a: State, b: State) -> float:
-        """How alike two states are, 0 to 1, as its perception reads them: what
-        the learning weighs one experience against another by (attention)."""
+        """How alike two states are, 0 to 1, as it reads them: what the learning
+        weighs one experience against another by (attention); 0 where it cannot
+        say."""
 
-    def perceive(self, step: Step, kind: tuple) -> Any:
-        """What its perception learns from a step, as a datum to write (with
-        `payload` and `tags`); None when nothing. The learning then reads every
-        situation again."""
+    def learn_reading(self, step: Step, kind: tuple) -> Note | None:
+        """What a step teaches it of reading states (where the region stands in
+        one), as a datum to write; None when nothing. The learning then reads
+        every situation again."""
 
     # ── what can be done ──
 
@@ -154,9 +176,6 @@ class Inducer(Protocol):
     def copy(self, state: State) -> State:
         """A state of its own, as the learning keeps what it expects."""
 
-    def reported(self, form: Any, said: dict[str, Any]) -> None:
-        """What the region reported the first time a hypothesis's step was met."""
-
     def coarse(self, kind: tuple) -> tuple | None:
         """The coarser kind a kind falls in, which the learning reads first — what
         was learned of it carries to every kind within it; None for none."""
@@ -168,7 +187,7 @@ class Inducer(Protocol):
                through: tuple = ()) -> list[Any]:
         """What one experience suggests: hypotheses, in its own forms. The
         learning says whether a hypothesis it holds foresaw the step, and shows
-        the steps of short-term perception as `evidence` ((step, report) pairs,
+        the recent steps as `evidence` ((step, report) pairs,
         oldest first, the step itself last): an inducer whose computing is
         costly computes only what the step was not foreseen by.
 
@@ -198,13 +217,10 @@ class Inducer(Protocol):
     def scopes(self, situation: str, act: Act) -> list[tuple]:
         """The scopes a situation and act fall in."""
 
-    def predict(self, form: Any, situation: str, state: State, act: Act, situation_of: Any) -> Any:
-        """What a hypothesis predicts there (with `state` and `fields`); None
-        when it says nothing there. A `state` of None: it says only what the
-        region will report (a hypothesis about the aim)."""
-
-    def fields(self, form: Any) -> dict[str, Any] | None:
-        """What it says the region will report of itself."""
+    def predict(self, form: Any, situation: str, state: State, act: Act, situation_of: Any) -> Prediction | None:
+        """What a hypothesis predicts there; None when it says nothing there. A
+        `state` of None: it says only what the region will report (a hypothesis
+        about the aim)."""
 
     def describe(self, form: Any, situation_of: Any) -> dict[str, Any]:
         """A hypothesis, said as data."""
@@ -213,14 +229,13 @@ class Inducer(Protocol):
         """A form it said is a hypothesis the mind holds: `recall()` gives it back
         as the mind's memory holds it — in hand while new, read from the store
         once its datum is there. An inducer that computes with a form it said
-        again (as its perception, say) keeps `recall`, never the form."""
+        again (to read states with, say) keeps `recall`, never the form."""
 
-    def restore(self, payload: dict[str, Any], step: Step) -> Any:
-        """A hypothesis again, from its datum as the store holds it (`payload`,
-        what `describe` said) and the step it was induced from, read from the
-        store: the mind reads what its model computes from in its memory (Plone,
-        2026-10-05). What `describe` leaves out, the step holds. The form
-        restored is the form described: `key` says the same of both."""
+    def restore(self, payload: dict[str, Any]) -> Any:
+        """A hypothesis again, from its datum as the store holds it (what
+        `describe` said): the mind reads what its model computes from in its
+        memory (Plone, 2026-10-05). The form restored is the form described:
+        `key` says the same of both."""
 
 
 class Learner(Protocol):
@@ -247,7 +262,7 @@ class Learner(Protocol):
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
                 on_report: bool, seen: list[list[Any]] | None = None) -> list[Write]:
         """What came back — the step, then its report: it learns from every
-        return. With a step, the mind's short-term perception (`seen`: step, its
+        return. With a step, the mind's recent steps (`seen`: step, its
         observation, the report or None, the report's observation or None; oldest
         first, this step last)."""
 
@@ -268,4 +283,4 @@ class Learner(Protocol):
         """The datum a write became, now that it is known."""
 
 
-__all__ = ["Context", "Expectation", "Inducer", "Learner", "Proposal", "Thinking", "Write"]
+__all__ = ["Context", "Expectation", "Inducer", "Learner", "Note", "Prediction", "Proposal", "Thinking", "Write"]

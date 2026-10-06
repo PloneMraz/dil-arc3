@@ -19,7 +19,7 @@ WHAT IT DOES:
 - **Has its learning think when an expectation fails** — the step, or the
   region's report — as often a cycle as alertness allows; on a change of the
   onlooker's word in its own right; and while the body waits for a command. It
-  hands its learning what it has: short-term perception (as long as T5's
+  hands its learning what it has: the recent steps (as many as T5's
   window), what memory answered to what was asked, what the onlooker says, what
   the region offers, why it is thinking. Its learning is also shown every
   return, and learns from it there; it thinks further only on the onlooker's
@@ -123,7 +123,7 @@ class Mind:
         self._priors_asked = False
         self._pending: str | None = None
         self._command_due = False
-        # Short-term perception: [step, unit, report or None, the report's unit or
+        # The recent steps: [step, unit, report or None, the report's unit or
         # None], as long as T5's window.
         self._seen: list[list[Any]] = []
         self._status_seen_at: int | None = None
@@ -309,14 +309,14 @@ class Mind:
         self._held = expectation.held if expectation.held else (self.learning.held() if by_model else ())
         predicted = InfoUnit(content={**content, "value": o.expected_payload(payload, expected)},
                              ref_frame=observed.ref_frame, t=observed.t)
-        # 2. Then look: this step joins short-term perception.
+        # 2. Then this step joins the recent steps.
         # Kept as long as the longest window the field can ask of T5; read as long
-        # as the one it asks now (`_perception`).
+        # as the one it asks now (`_recent`).
         self._seen = [*self._seen, [step, observed, None, None]][-2 * BASELINE_WINDOW:]
         hit = expected == step.after
         self.holds.append(int(hit))
         self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
-                                                 seen=self._perception()))
+                                                 seen=self._recent()))
         # 3. The expectation failed: think.
         if not hit:
             self.think("frame", ask, write)
@@ -412,8 +412,8 @@ class Mind:
 
     # ── commanding ──
 
-    def _perception(self) -> list[list[Any]]:
-        """Short-term perception: as long as T5's window this cycle — BASELINE_WINDOW,
+    def _recent(self) -> list[list[Any]]:
+        """The recent steps: as many as T5's window this cycle — BASELINE_WINDOW,
         shifted by the field's exploration as T5 shifts it (½–1½, 8 to 24)."""
         n = int(shifted_count(BASELINE_WINDOW, falling(axis(self._field, EXPLORATION))))
         return self._seen[-n:]
@@ -422,7 +422,7 @@ class Mind:
         report = self._seen[-1][2] if self._seen else None
         state = (report or {}).get(self.organs.state_field)
         return Context(
-            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r, _ in self._perception()],
+            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r, _ in self._recent()],
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
             remark=self._remark, remark_unit=self._remark_unit, aim=self._aim,

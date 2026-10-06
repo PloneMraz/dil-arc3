@@ -42,7 +42,6 @@ DEV = "ls20,vc33,ar25,lp85,tu93,lf52"
 # with Plone; a6, attention (idea (a)) against the mind without it, on the six.
 SERIES = {
     "m25": [
-        ("exact-new", "exact", "new", ()),
         ("grid-new", "grid", "new", ()),
         ("grid-changed", "grid", "changed", ()),
         ("grid-new-then-changed", "grid", "new-then-changed", ()),

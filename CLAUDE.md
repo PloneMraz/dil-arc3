@@ -133,16 +133,19 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **Learning is the mind's; an inducer computes for it** (Plone, 2026-09-28:
   learning is developing experience, not storing it, and another task must not
   have to define it again). The loop (`src/mind/learning.py`) names no task: it
-  keeps each step as experience; holds what an experience suggests as a
-  hypothesis, written as data (`kind: hypothesis`) built from the step and its
-  report; expects from the applicable hypothesis that fits the store best, which
-  holds that expectation (`held_by`); weighs each by the returns that bore it
+  keeps each step as experience — what an experience says, that the act gives
+  there what it gave, is its own expectation from its memory, not a model's
+  (Plone, 2026-10-06), an outcome other than those met an experience of its
+  own; holds what an experience suggests past itself as a hypothesis, written
+  as data (`kind: hypothesis`) built from the step and its report; expects from
+  the applicable experience or hypothesis that fits the store best, which holds
+  that expectation (`held_by`); weighs each by the returns that bore it
   out and did not — **held while right more often than wrong, and of those that
   apply, the one right at the highest rate**, (right + 1) / (tried + 2) (FIT_LAW,
   DECIDE@IMPL, tag H: fit against the store; Plone, 2026-09-28: a rate, not a
-  count); revises a hypothesis's datum in place at each weighing, and says in
-  a new datum, built from it, when whether it holds changes; keeps each
-  experience as a datum (`kind: experience`), revised in place as it changes
+  count); revises the datum in place at each weighing, and says in a new datum,
+  built from it, when whether it holds changes; keeps each experience as a datum
+  (`kind: experience`), revised in place as it changes
   (Plone, 2026-10-04: the whole store is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
   predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
   `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
@@ -153,23 +156,27 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   by the report wherever it applies, and the mind goes where one it holds says
   an act brings the aim, after where it reached the aim and before what it has
   not tried. Only the grid inducer suggests one (`aim`, its docstring). The inducer
-  declares where a hypothesis applies (its scope) and only computes: perception (a state's
-  identity, where the region stands in it), the acts a state affords, `induce`,
-  `predict`, `describe`. It is asked on a new situation and act, and on a step
+  declares where a hypothesis applies (its scope) and only computes: how it
+  reads a state (its identity, where the region stands in it: `learn_reading`,
+  not "perception": a computing of the mind is not named with a word of the
+  senses, Plone, 2026-10-06), the acts a state affords, `induce`, `predict`,
+  `describe`, `restore`. It is asked on a new situation and act, and on a step
   no held hypothesis foresaw — told which of the two it is (`foreseen`) and
-  shown short-term perception (`evidence`); what it keys alike is held once;
-  what it says in computing (`said`: a language model's answers) is kept whole
-  as data. Three inducers (`--inducer`): **exact** (`src/mind/models/exact.py`),
-  one hypothesis per experience, applying where it was met and nowhere else;
-  **grid** (`src/mind/models/grid.py`), the exact one's perception and
-  hypotheses plus "still" and "rewrite" ones that apply wherever their cells lie
-  (its docstring declares the language); **language**
+  shown the recent steps (`evidence`); what it keys alike is held once; what it
+  says in computing (`said`: a language model's answers) is kept whole as data.
+  Each inducer stands on its own, implementing `Inducer` (`models/base.py`),
+  every computing of it in its own file (Plone, 2026-10-06: the exact inducer,
+  no longer used as one, removed; what it said is the learning's experience,
+  how it read a grid is grid's). Two inducers (`--inducer`): **grid**
+  (`src/mind/models/grid.py`), its reading of a grid and "still", "rewrite" and
+  "aim" hypotheses that apply wherever their cells lie (its docstring declares
+  the language); **language**
   (`src/mind/models/language_inducer.py`), a served language model that writes
   one program — `predict(grid, action, x, y)`, and if it can `where(grid)` and
   `targets(grid)`, its reading of the grid — only when no hypothesis held
-  foresaw a step; all that reads the grid is the model's, code keeping only
-  records beside it: a state's hash and the exact hypothesis (Plone,
-  2026-09-28: option (a)). What it is told is `prior:mind-task`'s `induce`,
+  foresaw a step; all that reads the grid is the model's, code keeping only a
+  record beside it, a state's hash (Plone, 2026-09-28: option (a)) — how alike
+  two states are it does not say, and what a step made is the state it came to. What it is told is `prior:mind-task`'s `induce`,
   `induce_feedback`, `unforeseen` and `aimed`, handed on by the learning once
   the mind has recalled them, filled with what the host declares of the region
   and with the aim the mind holds, which the mind tells it — no word of a game,
@@ -199,8 +206,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   mind stands — the `ATTENTION_K = 16` experiences most alike, each weighed by
   how alike raised to `ATTENTION_SHARPNESS = 4` — once they weigh
   `ATTENTION_MIN_WEIGHT = 1.0`; else from all it did, as without it. Declared,
-  not measured. How alike is the inducer's to say (`similarity`: the exact
-  inducer's, and so grid's, is the share of cells equal off the clock). The
+  not measured. How alike is the inducer's to say (`similarity`: grid's is the
+  share of cells equal off the clock; the language inducer's, none). The
   choice it made so names the experiences it went by (`attended`, each with its
   weight) and is built from their hypotheses. Off by default.
 - **The learning is absolutely neutral** (Plone, 2026-09-29).
@@ -209,7 +216,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   problem — in its code, its names and its words. What knows what a state, an
   act or a region is (grids, rows, colours, clicks, clocks, levels) belongs to
   a model or to the host's organs, and the learning asks through a neutral seam
-  (`Inducer.copy`, `reported`, `coarse`; `Organs.state_object`). A model may be
+  (`Inducer.copy`, `coarse`, `made`; `Organs.state_object`). A model may be
   changed or replaced for a particular problem; the learning may not.
 - **A foreseen act is put last, never out of reach** (2026-09-28): an untried
   act whose held hypothesis says it leads where the mind has stood is tried
@@ -221,7 +228,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   brain: it is the part of the one mind that computes. The mind holds the seams
   with the loop — what it expects and which datum that is, when it thinks, what
   it commands, what it writes — and its learning; the model only computes for
-  them. A model can be replaced (an inducer: exact, grid, language);
+  them. A model can be replaced (an inducer: grid, language);
   the mind stays one, and so does its learning. The mind's code is to be
   neutral about the environment: what is particular to one region is data the
   mind reads (its priors), not code. In the code: `src/mind/` imports nothing
@@ -273,13 +280,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   from, it reads back from the store (next).
 - **What its model computes from, the mind reads from its memory** (Plone,
   2026-10-05: (B), for every inducer; each read recorded; the model's inputs
-  only). What came in a cycle is in hand in that cycle — perceived, not yet
+  only). What came in a cycle is in hand in that cycle — met in it, not yet
   memory; from the next, the mind reads it through T5's view of `[data]`
   (deviation 7) and no longer holds its content: each state it has stood in,
   from the frame it came in; each hypothesis's form, restored by its inducer
-  from its datum and the step it came from (`Inducer.restore`) — again only
+  from its datum (`Inducer.restore`) — again only
   when what its inducer said in it changes, not the learning's tallies beside
-  it; the steps of short-term perception, read only when the model looks at
+  it; the recent steps, read only when the model looks at
   them. An inducer that computes again with a form it said — the language
   inducer's program it reads the grid with, and the last it wrote — holds it
   only while new, and then has it back from the mind's memory (`Inducer.keep`). Each cycle's
@@ -295,7 +302,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **Memory is what the store held before the cycle that asks.** A query is
   answered without the data admitted in the cycle that raised it, and the view
   returns nothing admitted in the cycle that reads.
-- **Short-term perception is as long as T5's window**: `BASELINE_WINDOW = 16`
+- **The recent steps are as many as T5's window**: `BASELINE_WINDOW = 16`
   when the field has not leaned, shifted by exploration as T5's is (½–1½, 8 to
   24; the mind keeps 32 and reads that many): the steps just seen, each with
   what the region reported of itself that cycle. The mind reads them for how
@@ -406,10 +413,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   a change across organs, learning, inducers and the body; noted, not done
   (Plone, 2026-09-29).
 
-- **A scar of the exact inducer's hypothesis is almost always the clock's.** It
-  does not predict the clock, so where a region keeps one, an expectation from a
-  hypothesis fails on the clock's rows alone, and the hypothesis's datum is
-  scarred for it (measured: LOG.md, 2026-09-27). Where there is no clock, most
+- **A scar of an experience's expectation is almost always the clock's.** It
+  does not predict the clock, so where a region keeps one, an expectation from
+  an experience fails on the clock's rows alone, and its datum is scarred for it
+  (measured, of the exact hypothesis that said what an experience says now:
+  LOG.md, 2026-09-27). Where there is no clock, most
   scars fall on steps it had no expectation of its own for. So in `[event]` its
   scars do not read as refutations; a refutation is a datum of its own (a
   hypothesis that no longer holds). Open: learning how the clock runs, and
@@ -433,7 +441,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   are objected to — for "repeating", where the region stands now; for
   "back-and-forth", at the states the alternation ran through; said again after
   it was answered, over the run the onlooker points at, as far as the field's
-  alertness reaches (½–1½ of it, within short-term perception). Told once that
+  alertness reaches (½–1½ of it, within the recent steps). Told once that
   it repeats an act whose every step reached a state it had not stood in, the
   mind weighs the word against that evidence and keeps on, writing why
   (`kept_on`); told again, it objects (Plone, 2026-09-28). An objection

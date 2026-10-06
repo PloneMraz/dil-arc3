@@ -44,7 +44,7 @@ Settled deliberately, with Plone.
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
 | **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
-| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — exact, grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py` |
+| **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
@@ -83,16 +83,14 @@ otherwise, weighs each hypothesis by how often the region bore it out (held
 while right more often than wrong; of those that apply, the one right at the
 highest rate is expected from), and chooses by the paths it knows and by
 curiosity — what it knows least. The inducer is replaceable and only computes:
-what a state is to it, what can be done in one, what an experience suggests and
-what a hypothesis predicts. There are three (`--inducer`):
+what a state is to it, what can be done in one, what an experience suggests past
+itself and what a hypothesis predicts. What an experience itself says — this act
+from this situation gives that — is the mind's own, from its memory. Each
+inducer stands on its own. There are two (`--inducer`):
 
-- **exact** (`src/mind/models/exact.py`) suggests one hypothesis per experience
-  — this act from this situation gives that — applying nowhere else. It
-  generalises nothing, and is the reference the other is measured against. It
-  finds the clock a region keeps whatever is done.
-- **grid** (`src/mind/models/grid.py`) perceives as the exact one does and
-  suggests, besides the exact hypothesis, one that reaches past where it was
-  met: "this act changes nothing" (for an act that takes a place, on that
+- **grid** (`src/mind/models/grid.py`) reads a grid — the clock a region keeps
+  whatever is done, the things an act may be put on — and suggests hypotheses
+  that reach past where they were met: "this act changes nothing" (for an act that takes a place, on that
   colour), or "this act rewrites, in each part of the grid it changes, L into
   R", each part found on its own wherever L lies, one place only. When the aim
   comes it suggests what brought it: "this act, taken where these cells lie,
@@ -100,12 +98,12 @@ what a hypothesis predicts. There are three (`--inducer`):
   with what lay around them — which the mind carries to the next level (S4).
 - **language** (`src/mind/models/language_inducer.py`) is a served language
   model. Asked only when no hypothesis the mind holds foresaw a step, and shown
-  the steps of short-term perception, it writes one program:
+  the recent steps, it writes one program:
   `predict(grid, action, x, y)`, a hypothesis that applies wherever the region
   stands, and, if it can, `where(grid)` and `targets(grid)` — where the region
   stands, and where an act that takes a cell is worth putting: its reading of
-  the grid. All that reads the grid is the model's; code keeps only records
-  beside it, a state's hash and the exact hypothesis. What it is told is the
+  the grid. All that reads the grid is the model's; code keeps only a record
+  beside it, a state's hash. What it is told is the
   task prior's words, which name no game, filled with what the host declares of
   the region and with the aim the mind holds. Each answer is kept whole in the
   store, built from the prior. Not run against a served model, and not used for
@@ -127,8 +125,8 @@ or the hypothesis could never be refuted.
 The whole store is the agent's memory, and what a model computes from, the mind
 reads there: what came in a cycle is in hand in that cycle, and from the next it
 is read from `[data]` through T5's view — the states the mind has stood in,
-each hypothesis's form (restored by its inducer from its datum and its step),
-the steps of short-term perception when the model looks at them. Each cycle's
+each hypothesis's form (restored by its inducer from its datum), the recent
+steps when the model looks at them. Each cycle's
 reads are a `read` line in `[event]`, and what is written from them names them
 among what it was built from.
 
@@ -144,7 +142,7 @@ shape that, and each is met:
 - Kaggle's evaluation session has no network — the model is served offline, from
   a Kaggle Models mirror checked file by file against Hugging Face's hashes;
 - INV-5: "refeeding the whole game history into a context window each step is a
-  load, not an accrual" — the model is shown short-term perception, as long as
+  load, not an accrual" — the model is shown the recent steps, as many as
   T5's window, never the whole history; and it is asked only on a step no
   hypothesis the mind holds foresaw.
 
@@ -242,7 +240,7 @@ uv run --with pytest python -m pytest tests/ -q
 
 PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
 
-# a live game, the mind learning with an inducer (exact or grid)
+# a live game, the mind learning with the grid inducer
 $PY scripts/run_game.py ls20 600 --inducer grid
 
 ```
@@ -274,7 +272,7 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
-                  (learning.py); the models it learns with (exact, grid,
+                  (learning.py); the models it learns with (grid,
                   language_inducer), and what a served language model needs
                   (language.py). Imports nothing from arc3.
 src/arc3/         the body, its declared organs, and what the mind is told.

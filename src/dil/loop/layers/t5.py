@@ -108,7 +108,7 @@ WriteFn = Callable[[WriteRequest], None]
 # memory (v0.3.6 §9), and what a model computes from, the mind takes from it.
 # `ask` answers a cycle later and runs every layer; `read` is a view of `[data]`
 # the rule reads directly, in the cycle. It is memory alone: a datum admitted in
-# the cycle reading is perceived in it, not recalled, and the view does not
+# the cycle reading is met in it, not recalled, and the view does not
 # return it — nor anything written in the cycle, which the driver takes after
 # the pass. The driver records each cycle's reads in `[event]`, one `read` line
 # for each purpose. `id_of` names the datum an observation unit of an earlier

@@ -1,6 +1,7 @@
 """The language inducer — a language model the mind learns with (Plone, 2026-09-28).
 
-It computes for the mind's learning (`../learning.py`) as the other inducers do:
+It computes for the mind's learning (`../learning.py`) as any inducer does, and
+stands on its own (Plone, 2026-10-06):
 the learning holds the experiences and the hypotheses, weighs them against the
 region, expects, is curious and chooses; the model does none of that. What it
 does is think: shown what the mind has just seen, it works out how the region
@@ -17,19 +18,22 @@ model's, not code beside it):
 - `targets(grid)`, if it writes one — the cells worth putting an act that takes
   a cell on.
 
-Its perception is that of the latest program it wrote that is a hypothesis and
+How it reads a state is the latest program it wrote that is a hypothesis and
 defines `where` or `targets` (declared): what it reads into a grid changes as its
 thinking does, and the learning reads every situation again when it does. That
 program, and the last it wrote, it holds only while new: once the mind holds
 them as hypotheses it has them back from the mind's memory (`keep`), read from
-the store as every form is (Plone, 2026-10-05). Before
-any, a situation is the grid as it came, and no cell is a target. What code keeps
-beside it are records, never a reading of the grid: a state's identity (its
-hash), and the exact hypothesis — "from here, this act gave that" (`exact.py`).
+the store as every form is (Plone, 2026-10-05). Before any, a situation is the
+grid as it came, and no cell is a target. What code keeps beside it is a record,
+never a reading of the grid: a state's identity (its hash). What an experience
+says — "from here, this act gave that" — is the mind's own (its learning's
+experiences). Code reads no grid for it: how alike two states are it does not
+say (0), and what a step made is the state it came to (Plone, 2026-10-06: all
+that reads the grid is the model's).
 
 WHEN IT THINKS. Only when no hypothesis the mind holds foresaw a step (the
 learning says so: `foreseen`): each answer costs seconds of a served model. It is
-shown the steps of short-term perception (`evidence`), the last of them the step
+shown the recent steps (`evidence`), the last of them the step
 not foreseen, and the program it wrote last with how it did on those steps.
 
 WHAT IT IS TOLD is data the mind read, never code (Plone, 2026-09-25: a prompt is
@@ -61,13 +65,24 @@ from dataclasses import dataclass
 from typing import Any, Callable, Final
 
 from ..organs import Act, Organs, Step
-from .exact import ExactForm, ExactInducer, Grid, Perceived, Prediction, grid_key
+from .base import Note, Prediction
 from .language import (
     MAX_EVIDENCE_CHARS, MAX_SHOWN, PROGRAM_SECONDS, THOUGHT_TAGS, ModelEndpoint, ProgramError, Transition, chat,
     extract_code, misses_text, render_evidence, score,
 )
 
-PERCEPTION_TAGS: Final = {"domain": "mind", "kind": "perception", "object": "frame", "source": "mind"}
+Grid = list[list[int]]
+
+# A change of how it reads states: the program it reads them with now.
+READING_TAGS: Final = {"domain": "mind", "kind": "reading", "object": "frame", "source": "mind"}
+
+
+def identity(grid: Grid) -> str:
+    """A state's own identity: a hash of its cells, as they came — a record, no reading."""
+    h = hashlib.blake2b(digest_size=12)
+    for row in grid:
+        h.update(json.dumps(row).encode())
+    return h.hexdigest()
 
 
 @dataclass(eq=False)
@@ -127,7 +142,7 @@ def compile_program(code: str) -> ProgramForm:
                        where=where if callable(where) else None, targets=targets if callable(targets) else None)
 
 
-class LanguageInducer(ExactInducer):
+class LanguageInducer:
     """Programs a language model writes, and its reading of the grid."""
 
     kind = "language"
@@ -136,16 +151,16 @@ class LanguageInducer(ExactInducer):
 
     def __init__(self, organs: Organs, endpoint: ModelEndpoint | None = None,
                  chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> None:
-        super().__init__(organs)
+        self.organs = organs
         self.endpoint = endpoint or ModelEndpoint()
         self._chat = chat_fn
         # The program whose where/targets it reads the grid with, and the last
         # program that was a hypothesis: each in hand while new, then — once the
         # mind holds it (`keep`) — only how to have it back from the mind's memory.
         self._seeing: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
-        self._perceived = False                      # its reading changed since the learning last asked
+        self._reread = False                         # its reading changed since the learning last asked
         self._last: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
-        self._said: list[Perceived] = []
+        self._said: list[Note] = []
         self._words: dict[str, str] | None = None      # what it is told, as the mind recalled it
         self._aim: dict[str, Any] | None = None        # the mind's aim, as the mind told it
         self._situations: dict[str, str] = {}        # a state's identity -> its situation, under its reading
@@ -169,10 +184,15 @@ class LanguageInducer(ExactInducer):
             return None
         return held[0] if held[1] is None else held[1]()
 
-    # ── perception: the program's ──
+    # ── reading a state: the program's ──
+
+    def identity(self, state: Grid) -> str:
+        """A state's own identity, as it came."""
+        return identity(state)
 
     def situation(self, state: Grid) -> str:
-        raw = grid_key(state)
+        """Where the region stands in a state, as its program's `where` reads it."""
+        raw = identity(state)
         known = self._situations.get(raw)
         if known is not None:
             return known
@@ -185,22 +205,48 @@ class LanguageInducer(ExactInducer):
         """Where the region stands in a state, as a program's `where` reads it; the
         state as it came where it reads nothing, or fails."""
         if form is None or form.where is None:
-            return grid_key(state)
+            return identity(state)
         try:
             read = _bounded(form.where, [row[:] for row in state])
             return "w" + hashlib.blake2b(json.dumps(read).encode(), digest_size=12).hexdigest()
         except (ProgramError, TypeError, ValueError):
-            return grid_key(state)
+            return identity(state)
 
-    def perceive(self, step: Step, kind: tuple) -> Perceived | None:
+    def learn_reading(self, step: Step, kind: tuple) -> Note | None:
         """Its reading changed with the program it wrote: the learning reads every
         situation again."""
-        if not self._perceived:
+        if not self._reread:
             return None
-        self._perceived = False
+        self._reread = False
         form = self._now(self._seeing)
-        return Perceived(payload={"program": form.digest, "where": form.where is not None,
-                                  "targets": form.targets is not None}, tags=dict(PERCEPTION_TAGS))
+        return Note(payload={"program": form.digest, "where": form.where is not None,
+                             "targets": form.targets is not None}, tags=dict(READING_TAGS))
+
+    def made(self, step: Step) -> frozenset:
+        """What a step made: the state it came to, when it changed anything — a
+        record, as code reads no grid here."""
+        return frozenset((identity(step.after),)) if step.after != step.before else frozenset()
+
+    def similarity(self, a: Grid, b: Grid) -> float:
+        """How alike two states are it does not say: that would be code reading the grid."""
+        return 0.0
+
+    # ── what can be done ──
+
+    def learnable(self, act: Act) -> Act:
+        """An act as it is learned: the place kept only for an act that takes one."""
+        return act if act[0] in self.organs.placed else (act[0], None, None)
+
+    def default_kind(self, act: Act) -> tuple:
+        return ("act", act[0])
+
+    def copy(self, state: Grid) -> Grid:
+        """A state of its own, as the learning keeps what it expects."""
+        return [row[:] for row in state]
+
+    def coarse(self, kind: tuple) -> tuple | None:
+        """No kind falls in a coarser one."""
+        return None
 
     def candidates(self, situation: str, state: Grid, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state: every act the region offers that takes
@@ -240,7 +286,7 @@ class LanguageInducer(ExactInducer):
                through: tuple = ()) -> list[Any]:
         if report is not None:
             return []   # its programs predict no report of the region (declared, for now)
-        forms: list[Any] = [ExactForm(source=source, act=act, to=after)]
+        forms: list[Any] = []
         if not foreseen:
             program = self._think(act, before, after, evidence)
             if program is not None:
@@ -309,13 +355,13 @@ class LanguageInducer(ExactInducer):
         if form is not None:
             self._last = (form, None)
             if form.where is not None or form.targets is not None:
-                self._seeing, self._perceived = (form, None), True
+                self._seeing, self._reread = (form, None), True
                 self._situations, self._targets = {}, {}
         answer = {"on": "not foreseen", "steps": len(steps), "text": text, "program": form.digest if form else None,
                   "why_not": why, "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
         if usage.get("reasoning"):
             answer["reasoning"] = usage["reasoning"]
-        self._said.append(Perceived(payload=answer, tags=dict(THOUGHT_TAGS)))
+        self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
         self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
         return form
 
@@ -347,47 +393,35 @@ class LanguageInducer(ExactInducer):
                 ok=ok, n=len(evidence), misses=misses_text(misses, name=self.organs.name))})
         return messages
 
-    def said(self) -> list[Perceived]:
+    def said(self) -> list[Note]:
         out, self._said = self._said, []
         return out
 
-    def key(self, form: Any) -> tuple:
-        if isinstance(form, ProgramForm):
-            return ("program", form.digest)
-        return super().key(form)
+    def key(self, form: ProgramForm) -> tuple:
+        """What a program says, as one value: its code."""
+        return ("program", form.digest)
 
-    def scope(self, form: Any, situation_of) -> tuple:
-        if isinstance(form, ProgramForm):
-            return ("program",)
-        return super().scope(form, situation_of)
+    def scope(self, form: ProgramForm, situation_of) -> tuple:
+        """Where a program applies: wherever the region stands."""
+        return ("program",)
 
     def scopes(self, situation: str, act: Act) -> list[tuple]:
-        return [("at", situation, act), ("program",)]
+        return [("program",)]
 
-    def predict(self, form: Any, situation: str, state: Grid, act: Act, situation_of) -> Prediction | None:
-        if not isinstance(form, ProgramForm):
-            return super().predict(form, situation, state, act, situation_of)
+    def predict(self, form: ProgramForm, situation: str, state: Grid, act: Act, situation_of) -> Prediction | None:
         try:
             return Prediction(state=_grid_of(_bounded(form.predict, [row[:] for row in state], act[0], act[1],
                                                       act[2])))
         except ProgramError:
             return None   # it says nothing there
 
-    def fields(self, form: Any) -> dict[str, Any] | None:
-        return form.status if isinstance(form, ExactForm) else None
+    def describe(self, form: ProgramForm, situation_of) -> dict[str, Any]:
+        return {"form": "program", "program": form.digest, "code": form.code,
+                "where": form.where is not None, "targets": form.targets is not None}
 
-    def describe(self, form: Any, situation_of) -> dict[str, Any]:
-        if isinstance(form, ProgramForm):
-            return {"form": "program", "program": form.digest, "code": form.code,
-                    "where": form.where is not None, "targets": form.targets is not None}
-        return {"form": "exact", **super().describe(form, situation_of)}
-
-    def restore(self, payload: dict[str, Any], step: Step) -> Any:
-        """A program from its datum, which holds its code: loaded again. An exact
-        hypothesis from its datum and its step."""
-        if payload.get("form") == "program":
-            return compile_program(payload["code"])
-        return super().restore(payload, step)
+    def restore(self, payload: dict[str, Any]) -> ProgramForm:
+        """A program from its datum, which holds its code: loaded again."""
+        return compile_program(payload["code"])
 
 
-__all__ = ["PERCEPTION_TAGS", "LanguageInducer", "ProgramForm", "compile_program"]
+__all__ = ["READING_TAGS", "LanguageInducer", "ProgramForm", "compile_program", "identity"]

@@ -29,7 +29,7 @@ from dil.loop.layers.t8 import create_t8
 from dil.store.data_store import create_data_store
 from dil.store.event_log import create_event_log
 from mind.mind import Mind, mind_rule
-from mind.models.exact import ExactInducer
+from mind.models.grid import GridInducer
 from tests.test_arc3_host import FakeEnv, FakeGameAction, f
 from world import REPEAT_AT, Onlooker, World, act_of
 
@@ -127,7 +127,7 @@ def test_the_world_shows_each_act_to_the_others_once_they_watch():
 def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_still():
     # The body's acts are scripted here (`plan`), not the mind's: the mind only
     # fills T5, as it would in a run.
-    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
+    mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(

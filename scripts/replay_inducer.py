@@ -1,6 +1,6 @@
 """How far an inducer's hypotheses reach: a run's steps replayed through the mind's learning.
 
-    python scripts/replay_inducer.py scripts/data/<run> [--inducer exact|grid ...]
+    python scripts/replay_inducer.py scripts/data/<run> [--inducer grid ...]
     python scripts/replay_inducer.py scripts/data/<run> --inducer language --program PROBE.json [--propose]
 
 The steps a run took (`steps_of.py`) are shown, in order, to the mind's learning
@@ -9,8 +9,8 @@ came. The acts are the run's, so every inducer meets the same steps; what differ
 is only what it expected. Counted per inducer, off the clock:
 
   expected   steps it held an expectation for, and of those right
-  unseen     steps from a situation and act it had never met (where an exact
-             hypothesis cannot apply), it held an expectation for, and of those
+  unseen     steps from a situation and act it had never met (where no
+             experience applies), it held an expectation for, and of those
              right — the direct evidence that what it learned reaches further
   hypotheses how many it holds, and how many of them hold
 
@@ -37,14 +37,13 @@ sys.path.insert(0, str(SRC))
 from arc3.organs import ARC_ORGANS  # noqa: E402
 from arc3.task import MIND_TASK, TASK_CUE  # noqa: E402
 from mind.learning import Learning  # noqa: E402
-from mind.models.exact import ExactInducer  # noqa: E402
 from mind.models.grid import GridInducer  # noqa: E402
 from mind.models.base import Context  # noqa: E402
 from mind.models.language_inducer import LanguageInducer  # noqa: E402
 from mind.organs import Step  # noqa: E402
 from steps_of import steps_of  # noqa: E402
 
-INDUCERS = {"exact": ExactInducer, "grid": GridInducer, "language": LanguageInducer}
+INDUCERS = {"grid": GridInducer, "language": LanguageInducer}
 
 # The probe's program takes (grid, action); the inducer calls (grid, action, x, y).
 ADAPTER = """
@@ -115,7 +114,7 @@ def replay(run: str, name: str, program: str | None = None, propose: bool = Fals
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
-    ap.add_argument("--inducer", nargs="+", default=["exact", "grid"], choices=list(INDUCERS))
+    ap.add_argument("--inducer", nargs="+", default=["grid"], choices=list(INDUCERS))
     ap.add_argument("--program", default=None, help="for language: a probe's JSON, whose best.code answers")
     ap.add_argument("--propose", action="store_true", help="also choose at each step, and time it")
     a = ap.parse_args()

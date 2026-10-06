@@ -28,14 +28,14 @@ from dil.store.event_sink import deserialize_event_record, serialize_event_recor
 from arc3.observe import FRAME_CHANNEL, admit, transducers
 from mind.learning import Recalled
 from mind.mind import Mind, mind_rule
-from mind.models.exact import ExactInducer
+from mind.models.grid import GridInducer
 from mind.models.language_inducer import LanguageInducer
 from tests.test_arc3_learning_mind import frame, lit, of_kind, run, status
 from tests.test_language_inducer import RIGHT, STILL, Script, block
 
 
 def loop(inducer=None, rule=None):
-    mind = Mind(inducer or ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
+    mind = Mind(inducer or GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
     mind.receive("task", MIND_TASK.payload, None)
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
@@ -74,10 +74,9 @@ def test_what_came_before_is_no_longer_held_but_read_from_the_store():
     model = mind.learning
     assert all(isinstance(held, Recalled) for held in model._raw.values()), "every state met is memory now"
     first = model._hypotheses[0]
-    assert first.held is None and first.recall is not None and first.step == "signal-0-0", \
-        "its form is read from its datum and the step it came from"
+    assert first.held is None and first.recall is not None, "its form is read from its datum"
     got = reads(events)
-    assert (2, first.datum_id) in got["hypothesis"], "expecting the step it was learned from, it read it"
+    assert any(i == first.datum_id for _, i in got["hypothesis"]), "computing with it, it read it"
     assert any(i == "signal-0-0" for _, i in got["state"])
 
 
@@ -114,12 +113,12 @@ def test_the_view_holds_memory_alone():
     _, cycle, _, events = loop(rule=rule)
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
-    assert seen[0] == (None, None) and seen[1][0] is None, "what arrives in a cycle is perceived, not recalled"
+    assert seen[0] == (None, None) and seen[1][0] is None, "what arrives in a cycle is met in it, not recalled"
     assert seen[1][1] is not None and seen[1][1].payload["grids"] == [lit(1)], "what came before is memory"
     assert reads(events) == {"probe": [(1, "signal-0-0")]}
 
 
-def test_short_term_perception_is_read_only_when_the_model_looks_at_it():
+def test_the_recent_steps_are_read_only_when_the_model_looks_at_them():
     _, cycle, _, events = loop()
     three(cycle)
     assert "evidence" not in reads(events), "the exact inducer computes nothing from the steps before"
@@ -134,10 +133,10 @@ def test_short_term_perception_is_read_only_when_the_model_looks_at_it():
 
 
 def test_a_revision_of_its_tallies_alone_restores_nothing():
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     restored: list = []
     real = inducer.restore
-    inducer.restore = lambda payload, step: (restored.append(payload.get("act")), real(payload, step))[1]
+    inducer.restore = lambda payload: (restored.append(payload.get("act")), real(payload))[1]
     mind, cycle, data, events = loop(inducer)
     for _ in range(4):
         run(cycle, frame(lit(0), lit(1)), status())

@@ -847,7 +847,7 @@ def check_conformance(
         )
         # DEVIATION 7 (dil-arc3, 2026-10-05): what the agent read of `[data]` was
         # memory — data whose entry the trace shows before the cycle that read
-        # them. What arrives in a cycle is perceived in it, not recalled.
+        # them. What arrives in a cycle is met in it, not recalled.
         unremembered = next(
             (
                 (r, i)

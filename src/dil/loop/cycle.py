@@ -406,7 +406,7 @@ class Cycle:
     def _store_view(self, admitted_now: frozenset[str]) -> StoreView:
         """The cycle's read-only view of `[data]`, for T5 (DEVIATION: READ).
 
-        Memory alone: what was admitted this cycle is perceived, not recalled,
+        Memory alone: what was admitted this cycle is met in it, not recalled,
         and is not returned. Each read is kept, by purpose, for the cycle's
         `read` lines."""
         reads: dict[str, dict[str, None]] = {}

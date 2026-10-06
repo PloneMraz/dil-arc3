@@ -14,8 +14,8 @@ import pytest
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
-from mind.learning import CHOICE_TAGS, HYPOTHESIS_TAGS, Learning
-from mind.models.exact import CLOCK_WINDOW, ExactInducer, grid_key, things
+from mind.learning import CHOICE_TAGS, EXPERIENCE_TAGS, HYPOTHESIS_TAGS, Learning
+from mind.models.grid import CLOCK_WINDOW, GridInducer, grid_key, things
 from mind.organs import Step
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
@@ -55,7 +55,7 @@ def status(state="NOT_FINISHED", levels=0, action=1, affords=(1, 2)) -> Signal:
 
 def seated() -> Mind:
     """The one mind with its learning; its model's seat takes the inducer."""
-    return Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
+    return Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
 
 
 def create_mind() -> Mind:
@@ -68,7 +68,7 @@ def create_mind() -> Mind:
 def test_the_mind_holds_its_learning_and_its_models_seat_takes_the_inducer():
     # Plone, 2026-09-28: the model is the replaceable computing; the learning is
     # the mind's, whatever its model. Seating a model does not replace it.
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
     assert isinstance(mind.learning, Learning)
     assert mind.learning.inducer is inducer
@@ -99,11 +99,12 @@ def of_kind(data, kind):
 def test_what_it_takes_it_learns_as_data_built_from_the_frame_and_report():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status())
-    learned = of_kind(data, "hypothesis")
+    learned = of_kind(data, "experience")
     assert len(learned) == 1
     datum_id, datum = learned[0]
-    assert datum.open == {**HYPOTHESIS_TAGS, "object": "frame"} and datum.fixed.provenance == "nascent"
+    assert datum.open == {**EXPERIENCE_TAGS, "object": "frame"} and datum.fixed.provenance == "nascent"
     assert datum.payload["act"] == [1, None, None] and datum.payload["changed"] is True
+    assert (datum.payload["supports"], datum.payload["fails"], datum.payload["holds"]) == (1, 0, True)
     assert datum.payload["status"] == {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
@@ -130,8 +131,9 @@ def test_an_act_taken_again_is_expected_as_learned_and_the_expectation_is_the_da
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(1)), status())          # the same act from the same state
     assert mind.holds == [0, 0, 1], "the third it expected, from what it learned"
-    learned_id = of_kind(data, "hypothesis")[0][0]
+    learned_id = of_kind(data, "experience")[0][0]
     assert data.get(learned_id).fixed.provenance != "scar"
+    assert data.get(learned_id).payload["supports"] == 2, "the experience bore itself out"
 
 
 def test_the_same_act_giving_something_else_scars_the_datum_and_it_no_longer_holds():
@@ -139,18 +141,21 @@ def test_the_same_act_giving_something_else_scars_the_datum_and_it_no_longer_hol
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(2)), status())          # the same act, from the same state, elsewhere
-    learned_id = of_kind(data, "hypothesis")[0][0]
+    learned_id = of_kind(data, "experience")[0][0]
     scars = [r for r in events.all() if type(r).__name__ == "EventRecord" and r.datum_id == learned_id]
-    assert scars, "the expectation was the datum's, and the region refuted it"
+    assert scars, "the expectation was the experience's datum, and the region refuted it"
     run(cycle, frame(lit(2), lit(1), action=2), status(action=2))
-    refuted = [(k, d) for k, d in of_kind(data, "hypothesis") if d.payload["holds"] is False]
+    refuted = [(k, d) for k, d in of_kind(data, "experience") if d.payload["holds"] is False]
     assert refuted, "said in a datum of its own: it no longer predicts from it"
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
     refutation = [k for k, d in refuted if k != learned_id]
     assert refutation and learned_id in written[refutation[0]], "said in a datum of its own, built from it"
     first = data.get(learned_id).payload
-    assert first["holds"] is False and first["fails"] >= 1, "and the hypothesis's own datum revised in place"
+    assert first["holds"] is False and first["fails"] >= 1, "and the experience's own datum revised in place"
+    assert any(d.payload["to"] != first["to"] for _, d in of_kind(data, "experience")
+               if d.payload["from"] == first["from"] and d.payload["act"] == first["act"]), \
+        "what came instead, an experience of its own"
     revised = [r for r in events.all() if getattr(r, "activity_kind", None) == "revision"]
     assert any(r.datum_id == learned_id for r in revised), "each revision recorded in [event]"
 
@@ -164,9 +169,9 @@ def test_a_hypothesis_right_more_often_than_wrong_is_still_held():
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(2)), status())          # not borne out: 2 for, 1 against
     model = mind.learning
-    h = model._edges[(model.inducer.situation(lit(0)), (1, None, None))].hypothesis
+    h = model._edges[(model.inducer.situation(lit(0)), (1, None, None))]
     assert (h.supports, h.fails, h.holds) == (2, 1, True)
-    assert not [d for _, d in of_kind(data, "hypothesis") if d.payload["holds"] is False]
+    assert not [d for _, d in of_kind(data, "experience") if d.payload["holds"] is False]
 
 
 def test_the_game_ended_is_met_with_reset():
@@ -186,11 +191,11 @@ def _counting(step: int, piece: int = 0) -> list[list[int]]:
 
 
 def test_a_row_that_changes_whatever_is_done_is_the_clock_and_not_where_the_game_stands():
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     grids = [_counting(i) for i in range(CLOCK_WINDOW + 1)]
     for i in range(CLOCK_WINDOW):
         a = [1, 2, 3][i % 3]
-        inducer.perceive(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
+        inducer.learn_reading(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
     assert inducer.clock == frozenset({3})
     assert inducer.situation(_counting(1)) == inducer.situation(_counting(4))
     assert inducer.situation(_counting(1)) != inducer.situation(_counting(1, piece=2))
@@ -200,11 +205,11 @@ def test_a_cell_that_blinks_as_the_acts_alternate_is_not_the_clock():
     # r11l (2026-10-04): clicking one thing and another in turn, the mark of what
     # is chosen turned 0 -> 3 and back at every step, under three kinds of click;
     # the rows' rule took its rows for the clock, and the mind read past them.
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     grids = [lit(0, clock=i) for i in range(CLOCK_WINDOW + 1)]
     for i in range(CLOCK_WINDOW):
         a = [1, 2, 3][i % 3]
-        inducer.perceive(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
+        inducer.learn_reading(Step(before=grids[i], act=(a, None, None), after=grids[i + 1]), ("act", a))
     assert inducer.clock == frozenset()
 
 
@@ -490,7 +495,7 @@ def test_a_repetition_that_goes_nowhere_new_is_objected_to_at_once():
     assert any(a == (1, None, None) for _, a in mind.learning.objections())
 
 
-def test_short_term_perception_is_as_long_as_t5s_window_under_the_field():
+def test_the_recent_steps_are_as_many_as_t5s_window_under_the_field():
     from dil.loop.types import ModField
     mind, cycle, data, events = loop()
     for i in range(1, 30):
@@ -555,7 +560,7 @@ def test_each_law_of_curiosity_wants_what_it_counts():
     back, wall = ("act", 1), ("act", 2)
 
     def wants(law):
-        learning = Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=law)
+        learning = Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=law)
         learning._kinds = {back: [10, 1, 0], wall: [10, 2, 0]}
         learning._kind_changes = {back: 9, wall: 2}
         return max((back, wall), key=learning._curiosity)
@@ -566,7 +571,7 @@ def test_each_law_of_curiosity_wants_what_it_counts():
     assert wants("new-then-changed") == wall, "S2c: somewhere new first"
     assert wants("new-plus-changed") == back, "S2d: both odds, added"
     with pytest.raises(ValueError):
-        Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="most")
+        Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="most")
 
 
 def test_the_default_law_is_the_one_measured_before():
@@ -593,7 +598,7 @@ def test_the_aim_takes_the_goals_value():
 
 def test_with_no_goal_the_mind_holds_its_own_aim_and_acts():
     from mind.mind import OWN_AIM
-    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})   # its task never comes
+    mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})   # its task never comes
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -622,7 +627,7 @@ def test_its_own_aim_is_a_report_other_than_the_one_it_has_been_making_and_not_a
 
 def test_how_alike_two_states_are_is_the_share_of_cells_equal_off_the_clock():
     # Idea (a): how alike is the inducer's to say.
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     assert inducer.similarity(lit(0), lit(0)) == 1.0
     assert inducer.similarity(lit(0), lit(1)) == 7 / 9, "two cells differ of nine"
     assert inducer.similarity(lit(0), [[1, 0], [0, 0]]) == 0.0, "states of another shape are not alike"
@@ -633,7 +638,7 @@ def _attending(new_here, new_elsewhere):
     often each reached somewhere new in a situation alike to where it stands,
     `new_elsewhere` in one not alike at all."""
     from mind.learning import Edge
-    learning = Learning(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
+    learning = Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
     for act in (1, 2):
         for at, news in (("alike", new_here[act]), ("other", new_elsewhere[act])):
             learning._learned.append(Edge(at, (act, None, None), "to", ("act", act), True, seen=5, new=news))
@@ -664,7 +669,7 @@ def test_too_little_alike_to_go_by_it_wants_as_without_attention():
 def test_the_choice_names_the_experiences_it_went_by(monkeypatch):
     import mind.learning as learning_module
     monkeypatch.setattr(learning_module, "ATTENTION_MIN_WEIGHT", 0.1)
-    mind = Mind(ExactInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
+    mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
     mind.receive("task", MIND_TASK.payload, None)
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
@@ -750,7 +755,7 @@ def test_every_thing_is_offered_not_the_smallest_64():
 
 
 def test_a_click_is_of_its_colour_first_then_its_size():
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     assert inducer.coarse(("click", 8, 40)) == ("click", 8)
     assert inducer.coarse(("act", 1)) is None
 
@@ -768,7 +773,7 @@ def test_what_a_colour_did_carries_to_a_thing_of_that_colour_at_another_size():
 def _stepped(inducer, grids, act=(6, 5, 5)):
     got = None
     for before, after in zip(grids, grids[1:]):
-        got = inducer.perceive(Step(before=before, act=act, after=after), ("click", 1, 1)) or got
+        got = inducer.learn_reading(Step(before=before, act=act, after=after), ("click", 1, 1)) or got
     return got
 
 
@@ -785,7 +790,7 @@ def test_a_column_that_counts_a_cell_at_a_time_is_the_clock_whatever_the_act():
             g[r][0] = 14
         g[4][4] = step % 2 + 1                    # and what the act does, elsewhere
         grids.append(g)
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     said = _stepped(inducer, grids)
     assert inducer.clock_columns == frozenset({0}) and said.payload["columns"] == [0]
     assert inducer.situation(grids[2]) == inducer.situation(grids[4]), "off the clock, where it stands is one"
@@ -797,7 +802,7 @@ def test_a_thing_moving_along_a_line_is_not_taken_for_a_clock():
         g = [[0] * 8 for _ in range(8)]
         g[step][0] = 3                             # one cell moving down column 0
         grids.append(g)
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     _stepped(inducer, grids)
     assert inducer.clock_columns == frozenset() and inducer.clock == frozenset()
 
@@ -814,7 +819,7 @@ def test_a_bar_at_the_edge_that_counts_only_some_acts_is_the_clock():
             g[15][c] = 5
         g[8][8] = step % 3 + 1                     # what the act does, elsewhere
         grids.append(g)
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     _stepped(inducer, grids)
     assert 15 in inducer.clock
 
@@ -830,7 +835,7 @@ def test_an_inner_line_that_counts_only_some_acts_is_not_taken_for_the_clock():
         for c in range(cell, 13):
             g[8][c] = 5
         grids.append(g)
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     _stepped(inducer, grids)
     assert 8 not in inducer.clock
 

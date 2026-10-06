@@ -1,6 +1,6 @@
 """A live game with the one mind in the loop: the mind learns, DIL runs.
 
-    $PY scripts/run_game.py GAME CYCLES [--inducer exact|grid] [--alone] [--offline-dir DIR]
+    $PY scripts/run_game.py GAME CYCLES [--inducer grid] [--alone] [--offline-dir DIR]
         [--remote HOST:PORT] [--out DIR]
     $PY scripts/run_game.py GAME CYCLES --inducer language --endpoint URL [--model NAME]
         [--max-tokens N] [--think] [...]      (a served language model the mind learns with)
@@ -39,7 +39,6 @@ from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
-from mind.models.exact import ExactInducer
 from mind.models.grid import GridInducer
 from mind.models.language import ModelEndpoint
 from mind.models.language_inducer import LanguageInducer
@@ -70,10 +69,10 @@ ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
-ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
-                help="the mind's model, what its learning computes with: exact hypotheses, ones that reach "
-                     "past where they were met (mind/models/grid.py), or programs a served language model "
-                     "writes (mind/models/language_inducer.py, at --endpoint)")
+ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
+                help="the mind's model, what its learning computes with: hypotheses that reach past where they "
+                     "were met (mind/models/grid.py), or programs a served language model writes "
+                     "(mind/models/language_inducer.py, at --endpoint)")
 ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
                 help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
                      "new-then-changed (S2c), new-plus-changed (S2d) — mind/learning.py")
@@ -112,7 +111,7 @@ if a.inducer == "language":
     inducer = LanguageInducer(ARC_ORGANS, ModelEndpoint(url=a.endpoint, model=a.model,
                                                         max_tokens=a.max_tokens, extra=extra))
 else:
-    inducer = {"exact": ExactInducer, "grid": GridInducer}[a.inducer](ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
             attention=a.attention)
 seat = seat_rule(mind)
@@ -200,7 +199,7 @@ if a.inducer == "language":
     why_not = collections.Counter((t["why_not"] or "")[:60] for t in answers if not t["program"])
     print(f"  the model's answers   : {len(answers)}  programs {sum(1 for t in answers if t['program'])}  "
           f"seconds {sum(t['seconds'] or 0 for t in answers):.0f}  not a hypothesis {dict(why_not)}")
-    print(f"  its readings          : {len([1 for _, d in daemon._data.entries() if d.open.get('kind') == 'perception'])}")
+    print(f"  its readings          : {len([1 for _, d in daemon._data.entries() if d.open.get('kind') == 'reading'])}")
 print(f"  kinds of act          : {len(mind.learning._kinds)}  (tried, somewhere new, levels) most tried "
       f"{sorted(mind.learning._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
 print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in mind.commands]}")

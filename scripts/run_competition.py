@@ -49,7 +49,7 @@ ap.add_argument("--concurrency", type=int, default=4)
 ap.add_argument("--deadline", type=float, default=None, help="epoch seconds: start nothing after, stop what runs")
 ap.add_argument("--endpoint", default="")
 ap.add_argument("--model", default="")
-ap.add_argument("--inducer", choices=("exact", "grid", "language"), default="exact",
+ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
                 help="the mind's model, what its learning computes with; language: a model served at "
                      "--endpoint")
 ap.add_argument("--curiosity", default="new",

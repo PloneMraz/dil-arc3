@@ -99,8 +99,7 @@ def test_an_act_foreseen_to_lead_where_it_stood_is_put_last_not_out_of_reach():
 
 
 def test_what_a_step_made_is_each_part_it_changed_where_it_lies_as_left():
-    from mind.models.exact import ExactInducer
-    inducer = ExactInducer(ARC_ORGANS)
+    inducer = GridInducer(ARC_ORGANS)
     there = inducer.made(Step(board((1, 1)), (1, None, None), board((1, 2))))
     assert there == inducer.made(Step(board((1, 1)), (2, None, None), board((1, 2)))), "whatever the act"
     assert there != inducer.made(Step(board((4, 1)), (1, None, None), board((4, 2)))), "elsewhere, something else"

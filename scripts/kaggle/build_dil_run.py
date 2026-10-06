@@ -488,7 +488,7 @@ def main() -> None:
     ap.add_argument("--served", action="store_true",
                     help="a GPU notebook serving --model for the language inducer (not used for ARC-AGI-3 for "
                          "now, Plone 2026-09-28); without it, a CPU notebook with --inducer")
-    ap.add_argument("--inducer", choices=("exact", "grid"), default="exact",
+    ap.add_argument("--inducer", choices=("grid",), default="grid",
                     help="the mind's model, what its learning computes with")
     ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed", "made"),
                     default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")

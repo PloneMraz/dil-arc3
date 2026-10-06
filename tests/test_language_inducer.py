@@ -13,8 +13,7 @@ from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.learning import HYPOTHESIS_TAGS
 from mind.mind import Mind, mind_rule
-from mind.models.exact import grid_key
-from mind.models.language_inducer import PERCEPTION_TAGS, LanguageInducer
+from mind.models.language_inducer import READING_TAGS, LanguageInducer, identity as grid_key
 from mind.organs import Step
 from arc3.observe import admit, transducers
 from dil.loop.cycle import Layers, create_cycle
@@ -108,7 +107,7 @@ def test_it_is_shown_the_steps_seen_and_the_step_not_foreseen():
     run(cycle, frame(lit(0), lit(1)), status())
     run(cycle, frame(lit(1), lit(2)), status())
     user = script.shown[1][0]["content"]   # one message: the last answer was no program
-    assert "#0 ACTION1" in user and "#1 ACTION1" in user, "short-term perception, oldest first"
+    assert "#0 ACTION1" in user and "#1 ACTION1" in user, "the recent steps, oldest first"
     assert "No program you wrote foresaw the last step." in user
 
 
@@ -130,9 +129,9 @@ def test_its_where_is_how_the_grid_is_read_and_a_change_of_reading_is_data():
     assert inducer.situation(lit(1, 0)) != inducer.situation(lit(1, 1)), "before any program: the grid as it came"
     run(cycle, frame(lit(0), lit(1)), status())
     assert inducer.situation(lit(1, 0)) == inducer.situation(lit(1, 1)), "the clock cell, read out by its where"
-    perceptions = of_kind(data, "perception")
-    assert perceptions and perceptions[0][1].open == PERCEPTION_TAGS
-    assert perceptions[0][1].payload["where"] is True
+    readings = of_kind(data, "reading")
+    assert readings and readings[0][1].open == READING_TAGS
+    assert readings[0][1].payload["where"] is True
 
 
 def test_its_targets_are_where_an_act_that_takes_a_cell_may_be_put():
@@ -156,8 +155,8 @@ def test_a_model_that_does_not_answer_leaves_the_mind_learning_as_before():
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     answer = [d for _, d in of_kind(data, "thought")][-1]
     assert answer.payload["program"] is None and "did not answer" in answer.payload["why_not"]
-    assert [d.payload["form"] for _, d in of_kind(data, "hypothesis")] == ["exact", "exact"], \
-        "its exact records still stand"
+    assert of_kind(data, "hypothesis") == [] and len(of_kind(data, "experience")) == 2, \
+        "no program, and what it met is the mind's experience still"
     assert mind.commands[-1][1] is not None, "and the mind commands"
 
 
@@ -166,7 +165,7 @@ def test_a_program_predicts_wherever_it_applies_and_is_weighed_there():
     inducer.receive_prior("task", MIND_TASK.payload)
     forms = inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1),
                            evidence=((Step(lit(0), (1, None, None), lit(1)), None),))
-    program = forms[1]
+    program = forms[0]
     assert inducer.scope(program, lambda raw: raw) == ("program",)
     said = inducer.predict(program, "anywhere", lit(1), (2, None, None), lambda raw: raw)
     assert said is not None and said.state == lit(0)

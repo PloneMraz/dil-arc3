@@ -3,7 +3,7 @@
 Plone (2026-09-28): learning is developing experience into what serves the agent,
 not storing it; and it is the mind's, not the model's — another task, another
 model, and learning is not defined again. The mind holds the loop; a model — an
-inducer (`models/exact.py`, `grid.py`, `language_inducer.py`) — is its
+inducer (`models/grid.py`, `language_inducer.py`) — is its
 computing: what a state is to it, what can be done in one, what an experience
 suggests, what a hypothesis predicts.
 
@@ -11,21 +11,24 @@ THE LOOP, one step at a time:
 
 - **Experience.** Each step — from where the region stood, an act, where it
   stands and what it reported of itself — is kept, accrued (INV-5), with how
-  often it was met and how often the region ended on it.
-- **Hypotheses are data.** What an experience suggests, the inducer says — asked
+  often it was met and how often the region ended on it. What it says — that
+  the act gives there what it gave — is the mind's own expectation, from its
+  memory, weighed as a hypothesis is; an outcome other than the ones met is an
+  experience of its own (Plone, 2026-10-06: no model need say it).
+- **Hypotheses are data.** What an experience suggests past itself, the inducer says — asked
   of a step from a situation and act never met, and of one no hypothesis it held
   foresaw; the mind holds each as a hypothesis, once (what the inducer keys
   alike is one), and writes it (`kind: hypothesis`), built from the step and
   the report it came in.
-- **Expecting.** For a step, the hypotheses that apply to where the region stood
-  and the act; of those it holds, the one that fits the store best is the
-  expectation, and is what the expectation is (`held_by`) — so when the region
-  returns otherwise, it is scarred (v0.3.5).
+- **Expecting.** For a step, the experiences of the act there and the hypotheses
+  that apply to where the region stood and the act; of those it holds, the one
+  that fits the store best is the expectation, and is what the expectation is
+  (`held_by`) — so when the region returns otherwise, it is scarred (v0.3.5).
 - **Weighing.** Each return that a hypothesis predicted counts for it, each it
   did not counts against: a hypothesis is held while it has been right more
   often than wrong, and the one right at the highest rate is preferred (DECIDE@IMPL
   FIT_LAW; tag H: fit against the store, never a scored standard). Each weighing
-  revises the hypothesis's datum in place — how often it was borne out and
+  revises its datum in place — how often it was borne out and
   whether it holds are in `[data]` as they change — and when whether it holds
   changes, a datum of its own says so too, built from it (Plone, 2026-10-04).
 - **Experience.** Each experience is a datum (`kind: experience`): from where,
@@ -35,8 +38,8 @@ THE LOOP, one step at a time:
   agent's memory (protocol v0.3.6).
 - **Memory.** The whole store is the agent's memory, and what its model
   computes from, the mind reads there (Plone, 2026-10-05): the states it has
-  stood in, the hypotheses it predicts with, the steps short-term perception
-  shows. What came in a cycle is in hand in that cycle — perceived, not yet
+  stood in, the hypotheses it predicts with, the recent steps. What came in a
+  cycle is in hand in that cycle — met in it, not yet
   memory; from the next, it is read from the store, and its content is no
   longer held. Each read is the store's to record (DEVIATION 7), and what is
   written from what was read names it among what it was built from.
@@ -146,8 +149,25 @@ FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of
                   "expectation; at an equal rate, the one right more often")
 
 
+class Weighed:
+    """What the mind expects by, weighed by the returns: how often the region bore
+    it out (`supports`) and how often not (`fails`)."""
+
+    supports: int
+    fails: int
+
+    @property
+    def holds(self) -> bool:
+        return self.supports > self.fails
+
+    @property
+    def rate(self) -> float:
+        """How often it was right, Laplace's estimate: (right + 1) / (tried + 2)."""
+        return (self.supports + 1) / (self.supports + self.fails + 2)
+
+
 @dataclass(eq=False)
-class Hypothesis:
+class Hypothesis(Weighed):
     """A hypothesis the mind holds: the inducer's form, how often the region bore it
     out and how often not. Its own handle, as data.
 
@@ -159,25 +179,15 @@ class Hypothesis:
     fails: int = 0
     written: bool = False
     datum_id: str | None = None
-    # The step it was induced from: its observation, until the step's datum is
-    # known; then that datum's id. What was read to induce it, by id.
+    # The step it was induced from, its observation (what its datum is built
+    # from), until its datum is in the store; what was read to induce it, by id.
     unit: Any = None
-    step: str | None = None
     read: tuple[str, ...] = ()
     recall: Callable[["Hypothesis"], Any] | None = field(default=None, repr=False)
 
     @property
     def form(self) -> Any:
         return self.held if self.recall is None else self.recall(self)
-
-    @property
-    def holds(self) -> bool:
-        return self.supports > self.fails
-
-    @property
-    def rate(self) -> float:
-        """How often it was right, Laplace's estimate: (right + 1) / (tried + 2)."""
-        return (self.supports + 1) / (self.supports + self.fails + 2)
 
 
 @dataclass(frozen=True)
@@ -190,7 +200,7 @@ class Recalled:
 
 
 class Evidence(Sequence):
-    """Short-term perception as an inducer is shown it, each (step, report): what
+    """The recent steps as an inducer is shown them, each (step, report): what
     came in an earlier cycle read from the store when the inducer looks at it,
     and only then; what came in this one, as it came."""
 
@@ -208,17 +218,24 @@ class Evidence(Sequence):
 
 
 @dataclass(eq=False)
-class Edge:
+class Edge(Weighed):
     """One experience: from a state, an act, came a state and a report. `source`
     and `to` are the states as they came (their own identities); where the region
-    stood is read from them by the inducer's perception now."""
+    stood is read from them by the inducer's reading now.
+
+    It is also what the mind expects of that act there — what came, as memory
+    holds it — weighed as a hypothesis is: borne out each time the act there
+    gives it again, not when it gives something else, which is an experience of
+    its own (Plone, 2026-10-06: what an experience says is the learning's, not a
+    model's). Its datum is what such an expectation is (`held_by`)."""
 
     source: str
     act: Act
     to: str
     kind: tuple
     changed: bool
-    hypothesis: Hypothesis = field(default_factory=lambda: Hypothesis(None))
+    supports: int = 1            # it bears itself out
+    fails: int = 0
     status: dict[str, Any] | None = None
     ended: int = 0               # how many times the region ended on it
     seen: int = 1
@@ -226,6 +243,20 @@ class Edge:
     reached: int = 0             # how many times the aim came of it
     made: int = 0                # how many times it made something not made before
     written: bool = False        # its datum entered the store
+
+
+class Recall:
+    """What an experience says will come back: the state it came to, as memory
+    holds it (read only when asked for), and what the region reported."""
+
+    __slots__ = ("_learning", "_raw", "fields")
+
+    def __init__(self, learning: "Learning", raw: str, fields: dict[str, Any] | None) -> None:
+        self._learning, self._raw, self.fields = learning, raw, fields
+
+    @property
+    def state(self) -> Any:
+        return self._learning._stood(self._raw)
 
 
 class Answer:
@@ -283,7 +314,7 @@ class Learning:
         self._last_choice: dict[str, Any] | None = None        # the choice it wrote last
         # What the onlooker's word made it object to, by what the word was: (the
         # state as it came, act). Held while the onlooker says it; lifted when it
-        # says something else; read by the inducer's perception now.
+        # says something else; read by the inducer now.
         self._objected: dict[tuple, set[tuple[str, Act]]] = {}
         # Its answers to each word, while the word stands.
         self._answers: dict[tuple, list[Answer]] = {}
@@ -300,7 +331,10 @@ class Learning:
         self._state_of: dict[str, str] = {}                 # identity -> where the region stood
         self._raw_of: dict[str, str] = {}                  # a situation -> a state of it
         self._learned: list[Edge] = []                      # every experience, in the order met
-        self._edges: dict[tuple[str, Act], Edge] = {}
+        self._edges: dict[tuple[str, Act], Edge] = {}        # the first experience of a situation and act
+        # Every experience of a situation and act, one for each different outcome:
+        # what it expects of the act there.
+        self._outcomes: dict[tuple[str, Act], list[Edge]] = {}
         self._out: dict[str, dict[Act, Edge]] = {}
         # What every step has made, for the law that counts something made as new.
         self._made: set = set()
@@ -330,7 +364,7 @@ class Learning:
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
         self._learned_since_reset = True
         self.steps = 0
-        # The mind's short-term perception at the step being learned: what an
+        # The mind's recent steps at the step being learned: what an
         # inducer is shown when it is asked what the step suggests.
         self._seen_now: list = []
         # Memory as the mind reads it: the store's view this cycle (DEVIATION 7),
@@ -394,16 +428,13 @@ class Learning:
         """A hypothesis whose datum is in the store: read there from now on."""
         if self._view is None or h.datum_id is None or h.recall is not None:
             return
-        step = self._view.id_of(h.unit) if h.unit is not None else None
-        if step is None:
-            return
-        h.step, h.unit, h.held, h.recall = step, None, None, self._recall
+        h.unit, h.held, h.recall = None, None, self._recall
 
     def _recall(self, h: Hypothesis) -> Any:
-        """A hypothesis's form, read from its datum and its step's. Restored again
-        only when what its inducer said in it has changed — not the tallies the
-        learning keeps in it — and the form kept when it still says the same, so
-        what its model has computed with it holds."""
+        """A hypothesis's form, read from its datum. Restored again only when what
+        its inducer said in it has changed — not the tallies the learning keeps in
+        it — and the form kept when it still says the same, so what its model has
+        computed with it holds."""
         payload = self._view.read(h.datum_id, "hypothesis").payload
         self._used[h.datum_id] = None
         kept = self._restored.get(h.datum_id)
@@ -413,9 +444,7 @@ class Learning:
         if kept is not None and kept[2] == said:
             self._restored[h.datum_id] = (payload, kept[1], said)
             return kept[1]
-        self._used[h.step] = None
-        step = self.organs.step(self._view.read(h.step, "hypothesis").payload)
-        form = self.inducer.restore(payload, step)
+        form = self.inducer.restore(payload)
         if kept is not None and self.inducer.key(form) == self.inducer.key(kept[1]):
             form = kept[1]
         self._restored[h.datum_id] = (payload, form, said)
@@ -437,7 +466,7 @@ class Learning:
 
     def recalled_step(self, step: Step, unit: Any, report: dict[str, Any] | None,
                       report_unit: Any) -> tuple[Step, dict[str, Any] | None]:
-        """A step of short-term perception, and what the region reported of it:
+        """One of the recent steps, and what the region reported of it:
         read from the store when it came in an earlier cycle (`Evidence`)."""
         view = self._view
         datum = view.id_of(unit) if view is not None and unit is not None else None
@@ -468,7 +497,7 @@ class Learning:
                 report: dict[str, Any] | None = None) -> list[Hypothesis]:
         """What an experience suggests, held — save what it holds already. The
         inducer is told whether a hypothesis held foresaw the step, and shown
-        short-term perception: one whose computing is costly computes only what
+        the recent steps: one whose computing is costly computes only what
         was not foreseen. With the step's `report`, when the aim came: what
         brings the aim, from what the mind expected of the step and what the
         region showed between (S4)."""
@@ -478,7 +507,7 @@ class Learning:
         used = self._take_used()
         forms = self.inducer.induce(source_raw, act, step.before, step.after, foreseen=foreseen,
                                     evidence=evidence, **extra)
-        read = self._take_used()     # what the inducer read of short-term perception
+        read = self._take_used()     # what the inducer read of the recent steps
         self._used = dict.fromkeys(used)
         for form in forms:
             key = self.inducer.key(form)
@@ -492,10 +521,13 @@ class Learning:
             self.inducer.keep(form, lambda h=h: h.form)
         return out
 
-    def _applicable(self, situation: str, act: Act, state: Any = None) -> list[tuple[Hypothesis, Any, str]]:
-        """The hypotheses that apply to a situation and act, each with what it
-        predicts and the situation that is: worked out once, and again only for
+    def _applicable(self, situation: str, act: Act, state: Any = None) -> list[tuple[Weighed, Any, str]]:
+        """What applies to a situation and act, each with what it predicts and the
+        situation that is: the experiences of the act there, from memory, and the
+        hypotheses that apply there — worked out once, and again only for
         hypotheses induced since."""
+        experienced = [(e, Recall(self, e.to, e.status), self._state_of[e.to])
+                       for e in self._outcomes.get((situation, act), ())]
         stood = situation in self._raw_of
         if not stood and self._imagined_left <= 0:
             return []          # it has looked as far past where it stood as a choice may
@@ -528,7 +560,7 @@ class Learning:
                 for h, _, _ in found:
                     if h.recall is not None:
                         self._used[h.datum_id] = None
-        return found
+        return [*experienced, *found] if experienced else found
 
     def _best(self, situation: str, act: Act, state: Any = None) -> tuple[Hypothesis, Any, str] | None:
         """Of the hypotheses that apply and are held, the one right at the highest
@@ -575,7 +607,7 @@ class Learning:
             back-and-forth, at the states the alternation ran through. Said again
             after it was answered, the objection reaches back over the run the
             onlooker points at, as far as the field's alertness says (½–1½ of
-            it, within short-term perception);
+            it, within the recent steps);
           - but told once that it repeats an act whose every step reached a state
             it had not stood in — its own evidence that the repetition is getting
             somewhere — it keeps on, and says why (`kept_on`); told again, it
@@ -714,14 +746,14 @@ class Learning:
         return self._state_of[raw]
 
     def _reindex(self, built_from) -> list[Write]:
-        """Read every state again, the inducer's perception having changed; where two
-        experiences are now one situation and act, the hypothesis of the first
-        counts the other against it if they disagree."""
+        """Read every state again, the inducer's reading having changed; where two
+        experiences are now one situation and act, the first counts the other
+        against it if they disagree."""
         self._state_of = {raw: self.inducer.situation(self._stood(raw)) for raw in self._raw}
         self._raw_of = {}
         for raw, situation in self._state_of.items():
             self._raw_of.setdefault(situation, raw)
-        self._edges, self._out = {}, {}
+        self._edges, self._out, self._outcomes = {}, {}, {}
         self._scoped, self._applies, self._imagined = {}, {}, {}
         for h in self._hypotheses:
             self._scoped.setdefault(self.inducer.scope(h.form, self._situation_of), []).append(h)
@@ -729,17 +761,18 @@ class Learning:
         writes: list[Write] = []
         for edge in self._learned:
             key = (self._state_of[edge.source], edge.act)
+            self._outcomes.setdefault(key, []).append(edge)
             first = self._edges.get(key)
             if first is None:
                 self._edges[key] = edge
                 self._out.setdefault(key[0], {})[edge.act] = edge
             elif self._state_of[first.to] != self._state_of[edge.to] and (first, edge) not in self._against:
                 self._against.add((first, edge))   # one experience, counted against it once
-                writes += self._weigh(first.hypothesis, False, built_from)
+                writes += self._weigh(first, False, built_from)
         if self._here is not None and self._now_raw is not None:
             self._here = self._state_of[self._now_raw]
-        # What it wrote of its experiences and hypotheses named situations as its
-        # perception read them: read again, each written one is revised.
+        # What it wrote of its experiences and hypotheses named situations as it
+        # read them: read again, each written one is revised.
         for edge in self._learned:
             if edge.written:
                 self._touch(edge)
@@ -764,7 +797,7 @@ class Learning:
                 self.unseen[1] += 1
                 self._unseen_expected = to
             state = self.inducer.copy(said.state)
-            fields = self.inducer.fields(h.form)
+            fields = said.fields
             self._expected = state
             return Expectation(state=state, fields=dict(fields) if fields else None,
                                held=(("handle", h),), by_model=True)
@@ -778,17 +811,24 @@ class Learning:
         self._seen_now = list(seen or [(step, unit, None, None)])
         return self._learn_step(step, unit)
 
-    def _weigh(self, h: Hypothesis, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
-        """Count a return for or against a hypothesis and revise its datum: how
-        often it was borne out, and whether it holds, are in the store as they
-        change (a hypothesis not yet written enters with them). When whether it
-        holds changes, a datum of its own says so too, built from it: a refutation
-        is an event a reader looks for (Plone, 2026-10-04)."""
+    def _weigh(self, h: Weighed, borne_out: bool, built_from: tuple[object, ...]) -> list[Write]:
+        """Count a return for or against what it expects by — a hypothesis, or an
+        experience — and revise its datum: how often it was borne out, and whether
+        it holds, are in the store as they change (one not yet written enters with
+        them; an experience's datum is revised once the step's report has come).
+        When whether it holds changes, a datum of its own says so too, built from
+        it: a refutation is an event a reader looks for (Plone, 2026-10-04)."""
         before = h.holds
         if borne_out:
             h.supports += 1
         else:
             h.fails += 1
+        if isinstance(h, Edge):
+            self._touch(h)
+            if h.written and h.holds != before:
+                return [Write(payload=self._experience(h), tags=self._experience_tags,
+                              built_from=(*built_from, ("handle", h)))]
+            return []
         if not h.written:
             return []
         # What a revision was built from: what it read, save itself.
@@ -805,20 +845,25 @@ class Learning:
         if edge not in self._pending:
             self._pending.append(edge)
 
+    def _experience(self, edge: Edge) -> dict[str, Any]:
+        """An experience, said as data."""
+        return {"from": self._state_of[edge.source], "act": list(edge.act), "to": self._state_of[edge.to],
+                "kind": list(edge.kind), "changed": edge.changed, "seen": edge.seen, "new": edge.new,
+                **({"made": edge.made} if self.curiosity == "made" else {}),
+                "reached": edge.reached, "ended": edge.ended, "status": edge.status,
+                "holds": edge.holds, "supports": edge.supports, "fails": edge.fails}
+
     def _experiences(self, built_from: tuple[object, ...]) -> list[Write]:
         """The experiences changed in this step, each written anew or revised."""
         writes = []
         for edge in self._pending:
-            payload = {"from": self._state_of[edge.source], "act": list(edge.act), "to": self._state_of[edge.to],
-                       "kind": list(edge.kind), "changed": edge.changed, "seen": edge.seen, "new": edge.new,
-                       **({"made": edge.made} if self.curiosity == "made" else {}),
-                       "reached": edge.reached, "ended": edge.ended, "status": edge.status}
+            payload = self._experience(edge)
             if edge.written:
                 writes.append(Write(payload=payload, revises=edge, built_from=built_from))
             else:
                 edge.written = True
                 writes.append(Write(payload=payload, tags=self._experience_tags, handle=edge,
-                                    built_from=(*built_from, ("handle", edge.hypothesis))))
+                                    built_from=built_from))
         self._pending = []
         return writes
 
@@ -872,18 +917,21 @@ class Learning:
         for h, _, said in applied:
             writes += self._weigh(h, said == to, (unit, *self._expected_from))
         self._last_step = (source_raw, act, step, unit)
-        if known is None:
+        if known is None or not foreseen:
+            # Never met, or what came nothing it holds foresaw: it asks what this suggests.
             self._new = self._induce(source_raw, act, step, foreseen, unit)
-            edge = Edge(source_raw, act, to_raw, kind, changed, hypothesis=self._new[0])
+        # The experience of this outcome: met again, or one of its own.
+        outcomes = self._outcomes.setdefault((source, act), [])
+        edge = next((e for e in outcomes if self._state_of[e.to] == to), None)
+        if edge is None:
+            edge = Edge(source_raw, act, to_raw, kind, changed)
+            outcomes.append(edge)
             self._learned.append(edge)
-            self._edges[(source, act)] = edge
-            self._out.setdefault(source, {})[act] = edge
+            if known is None:
+                self._edges[(source, act)] = edge
+                self._out.setdefault(source, {})[act] = edge
         else:
-            edge = known
             edge.seen += 1
-            if not foreseen:
-                # What came, no hypothesis it holds foresaw: it asks what this suggests.
-                self._new = self._induce(source_raw, act, step, foreseen, unit)
         edge.new += int(new)
         edge.made += int(made)
         self._touch(edge)
@@ -899,11 +947,11 @@ class Learning:
             self._learned_since_reset = False
         elif known is None:
             self._learned_since_reset = True
-        perceived = self.inducer.perceive(step, kind)
-        if perceived is not None:
+        reading = self.inducer.learn_reading(step, kind)
+        if reading is not None:
             writes += self._reindex((unit,))
-            writes.append(Write(payload={**perceived.payload, "cycle": self.steps},
-                                tags=dict(perceived.tags), built_from=(unit,)))
+            writes.append(Write(payload={**reading.payload, "cycle": self.steps},
+                                tags=dict(reading.tags), built_from=(unit,)))
         return writes
 
     def _learn_report(self, report: dict[str, Any] | None, units: tuple[Any, ...]) -> list[Write]:
@@ -916,16 +964,11 @@ class Learning:
         self._reports[key] = self._reports.get(key, 0) + 1
         if edge.status is None:
             edge.status = said
-            self.inducer.reported(edge.hypothesis.form, said)
-            if edge.hypothesis.written:
-                # Its datum says what its form now says.
-                writes.append(Write(payload=self._describe(edge.hypothesis), revises=edge.hypothesis,
-                                    built_from=units))
         elif self._reached(edge.status) != self._reached(said):
-            # The aim from one and not from the other: the hypothesis did not bear
+            # The aim from one and not from the other: the experience did not bear
             # out. Whether the region ended is not weighed here: a region may end
             # for what the act did not do.
-            writes += self._weigh(edge.hypothesis, False, units)
+            writes += self._weigh(edge, False, units)
         # Each hypothesis that said this act, there, brings the aim is borne out
         # by the report, or not (S4).
         for h in self._aim_applied:
@@ -951,7 +994,7 @@ class Learning:
         if self._new:
             writes += self._write(units)
         self._touch(edge)
-        writes += self._experiences(units)
+        writes += self._experiences((*units, *self._expected_from))
         return writes
 
     def _describe(self, h: Hypothesis) -> dict[str, Any]:
@@ -1191,7 +1234,7 @@ class Learning:
         if here is None:
             return Proposal(None, why="nowhere yet"), []
         offers = context.offers
-        through: list[Hypothesis] = []
+        through: list[Weighed] = []
         odds: float | None = None
         act: Act | None = None
         said = self._said(context.remark or {})
@@ -1201,9 +1244,9 @@ class Learning:
             act, why = self.organs.reset, f"the region has ended ({context.ended})"
         else:
             # Toward the aim it takes no objection.
-            gained = {self._state_of[e.source] for e in self._edges.values()
-                      if e.hypothesis.holds and self._reached(e.status)}
-            aim_here = [e for e in self._out.get(here, {}).values() if e.hypothesis.holds and self._reached(e.status)]
+            gained = {self._state_of[e.source] for e in self._learned if e.holds and self._reached(e.status)}
+            aim_here = [e for e in self._learned
+                        if self._state_of[e.source] == here and e.holds and self._reached(e.status)]
             # What its hypotheses say brings the aim, where it stands or where it
             # can go (S4): after what reached it, before what it has not tried.
             said_here = [] if aim_here else self._aims_at(here, offers)
@@ -1214,7 +1257,7 @@ class Learning:
             opened = self._open_here(here, offers, objected)
             fresh = [ak for ak in opened if not self._foreseen(here, ak[0])]
             if aim_here:
-                act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0].hypothesis]
+                act, why, through = aim_here[0].act, "an act that reached the aim before", [aim_here[0]]
             elif said_here:
                 act, h = said_here[0]
                 why, through = "an act its hypotheses say brings the aim here", [h]
@@ -1259,7 +1302,7 @@ class Learning:
                     if free:
                         least = min(free, key=lambda e: (self._visits.get(self._state_of[e.to], 0), e.seen,
                                                          e.act[0], e.act[1] or 0, e.act[2] or 0))
-                        act, why, through = least.act, "all known; toward the state visited least", [least.hypothesis]
+                        act, why, through = least.act, "all known; toward the state visited least", [least]
                     elif known:
                         act, why = self.organs.reset, "every act known here was objected to"
                     elif said is not None and said[0] == "standing still":
@@ -1283,7 +1326,7 @@ class Learning:
             # each suggested, it was built from.
             choice["attended"] = [{"at": self._state_of[e.source], "act": list(e.act), "weight": round(w, 3)}
                                   for e, w in self._attended]
-            through = [*through, *(e.hypothesis for e, _ in self._attended if e.hypothesis not in through)]
+            through = [*through, *(e for e, _ in self._attended if e not in through)]
         if lifted:
             choice["lifted"] = lifted
         if context.on == "command again" and self._last_choice is not None \

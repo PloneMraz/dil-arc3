@@ -15,7 +15,7 @@ from __future__ import annotations
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
-from mind.models.exact import grid_key
+from mind.models.grid import grid_key
 from mind.models.grid import AimForm, GridInducer
 from arc3.observe import admit, transducers
 from dil.loop.cycle import Layers, create_cycle

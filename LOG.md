@@ -5413,3 +5413,41 @@ stayed `QUEUED` past 05:10 and was cancelled. The "draft" Kaggle showed on the
 notebook came on one never opened in the editor, so it is how a notebook with no
 version run shows, not what held it (corrects the entry above that tied it to
 the click).
+
+### The exact inducer removed; experiences are the mind's expectation; "perception" renamed (Plone)
+
+Plone asked what `exact.py` was: no inducer any run used, yet grid and the
+language inducer inherited it and died without it. It was two things: grid's
+reading of a grid (identity, the clock, things, `made`, `similarity`), and the
+exact hypothesis — "from here, this act gives that" — which said again what the
+learning's experiences hold, and which the learning required of every inducer
+(an experience's hypothesis was the first form `induce` returned). Approved:
+
+1. **Experiences are the mind's expectation.** What an experience says is the
+   learning's own, from its memory (`Recall`: the state it came to, read only
+   when asked for, and the report); each experience is weighed as a hypothesis
+   is (`Weighed`: supports, fails, holds, rate), its datum carries them, is what
+   an expectation from it is (`held_by`), takes the scar, and a change of whether
+   it holds is a datum of its own; an outcome other than those met is an
+   experience of its own (`_outcomes`). `ExactForm`, `Inducer.reported` and
+   `Inducer.fields` are gone; a prediction carries its fields.
+2. **grid stands on its own**: how it reads a grid moved in from `exact.py`; no
+   inheritance. Not a separate file: only grid reads grids now.
+3. **The language inducer stands on its own**: its own hash for a state's
+   identity; `similarity` says nothing (0), `made` is the state a step came to —
+   no code reads the grid for it.
+4. **`exact.py` deleted**, and `--inducer exact` with it (run_game,
+   run_competition, replay_inducer, build_dil_run, run_series).
+5. **"Perception" renamed** — a computing of the mind is not named with a word
+   of the senses: `Inducer.perceive` → `learn_reading`, `Perceived` → `Note`
+   (with `Prediction`, in `models/base.py`), the language inducer's datum kind
+   `perception` → `reading`, "short-term perception" → "the recent steps"
+   (`Mind._recent`); `restore` takes the datum alone.
+
+356 tests pass (the exact hypothesis's tests now the experience's). On the six,
+`made`, attention, 600 cycles, against the code before (`c1`): the scorecard
+identical (8 levels, 0.59339, 3,594 actions); every choice the same in vc33,
+ar25, lp85, tu93 and lf52, ls20's from cycle 402 on (after its level, an outcome
+now its own experience: 354 experiences, not 344); hypotheses written 223 not
+574 in ls20 (the exact ones gone; so for each); each game 8-18% faster;
+conformance as before.
