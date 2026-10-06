@@ -47,8 +47,7 @@ THE LOOP, one step at a time:
 - **Choosing.** Toward the aim it has reached before, or where its held
   hypotheses say an act brings it; else what it knows least
   (curiosity, below) — an act its hypotheses say leads where it has stood last,
-  never out of reach, and of such acts the one foreseen least surely first
-  (FORESEEN_LAW);
+  never out of reach;
   else the shortest way to where something is left to try, looking ahead by what
   its held hypotheses predict — through the situations it has stood in and, for
   an inducer whose hypotheses reach past where they were met, up to
@@ -142,9 +141,6 @@ ATTENTION_MIN_WEIGHT: Final = 1.0
 # What the mind counts as worth trying (the docstring's CURIOSITY), by name; the
 # first is the default (S2b).
 CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed", "made")
-# When every act left here is foreseen, which is tried first (point 3, 2026-10-05).
-FORESEEN_LAW: Final = ("of acts its hypotheses all foresee, the one foreseen least surely: by the hypothesis "
-                       "right at the lowest rate; then by curiosity")
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
                   "the one right at the highest rate, (supports + 1) / (supports + fails + 2), is the "
                   "expectation; at an equal rate, the one right more often")
@@ -1102,17 +1098,6 @@ class Learning:
         best = self._best(here, act)
         return best is not None and best[2] in self._raw_of
 
-    def _least_sure(self, here: str, pool: list[tuple[Act, tuple]]) -> list[tuple[Act, tuple]]:
-        """Of acts its hypotheses all foresee, those foreseen least surely: by the
-        hypothesis right at the lowest rate (FORESEEN_LAW). Trying one tests what
-        it holds where it may most be wrong; none is put out of reach."""
-        rated = []
-        for act, kind in pool:
-            best = self._best(here, act)
-            rated.append((best[0].rate if best is not None else 0.0, (act, kind)))
-        low = min(rate for rate, _ in rated)
-        return [ak for rate, ak in rated if rate == low]
-
     def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
         """From a situation, where each act leads, by the hypothesis it holds best
         there: the acts taken from it first, in the order taken — never one that
@@ -1263,8 +1248,8 @@ class Learning:
                         ("; its hypotheses say where each leads" if foreseen else "") + \
                         ("; objected to, and no other way" if over else "")
                 elif opened:
-                    act, odds = self._curious(here, self._least_sure(here, opened))
-                    why = "not yet taken from here; its hypotheses say where each leads, this one least surely"
+                    act, odds = self._curious(here, opened)
+                    why = "not yet taken from here; its hypotheses say where each leads"
                 elif self._learned_since_reset:
                     act, why = self.organs.reset, "nothing left to try from anywhere it can reach"
                 else:

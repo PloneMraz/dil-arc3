@@ -215,9 +215,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   act whose held hypothesis says it leads where the mind has stood is tried
   after the acts it cannot foresee, here and by the ways to them. A hypothesis
   that kept an act from being tried could never be refuted by it (measured:
-  LOG.md, S3). Of acts all foreseen, the one foreseen least surely — by the
-  hypothesis right at the lowest rate — is tried first, then by curiosity
-  (`FORESEEN_LAW`; Plone, 2026-10-05: kept).
+  LOG.md, S3).
 - **The model is the mind's computing, inside it** (Plone, 2026-09-27). The mind
   thinks with a model; the model is not a second mind beside it, nor a second
   brain: it is the part of the one mind that computes. The mind holds the seams

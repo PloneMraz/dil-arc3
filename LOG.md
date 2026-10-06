@@ -5380,3 +5380,9 @@ submitted. 25 of 25 exited 0, no traceback; 4,457 s.
   tn36 33 actions and sp80 0.0986, version 19's own; with it, tn36 no level, sp80
   0.0431. So FORESEEN_LAW, kept on the six and ft09 (2026-10-05), loses tn36's and
   cd82's first levels on the 25.
+
+### FORESEEN_LAW removed (Plone)
+
+On the evidence of version 21 and the run here with and without it, Plone agreed
+to remove it: `learning.py` and CLAUDE.md as before `982eecb`. Next, version 22:
+`made` and C1, without it.
