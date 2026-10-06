@@ -31,7 +31,7 @@ THE LOOP, one step at a time:
   revises its datum in place — how often it was borne out and
   whether it holds are in `[data]` as they change — and when whether it holds
   changes, a datum of its own says so too, built from it (Plone, 2026-10-04).
-- **Experience.** Each experience is a datum (`kind: experience`): from where,
+- **Experience, written.** Each experience is a datum (`kind: experience`): from where,
   by what act, to where, how often met, how often it reached somewhere new or
   the aim or ended the region, what the region reported. Written once the step's
   report has come, and revised in place as it changes. The whole store is the
@@ -127,9 +127,9 @@ MAX_PATH_NODES: Final = 20_000
 MAX_IMAGINED_STEPS: Final = 3
 # How many predictions one search for a way may make for situations it has not
 # stood in; past it, it looks no further past where it has stood. What it
-# predicts there is kept for that choice only, never after (tn36, 2026-09-29:
-# kept, the predictions of every imagined situation for every act filled 5 GB in
-# 37 cycles). DECLARED: a bound on work.
+# predicts there is kept for that choice only, never after (2026-09-29: kept, the
+# predictions of every imagined situation for every act once filled 5 GB in 37
+# cycles; LOG.md). DECLARED: a bound on work.
 MAX_IMAGINED_PREDICTIONS: Final = 20_000
 # DECIDE@IMPL (tag H) — how a hypothesis is weighed against the store.
 # ATTENTION (idea (a), Plone, 2026-09-29): with it, how much an act is wanted is
@@ -375,7 +375,9 @@ class Learning:
         self._view: Any = None
         self._memo: dict[Recalled, Any] = {}
         self._unsettled: list[tuple[str, Any, str]] = []
-        self._restored: dict[str, tuple[Any, Any]] = {}
+        # Each hypothesis read, by its datum: the payload read, the form restored
+        # from it, and what its inducer said in it (the payload off the tallies).
+        self._restored: dict[str, tuple[Any, Any, dict[str, Any]]] = {}
         self._used: dict[str, None] = {}
         self._chosen_kind: tuple | None = None
         # Hypotheses about the aim (S4): those that applied to the step being

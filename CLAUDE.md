@@ -351,8 +351,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   when it is met. The **aim** is the mind's own, and there is one: it takes the
   goal's value; when no goal comes back with what the mind asked its memory for
   (it waits `GOAL_WAIT = 1` cycle for the answer), it holds its own, `OWN_AIM`:
-  the region reports something other than what it has been reporting, in a state
-  it has not ended in — seeking an end is no aim (both declared, a law of the
+  the region reports something other than what it reports most (one seen before
+  but seldom reaches it too), in a state it has not ended in — seeking an end is
+  no aim (both declared, a law of the
   mind: `src/mind/mind.py`). The learning holds the same aim (`hold_aim`) and
   tells its model what it is for; no model has an aim. With no aim yet held —
   the cycle before the answer — the mind commands nothing and the body waits.
@@ -398,11 +399,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Qwen3.8-Flash-Next's smallest GGUF is 72.5 GB, larger than its memory and
   free disk). Step by step: (1) a notebook of its own, `dil-arc3-language-inducer`
   (`build_dil_run.py --served --notebook dil-arc3-language-inducer`), serving the model
-  last served, Qwen3.8-Flash-Next NVFP4, one game, about 100 cycles; (2) pushed
-  once the Save & Run running before it has finished, to see whether the
-  language inducer as it stands works in the loop — how right its `predict`
-  is, whether it finds the way to the aim, how long it takes — read back from
-  `[event]`.
+  last served, Qwen3.8-Flash-Next NVFP4, ls20, 100 cycles — built; (2) run by
+  Save & Run, to see whether the language inducer as it stands works in the
+  loop — how right its `predict` is, whether it finds the way to the aim, how
+  long it takes — read back from `[event]`. Not run yet: each push waited hours
+  in the RTX Pro 6000's queue and was cancelled (LOG.md, 2026-10-05 and
+  2026-10-06); to be pushed again when the queue allows.
 
 ### Open in the current design
 
@@ -415,7 +417,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 
 - **A scar of an experience's expectation is almost always the clock's.** It
   does not predict the clock, so where a region keeps one, an expectation from
-  an experience fails on the clock's rows alone, and its datum is scarred for it
+  an experience fails on the clock's rows and columns alone, and its datum is scarred for it
   (measured, of the exact hypothesis that said what an experience says now:
   LOG.md, 2026-09-27). Where there is no clock, most
   scars fall on steps it had no expectation of its own for. So in `[event]` its

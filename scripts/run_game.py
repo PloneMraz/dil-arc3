@@ -125,8 +125,9 @@ daemon = Daemon(
     host=declaration(a.game, store_root=store_root, onlooker=not a.alone), source=host_source, layers=layers,
     glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carrying_out(source),
     admit=admit,
-    # The learning mind writes every cycle and adds data rather than revising
-    # one: the scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE).
+    # The scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE): the
+    # learning revises data in place (2026-10-04), and what a datum holds is in
+    # `[data]`; a commit's snapshot is for recovery, not reading (v0.3.6 §9).
     commit_on_write=False,
     # `[data]` and `[event]` synced to disk once a cycle, not each write (Plone,
     # 2026-10-04: a machine's crash loses at most the cycle running; recovery is

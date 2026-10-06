@@ -65,7 +65,8 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
   every part lies, box and ring alike, it says the region will report what it
   reported then.
 
-The clock's rows are no part of any of them: what lies there matches anything.
+The clock's rows and columns are no part of any of them: what lies there matches
+anything.
 """
 
 from __future__ import annotations

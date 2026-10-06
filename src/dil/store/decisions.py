@@ -215,14 +215,14 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 
 # DEVIATION from dil-core, declared (Plone, 2026-09-24): dil-arc3 also commits at
 # the close of every cycle in which the agent wrote a datum, so every version of
-# what it wrote — the mind's program above all — is in a snapshot, tied by
+# what it wrote is in a snapshot, tied by
 # its marker to its place in `[event]`. dil-core keeps the scar rhythm alone:
 # for an agent that writes often, a snapshot per write is too heavy a cost.
-# The learning mind writes every cycle, and adds data rather than revising one —
-# a transition that no longer holds is a new datum (Plone, 2026-09-27), so every version is in `[data]`, not only in a snapshot:
-# a snapshot per write made each cycle slower than the last and a 400-cycle
-# store 2 GB (LOG.md), so a run with it keeps the scar rhythm alone (Plone,
-# 2026-09-27; `Daemon(commit_on_write=False)`).
+# The learning mind writes every cycle and revises data in place (2026-10-04):
+# what a datum holds is in `[data]`, and a commit's snapshot is for recovery,
+# not for reading (protocol v0.3.6 §9). A snapshot per write made each cycle
+# slower than the last and a 400-cycle store 2 GB (LOG.md), so a run keeps the
+# scar rhythm alone (Plone, 2026-09-27; `Daemon(commit_on_write=False)`).
 COMMIT_CADENCE: Final = (
     "every COMMIT_EVERY scars, at a cycle boundary; and, unless the host turns it "
     "off, at the close of every cycle in which the agent wrote a datum (dil-arc3; "

@@ -5466,3 +5466,34 @@ conformance as before.
   README says how to take one from `e1a3112` and run it against the commit it
   was written for. Every script left imports against the code now; 356 tests
   pass.
+
+### An earlier review's findings, checked and fixed (Plone)
+
+Plone passed on an older review; each finding was checked against the code now:
+
+- Two comments still said the learning adds data rather than revising one
+  (`run_game.py`, `store/decisions.py`, with "the mind's program" of the old
+  language mind): corrected — it revises in place since 2026-10-04.
+- `build_dil_run.py`'s docstring described the old GPU-only run and "two
+  scripts": rewritten (CPU learning notebook by default, `--served` for GPU,
+  `--probe`; four scripts packed).
+- The mind's own aim was written two ways and coded a third: the code (a report
+  other than the one the region makes most; one seen before but seldom reaches
+  it) is what every run measured, so the words now say that — `OWN_AIM`'s text,
+  `mind.py`, README, CLAUDE.md.
+- grid's docstring: "the clock's rows" → rows and columns (the reading of an aim
+  after C1 had been brought up to date in the restructure).
+- README: the fourth law (`made`) added; "scars the program" and "the mind's
+  program" (the old language mind's words) corrected.
+- CLAUDE.md, Open: "the clock's rows alone" → rows and columns.
+- `learning.py` named a game in a comment (tn36): taken out; the learning names
+  none.
+- `_restored`'s type note said a pair; it holds three: corrected.
+- `scripts/README.md`: `situations.py` added to the table; `made` among
+  `--curiosity`'s values; the import check dated today (every script imports).
+- `learning.py`'s docstring had two items named "Experience": the second is
+  "Experience, written".
+- CLAUDE.md, In hand: step 2 said "pushed once … finished"; it now says what
+  holds — built, not run yet, each push held in the RTX Pro 6000's queue.
+
+356 tests pass.

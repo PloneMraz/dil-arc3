@@ -1,22 +1,28 @@
-"""Build the Kaggle dataset and notebook that run dil-arc3, with the model at the mind.
+"""Build the Kaggle dataset and notebook that run dil-arc3.
 
-    python scripts/kaggle/build_dil_run.py [--model 35b-a3b|27b|flash-next] [--game ls20]
-        [--cycles 60] [--max-tokens 12288] [--max-model-len 65536]
+    python scripts/kaggle/build_dil_run.py [--game a,b] [--cycles 60] [--concurrency 4]
+        [--curiosity LAW] [--attention] [--notebook SLUG]
+    python scripts/kaggle/build_dil_run.py --served [--model 35b-a3b|27b|flash-next] [--notebook SLUG]
+        [--max-tokens 12288] [--max-model-len 65536] ...
+    python scripts/kaggle/build_dil_run.py --probe
 
-Not the probe: the probe ran a model on its own. This runs the agent — DIL's
-loop over a live ARC-AGI-3 game, the host carrying the frame, the one mind —
-the model and the program it writes — asking the store, writing its program as
-data, revising it on mismatch —
-with the model served by vLLM on the competition's RTX Pro 6000, internet off.
-The game is played offline from the competition's own `environment_files`,
-the runtime installed from its own wheelhouse (as Tufa Labs' public notebook
-does). The run's store — `[event]` log, `[data]`, commits — is left in
-/kaggle/working to be read back.
+This runs the agent — DIL's loop over live ARC-AGI-3 games, the host carrying
+the frame, the one mind learning and commanding — through `run_competition.py`:
+offline from the competition's own `environment_files` on Save & Run, through
+the gateway in a scored rerun. By default a CPU notebook (`dil-arc3-learning`):
+the mind with its learning and the grid inducer, no model served. With
+`--served`, a GPU notebook on the competition's RTX Pro 6000 serving `--model`
+with vLLM, internet off, for the language inducer (not used for ARC-AGI-3 for
+now). With `--probe`, the gateway probe: the starter kit's random agent on the
+same road, CPU, no model. The runtime is installed from the competition's own
+wheelhouse (as Tufa Labs' public notebook does); each game's store — `[event]`
+log, `[data]`, commits — is left to be read back (packed into one file).
 
 Writes, under scripts/data/kaggle/dil-run/ (git-ignored):
 
-    dataset/   dil-arc3.tar (src/, scripts/_paths.py, scripts/run_game.py),
-               the model manifests, dataset-metadata.json
+    dataset/   dil-arc3.tar (src/, and scripts/_paths.py, run_game.py,
+               run_competition.py, random_game.py), the model manifests,
+               dataset-metadata.json
                -> kaggle datasets create -p .../dataset      (first time)
                -> kaggle datasets version -p .../dataset -m "..."
     kernel/    run.ipynb, kernel-metadata.json
@@ -464,7 +470,7 @@ print("outputs:", sorted(p.name for p in W.iterdir()))''',
 
 
 def _pack(dest: Path) -> None:
-    """src/ and the two scripts the run needs, as the repository lays them out."""
+    """src/ and the four scripts the run needs, as the repository lays them out."""
     def keep(info: tarfile.TarInfo) -> tarfile.TarInfo | None:
         return None if "__pycache__" in info.name or info.name.endswith(".pyc") else info
 

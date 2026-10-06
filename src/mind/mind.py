@@ -45,7 +45,7 @@ WHAT IT DOES:
   (`goal`, with `reached_when`). The aim is the mind's own: it takes the goal's
   value when there is one; when none comes back with what it asked its memory
   for — it waits one cycle for the answer — it holds its own, OWN_AIM: that the
-  region reports something it has not been reporting, and has not ended. Its
+  region reports something other than what it reports most, and has not ended. Its
   learning holds the same aim (`hold_aim`), and tells its model what it is for.
   No model has an aim.
 """
@@ -69,11 +69,11 @@ from .organs import Act, Organs, Step
 # the body can carry out — while the body waits. DECLARED, not measured.
 MAX_WAIT_THOUGHTS: Final = 2
 # The aim the mind holds when no goal is given (Plone, 2026-09-28): the region
-# reports something other than what it has been reporting, in a state it has not
-# ended in (`Organs.ended`) — seeking the end of a run would be no aim. Grounded
+# reports something other than what it reports most — a report seen before, but
+# seldom, reaches it too — in a state it has not ended in (`Organs.ended`) — seeking the end of a run would be no aim. Grounded
 # in what comes back, as every aim must be (the regress rule, 2026-09-25).
 # DECLARED, a law of the mind.
-OWN_AIM: Final = {"aim": "the region reports something it has not been reporting, and has not ended",
+OWN_AIM: Final = {"aim": "the region reports something other than what it reports most, and has not ended",
                   "source": "own", "reached_when": {"new": True}}
 # How many cycles past the one it asked its memory in the mind waits for a goal
 # before it holds its own aim: the answer comes back the next cycle. DECLARED.

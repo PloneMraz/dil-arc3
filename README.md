@@ -21,8 +21,8 @@ computes, never whether it learns.
 **Goal and aim.** A goal is an instruction from outside; the aim is the mind's
 own, and there is always one (Plone, 2026-09-28). The mind's aim takes the
 goal's value when a goal is given; when none is, it holds its own: that the
-region reports something other than what it has been reporting, in a state it
-has not ended in. No model has an aim: the mind tells its model what it computes
+region reports something other than what it reports most, in a state it has
+not ended in. No model has an aim: the mind tells its model what it computes
 for.
 
 **What it is told.** Its store holds, before it lives, two things, each as host
@@ -55,14 +55,15 @@ The line that matters: **the mind acts on nothing; it commands, and the body
 carries out.** The mind constructs the next action toward getting through the
 level and commands it as T5's test (§6.4); the body carries it out, or, with no
 command it can carry out, waits. What judges a command is the region's return,
-which scars the program when it does not hold. What else the mind sends out is a
+which scars the experience or hypothesis the expectation came from when it does
+not hold. What else the mind sends out is a
 question to its own memory: a store query, by cue, that it chooses itself
 (§6.4). The query is traced like any emission, so what the
 mind read is in `[event]`. What it writes, it writes as data (§9 `nascent`), with
 what it was built from.
 
 **Seeing is the body's; computing is the mind's.** The host takes the grid in as
-the engine returns it; working out what is in it is the mind's program.
+the engine returns it; working out what is in it is the mind's computing.
 
 ## What the mind is
 
@@ -112,8 +113,9 @@ inducer stands on its own. There are two (`--inducer`):
 Curiosity counts how often a kind of act reached a situation not met before
 (S2b). An act that takes a place may be put on any thing the inducer sees — a
 region of one colour, every one — and its kind is the thing's colour first,
-then its size, so what a colour did carries to a thing of it at another size; three other laws — a change (S2), somewhere new then a change (S2c), the
-two added (S2d) — are kept to be measured against it (`--curiosity`). With
+then its size, so what a colour did carries to a thing of it at another size; four other laws — a change (S2), somewhere new then a change (S2c), the
+two added (S2d), and something made not made before (B1, `made`: what a step
+made is the model's to say) — are kept to be measured against it (`--curiosity`). With
 `--attention` (off by default), what an act did is read not from everywhere but
 from the sixteen situations most like where the mind stands, each weighed by how
 alike — the inducer says how alike two states are — and the choice names the
