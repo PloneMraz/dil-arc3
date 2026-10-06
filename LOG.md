@@ -5386,3 +5386,20 @@ submitted. 25 of 25 exited 0, no traceback; 4,457 s.
 On the evidence of version 21 and the run here with and without it, Plone agreed
 to remove it: `learning.py` and CLAUDE.md as before `982eecb`. Next, version 22:
 `made` and C1, without it.
+
+### Version 22 (`101e93b`: `made`, C1, no FORESEEN_LAW): 13 levels, 0.430 — not submitted
+
+Notebook `dil-arc3-learning` version 22, grid, `made`, attention, 600 cycles, the
+25 games four at once. 25 of 25 exited 0, no traceback; 4,358 s.
+
+- **13 levels, 0.42982** (version 19: 15, 0.50169; version 20, the same with
+  FORESEEN_LAW: 15, 0.48834; version 21, S2b with FORESEEN_LAW: 13, 0.36395).
+- As version 20: ar25's first level, ls20 128 actions, bp35, m0r0 0.36, cd82's
+  first level lost. Unlike it: sc25's and sp80's first levels lost (version 20
+  had them, at 584 and 411 actions), tn36's first in more actions (1.98 for the
+  game, not 3.36), su15 and lf52 back to about version 19's.
+- So FORESEEN_LAW did harm with S2b (tn36, cd82, sp80) and good with `made`
+  (sc25, sp80, tn36). What each law gives a game is not stable across the
+  others: a change in the order of trying moves which first levels are reached.
+  None of the four versions is better than version 19 on the 25. Not submitted
+  (Plone: the result reported before any submission).
