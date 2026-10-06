@@ -28,8 +28,9 @@ grid as it came, and no cell is a target. What code keeps beside it is a record,
 never a reading of the grid: a state's identity (its hash). What an experience
 says — "from here, this act gave that" — is the mind's own (its learning's
 experiences). Code reads no grid for it: how alike two states are it does not
-say (0), and what a step made is the state it came to (Plone, 2026-10-06: all
-that reads the grid is the model's).
+say (0), what a step made is the state it came to, and a cell its program names
+is of no kind but "click" (Plone, 2026-10-06: all that reads the grid is the
+model's).
 
 WHEN IT THINKS. Only when no hypothesis the mind holds foresaw a step (the
 learning says so: `foreseen`): each answer costs seconds of a served model. It is
@@ -250,7 +251,9 @@ class LanguageInducer:
 
     def candidates(self, situation: str, state: Grid, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state: every act the region offers that takes
-        no cell, and an act that takes one at each cell its program names."""
+        no cell, and an act that takes one at each cell its program names, in the
+        order it names them — all of one kind: code reads nothing of the cell, so
+        which to try first is the order the model gave."""
         out: list[tuple[Act, tuple]] = []
         for a in sorted(offers):
             if a == self.organs.reset[0]:
@@ -273,7 +276,7 @@ class LanguageInducer:
                         x, y = int(cell[0]), int(cell[1])
                         if 0 <= y < len(state) and 0 <= x < len(state[y]) and (x, y) not in taken:
                             taken.add((x, y))
-                            cells.append(((a, x, y), ("click", state[y][x])))
+                            cells.append(((a, x, y), ("click",)))
                 except (ProgramError, TypeError, ValueError, IndexError):
                     cells = []
             self._targets[situation] = cells

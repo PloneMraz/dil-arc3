@@ -145,7 +145,7 @@ def targets(grid):
     inducer.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1))
     situation = inducer.situation(lit(1))
     assert inducer.candidates(situation, lit(1), (1, 6)) == [((1, None, None), ("act", 1)),
-                                                            ((6, 1, 0), ("click", 1))]
+                                                            ((6, 1, 0), ("click",))]
 
 
 def test_a_model_that_does_not_answer_leaves_the_mind_learning_as_before():

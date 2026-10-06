@@ -5451,3 +5451,18 @@ ar25, lp85, tu93 and lf52, ls20's from cycle 402 on (after its level, an outcome
 now its own experience: 354 experiences, not 344); hypotheses written 223 not
 574 in ls20 (the exact ones gone; so for each); each game 8-18% faster;
 conformance as before.
+
+### Two leftovers after the restructure (Plone)
+
+- **The language inducer read a cell for a click's kind** (`("click", colour)`).
+  Now every cell its program names is of one kind, `("click",)`, tried in the
+  order the program gave: code reads no cell of the grid for it.
+- **Dead scripts.** Not six but twenty-one scripts imported modules or names the
+  code no longer has (`arc3.perceive`, `seeing`, `interpret`, `model`, `effect`,
+  `respond`, `mind` of the two-mind era; `affordance_key`, `diff`,
+  `GAME_CHANNEL`, `game_transducer`). `scripts/README.md` had kept them on
+  purpose, as the source of numbers in this log; git keeps them as well, so they
+  were removed from the tree (Plone: no dead code; history in the text), and the
+  README says how to take one from `e1a3112` and run it against the commit it
+  was written for. Every script left imports against the code now; 356 tests
+  pass.
