@@ -5362,3 +5362,21 @@ Notebook `dil-arc3-learning` version 20, grid, `--curiosity made`, attention,
   clean; levels and score at least version 19's; 110 games inside the deadline):
   the score fell short, so it was not submitted; the day's submission went unused
   (Plone).
+
+### Version 21 (`148336a`: S2b, C1, FORESEEN_LAW): 13 levels, 0.364 — FORESEEN_LAW does harm
+
+Notebook `dil-arc3-learning` version 21, as version 19 (grid, S2b, attention,
+600 cycles, the 25 games four at once) but with C1 and FORESEEN_LAW; a test, not
+submitted. 25 of 25 exited 0, no traceback; 4,457 s.
+
+- **13 levels, 0.36395** (version 19: 15, 0.50169; version 20: 15, 0.48834).
+  tn36's first level lost (version 19: 33 actions, 3.36 for the game), cd82's
+  lost (as in version 20), sp80 271 → 411 actions (as in version 20); better:
+  su15 463 → 270, lf52 and vc33 a little (as in version 20). ls20, ar25, bp35 and
+  m0r0 as version 19: their changes in version 20 are `made`'s.
+- C1 acts only once a level has ended, and tn36, cd82 and sp80 changed in their
+  first. Run here, tn36 and sp80, S2b, attention, 600 cycles, with and without
+  FORESEEN_LAW (the code of `148336a`, the law's one line undone): without it,
+  tn36 33 actions and sp80 0.0986, version 19's own; with it, tn36 no level, sp80
+  0.0431. So FORESEEN_LAW, kept on the six and ft09 (2026-10-05), loses tn36's and
+  cd82's first levels on the 25.
