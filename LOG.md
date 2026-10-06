@@ -5497,3 +5497,17 @@ Plone passed on an older review; each finding was checked against the code now:
   holds — built, not run yet, each push held in the RTX Pro 6000's queue.
 
 356 tests pass.
+
+### Version 23 (`b6a95ac`): 13 levels, 0.499 — submitted as `56887238` (Plone)
+
+Notebook `dil-arc3-learning` version 23, from the code after the restructure:
+grid, S2b, attention, 600 cycles, the 25 games four at once — the configuration
+of the earlier submissions. 25 of 25 exited 0, no traceback; 4,368 s.
+
+- **13 levels, 0.49871** (version 19: 15, 0.50169). Every game as version 19 but
+  two, whose first levels came last in their run: cd82's (version 19: cycle 514,
+  513 actions) and sc25's (cycle 558, 557 actions), now not within the 600
+  cycles. Their scores were 0.055 and 0.020 of the 0.50.
+- Submitted at Plone's word once the Save & Run had run clean: `56887238`,
+  2026-10-06 17:35 UTC, PENDING; the day's one submission. Nothing is pushed to
+  Kaggle until it is scored.
