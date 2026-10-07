@@ -5757,3 +5757,17 @@ The six (S2b, attention, 600 cycles; no suspects), against version 23: vc33 69
 and 235 (288); ls20, tu93, lp85, lf52 as version 23; ar25 none (as version 23).
 0.571 (0.569). tu93 held 10 such hypotheses and ended 12 times, as before: no
 end came twice by the same pattern. Removed, not committed.
+
+### Version 26 (`a6c4563`, suspects): 15 levels, 0.515
+
+Notebook `dil-arc3-learning` version 26: grid, S2b, attention, suspects, 600
+cycles, the 25 games four at once. Not submitted. 25 of 25 played through,
+4,352 s (version 23: 4,359 s).
+
+- **15 levels, 0.51501** (version 23: 13, 0.49871; version 19: 15, 0.50169).
+- Gained: cn04 (1 level in 100 actions, baseline 29: 0.40), cd82 (538), ar25
+  (251), vc33's second level in 244 (288), bp35 140 (144). Lost: sp80 (version
+  23: 271 actions). ls20 381 (342); every other game as version 23.
+- Suspects borne out — the aim came where one said: cd82 2 (of 24 tested), cn04
+  1 (41), ar25 1 (20), bp35 1 (20), ls20 1 (16). Untested or never borne out
+  elsewhere; sp80 went 96 times toward suspects and tested 9, none borne out.
