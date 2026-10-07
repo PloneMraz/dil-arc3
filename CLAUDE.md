@@ -147,7 +147,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   built from it, when whether it holds changes; keeps each experience as a datum
   (`kind: experience`), revised in place as it changes
   (Plone, 2026-10-04: the whole store is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
-  predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
+  predict (at most `MAX_IMAGINED_STEPS` past where it has stood, or as many as
+  the run declares (`--look-ahead`), and
   `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
   only). **Reaching
   the aim is an experience too** (S4, Plone, 2026-09-28): the inducer, asked

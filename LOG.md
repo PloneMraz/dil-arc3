@@ -5683,3 +5683,6 @@ committed; two at once, lowest priority):
 - Hypotheses written: 228–375 a game (objects alone: 20–65). Time here: ls20
   1,596 s (objects alone 175 s; version 23 on Kaggle 992 s), the others 353–559 s.
 - Four games say little: ls20 five times better, tu93 lost both levels.
+- How far the mind looks ahead is now declared by the run (`--look-ahead`,
+  through `run_game.py`, `run_competition.py`, `build_dil_run.py`), 3 when not
+  given, so the 25 games can be run as measured here without changing grid's.

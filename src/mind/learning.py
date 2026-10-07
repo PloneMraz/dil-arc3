@@ -123,7 +123,8 @@ TALLIES: Final = ("holds", "supports", "fails")
 # How far it searches the situations it knows for a way. DECLARED: a bound on work.
 MAX_PATH_NODES: Final = 20_000
 # How many steps it looks ahead past the situations it has stood in, on what its
-# hypotheses predict. DECLARED: a bound on work.
+# hypotheses predict, unless the run declares another (`look_ahead`). DECLARED: a
+# bound on work.
 MAX_IMAGINED_STEPS: Final = 3
 # How many predictions one search for a way may make for situations it has not
 # stood in; past it, it looks no further past where it has stood. What it
@@ -281,7 +282,8 @@ class Learning:
     to expect, show it what came back, ask it what to do."""
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
-                 curiosity: str = CURIOSITY[0], attention: bool = False) -> None:
+                 curiosity: str = CURIOSITY[0], attention: bool = False,
+                 look_ahead: int = MAX_IMAGINED_STEPS) -> None:
         if curiosity not in CURIOSITY:
             raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer
@@ -293,6 +295,7 @@ class Learning:
         # store is the agent's memory: every change in what it learned is written).
         self._pending: list[Edge] = []
         self.attention = attention
+        self.look_ahead = look_ahead
         # For a choice being made: how alike each state met is to where it stands
         # (attention), and what the chosen act was weighed by.
         self._alike: dict[str, float] = {}
@@ -1168,7 +1171,7 @@ class Learning:
               avoid: set[tuple[str, Act]] | frozenset = frozenset()) -> list[tuple[Act, Hypothesis]] | None:
         """The shortest way from `start` to a situation `goal` holds of, looking
         ahead by what its held hypotheses predict — through situations it has stood
-        in, and at most MAX_IMAGINED_STEPS past them — whose first act is none of
+        in, and at most `look_ahead` past them — whose first act is none of
         `avoid` there: each step an act and the hypothesis it goes by; None if none."""
         prev: dict[str, tuple[str, Act, Hypothesis] | None] = {start: None}
         past: dict[str, int] = {start: 0}          # steps taken past where it has stood
@@ -1181,7 +1184,7 @@ class Learning:
                     node, act, h = prev[node]
                     path.append((act, h))
                 return path[::-1]
-            if past[node] >= MAX_IMAGINED_STEPS:
+            if past[node] >= self.look_ahead:
                 continue
             for act, to, h, said in self._ways(node, offers):
                 if to in prev or (node == start and (start, act) in avoid):

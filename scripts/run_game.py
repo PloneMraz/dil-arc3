@@ -37,7 +37,7 @@ from arc3.host import create_source, declaration
 from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
-from mind.learning import ATTENTION_K, CURIOSITY
+from mind.learning import ATTENTION_K, CURIOSITY, MAX_IMAGINED_STEPS
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.objects import ObjectsInducer
 from mind.models.grid import GridInducer
@@ -81,6 +81,9 @@ ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
 ap.add_argument("--attention", action="store_true",
                 help="weigh how much an act is wanted by what it did in the situations most like where it "
                      "stands, not everywhere (idea (a), mind/learning.py: ATTENTION_K)")
+ap.add_argument("--look-ahead", type=int, default=MAX_IMAGINED_STEPS,
+                help="how many steps the mind looks ahead past where it has stood, on what its hypotheses "
+                     "predict (mind/learning.py: MAX_IMAGINED_STEPS)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -117,7 +120,7 @@ elif a.inducer == "objects":
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
-            attention=a.attention)
+            attention=a.attention, look_ahead=a.look_ahead)
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -197,6 +200,8 @@ print(f"  why it chose          : {dict(why)}")
 if a.curiosity != CURIOSITY[0]:
     print(f"  curiosity             : {a.curiosity}  changes by kind "
           f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")
+if a.look_ahead != MAX_IMAGINED_STEPS:
+    print(f"  look-ahead            : {a.look_ahead} steps past where it stood")
 if a.attention:
     print(f"  attention             : the {ATTENTION_K} experiences most alike")
 if a.inducer == "language":
