@@ -5580,3 +5580,28 @@ tu93 and ar25 and lost ls20 and sp80: no progress on the 25. Removed: `grid.py`
 and its test as before `53ce2ff`. Like B1, FORESEEN_LAW and WAY_LAW, it changed
 which first levels were reached by the order of trying, not how many — the mind
 explores until it meets the aim, and does not know where the aim lies.
+
+### The objects inducer, step 1: moves and blocks (on trial; Plone: grid is history if it does better)
+
+Plone approved an inducer that says what an act does to a thing, wherever it
+lies (`src/mind/models/objects.py`; grid's reading copied, so it stands on its
+own — Plone's "cách 1"). Step 1: **move** (an act that takes no place moves what
+lies as a pattern by (rows, columns), leaving and entering cells of one colour)
+and **block** (it does not move that pattern where what lies in its way is of
+these colours, or the edge — from the act's own moves, had back from the mind's
+memory); for clicks, grid's still. `--inducer objects` in `run_game.py`,
+`run_competition.py`, `build_dil_run.py`. 359 tests pass.
+
+Here, ls20, tu93, g50t, ka59 (S2b, attention, 600 cycles, two at once, at the
+lowest priority), against version 23 (grid):
+
+- **It learns what the games do, in a handful of hypotheses**: ls20 15 (grid
+  wrote ~200), each act a move of the 25-cell piece by 5 cells and a block of it
+  by walls (0 against); g50t 21 (moves by 6, blocks 0 against); ka59 34 (moves
+  by 3); tu93 16 (moves by 6). Moves fail where something else changes as well.
+- **Levels fewer**: ls20's first lost (version 23: 342 actions), tu93 434 and
+  109 actions (version 23: 454 and 50; 0.100 for the game, not 0.459); g50t and
+  ka59 none, as before. Blocked steps fewer (ka59 128 → 30), the ways taken more
+  (ls20 346 choices) — as with P1: foreseeing what does nothing sends the mind
+  elsewhere, not toward the aim. Better foresight of the world does not tell it
+  where to go; what brings the aim (step 3) is what it lacks.

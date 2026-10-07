@@ -39,6 +39,7 @@ from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
+from mind.models.objects import ObjectsInducer
 from mind.models.grid import GridInducer
 from mind.models.language import ModelEndpoint
 from mind.models.language_inducer import LanguageInducer
@@ -69,9 +70,10 @@ ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
-ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
+ap.add_argument("--inducer", choices=("grid", "objects", "language"), default="grid",
                 help="the mind's model, what its learning computes with: hypotheses that reach past where they "
-                     "were met (mind/models/grid.py), or programs a served language model writes "
+                     "were met (mind/models/grid.py), moves of things (mind/models/objects.py, on trial), or "
+                     "programs a served language model writes "
                      "(mind/models/language_inducer.py, at --endpoint)")
 ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
                 help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
@@ -110,6 +112,8 @@ extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
 if a.inducer == "language":
     inducer = LanguageInducer(ARC_ORGANS, ModelEndpoint(url=a.endpoint, model=a.model,
                                                         max_tokens=a.max_tokens, extra=extra))
+elif a.inducer == "objects":
+    inducer = ObjectsInducer(ARC_ORGANS)
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
