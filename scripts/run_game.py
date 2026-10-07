@@ -83,8 +83,8 @@ ap.add_argument("--attention", action="store_true",
 ap.add_argument("--look-ahead", type=int, default=MAX_IMAGINED_STEPS,
                 help="how many steps the mind looks ahead past where it has stood, on what its hypotheses "
                      "predict (mind/learning.py: MAX_IMAGINED_STEPS)")
-ap.add_argument("--suspects", action="store_true",
-                help="before the aim has come, test where its model says it may lie (mind/learning.py)")
+ap.add_argument("--no-suspects", dest="suspects", action="store_false",
+                help="do not test, before the aim has come, where its model says it may lie (mind/learning.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")

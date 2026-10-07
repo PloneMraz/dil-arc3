@@ -227,6 +227,7 @@ def test_clicking_that_never_did_anything_is_wanted_less_whatever_is_left_to_cli
     # thing to click was a new kind, so clicking went on (LOG.md). The action is
     # chosen first, over every kind of it.
     mind, cycle, data, events = loop()
+    mind.learning.suspects = mind.learning._suspect_due = False     # curiosity alone: no suspect to go to
     mind.learning._actions = {6: [20, 0, 0], 1: [5, 5, 0]}
     mind.learning._kinds = {("act", 1): [5, 5, 0]}
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 6)))

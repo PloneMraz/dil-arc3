@@ -211,14 +211,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   share of cells equal off the clock; the language inducer's, none). The
   choice it made so names the experiences it went by (`attended`, each with its
   weight) and is built from their hypotheses. Off by default.
-- **Suspects, an option** (Plone, 2026-10-07): with `--suspects`, before the
-  aim has come the learning asks its inducer where it may lie
+- **Suspects** (Plone, 2026-10-07; on by default since 2026-10-08, `--no-suspects`
+  to leave them out): before the aim has come the learning asks its inducer where it may lie
   (`Inducer.suspects`) — on the first state and after each aim or end — and
   holds each as a hypothesis about the aim, untested (neither borne out nor
   not): tried where it applies as a held one is, written as any is, dropped when
   the region's report does not bear it out. Grid suspects each thing of a colour
-  no other thing has, one for each act; the language inducer, none. Off by
-  default; measured on the six (LOG.md).
+  no other thing has, one for each act; the language inducer, none (measured:
+  LOG.md).
 - **The learning is absolutely neutral** (Plone, 2026-09-29).
   `src/mind/learning.py` belongs to the mind and serves its learning in every
   environment and every situation — not games, not work, not any particular

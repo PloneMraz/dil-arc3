@@ -47,8 +47,8 @@ THE LOOP, one step at a time:
   with the step's report and what it expected of the step, the inducer says
   what brings the aim — hypotheses that predict no state, only the report —
   held and written as any are, weighed by each report where they applied.
-- **Where the aim may lie** (an option, `suspects`; off unless the run declares
-  it). Before the aim has come, the inducer is asked,
+- **Where the aim may lie** (`suspects`; on unless the run declares it off).
+  Before the aim has come, the inducer is asked,
   on the first state and on each the region starts anew in (after the aim, or
   an end), where it may lie (`Inducer.suspects`; Plone, 2026-10-07): each is a
   hypothesis about the aim held untested — neither borne out nor not — written
@@ -290,7 +290,7 @@ class Learning:
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
                  curiosity: str = CURIOSITY[0], attention: bool = False,
-                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = False) -> None:
+                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = True) -> None:
         if curiosity not in CURIOSITY:
             raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer

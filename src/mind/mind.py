@@ -108,7 +108,7 @@ class Mind:
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
                  curiosity: str = CURIOSITY[0], attention: bool = False,
-                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = False) -> None:
+                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = True) -> None:
         # Its learning is its own, whatever its model: the model's seat takes the
         # inducer, and the learning computes with it (Plone, 2026-09-28). Its law of
         # curiosity is the learning's (`learning.CURIOSITY`), and so is whether it

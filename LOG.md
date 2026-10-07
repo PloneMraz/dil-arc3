@@ -5771,3 +5771,13 @@ cycles, the 25 games four at once. Not submitted. 25 of 25 played through,
 - Suspects borne out — the aim came where one said: cd82 2 (of 24 tested), cn04
   1 (41), ar25 1 (20), bp35 1 (20), ls20 1 (16). Untested or never borne out
   elsewhere; sp80 went 96 times toward suspects and tested 9, none borne out.
+
+### 2026-10-08
+
+### Suspects on by default (Plone)
+
+After version 26, Plone: suspects in the code by default. `Learning` and `Mind`
+take `suspects=True`; `--no-suspects` leaves them out (`run_game.py`,
+`run_competition.py`, `build_dil_run.py`). Two tests of curiosity alone turn
+them off; one counting what is restored counts what was said of a step. 358
+tests pass.
