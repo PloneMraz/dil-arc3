@@ -225,6 +225,13 @@ class Inducer(Protocol):
     def describe(self, form: Any, situation_of: Any) -> dict[str, Any]:
         """A hypothesis, said as data."""
 
+    def suspects(self, state: State, report: dict[str, Any]) -> list[Any]:
+        """Where the aim may lie, before it has come (Plone, 2026-10-07): forms of
+        hypotheses that say an act, where they apply, brings `report` — what the
+        region reports when the aim comes. The mind holds each untested, goes
+        where it applies to test it, and drops it when the region does not bear
+        it out. None, for a model that cannot say."""
+
     def keep(self, form: Any, recall: Any) -> None:
         """A form it said is a hypothesis the mind holds: `recall()` gives it back
         as the mind's memory holds it — in hand while new, read from the store

@@ -58,6 +58,7 @@ ap.add_argument("--attention", action="store_true",
                 help="passed to run_game.py (mind/learning.py: ATTENTION_K)")
 ap.add_argument("--look-ahead", type=int, default=None,
                 help="passed to run_game.py (mind/learning.py: MAX_IMAGINED_STEPS)")
+ap.add_argument("--suspects", action="store_true", help="passed to run_game.py (mind/learning.py)")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
@@ -147,7 +148,8 @@ while queue or running:
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
              "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"),
              "--inducer", a.inducer, "--curiosity", a.curiosity, *(["--attention"] if a.attention else []),
-             *(["--look-ahead", str(a.look_ahead)] if a.look_ahead is not None else [])],
+             *(["--look-ahead", str(a.look_ahead)] if a.look_ahead is not None else []),
+             *(["--suspects"] if a.suspects else [])],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()

@@ -47,8 +47,15 @@ THE LOOP, one step at a time:
   with the step's report and what it expected of the step, the inducer says
   what brings the aim — hypotheses that predict no state, only the report —
   held and written as any are, weighed by each report where they applied.
+- **Where the aim may lie** (an option, `suspects`; off unless the run declares
+  it). Before the aim has come, the inducer is asked,
+  on the first state and on each the region starts anew in (after the aim, or
+  an end), where it may lie (`Inducer.suspects`; Plone, 2026-10-07): each is a
+  hypothesis about the aim held untested — neither borne out nor not — written
+  as any is, and tried where it applies, as a held one is; the region's report
+  bears it out, or not, and one not borne out is dropped.
 - **Choosing.** Toward the aim it has reached before, or where its held
-  hypotheses say an act brings it; else what it knows least
+  hypotheses — or those untested — say an act brings it; else what it knows least
   (curiosity, below) — an act its hypotheses say leads where it has stood last,
   never out of reach;
   else the shortest way to where something is left to try, looking ahead by what
@@ -283,7 +290,7 @@ class Learning:
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
                  curiosity: str = CURIOSITY[0], attention: bool = False,
-                 look_ahead: int = MAX_IMAGINED_STEPS) -> None:
+                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = False) -> None:
         if curiosity not in CURIOSITY:
             raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer
@@ -386,6 +393,10 @@ class Learning:
         # Hypotheses about the aim (S4): those that applied to the step being
         # learned, weighed by its report; the step; whether any is held yet.
         self._aim_applied: list[Hypothesis] = []
+        # Whether to ask where the aim may lie at the next step: on the first, and
+        # after the aim or an end, where the region starts anew.
+        self.suspects = suspects
+        self._suspect_due = suspects
         self._last_step: tuple[str, Act, Step, Any] | None = None
         self._expected_from: tuple[str, ...] = ()
         self._aim_held = False
@@ -577,7 +588,7 @@ class Learning:
     def _aims(self, situation: str, act: Act, state: Any = None) -> list[Hypothesis]:
         """The held hypotheses that say this act, here, brings the aim (S4)."""
         return [h for h, said, to in self._applicable(situation, act, state)
-                if to is None and h.holds and self._reached(said.fields)]
+                if to is None and (h.holds or h.supports == h.fails == 0) and self._reached(said.fields)]
 
     def _aims_at(self, situation: str, offers: tuple[int, ...]) -> list[tuple[Act, Hypothesis]]:
         """The acts here its held hypotheses say bring the aim, each with the one."""
@@ -925,6 +936,9 @@ class Learning:
         if known is None or not foreseen:
             # Never met, or what came nothing it holds foresaw: it asks what this suggests.
             self._new = self._induce(source_raw, act, step, foreseen, unit)
+        if self._suspect_due:
+            self._suspect_due = False
+            self._new = [*self._new, *self._suspect(step.after, unit)]
         # The experience of this outcome: met again, or one of its own.
         outcomes = self._outcomes.setdefault((source, act), [])
         edge = next((e for e in outcomes if self._state_of[e.to] == to), None)
@@ -989,6 +1003,8 @@ class Learning:
                 self._new = [*self._new, *aims]
         if said.get(self.organs.state_field) in self.organs.ended:
             edge.ended += 1
+        if self._reached(said) or said.get(self.organs.state_field) in self.organs.ended:
+            self._suspect_due = self.suspects
         if self._reached(said) and edge.act[0] != self.organs.reset[0]:
             edge.reached += 1
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
@@ -1001,6 +1017,26 @@ class Learning:
         self._touch(edge)
         writes += self._experiences((*units, *self._expected_from))
         return writes
+
+    def _suspect(self, state: Any, unit: Any) -> list[Hypothesis]:
+        """Where the aim may lie, by its inducer: each a hypothesis held untested
+        (neither borne out nor not), save one it holds already. Only for an aim
+        whose report it knows (a goal's fields)."""
+        fields = ((self._aim or {}).get("reached_when") or {}).get("fields")
+        if not fields:
+            return []
+        out = []
+        for form in self.inducer.suspects(state, dict(fields)):
+            key = self.inducer.key(form)
+            if key in self._keys:
+                continue
+            h = self._keys[key] = Hypothesis(form, supports=0, unit=unit)
+            self._add(h)
+            out.append(h)
+            self.inducer.keep(form, lambda h=h: h.form)
+        if out:
+            self._aim_held = True
+        return out
 
     def _describe(self, h: Hypothesis) -> dict[str, Any]:
         return {"inducer": self.inducer.kind, **self.inducer.describe(h.form, self._situation_of),

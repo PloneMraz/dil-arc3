@@ -1,7 +1,7 @@
 """Build the Kaggle dataset and notebook that run dil-arc3.
 
     python scripts/kaggle/build_dil_run.py [--game a,b] [--cycles 60] [--concurrency 4]
-        [--curiosity LAW] [--attention] [--look-ahead N] [--notebook SLUG]
+        [--curiosity LAW] [--attention] [--look-ahead N] [--suspects] [--notebook SLUG]
     python scripts/kaggle/build_dil_run.py --served [--model 35b-a3b|27b|flash-next] [--notebook SLUG]
         [--max-tokens 12288] [--max-model-len 65536] ...
     python scripts/kaggle/build_dil_run.py --probe
@@ -507,6 +507,8 @@ def main() -> None:
     ap.add_argument("--look-ahead", type=int, default=None,
                     help="how many steps the mind looks ahead past where it has stood (mind/learning.py: "
                          "MAX_IMAGINED_STEPS, when not given)")
+    ap.add_argument("--suspects", action="store_true",
+                    help="before the aim has come, the mind tests where its model says it may lie")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -549,7 +551,8 @@ def main() -> None:
         run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity,
                                                                         *(["--attention"] if a.attention else []),
                                                                         *(["--look-ahead", str(a.look_ahead)]
-                                                                          if a.look_ahead is not None else [])]
+                                                                          if a.look_ahead is not None else []),
+                                                                        *(["--suspects"] if a.suspects else [])]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]

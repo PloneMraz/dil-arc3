@@ -83,6 +83,8 @@ ap.add_argument("--attention", action="store_true",
 ap.add_argument("--look-ahead", type=int, default=MAX_IMAGINED_STEPS,
                 help="how many steps the mind looks ahead past where it has stood, on what its hypotheses "
                      "predict (mind/learning.py: MAX_IMAGINED_STEPS)")
+ap.add_argument("--suspects", action="store_true",
+                help="before the aim has come, test where its model says it may lie (mind/learning.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -117,7 +119,7 @@ if a.inducer == "language":
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
-            attention=a.attention, look_ahead=a.look_ahead)
+            attention=a.attention, look_ahead=a.look_ahead, suspects=a.suspects)
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -199,6 +201,10 @@ if a.curiosity != CURIOSITY[0]:
           f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")
 if a.look_ahead != MAX_IMAGINED_STEPS:
     print(f"  look-ahead            : {a.look_ahead} steps past where it stood")
+if a.suspects:
+    tested = [h for key, h in mind.learning._keys.items() if key[0] == "suspect"]
+    print(f"  suspects              : {len(tested)}  tested {sum(h.supports + h.fails > 0 for h in tested)}  "
+          f"borne out {sum(h.supports > 0 for h in tested)}")
 if a.attention:
     print(f"  attention             : the {ATTENTION_K} experiences most alike")
 if a.inducer == "language":

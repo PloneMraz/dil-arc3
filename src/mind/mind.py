@@ -108,13 +108,13 @@ class Mind:
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
                  curiosity: str = CURIOSITY[0], attention: bool = False,
-                 look_ahead: int = MAX_IMAGINED_STEPS) -> None:
+                 look_ahead: int = MAX_IMAGINED_STEPS, suspects: bool = False) -> None:
         # Its learning is its own, whatever its model: the model's seat takes the
         # inducer, and the learning computes with it (Plone, 2026-09-28). Its law of
         # curiosity is the learning's (`learning.CURIOSITY`), and so is whether it
         # attends to the experiences most like where it stands (`learning.ATTENTION_K`).
         self.learning: Learner = Learning(inducer, organs, priors, curiosity=curiosity, attention=attention,
-                                           look_ahead=look_ahead)
+                                           look_ahead=look_ahead, suspects=suspects)
         self.organs = organs
         self.frame_calls = 0
         # For the run's report only, never the field: whether each expectation of

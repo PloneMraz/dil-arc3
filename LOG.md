@@ -5710,3 +5710,36 @@ Plone had agreed to remove it should it not do better than grid; it did not.
 `src/mind/models/objects.py`, its tests and `--inducer objects` are gone; what
 it was and did is above, its code at `73a7ce3`. `--look-ahead` stays, declared
 by the run, 3 when not given. 356 tests pass.
+
+### Where the aim may lie, before it has come: suspects (an option; Plone)
+
+Read from version 23's stores (25 games, about 15,000 actions): 29% of the
+actions changed nothing — 2,341 untried acts the inducer did not foresee, 1,874
+acts its hypotheses had foreseen would change nothing (S3: tried last, never out
+of reach; 15% of them reached somewhere new); 17% were walks back to where
+something was left to try; 193 ends. The score is three levels near the human
+baseline (tn36, lp85, r11l); every other level took 3 to 20 times the baseline.
+Before the aim first comes, the mind has nothing to go toward: it covers.
+
+Plone agreed to give it something to test. `Inducer.suspects(state, report)`:
+where the aim may lie, as hypotheses that an act brings `report` there. The
+learning (`suspects=True`, `--suspects`; off by default) asks on the first
+state and after each aim or end, holds each untested (0 for, 0 against — tried
+where it applies as a held one is, `_aims`), writes it as any hypothesis, and
+the region's report bears it out or not; one not borne out is dropped. Grid
+suspects each thing of a colour no other thing has: for an act that takes a
+place, put on it; for any other, taken once something has come near it (within
+its own width or height), it still lying as it was; one for each act. The
+language inducer suspects nothing. 358 tests pass.
+
+The six games (S2b, attention, 600 cycles, two at once, lowest priority),
+against version 23:
+
+- First (near: the cells next to it): ar25 1 level in 204 actions (version 23:
+  none); vc33 69 and 244 (version 23: 69 and 288); ls20 391 (342); tu93, lp85,
+  lf52 as version 23. No suspect borne out in 37 tested.
+- Then (near: within its own size): ar25 251; vc33 69 and 244; ls20 381; the
+  others as before. Tested: ls20 16 (1 borne out), ar25 20 (1), lf52 8, vc33 1;
+  tu93 91 suspects, none tested — its piece stops a gap of three cells short of
+  the goal, outside "near"; lp85 none (no colour held by one thing alone).
+- The six: 0.578 (version 23 on the same six: 0.569).
