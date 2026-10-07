@@ -46,6 +46,11 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
 
 - **Still** — "this act changes nothing (off the clock)": for an act that takes
   a place, put on a cell of this colour; for any other, anywhere.
+- **Blocked** — "this act changes nothing where what last moved lies as it does
+  now, with what lies around it": suggested when an act that takes no place
+  changed nothing, what last moved read from the recent steps. Where the mover
+  and its ring lie so again, the act is foreseen to change nothing, and is tried
+  after what is not foreseen (the learning's S3).
 - **Rewrite** — "this act rewrites, in each part of the grid it changes, the
   cells L into R": a part is changed cells near one another; its L is every cell
   of the box around them, as it was, and R the cells that changed, as they
@@ -194,6 +199,19 @@ class StillForm:
     @property
     def key(self) -> tuple:
         return ("still", self.act, self.colour)
+
+
+@dataclass(eq=False)
+class BlockedForm:
+    """This act, which takes no place, changes nothing where `part` lies — what
+    last moved, as it is, with the cells around it (the ring) as they are."""
+
+    act: int
+    part: "Part"
+
+    @property
+    def key(self) -> tuple:
+        return ("blocked", self.act, self.part)
 
 
 # What lies past the grid's edge, in a ring.
@@ -464,6 +482,10 @@ class GridInducer:
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if not changed:
             forms.append(StillForm(act[0], before[act[2]][act[1]] if placed else None))
+            if not placed:
+                blocked = self._blocked(act, before, evidence)
+                if blocked is not None:
+                    forms.append(blocked)
             return forms
         if len(changed) > BIG_CHANGE:
             return forms
@@ -544,6 +566,53 @@ class GridInducer:
         return [AimForm(act=act[0], placed=placed, parts=tuple(found),
                         colour=before[act[2]][act[1]] if placed else None, status=dict(report))]
 
+    def _blocked(self, act: Act, before: Grid, evidence) -> BlockedForm | None:
+        """An act that takes no place changed nothing: that it changes nothing where
+        what last moved lies as it does now, with what lies around it (2026-10-06).
+        What last moved is read from the recent steps: in the latest that changed
+        anything off the clock, the cells changed into a colour other than the one
+        most around them — what came there, not what was left — if they lie so
+        still."""
+        for i in range(len(evidence) - 2, -1, -1):
+            step, _ = evidence[i]
+            b, a = step.before, step.after
+            rows = min(len(b), len(a), len(before))
+            changed = [(r, c) for r in range(rows) if r not in self.clock
+                       for c in range(min(len(b[r]), len(a[r]), len(before[r])))
+                       if c not in self.clock_columns and b[r][c] != a[r][c]]
+            if not changed:
+                continue
+            if len(changed) > MAX_REWRITE_CELLS:
+                return None
+            r0, r1 = min(r for r, _ in changed), max(r for r, _ in changed)
+            c0, c1 = min(c for _, c in changed), max(c for _, c in changed)
+            around: dict[int, int] = {}
+            for r in range(r0 - 1, r1 + 2):
+                for c in range(c0 - 1, c1 + 2):
+                    if not (r0 <= r <= r1 and c0 <= c <= c1) and 0 <= r < len(a) and 0 <= c < len(a[r]):
+                        around[a[r][c]] = around.get(a[r][c], 0) + 1
+            ground = max(around, key=around.get) if around else None
+            came = [(r, c) for r, c in changed if a[r][c] != ground]
+            if not came or any(before[r][c] != a[r][c] for r, c in came):
+                return None   # nothing came, or it lies otherwise now
+            r0, r1 = min(r for r, _ in came), max(r for r, _ in came)
+            c0, c1 = min(c for _, c in came), max(c for _, c in came)
+
+            def at(r: int, c: int) -> int:
+                return before[r][c] if 0 <= r < len(before) and 0 <= c < len(before[r]) else OFF_GRID
+            box = [(r, c) for r in range(r0, r1 + 1) if r not in self.clock for c in range(c0, c1 + 1)
+                   if c not in self.clock_columns]
+            ring = [(r, c) for r in range(r0 - 1, r1 + 2) if r not in self.clock for c in range(c0 - 1, c1 + 2)
+                    if not (r0 <= r <= r1 and c0 <= c <= c1) and c not in self.clock_columns]
+            seen: dict[int, int] = {}
+            for r, c in box:
+                seen[before[r][c]] = seen.get(before[r][c], 0) + 1
+            box.sort(key=lambda rc: (seen[before[rc[0]][rc[1]]], rc))
+            return BlockedForm(act=act[0], part=Part(lhs=tuple((r - r0, c - c0, before[r][c]) for r, c in box),
+                                                     ring=tuple((r - r0, c - c0, at(r, c)) for r, c in ring),
+                                                     rhs=(), place=None))
+        return None
+
     def _thing_at(self, grid: Grid, x: int, y: int) -> list[tuple[int, int]]:
         """The cells of one colour joined side to side to the cell at (x, y)."""
         colour, cells, stack, seen = grid[y][x], [], [(y, x)], {(y, x)}
@@ -577,6 +646,13 @@ class GridInducer:
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if isinstance(form, AimForm):
             return self._aim_predict(form, placed, situation, state, act)
+        if isinstance(form, BlockedForm):
+            if placed:
+                return None
+            corner = self._lies(form.part, situation, state)
+            if corner is None or not self._fits(form.part.ring, corner, state):
+                return None
+            return Prediction(state=state)
         if isinstance(form, StillForm):
             if placed != (form.colour is not None):
                 return None
@@ -672,6 +748,10 @@ class GridInducer:
     def describe(self, form: Any, situation_of) -> dict[str, Any]:
         if isinstance(form, StillForm):
             return {"form": "still", "act": form.act, "colour": form.colour}
+        if isinstance(form, BlockedForm):
+            p = form.part
+            return {"form": "blocked", "act": form.act,
+                    "parts": [{"from": [list(c) for c in p.lhs], "ring": [list(c) for c in p.ring], "place": None}]}
         if isinstance(form, AimForm):
             return {"form": "aim", "act": form.act, "placed": form.placed, "colour": form.colour,
                     "status": form.status,
@@ -686,10 +766,12 @@ class GridInducer:
         """It computes with no form it said again: the mind's memory holds them."""
 
     def restore(self, payload: dict[str, Any]) -> Any:
-        """A still, rewrite or aim hypothesis from its datum alone."""
+        """A still, blocked, rewrite or aim hypothesis from its datum alone."""
         form = payload.get("form")
         if form == "still":
             return StillForm(act=payload["act"], colour=payload["colour"])
+        if form == "blocked":
+            return BlockedForm(act=payload["act"], part=_part(payload["parts"][0]))
         parts_ = tuple(_part(p) for p in payload["parts"])
         if form == "aim":
             return AimForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"],
@@ -706,5 +788,6 @@ def _part(said: dict[str, Any]) -> Part:
 
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
-           "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer",
+           "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "BlockedForm",
+           "GridInducer",
            "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]

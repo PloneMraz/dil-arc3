@@ -124,3 +124,18 @@ def test_by_the_law_made_a_whole_never_met_is_not_new_when_each_part_was_made_be
         return model._kinds[("act", 1)][:2]
     assert counted("new") == [6, 3], "somewhere new: two pieces, then the last whole, never met"
     assert counted("made") == [6, 4], "made: each way of each piece once; the last whole made nothing new"
+
+
+def test_a_move_that_changed_nothing_is_foreseen_where_what_moved_lies_so_again():
+    from mind.models.grid import BlockedForm
+    inducer = GridInducer(ARC_ORGANS)
+    stuck = board((1, 2), wall=[(1, 3)])                                   # a wall where it would go next
+    moved = Step(board((1, 1), wall=[(1, 3)]), (4, None, None), stuck)     # the piece moved right
+    forms = inducer.induce(inducer.identity(stuck), (4, None, None), stuck, stuck,
+                           evidence=((moved, None), (Step(stuck, (4, None, None), stuck), None)))
+    blocked = next(f for f in forms if isinstance(f, BlockedForm))
+    again = board((4, 2), wall=[(4, 3)])
+    assert predicted(inducer, blocked, again, (4, None, None)) == again, "the piece, the wall beside it: nothing"
+    free = board((4, 2))
+    assert predicted(inducer, blocked, free, (4, None, None)) is None, "no wall beside it: it says nothing"
+    assert predicted(inducer, blocked, again, (3, None, None)) is None, "another act: it says nothing"

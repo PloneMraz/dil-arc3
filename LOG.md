@@ -5522,3 +5522,27 @@ COMPLETE, public score **0.25**, read 2026-10-07 01:29 UTC. Version 18
 Run gave 13 levels, 0.499, the same as version 18's but for two first levels that
 had come last in their run. Which hidden games it completed levels in is not
 shown. Kaggle is free to use again.
+
+### P1: a blocked hypothesis for an act that takes no place (on trial)
+
+Of the actions before a first level in version 19, many changed nothing: keys
+that met a wall (cd82 182 of 452, tu93 107 of 446, ls20 88 of 340, g50t 141,
+ka59 120) — each a situation never met, so nothing foresaw it — and clicks on a
+colour already known to do nothing (su15 267, s5i5 261, sb26 262, ft09 576).
+P1 (Plone: tried first): when an act that takes no place changes nothing, the
+grid inducer suggests that it changes nothing where what last moved lies as it
+does now, with the cells around it as they are (`BlockedForm`); what last moved
+is read from the recent steps — in the latest that changed anything, the cells
+that came to a colour other than the one most around them. Where it lies so
+again, the act is foreseen to change nothing and is tried after what is not
+(S3 stands). 357 tests pass.
+
+Here, ten games, S2b, attention, 600 cycles, against version 23's scorecard:
+tu93's first level 454 → 300 actions and its second 50 → 45 (0.459 → 0.571);
+ar25's first level (531 actions); ls20's lost (342 actions in version 23); the
+rest the same; the ten's scores summed 3.414 → 3.521. Blocked steps fewer (ka59
+128 → 75, g50t 141 → 101, tu93 107 → 74), but the mind went elsewhere instead
+— the ways it took grew (ls20 130 → 350 choices, g50t 318 → 414): with the acts
+here foreseen, it goes to an act it cannot foresee, however far. Two runs of the
+25 here at once, 24 processes, starved the desktop (VS Code crashed) and were
+lost; the 25 are measured on Kaggle instead.
