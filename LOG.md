@@ -5572,3 +5572,11 @@ Notebook `dil-arc3-learning` version 24: version 23's configuration with P1. 25 
   sp80's (271); the other 21 the same.
 - The ten games run here before came out on Kaggle exactly as here (ar25, tu93,
   ls20 and the rest), as the runs are deterministic.
+
+### P1 removed (Plone)
+
+On version 24 (12 levels, 0.499, against version 23's 13, 0.499) it gained
+tu93 and ar25 and lost ls20 and sp80: no progress on the 25. Removed: `grid.py`
+and its test as before `53ce2ff`. Like B1, FORESEEN_LAW and WAY_LAW, it changed
+which first levels were reached by the order of trying, not how many — the mind
+explores until it meets the aim, and does not know where the aim lies.
