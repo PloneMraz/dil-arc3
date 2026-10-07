@@ -5605,3 +5605,35 @@ lowest priority), against version 23 (grid):
   (ls20 346 choices) — as with P1: foreseeing what does nothing sends the mind
   elsewhere, not toward the aim. Better foresight of the world does not tell it
   where to go; what brings the aim (step 3) is what it lacks.
+
+### The objects inducer, step 3: what brings the aim, as a relation (on trial)
+
+Plone approved step 3 before step 2 (clicks): **aim** — an act that took no
+place and brought the aim moved a pattern into cells of these colours (or, when
+it entered none, beside them); it says so again wherever that pattern, moved by
+that act, enters those colours, whatever the layout. Read from the act's own
+moves, had back from the mind's memory, or from the grid the stack held before
+its last (C1's `through`). Two things it had to learn to read the step that
+brought tu93's aim: a pattern that turns as it moves (`after`), and the
+pattern's colours held before and after (the goal is drawn over as the level
+ends). Replayed on tu93's two levels gained: both read as "moved into 14".
+360 tests pass.
+
+Measured here (ls20, tu93, g50t, ka59; S2b, attention, 600 cycles, two at once,
+lowest priority) with the learning looking up to 32 steps past where it stood,
+not 3 (`MAX_IMAGINED_STEPS`; not committed, since it changes grid's runs too and
+was not measured there):
+
+- ls20 1 level, 564 actions (step 1: none; grid, version 23: 342); tu93 301 and
+  80 actions, 0.187 (step 1: 434 and 109, 0.100; grid: 454 and 50, 0.459); g50t
+  and ka59 none, as before.
+- **The aims it read never steered a choice.** tu93 held two (acts 1 and 2 into
+  14, 1 for, 0 against), ls20 one (act 1 into 5 and 9); no choice in the four
+  runs was made "toward where its hypotheses say an act brings the aim". In
+  tu93's third level (cycles 382–599) the goal is entered from the right, by
+  act 3, for which no aim was read, and in 218 cycles the piece never stood one
+  step from it. What it gained over step 1 is therefore not the aim's doing.
+- Seen in the stores: each act's move is held once for each way the piece
+  faces (tu93: about 60 move hypotheses for four acts), and RESET is read as a
+  move as well (act 0, by the shift between where the piece stood and its
+  start).

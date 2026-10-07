@@ -69,3 +69,23 @@ def test_its_hypotheses_come_back_from_their_datum():
         assert inducer.key(again) == inducer.key(form)
         for state in (board((5, 3)), board((5, 1), walls=[(5, 3), (6, 3)])):
             assert predicted(inducer, again, state) == predicted(inducer, form, state)
+
+
+def test_what_brought_the_aim_is_a_relation_that_holds_on_another_layout():
+    from mind.models.objects import AimForm
+    inducer = ObjectsInducer(ARC_ORGANS)
+    move = moved(inducer)
+    inducer.keep(move, lambda: move)
+    levelled = {"stateTo": "NOT_FINISHED", "levelsDelta": 1, "depthDelta": 0}
+    before = board((1, 1))
+    before[1][3] = before[2][3] = 3                      # the exit, where the piece goes next
+    aim = inducer.induce("s", RIGHT, before, board(), report=levelled)
+    assert len(aim) == 1 and isinstance(aim[0], AimForm) and aim[0].colours == frozenset({3})
+    other = board((5, 4))
+    other[5][6] = other[6][6] = 3                        # another layout, the exit elsewhere
+    said = inducer.predict(aim[0], inducer.situation(other), other, RIGHT, lambda raw: raw)
+    assert said is not None and said.state is None and said.fields == levelled
+    away = board((1, 1))
+    away[5][6] = 3
+    assert inducer.predict(aim[0], inducer.situation(away), away, RIGHT, lambda raw: raw) is None, \
+        "the exit not where it goes: it says nothing"
