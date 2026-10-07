@@ -5743,3 +5743,17 @@ against version 23:
   tu93 91 suspects, none tested — its piece stops a gap of three cells short of
   the goal, outside "near"; lp85 none (no colour held by one thing alone).
 - The six: 0.578 (version 23 on the same six: 0.569).
+
+### An end as an experience: tried and removed
+
+The smaller of the two directions Plone agreed to: when a step ends the region,
+the inducer is asked what brought the end, as it is asked what brought the aim;
+held, weighed by whether the region ends where it applies, and an act a held one
+says ends the region tried after every other, here and on the ways looked ahead
+by. Most ends come in a frame of one grid (ar25, cd82, ls20, sp80 and others
+every time), so what the act was to change is only what the mind expected.
+
+The six (S2b, attention, 600 cycles; no suspects), against version 23: vc33 69
+and 235 (288); ls20, tu93, lp85, lf52 as version 23; ar25 none (as version 23).
+0.571 (0.569). tu93 held 10 such hypotheses and ended 12 times, as before: no
+end came twice by the same pattern. Removed, not committed.
