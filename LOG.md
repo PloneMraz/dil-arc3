@@ -5546,3 +5546,17 @@ rest the same; the ten's scores summed 3.414 → 3.521. Blocked steps fewer (ka5
 here foreseen, it goes to an act it cannot foresee, however far. Two runs of the
 25 here at once, 24 processes, starved the desktop (VS Code crashed) and were
 lost; the 25 are measured on Kaggle instead.
+
+### WAY_LAW tried and removed
+
+Point 3's sequel, approved as "direction 3": where every act left here is foreseen
+and a way leads to one that is not, an act here is tried first when the chance it
+comes out otherwise (1 - the rate of what foresaw it) times the way's acts and
+the one at its end is at least the odds of somewhere new. With P1, here, ls20
+and tu93 (S2b, attention, 600 cycles, two at once, at the lowest priority):
+
+- ls20's first level back, at 564 actions (version 23: 342; P1 alone: none);
+- tu93 407 and 64 actions (P1 alone: 300 and 45; version 23: 454 and 50), 0.283
+  for the game, against P1's 0.571.
+
+Worse than P1 alone on both; removed before it was committed.
