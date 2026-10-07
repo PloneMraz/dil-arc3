@@ -5560,3 +5560,15 @@ and tu93 (S2b, attention, 600 cycles, two at once, at the lowest priority):
   for the game, against P1's 0.571.
 
 Worse than P1 alone on both; removed before it was committed.
+
+### Version 24 (`53ce2ff`, P1): 12 levels, 0.499
+
+Notebook `dil-arc3-learning` version 24: version 23's configuration with P1. 25 of
+25 exited 0, no traceback; 3,836 s (version 23: 4,368 s).
+
+- **12 levels, 0.49905** (version 23: 13, 0.49871; version 19: 15, 0.50169).
+  Against version 23: tu93 454/50 → 300/45 actions (0.459 → 0.571), ar25's first
+  level (531 actions, 0.010); ls20's first lost (342 actions in version 23) and
+  sp80's (271); the other 21 the same.
+- The ten games run here before came out on Kaggle exactly as here (ar25, tu93,
+  ls20 and the rest), as the runs are deterministic.
