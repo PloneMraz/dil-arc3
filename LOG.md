@@ -5686,3 +5686,27 @@ committed; two at once, lowest priority):
 - How far the mind looks ahead is now declared by the run (`--look-ahead`,
   through `run_game.py`, `run_competition.py`, `build_dil_run.py`), 3 when not
   given, so the 25 games can be run as measured here without changing grid's.
+
+### Version 25 (`98155de`, objects as grid and more, look-ahead 32): 12 levels, 0.457
+
+Notebook `dil-arc3-learning` version 25: the objects inducer as grid and more,
+S2b, attention, 32 steps of look-ahead, 600 cycles, the 25 games four at once.
+Not submitted. 6,772 s (version 23: 4,359 s); the longest game 3,682 s
+(version 23: 1,560 s).
+
+- **12 levels, 0.45746** (version 23: 13, 0.49871).
+- Gained: ar25 (1 level, none before), dc22 (1, none before), ls20 (154
+  actions, as here; version 23: 342), sp80 and su15 (a few actions fewer).
+- Lost: tu93 (version 23: 2 levels, 0.459), m0r0 (version 23: 1, 0.78).
+- **re86 ended in an error** at cycle 207: a move predicted past the grid's edge
+  along the clock's line (`_in_the_way` passed over a cell in a clock row or
+  column before asking whether it lay inside the grid). Version 23 gained no
+  level there.
+- Against the rule set before trying it: not better than grid.
+
+### The objects inducer removed (Plone)
+
+Plone had agreed to remove it should it not do better than grid; it did not.
+`src/mind/models/objects.py`, its tests and `--inducer objects` are gone; what
+it was and did is above, its code at `73a7ce3`. `--look-ahead` stays, declared
+by the run, 3 when not given. 356 tests pass.
