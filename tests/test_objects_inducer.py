@@ -72,7 +72,7 @@ def test_its_hypotheses_come_back_from_their_datum():
 
 
 def test_what_brought_the_aim_is_a_relation_that_holds_on_another_layout():
-    from mind.models.objects import AimForm
+    from mind.models.objects import IntoForm
     inducer = ObjectsInducer(ARC_ORGANS)
     move = moved(inducer)
     inducer.keep(move, lambda: move)
@@ -80,7 +80,7 @@ def test_what_brought_the_aim_is_a_relation_that_holds_on_another_layout():
     before = board((1, 1))
     before[1][3] = before[2][3] = 3                      # the exit, where the piece goes next
     aim = inducer.induce("s", RIGHT, before, board(), report=levelled)
-    assert len(aim) == 1 and isinstance(aim[0], AimForm) and aim[0].colours == frozenset({3})
+    assert len(aim) == 1 and isinstance(aim[0], IntoForm) and aim[0].colours == frozenset({3})
     other = board((5, 4))
     other[5][6] = other[6][6] = 3                        # another layout, the exit elsewhere
     said = inducer.predict(aim[0], inducer.situation(other), other, RIGHT, lambda raw: raw)
@@ -94,7 +94,7 @@ def test_what_brought_the_aim_is_a_relation_that_holds_on_another_layout():
 
 
 def test_the_aim_is_brought_by_any_act_that_moves_the_thing_there():
-    from mind.models.objects import AimForm
+    from mind.models.objects import IntoForm
     inducer = ObjectsInducer(ARC_ORGANS)
     move = moved(inducer)
     inducer.keep(move, lambda: move)
@@ -104,7 +104,7 @@ def test_the_aim_is_brought_by_any_act_that_moves_the_thing_there():
     before = board((1, 1))
     before[1][3] = before[2][3] = 3
     aim = inducer.induce("s", RIGHT, before, board(), report={"levelsDelta": 1})
-    assert isinstance(aim[0], AimForm)
+    assert isinstance(aim[0], IntoForm)
     below = board((1, 1))
     below[3][1] = below[3][2] = 3                        # the exit below it: reached going down
     assert inducer.predict(aim[0], inducer.situation(below), below, down, lambda raw: raw) is not None
@@ -113,4 +113,5 @@ def test_the_aim_is_brought_by_any_act_that_moves_the_thing_there():
 
 def test_reset_is_no_move():
     inducer = ObjectsInducer(ARC_ORGANS)
-    assert inducer.induce("s", ARC_ORGANS.reset, board((5, 5)), board((1, 1))) == []
+    forms = inducer.induce("s", ARC_ORGANS.reset, board((5, 5)), board((1, 1)))
+    assert not any(isinstance(f, (MoveForm, BlockForm)) for f in forms)

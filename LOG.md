@@ -5662,3 +5662,24 @@ committed; two at once, lowest priority):
   colour entered.
 - Against the rule set before trying it (better than grid on ls20 and tu93, or
   stop): neither is better than grid.
+
+### The objects inducer as grid and more (on trial)
+
+Plone asked why the objects inducer did worse when it seemed to inherit grid:
+it inherited grid's reading, not its hypotheses — move and block took
+rewrite's place, and move fails wherever something else changes too. Plone: if
+there is a way left, try it. So the objects inducer now suggests grid's still,
+rewrite and aim, copied, and beside them move, block and the aim of no one act
+(form `into`); the mind weighs them all alike. RESET is no move, but grid's
+hypotheses read it as grid does. 362 tests pass.
+
+Measured as before (four games, 600 cycles, 32 steps of look-ahead, not
+committed; two at once, lowest priority):
+
+- **ls20 1 level in 154 actions, 0.073** (grid, version 23: 342, 0.0148; objects
+  alone: 564) — the fewest any run of this agent has taken there.
+- **tu93 none** (grid: 454 and 50, 0.459; objects alone: 301 and 53, 0.414).
+- g50t, ka59 none, as before.
+- Hypotheses written: 228–375 a game (objects alone: 20–65). Time here: ls20
+  1,596 s (objects alone 175 s; version 23 on Kaggle 992 s), the others 353–559 s.
+- Four games say little: ls20 five times better, tu93 lost both levels.
