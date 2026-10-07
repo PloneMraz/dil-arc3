@@ -5637,3 +5637,28 @@ was not measured there):
   faces (tu93: about 60 move hypotheses for four acts), and RESET is read as a
   move as well (act 0, by the shift between where the piece stood and its
   start).
+
+### The objects inducer: the aim of no one act (on trial)
+
+Plone: try it. The aim says "an act brings the aim where its move takes a thing
+of these colours into a cell of those" — any act, by its own move had back from
+the mind's memory, the thing known by its colours whichever way it faces; tu93's
+two aims, of acts 1 and 2, are one. RESET is read as no move. 362 tests pass.
+
+Measured as step 3 (four games, 600 cycles, 32 steps of look-ahead, not
+committed; two at once, lowest priority):
+
+- tu93 301 and **53** actions, **0.414** (step 3: 301 and 80, 0.187; grid,
+  version 23: 454 and 50, 0.459); ls20 1 level, 564 actions (grid: 342); g50t
+  and ka59 none, as before.
+- **The aim now steers**: tu93 made 101 choices toward where its hypotheses say
+  an act brings the aim (step 3: none), its one aim borne out twice, never
+  against; ls20 20, by an aim that does not hold (into 5 and 9: 1 for, 4
+  against).
+- Where it stops: in tu93's third level things of colour 8 move as the piece
+  does, and each move of the piece fails where they change as well; the way it
+  imagines to the goal does not hold them, and it walked into one twice
+  (`GAME_OVER` at cycles 547 and 565). Of ls20, what brings the aim is not a
+  colour entered.
+- Against the rule set before trying it (better than grid on ls20 and tu93, or
+  stop): neither is better than grid.

@@ -89,3 +89,28 @@ def test_what_brought_the_aim_is_a_relation_that_holds_on_another_layout():
     away[5][6] = 3
     assert inducer.predict(aim[0], inducer.situation(away), away, RIGHT, lambda raw: raw) is None, \
         "the exit not where it goes: it says nothing"
+    again = inducer.restore(json.loads(json.dumps(inducer.describe(aim[0], lambda raw: raw))))
+    assert inducer.key(again) == inducer.key(aim[0])
+
+
+def test_the_aim_is_brought_by_any_act_that_moves_the_thing_there():
+    from mind.models.objects import AimForm
+    inducer = ObjectsInducer(ARC_ORGANS)
+    move = moved(inducer)
+    inducer.keep(move, lambda: move)
+    down = (2, None, None)
+    fell = next(f for f in inducer.induce("s", down, board((1, 1)), board((2, 1))) if isinstance(f, MoveForm))
+    inducer.keep(fell, lambda: fell)
+    before = board((1, 1))
+    before[1][3] = before[2][3] = 3
+    aim = inducer.induce("s", RIGHT, before, board(), report={"levelsDelta": 1})
+    assert isinstance(aim[0], AimForm)
+    below = board((1, 1))
+    below[3][1] = below[3][2] = 3                        # the exit below it: reached going down
+    assert inducer.predict(aim[0], inducer.situation(below), below, down, lambda raw: raw) is not None
+    assert inducer.predict(aim[0], inducer.situation(below), below, RIGHT, lambda raw: raw) is None
+
+
+def test_reset_is_no_move():
+    inducer = ObjectsInducer(ARC_ORGANS)
+    assert inducer.induce("s", ARC_ORGANS.reset, board((5, 5)), board((1, 1))) == []
