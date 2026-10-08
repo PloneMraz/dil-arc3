@@ -5796,3 +5796,20 @@ own size: tu93's first level in **404** actions (454), its goal suspect borne
 out — but its second level lost (50): going toward suspects, it ended the region
 at cycles 417 and 432 and did not get through in the 196 cycles left. ls20 400
 (381); ar25, vc33, lp85, lf52 the same. 0.502 (0.578). Removed, not committed.
+
+### Version 27 (`2339636`, suspects no larger than 256 cells): 15 levels, 0.514 — removed
+
+From version 26's stores: the suspects borne out were of 30 to 189 cells; those
+of 400 to 1,025 were walls or grounds, near nearly everywhere (ls20 tested one
+of 892 cells four times; tn36, m0r0, su15, lf52 alike), and bp35's one borne out
+was a wall of 1,025 cells, the aim coming near it by chance. Tried: no suspect
+larger than `MAX_SUSPECT_CELLS = 256`.
+
+Notebook `dil-arc3-learning` version 27, as version 26 otherwise (suspects now
+on by default). 25 of 25 played through, 5,533 s (version 26: 4,352 s).
+
+- **15 levels, 0.51445** (version 26: 15, 0.51501). Suspects 434 (525), tested
+  149 (206), borne out 5 (6).
+- Every level as version 26 but bp35 140 → 163 actions, ls20 381 → 391, cd82
+  538 → 540. Fewer tested, no fewer actions: no progress, so removed (`git
+  revert`), as Plone has it for a change that does not do better.
