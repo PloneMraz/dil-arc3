@@ -5908,3 +5908,25 @@ stuck, its hypotheses foresaw few untried acts. lp85's second level is a puzzle
 of rings turned by arrows, its tiles to be brought to marks: what would get
 through it is the state to aim at, not a likeness to the first level's.
 Removed, not committed.
+
+### The inducer reading the aim as a relation: what the steps that brought it were, and an into aim tried
+
+Plone corrected me: neutrality is the mind's law; an inducer need only keep the
+competition's rules — it may know levels, puzzles and goals. So: what were the
+steps that brought the aim, in version 23's levels? Each game its own: tu93's
+piece went into the cell of colour 14; m0r0's two pieces, moving as mirrors,
+met and became one; ls20's piece went into a frame and the pattern in it
+changed; r11l's pieces were gathered into the ring in its middle; lp85's rings
+were turned until the tiles sat on their marks; vc33's levels were brought in
+line with a mark. Grid's aim (the box and ring of what the act changed, cell for
+cell) was never found again in the second level of the games whose act takes no
+place (m0r0, sp80, ls20, bp35).
+
+Tried (after the first aim only): grid also says, with an aim, "this act brings
+the aim where it moves this thing into a cell of these colours" — the thing
+read as for the objects inducer's moves, by how much it moved, and the colours
+it moved into; a relation, so it may hold on another layout. Read from version
+23's level-ups it fits tu93 alone (m0r0's pieces merge, ls20's changes as it
+enters). The ten games: every level and action count as version 23; tu93 held
+two such aims (acts 2 and 1), each borne out once, never choosing by them — its
+third level is entered by act 3. Removed, not committed.
