@@ -67,9 +67,7 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
 
 - **Suspect** — "this act brings the aim where this thing lies as it lies now":
   where the aim may lie before it has come (`suspects`). A thing of a colour no
-  other thing has — rare, so worth a look — and no larger than
-  MAX_SUSPECT_CELLS (larger, it is a wall or a ground, and near it is nearly
-  everywhere) is suspected: for an act that takes a
+  other thing has — rare, so worth a look — is suspected: for an act that takes a
   place, put on it; for any other, taken once something has come next to it (the
   thing still lying as it was): near it, within as many cells as it is wide or
   high, whichever is more — near at its own scale. One for each act, each
@@ -188,11 +186,6 @@ def things(grid: Grid) -> list[tuple[int, int, int, int]]:
     return out
 
 
-
-# A thing larger than this is not suspected. DECLARED, not measured: in version
-# 26 the suspects borne out were of 30 to 189 cells, and those of 400 to 1,025
-# were walls or grounds, near nearly everywhere (LOG.md, 2026-10-08).
-MAX_SUSPECT_CELLS: Final = 256
 
 # A rewrite over more cells than this is not suggested: it would be the grid
 # itself, met again or not at all. DECLARED, a bound on work.
@@ -743,8 +736,8 @@ class GridInducer:
         for colour, _, _, _ in found:
             count[colour] = count.get(colour, 0) + 1
         out = []
-        for colour, size, x, y in found:
-            if count[colour] != 1 or size > MAX_SUSPECT_CELLS or y in self.clock or x in self.clock_columns:
+        for colour, _, x, y in found:
+            if count[colour] != 1 or y in self.clock or x in self.clock_columns:
                 continue
             cells = [(r, c) for r, c in self._thing_at(state, x, y) if r not in self.clock and c not in self.clock_columns]
             own = set(cells)
@@ -790,5 +783,5 @@ def _part(said: dict[str, Any]) -> Part:
 
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
-           "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_SUSPECT_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer",
+           "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer",
            "Part", "RewriteForm", "StillForm", "SuspectForm", "grid_key", "parts", "things"]
