@@ -5930,3 +5930,23 @@ it moved into; a relation, so it may hold on another layout. Read from version
 enters). The ten games: every level and action count as version 23; tu93 held
 two such aims (acts 2 and 1), each borne out once, never choosing by them — its
 third level is entered by act 3. Removed, not committed.
+
+### A: things that move, and the aim as a relation of no one act — once the aim has come (on trial)
+
+Plone chose A over turning to the paper: an inducer that reads things moving
+and what brings the aim as a relation, step by step, measured each time. The
+rule kept: nothing changes before the first aim, so the first levels version 23
+gets are not put at risk.
+
+- **Step 1**: once the aim has come, grid reads moves and blocks too (the
+  objects inducer's, `2026-10-07`), beside still, rewrite and aim; before it, as
+  version 23. The ten games: every first level as version 23 (by design); tu93's
+  second in 48 actions (50); the rest the same.
+- **Step 2**: with each aim, for an act that takes no place, an **into** aim:
+  "an act brings the aim where its move takes a thing of these colours into a
+  cell of those" — of no one act, predicted for an act by its own moves. The
+  ten games: **tu93's second level in 37 actions** (50; baseline 16), its into
+  aim borne out twice, never against, choices made toward it; ls20 and m0r0
+  read none (ls20's piece changes as it enters the frame; m0r0's two pieces,
+  moving as mirrors, are not one move); the rest as version 23.
+- 359 tests pass. Committed on trial.

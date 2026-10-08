@@ -65,6 +65,23 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
   every part lies, box and ring alike, it says the region will report what it
   reported then.
 
+Once the aim has first come — what the region is for now shown it — it reads
+what an act that takes no place does as things that move, too (A, 2026-10-08;
+before that, it suggests only the above, so what the mind does before its first
+aim is as it was):
+
+- **Move** — "this act moves what lies as this pattern by (rows, columns) — as
+  another pattern, if it turns as it goes — and what it leaves takes the colour
+  `trail`": what changed, read as the things that touched it, as many cells of
+  the same colours before and after. It applies where the pattern lies once,
+  and only where the cells it moves into are of `trail`.
+- **Block** — "this act does not move that pattern where what lies in its way
+  is of these colours (or the grid's edge)": an act that changed nothing, read
+  against the moves it suggested of that act (had back from the mind's memory).
+- **Into** — "an act brings the aim where its move takes a thing of these
+  colours into a cell of those": with each aim, for an act that takes no place, from the move that brought it — a relation, of no one act and
+  no one layout: any act whose move it holds takes the thing there.
+
 The clock's rows and columns are no part of any of them: what lies there matches
 anything.
 """
@@ -182,6 +199,12 @@ def things(grid: Grid) -> list[tuple[int, int, int, int]]:
 # A rewrite over more cells than this is not suggested: it would be the grid
 # itself, met again or not at all. DECLARED, a bound on work.
 MAX_REWRITE_CELLS: Final = 1024
+# A thing a move is read from is no larger than this: what is larger is the
+# ground or a wall. DECLARED, a bound on work.
+MAX_MOVE_CELLS: Final = 256
+# How many of an act's moves a blocked step is read against, the latest first.
+# DECLARED, a bound on work.
+MOVES_KEPT: Final = 4
 
 
 @dataclass(eq=False)
@@ -245,6 +268,69 @@ class AimForm:
 
 
 
+@dataclass(eq=False)
+class MoveForm:
+    """This act moves what lies as `pattern` — (row, column, colour) from its
+    corner — by (`dr`, `dc`), as `after` if it turns as it goes; what it leaves,
+    and where it goes, is `trail`."""
+
+    act: int
+    pattern: tuple[tuple[int, int, int], ...]
+    dr: int
+    dc: int
+    trail: int
+    after: tuple[tuple[int, int, int], ...] | None = None
+
+    @property
+    def came(self) -> tuple[tuple[int, int, int], ...]:
+        return self.after if self.after is not None else self.pattern
+
+    @property
+    def key(self) -> tuple:
+        return ("move", self.act, self.pattern, self.dr, self.dc, self.trail, self.after)
+
+
+@dataclass(eq=False)
+class BlockForm:
+    """This act does not move `pattern` by (`dr`, `dc`) where what lies in its way
+    is of one of `blockers` (OFF_GRID: the grid's edge)."""
+
+    act: int
+    pattern: tuple[tuple[int, int, int], ...]
+    dr: int
+    dc: int
+    trail: int
+    blockers: frozenset[int]
+    after: tuple[tuple[int, int, int], ...] | None = None
+
+    @property
+    def came(self) -> tuple[tuple[int, int, int], ...]:
+        return self.after if self.after is not None else self.pattern
+
+    @property
+    def key(self) -> tuple:
+        return ("block", self.act, self.pattern, self.dr, self.dc, self.blockers)
+
+
+@dataclass(eq=False)
+class IntoForm:
+    """An act brings the aim where its move takes a thing of the colours `mover`
+    (each cell's, sorted), leaving `trail`, into a cell of one of `colours`: the
+    region then reports `status`. Of no one act."""
+
+    mover: tuple[int, ...]
+    trail: int
+    colours: frozenset[int]
+    status: dict
+
+    @property
+    def key(self) -> tuple:
+        return ("into", self.mover, self.trail, self.colours)
+
+
+def _mover(form: Any) -> tuple[int, ...]:
+    return tuple(sorted(v for _, _, v in form.pattern))
+
 
 class GridInducer:
     """Still, rewrite and aim hypotheses, over its reading of grids."""
@@ -267,6 +353,12 @@ class GridInducer:
         self._where: dict[str, dict[int, list[tuple[int, int]]]] = {}   # situation -> colour -> cells
         # (situation, part) -> (the part, where it lies): the part is kept, so its id is not reused.
         self._found: dict[tuple[str, int], tuple[Part, tuple[int, int] | None]] = {}
+        # Whether the aim has come: from then it reads things as moving, too.
+        self._aimed = False
+        # Each act's moves it suggested, had back from the mind's memory (`keep`).
+        self._moves_of: dict[int, list[Any]] = {}
+        # (situation, move or block) -> (the form, where its pattern lies once, or None).
+        self._lying: dict[tuple[str, int], tuple[Any, tuple[int, int] | None]] = {}
 
     # ── reading a grid ──
 
@@ -456,7 +548,19 @@ class GridInducer:
                evidence: tuple = (), report: dict | None = None, expected: Grid | None = None,
                through: tuple = ()) -> list[Any]:
         if report is not None:
+            self._aimed = True
             return self._aim(act, before, expected, report, through)
+        forms = self._rewrite(act, before, after)
+        placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
+        if self._aimed and not placed and act[0] != self.organs.reset[0]:
+            changed = [(r, c) for r in range(min(len(before), len(after))) if r not in self.clock
+                       for c in range(min(len(before[r]), len(after[r])))
+                       if c not in self.clock_columns and before[r][c] != after[r][c]]
+            forms += self._blocked(act[0], before) if not changed else self._moved(act[0], before, after, changed)
+        return forms
+
+    def _rewrite(self, act: Act, before: Grid, after: Grid) -> list[Any]:
+        """A still or a rewrite (the module's docstring)."""
         forms: list[Any] = []
         rows = min(len(before), len(after))
         changed = [(r, c) for r in range(rows) if r not in self.clock
@@ -541,8 +645,36 @@ class GridInducer:
             place = (r0 - act[2], c0 - act[1]) if placed else None
             found.append(Part(lhs=tuple((r - r0, c - c0, before[r][c]) for r, c in box),
                               ring=tuple((r - r0, c - c0, at(r, c)) for r, c in ring), rhs=(), place=place))
-        return [AimForm(act=act[0], placed=placed, parts=tuple(found),
-                        colour=before[act[2]][act[1]] if placed else None, status=dict(report))]
+        aims: list[Any] = [AimForm(act=act[0], placed=placed, parts=tuple(found),
+                                   colour=before[act[2]][act[1]] if placed else None, status=dict(report))]
+        if not placed:
+            aims += self._into(act[0], before, done, cells, report)
+        return aims
+
+    def _into(self, act: int, before: Grid, done: Grid, changed: list[tuple[int, int]],
+              report: dict) -> list[Any]:
+        """The move that brought the aim — read from the step, or of this act's
+        moves (had back from the mind's memory) the one whose pattern lies here
+        once — and the colours of the cells it moved into: an into aim."""
+        tries = [self._move_read(act, before, done, changed)]
+        situation = self.situation(before)
+        for recall in reversed(self._moves_of.get(act, [])[-MOVES_KEPT:]):
+            form = recall()
+            corner = self._lies_once(form, situation, before)
+            if corner is not None:
+                tries.append((form, corner))
+        for found in tries:
+            if found is None:
+                continue
+            form, corner = found
+            own = {(corner[0] + r, corner[1] + c) for r, c, _ in form.pattern}
+            went = {(corner[0] + r + form.dr, corner[1] + c + form.dc) for r, c, _ in form.came}
+            colours = {before[r][c] for r, c in went - own
+                       if 0 <= r < len(before) and 0 <= c < len(before[r]) and before[r][c] != form.trail}
+            if colours:
+                return [IntoForm(mover=_mover(form), trail=form.trail, colours=frozenset(colours),
+                                 status=dict(report))]
+        return []
 
     def _thing_at(self, grid: Grid, x: int, y: int) -> list[tuple[int, int]]:
         """The cells of one colour joined side to side to the cell at (x, y)."""
@@ -563,20 +695,26 @@ class GridInducer:
 
     def scope(self, form: Any, situation_of) -> tuple:
         """Where a hypothesis applies: wherever its act is taken."""
+        if isinstance(form, IntoForm):
+            return ("into",)
         if isinstance(form, AimForm):
             return ("aim", form.act)
         return ("act", form.act)
 
     def scopes(self, situation: str, act: Act) -> list[tuple]:
         """The scopes a situation and act fall in."""
-        return [("act", act[0]), ("aim", act[0])]
+        return [("act", act[0]), ("aim", act[0]), ("into",)]
 
     def predict(self, form: Any, situation: str, state: Grid, act: Act, situation_of) -> Prediction | None:
+        placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
+        if isinstance(form, IntoForm):
+            return None if placed else self._into_predict(form, situation, state, act[0])
         if act[0] != form.act:
             return None
-        placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if isinstance(form, AimForm):
             return self._aim_predict(form, placed, situation, state, act)
+        if isinstance(form, (MoveForm, BlockForm)):
+            return None if placed else self._move_predict(form, situation, state)
         if isinstance(form, StillForm):
             if placed != (form.colour is not None):
                 return None
@@ -672,6 +810,17 @@ class GridInducer:
     def describe(self, form: Any, situation_of) -> dict[str, Any]:
         if isinstance(form, StillForm):
             return {"form": "still", "act": form.act, "colour": form.colour}
+        if isinstance(form, IntoForm):
+            return {"form": "into", "mover": list(form.mover), "trail": form.trail,
+                    "colours": sorted(form.colours), "status": form.status}
+        if isinstance(form, (MoveForm, BlockForm)):
+            said = {"form": "move" if isinstance(form, MoveForm) else "block", "act": form.act,
+                    "pattern": [list(c) for c in form.pattern], "dr": form.dr, "dc": form.dc, "trail": form.trail}
+            if form.after is not None:
+                said["after"] = [list(c) for c in form.after]
+            if isinstance(form, BlockForm):
+                said["blockers"] = sorted(form.blockers)
+            return said
         if isinstance(form, AimForm):
             return {"form": "aim", "act": form.act, "placed": form.placed, "colour": form.colour,
                     "status": form.status,
@@ -683,18 +832,205 @@ class GridInducer:
                           for p in form.parts]}
 
     def keep(self, form: Any, recall: Any) -> None:
-        """It computes with no form it said again: the mind's memory holds them."""
+        """A move it said is had back from the mind's memory when a blocked step is
+        read against it; no other form is computed with again."""
+        if isinstance(form, MoveForm):
+            self._moves_of.setdefault(form.act, []).append(recall)
+
+    # ── things that move (once the aim has come) ──
+
+    def _moved(self, act: int, before: Grid, after: Grid, changed: list[tuple[int, int]]) -> list[Any]:
+        """A move, if what changed reads as one."""
+        found = self._move_read(act, before, after, changed)
+        return [found[0]] if found is not None else []
+
+    def _move_read(self, act: int, before: Grid, after: Grid,
+                   changed: list[tuple[int, int]]) -> tuple[Any, tuple[int, int]] | None:
+        """The move what changed reads as — things of as many cells, of the same
+        colours, after as before, shifted, turned, or both — and where its
+        pattern lay; tried with each colour what changed most became, as what a
+        thing leaves."""
+        if not changed or len(changed) > 2 * MAX_MOVE_CELLS:
+            return None
+        became: dict[int, int] = {}
+        for r, c in changed:
+            became[after[r][c]] = became.get(after[r][c], 0) + 1
+        for trail in sorted(became, key=lambda v: -became[v])[:3]:
+            was, now = self._touching(before, changed, trail), self._touching(after, changed, trail)
+            if not was or not now:
+                continue
+            # What it moved onto and took the place of is gone after: only the
+            # colours both hold are what moved.
+            both = {before[r][c] for r, c in was} & {after[r][c] for r, c in now}
+            was = [(r, c) for r, c in was if before[r][c] in both]
+            now = [(r, c) for r, c in now if after[r][c] in both]
+            if not was or len(was) != len(now):
+                continue
+            p, r0, c0 = _pattern(before, was)
+            q, r1, c1 = _pattern(after, now)
+            if sorted(v for _, _, v in p) != sorted(v for _, _, v in q) or (p == q and (r1, c1) == (r0, c0)):
+                continue
+            return MoveForm(act=act, pattern=p, dr=r1 - r0, dc=c1 - c0, trail=trail,
+                            after=q if q != p else None), (r0, c0)
+        return None
+
+    def _blocked(self, act: int, before: Grid) -> list[Any]:
+        """A block, if a move it suggested of this act before finds its pattern
+        here once, and what lies in its way is of no colour `trail`."""
+        situation = self.situation(before)
+        for recall in reversed(self._moves_of.get(act, [])[-MOVES_KEPT:]):
+            form = recall()
+            corner = self._lies_once(form, situation, before)
+            if corner is None:
+                continue
+            blockers = self._in_the_way(form, corner, before)
+            if blockers:
+                return [BlockForm(act=act, pattern=form.pattern, dr=form.dr, dc=form.dc, trail=form.trail,
+                                  blockers=frozenset(blockers), after=form.after)]
+        return []
+
+    def _thing_cells(self, grid: Grid, start: tuple[int, int], seen: set) -> list[tuple[int, int]] | None:
+        """The cells of one colour joined side to side to `start`, off the clock;
+        None when larger than MAX_MOVE_CELLS (a ground, or a wall)."""
+        colour, cells, stack = grid[start[0]][start[1]], [], [start]
+        seen.add(start)
+        while stack:
+            r, c = stack.pop()
+            cells.append((r, c))
+            if len(cells) > MAX_MOVE_CELLS:
+                return None
+            for q in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+                if q not in seen and 0 <= q[0] < len(grid) and 0 <= q[1] < len(grid[q[0]]) \
+                        and q[0] not in self.clock and q[1] not in self.clock_columns and grid[q[0]][q[1]] == colour:
+                    seen.add(q)
+                    stack.append(q)
+        return cells
+
+    def _touching(self, grid: Grid, changed: list[tuple[int, int]], trail: int) -> list[tuple[int, int]] | None:
+        """The cells of the things that touch what changed, of no colour `trail`;
+        None when one is too large to be a thing."""
+        seen: set = set()
+        out: list[tuple[int, int]] = []
+        for cell in changed:
+            if cell in seen or grid[cell[0]][cell[1]] == trail:
+                continue
+            thing = self._thing_cells(grid, cell, seen)
+            if thing is None:
+                return None
+            out += thing
+        return out
+
+    def _in_the_way(self, form: Any, corner: tuple[int, int], state: Grid) -> set[int]:
+        """The colours, other than `trail`, of the cells the pattern would move
+        into and does not stand on now (OFF_GRID past the edge)."""
+        own = {(corner[0] + r, corner[1] + c) for r, c, _ in form.pattern}
+        out: set[int] = set()
+        for r, c, _ in form.came:
+            rr, cc = corner[0] + r + form.dr, corner[1] + c + form.dc
+            if (rr, cc) in own:
+                continue
+            if not (0 <= rr < len(state) and 0 <= cc < len(state[rr])):
+                out.add(OFF_GRID)
+            elif rr in self.clock or cc in self.clock_columns:
+                continue
+            elif state[rr][cc] != form.trail:
+                out.add(state[rr][cc])
+        return out
+
+    def _lies_once(self, form: Any, situation: str, state: Grid) -> tuple[int, int] | None:
+        """The one place a form's pattern lies, off the clock; None if nowhere or
+        at several."""
+        known = self._lying.get((situation, id(form)))
+        if known is not None and known[0] is form:
+            return known[1]
+        where = self._where.get(situation)
+        if where is None:
+            where = {}
+            for r, row in enumerate(state):
+                if r in self.clock:
+                    continue
+                for c, v in enumerate(row):
+                    if c not in self.clock_columns:
+                        where.setdefault(v, []).append((r, c))
+            self._where[situation] = where
+        pr, pc, colour = min(form.pattern, key=lambda cell: len(where.get(cell[2], ())))
+        found = []
+        for r, c in where.get(colour, ()):
+            corner = (r - pr, c - pc)
+            if all(0 <= corner[0] + dr < len(state) and 0 <= corner[1] + dc < len(state[corner[0] + dr])
+                   and state[corner[0] + dr][corner[1] + dc] == v for dr, dc, v in form.pattern):
+                found.append(corner)
+                if len(found) > 1:
+                    break
+        corner = found[0] if len(found) == 1 else None
+        self._lying[(situation, id(form))] = (form, corner)
+        return corner
+
+    def _into_predict(self, form: IntoForm, situation: str, state: Grid, act: int) -> Prediction | None:
+        """The aim, if this act's move — of its moves had back from the mind's
+        memory, the latest of the into's thing whose pattern lies here once —
+        takes the thing into a cell of the into's colours."""
+        for recall in reversed(self._moves_of.get(act, [])[-MOVES_KEPT:]):
+            move = recall()
+            if move.trail != form.trail or _mover(move) != form.mover:
+                continue
+            corner = self._lies_once(move, situation, state)
+            if corner is None:
+                continue
+            own = {(corner[0] + r, corner[1] + c) for r, c, _ in move.pattern}
+            for r, c, _ in move.came:
+                rr, cc = corner[0] + r + move.dr, corner[1] + c + move.dc
+                if (rr, cc) not in own and 0 <= rr < len(state) and 0 <= cc < len(state[rr]) \
+                        and state[rr][cc] in form.colours:
+                    return Prediction(state=None, fields=dict(form.status))
+            return None
+        return None
+
+    def _move_predict(self, form: Any, situation: str, state: Grid) -> Prediction | None:
+        """A block: nothing changes where what is in the way is of its colours. A
+        move: the pattern moved, where nothing is in its way."""
+        corner = self._lies_once(form, situation, state)
+        if corner is None:
+            return None
+        in_the_way = self._in_the_way(form, corner, state)
+        if isinstance(form, BlockForm):
+            return Prediction(state=state) if in_the_way & form.blockers else None
+        if in_the_way:
+            return None
+        out = [row[:] for row in state]
+        for r, c, _ in form.pattern:
+            out[corner[0] + r][corner[1] + c] = form.trail
+        for r, c, v in form.came:
+            out[corner[0] + r + form.dr][corner[1] + c + form.dc] = v
+        return Prediction(state=out)
 
     def restore(self, payload: dict[str, Any]) -> Any:
         """A still, rewrite or aim hypothesis from its datum alone."""
         form = payload.get("form")
         if form == "still":
             return StillForm(act=payload["act"], colour=payload["colour"])
+        if form == "into":
+            return IntoForm(mover=tuple(payload["mover"]), trail=payload["trail"],
+                            colours=frozenset(payload["colours"]), status=dict(payload["status"]))
+        if form in ("move", "block"):
+            pattern = tuple(tuple(c) for c in payload["pattern"])
+            after = tuple(tuple(c) for c in payload["after"]) if payload.get("after") is not None else None
+            if form == "block":
+                return BlockForm(act=payload["act"], pattern=pattern, dr=payload["dr"], dc=payload["dc"],
+                                 trail=payload["trail"], blockers=frozenset(payload["blockers"]), after=after)
+            return MoveForm(act=payload["act"], pattern=pattern, dr=payload["dr"], dc=payload["dc"],
+                            trail=payload["trail"], after=after)
         parts_ = tuple(_part(p) for p in payload["parts"])
         if form == "aim":
             return AimForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"],
                            status=dict(payload["status"]))
         return RewriteForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"])
+
+
+def _pattern(grid: Grid, cells: list[tuple[int, int]]) -> tuple[tuple[tuple[int, int, int], ...], int, int]:
+    """Cells as a pattern from their corner, and the corner."""
+    r0, c0 = min(r for r, _ in cells), min(c for _, c in cells)
+    return tuple(sorted((r - r0, c - c0, grid[r][c]) for r, c in cells)), r0, c0
 
 
 def _part(said: dict[str, Any]) -> Part:
@@ -707,4 +1043,4 @@ def _part(said: dict[str, Any]) -> Part:
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
            "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer",
-           "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]
+           "BlockForm", "IntoForm", "MAX_MOVE_CELLS", "MOVES_KEPT", "MoveForm", "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]
