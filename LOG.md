@@ -5890,3 +5890,21 @@ the learning's untested hypotheses, `--no-suspects` and `tests/test_suspects.py`
 — and so is `--look-ahead`, which nothing uses now: `src/`, `scripts/` and
 `tests/` are as at `b6a95ac` (version 23, `56887238`). What suspects were and
 did is above (2026-10-07 and 2026-10-08), their code at `964f4a7`.
+
+### After the aim, toward what is like where it came from: tried and removed
+
+A rule Plone agreed to for what comes next: change what the mind does only
+after the aim has first come, so the first levels version 23 gets (likely what
+its hidden score is made of) cannot be lost. Tried: once the aim has come, of
+the 8 nearest situations where something is left to try, the one likest (the
+inducer's `similarity`) to a state the aim came from; and of untried acts here,
+those its hypotheses say lead likest, if likelier than here. Read first from
+version 23's stores: the state before tu93's second aim was the likest of its
+49 second-level states to the one before its first; vc33's ranked 265 of 287.
+
+The ten games: every level and action count as version 23 — first levels by
+design, later ones because the rule had little to act on: where the mind was
+stuck, its hypotheses foresaw few untried acts. lp85's second level is a puzzle
+of rings turned by arrows, its tiles to be brought to marks: what would get
+through it is the state to aim at, not a likeness to the first level's.
+Removed, not committed.
