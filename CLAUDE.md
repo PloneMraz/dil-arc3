@@ -877,7 +877,9 @@ faster code. A sixth, `56887238`, is the same notebook's **version 23**, code
 `b6a95ac`: as the fifth (grid, S2b, attention, 600 cycles, four at once), with
 the store as the mind's memory ((A), (B)), the store synced once a cycle,
 experiences as the mind's own expectation, an aim read from what the region
-showed before its last grid (C1), and each inducer standing on its own. What
+showed before its last grid (C1), and each inducer standing on its own. A
+seventh, `56934496`, is the same notebook's **version 26**, code `a6c4563`: as
+the sixth, with suspects (where the aim may lie, tested before it has come). What
 each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 

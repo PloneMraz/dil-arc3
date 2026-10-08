@@ -5813,3 +5813,9 @@ on by default). 25 of 25 played through, 5,533 s (version 26: 4,352 s).
 - Every level as version 26 but bp35 140 → 163 actions, ls20 381 → 391, cd82
   538 → 540. Fewer tested, no fewer actions: no progress, so removed (`git
   revert`), as Plone has it for a change that does not do better.
+
+### Version 26 submitted as `56934496` (Plone)
+
+Plone approved submitting version 26 (grid, S2b, attention, suspects; 15
+levels, 0.515 on the 25 here): `56934496`, notebook `dil-arc3-learning` version
+26, code `a6c4563`. Nothing is pushed to Kaggle while it is scored.
