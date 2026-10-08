@@ -5819,3 +5819,23 @@ on by default). 25 of 25 played through, 5,533 s (version 26: 4,352 s).
 Plone approved submitting version 26 (grid, S2b, attention, suspects; 15
 levels, 0.515 on the 25 here): `56934496`, notebook `dil-arc3-learning` version
 26, code `a6c4563`. Nothing is pushed to Kaggle while it is scored.
+
+### After the first level: what the mind does (read from version 26), and a trial
+
+Where a first level came early, the rest of the 600 cycles passed without a
+second: r11l (first in 19 actions), lp85 (17), tn36 (33), m0r0 (74), cn04 (100).
+Almost every choice after it was "not yet taken from here", or a way to where
+something was. Tried here, on ten games (the six, r11l, tn36, cn04, m0r0):
+curiosity without the odds of the aim first (`_odds_of`'s first term at 0) —
+every level and every action count as version 26. Not the cause; not
+committed. What each did instead:
+
+- lp85: one click (colour 8, 10 cells) 572 times, 563 of them somewhere new. Each
+  turns a ring of about 90 cells by one; its counter is on column 0, read as the
+  clock; the ring's turns do not come back within the run, so every state is new
+  and S2b wants the click as much as at the start.
+- m0r0: 1-cell things clicked 209 and 135 times, never changing anything — each
+  an act not taken from there, foreseen to change nothing (S3: tried last, never
+  out of reach), 350 such choices.
+- tn36: 1-cell things of colour 0 clicked 235 times, 12 somewhere new.
+- r11l: 35 kinds of click, 299 states; cn04: act 5 195 times, 159 somewhere new.
