@@ -5851,3 +5851,14 @@ level and action count the same but ar25 251 → 253. In lp85 the objection came
 56 times; each time the mind clicked the other thing of the same kind (the
 second arrow, 14,26) once or twice, the onlooker fell quiet, the objection was
 lifted, and it went back. Removed, not committed.
+
+### Foreseen acts by doubt: tried and removed
+
+(B) When only acts its hypotheses foresee are left here, the one foreseen by
+the hypothesis right at the lowest rate first (of those as sure, by curiosity);
+one never wrong after the rest, never out of reach.
+
+The ten games, against version 26: **tn36's level lost** (version 26: 33
+actions, 3.36 of the score); vc33 62 and 282 (69 and 244); lf52 134 (138); m0r0
+as before — its 1-cell things still clicked 209 and 135 times; the others the
+same. Removed, not committed.
