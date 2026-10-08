@@ -136,9 +136,7 @@ def test_a_revision_of_its_tallies_alone_restores_nothing():
     inducer = GridInducer(ARC_ORGANS)
     restored: list = []
     real = inducer.restore
-    # What it said of a step (a suspect, of where the aim may lie, is not said of one).
-    inducer.restore = lambda payload: (payload.get("form") != "suspect" and restored.append(payload.get("act")),
-                                       real(payload))[1]
+    inducer.restore = lambda payload: (restored.append(payload.get("act")), real(payload))[1]
     mind, cycle, data, events = loop(inducer)
     for _ in range(4):
         run(cycle, frame(lit(0), lit(1)), status())

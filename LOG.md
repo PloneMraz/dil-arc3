@@ -5881,3 +5881,12 @@ shown, so why is not known. What could be, neither shown nor ruled out:
   the games not started.
 - A game whose process failed scores only what it had gained; here all 25 exited
   0.
+
+### Back to version 23 (Plone)
+
+After `56934496`'s 0.02, Plone: back to version 23, and find a new way to
+improve. Suspects are removed — `Inducer.suspects`, grid's suspect hypotheses,
+the learning's untested hypotheses, `--no-suspects` and `tests/test_suspects.py`
+— and so is `--look-ahead`, which nothing uses now: `src/`, `scripts/` and
+`tests/` are as at `b6a95ac` (version 23, `56887238`). What suspects were and
+did is above (2026-10-07 and 2026-10-08), their code at `964f4a7`.

@@ -37,7 +37,7 @@ from arc3.host import create_source, declaration
 from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
-from mind.learning import ATTENTION_K, CURIOSITY, MAX_IMAGINED_STEPS
+from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.grid import GridInducer
 from mind.models.language import ModelEndpoint
@@ -71,8 +71,7 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
                 help="the mind's model, what its learning computes with: hypotheses that reach past where they "
-                     "were met (mind/models/grid.py), or "
-                     "programs a served language model writes "
+                     "were met (mind/models/grid.py), or programs a served language model writes "
                      "(mind/models/language_inducer.py, at --endpoint)")
 ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
                 help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
@@ -80,11 +79,6 @@ ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
 ap.add_argument("--attention", action="store_true",
                 help="weigh how much an act is wanted by what it did in the situations most like where it "
                      "stands, not everywhere (idea (a), mind/learning.py: ATTENTION_K)")
-ap.add_argument("--look-ahead", type=int, default=MAX_IMAGINED_STEPS,
-                help="how many steps the mind looks ahead past where it has stood, on what its hypotheses "
-                     "predict (mind/learning.py: MAX_IMAGINED_STEPS)")
-ap.add_argument("--no-suspects", dest="suspects", action="store_false",
-                help="do not test, before the aim has come, where its model says it may lie (mind/learning.py)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -119,7 +113,7 @@ if a.inducer == "language":
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
-            attention=a.attention, look_ahead=a.look_ahead, suspects=a.suspects)
+            attention=a.attention)
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
@@ -199,12 +193,6 @@ print(f"  why it chose          : {dict(why)}")
 if a.curiosity != CURIOSITY[0]:
     print(f"  curiosity             : {a.curiosity}  changes by kind "
           f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")
-if a.look_ahead != MAX_IMAGINED_STEPS:
-    print(f"  look-ahead            : {a.look_ahead} steps past where it stood")
-if a.suspects:
-    tested = [h for key, h in mind.learning._keys.items() if key[0] == "suspect"]
-    print(f"  suspects              : {len(tested)}  tested {sum(h.supports + h.fails > 0 for h in tested)}  "
-          f"borne out {sum(h.supports > 0 for h in tested)}")
 if a.attention:
     print(f"  attention             : the {ATTENTION_K} experiences most alike")
 if a.inducer == "language":

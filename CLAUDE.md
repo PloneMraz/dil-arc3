@@ -147,8 +147,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   built from it, when whether it holds changes; keeps each experience as a datum
   (`kind: experience`), revised in place as it changes
   (Plone, 2026-10-04: the whole store is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
-  predict (at most `MAX_IMAGINED_STEPS` past where it has stood, or as many as
-  the run declares (`--look-ahead`), and
+  predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
   `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
   only). **Reaching
   the aim is an experience too** (S4, Plone, 2026-09-28): the inducer, asked
@@ -211,14 +210,6 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   share of cells equal off the clock; the language inducer's, none). The
   choice it made so names the experiences it went by (`attended`, each with its
   weight) and is built from their hypotheses. Off by default.
-- **Suspects** (Plone, 2026-10-07; on by default since 2026-10-08, `--no-suspects`
-  to leave them out): before the aim has come the learning asks its inducer where it may lie
-  (`Inducer.suspects`) — on the first state and after each aim or end — and
-  holds each as a hypothesis about the aim, untested (neither borne out nor
-  not): tried where it applies as a held one is, written as any is, dropped when
-  the region's report does not bear it out. Grid suspects each thing of a colour
-  no other thing has, one for each act; the language inducer, none (measured:
-  LOG.md).
 - **The learning is absolutely neutral** (Plone, 2026-09-29).
   `src/mind/learning.py` belongs to the mind and serves its learning in every
   environment and every situation — not games, not work, not any particular

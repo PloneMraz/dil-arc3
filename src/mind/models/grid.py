@@ -65,14 +65,6 @@ ITS HYPOTHESES, in a language declared, not measured, naming no game:
   every part lies, box and ring alike, it says the region will report what it
   reported then.
 
-- **Suspect** — "this act brings the aim where this thing lies as it lies now":
-  where the aim may lie before it has come (`suspects`). A thing of a colour no
-  other thing has — rare, so worth a look — is suspected: for an act that takes a
-  place, put on it; for any other, taken once something has come next to it (the
-  thing still lying as it was): near it, within as many cells as it is wide or
-  high, whichever is more — near at its own scale. One for each act, each
-  tested on its own.
-
 The clock's rows and columns are no part of any of them: what lies there matches
 anything.
 """
@@ -253,26 +245,9 @@ class AimForm:
 
 
 
-@dataclass(eq=False)
-class SuspectForm:
-    """This act brings the aim where `cells` lie as they lie — put on one of them,
-    for an act that takes a place; for any other, once a cell of `ring` (the
-    cells near them, as they were) is otherwise: the region then reports
-    `status`. Each cell (row, column, colour), where it lay."""
-
-    act: int
-    placed: bool
-    cells: tuple[tuple[int, int, int], ...]
-    ring: tuple[tuple[int, int, int], ...]
-    status: dict
-
-    @property
-    def key(self) -> tuple:
-        return ("suspect", self.act, self.placed, self.cells)
-
 
 class GridInducer:
-    """Still, rewrite, aim and suspect hypotheses, over its reading of grids."""
+    """Still, rewrite and aim hypotheses, over its reading of grids."""
 
     kind = "grid"
     # Its hypotheses apply past where they were met.
@@ -588,7 +563,7 @@ class GridInducer:
 
     def scope(self, form: Any, situation_of) -> tuple:
         """Where a hypothesis applies: wherever its act is taken."""
-        if isinstance(form, (AimForm, SuspectForm)):
+        if isinstance(form, AimForm):
             return ("aim", form.act)
         return ("act", form.act)
 
@@ -602,8 +577,6 @@ class GridInducer:
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
         if isinstance(form, AimForm):
             return self._aim_predict(form, placed, situation, state, act)
-        if isinstance(form, SuspectForm):
-            return self._suspect_predict(form, placed, state, act)
         if isinstance(form, StillForm):
             if placed != (form.colour is not None):
                 return None
@@ -659,19 +632,6 @@ class GridInducer:
                 return None
         return Prediction(state=None, fields=dict(form.status))
 
-    def _suspect_predict(self, form: SuspectForm, placed: bool, state: Grid, act: Act) -> Prediction | None:
-        """Where the thing lies as it lay — put on it, or, for an act that takes no
-        place, with something come next to it — the region will report what it
-        reports when the aim comes."""
-        if placed != form.placed or not self._fits(form.cells, (0, 0), state):
-            return None
-        if placed:
-            if not any(r == act[2] and c == act[1] for r, c, _ in form.cells):
-                return None
-        elif self._fits(form.ring, (0, 0), state):
-            return None
-        return Prediction(state=None, fields=dict(form.status))
-
     def _fits(self, cells, anchor: tuple[int, int], state: Grid) -> bool:
         ar, ac = anchor
         for dr, dc, colour in cells:
@@ -712,10 +672,6 @@ class GridInducer:
     def describe(self, form: Any, situation_of) -> dict[str, Any]:
         if isinstance(form, StillForm):
             return {"form": "still", "act": form.act, "colour": form.colour}
-        if isinstance(form, SuspectForm):
-            return {"form": "suspect", "act": form.act, "placed": form.placed,
-                    "cells": [list(c) for c in form.cells], "ring": [list(c) for c in form.ring],
-                    "status": form.status}
         if isinstance(form, AimForm):
             return {"form": "aim", "act": form.act, "placed": form.placed, "colour": form.colour,
                     "status": form.status,
@@ -726,35 +682,6 @@ class GridInducer:
                            "to": [list(c) for c in p.rhs], "place": list(p.place) if p.place else None}
                           for p in form.parts]}
 
-    def suspects(self, state: Grid, report: dict[str, Any]) -> list[Any]:
-        """Each thing of a colour no other thing has, off the clock, suspected for
-        each act (the module's docstring)."""
-        found = self._things.get(self.identity(state))
-        if found is None:
-            found = self._things[self.identity(state)] = things(state)
-        count: dict[int, int] = {}
-        for colour, _, _, _ in found:
-            count[colour] = count.get(colour, 0) + 1
-        out = []
-        for colour, _, x, y in found:
-            if count[colour] != 1 or y in self.clock or x in self.clock_columns:
-                continue
-            cells = [(r, c) for r, c in self._thing_at(state, x, y) if r not in self.clock and c not in self.clock_columns]
-            own = set(cells)
-            r0, r1 = min(r for r, _ in cells), max(r for r, _ in cells)
-            c0, c1 = min(c for _, c in cells), max(c for _, c in cells)
-            near = max(r1 - r0, c1 - c0) + 1
-            ring = sorted((r, c) for r in range(max(0, r0 - near), min(len(state), r1 + near + 1))
-                          for c in range(max(0, c0 - near), min(len(state[r]), c1 + near + 1))
-                          if (r, c) not in own and r not in self.clock and c not in self.clock_columns)
-            for act in sorted(self.organs.acts):
-                if act == self.organs.reset[0]:
-                    continue
-                out.append(SuspectForm(act=act, placed=act in self.organs.placed,
-                                       cells=tuple((r, c, state[r][c]) for r, c in sorted(cells)),
-                                       ring=tuple((r, c, state[r][c]) for r, c in ring), status=dict(report)))
-        return out
-
     def keep(self, form: Any, recall: Any) -> None:
         """It computes with no form it said again: the mind's memory holds them."""
 
@@ -763,10 +690,6 @@ class GridInducer:
         form = payload.get("form")
         if form == "still":
             return StillForm(act=payload["act"], colour=payload["colour"])
-        if form == "suspect":
-            return SuspectForm(act=payload["act"], placed=payload["placed"],
-                               cells=tuple(tuple(c) for c in payload["cells"]),
-                               ring=tuple(tuple(c) for c in payload["ring"]), status=dict(payload["status"]))
         parts_ = tuple(_part(p) for p in payload["parts"])
         if form == "aim":
             return AimForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"],
@@ -784,4 +707,4 @@ def _part(said: dict[str, Any]) -> Part:
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
            "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "GridInducer",
-           "Part", "RewriteForm", "StillForm", "SuspectForm", "grid_key", "parts", "things"]
+           "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]

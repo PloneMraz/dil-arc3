@@ -171,10 +171,6 @@ class LanguageInducer:
 
     # ── the programs it computes with again ──
 
-    def suspects(self, state: Grid, report: dict[str, Any]) -> list[Any]:
-        """Where the aim may lie: it says nothing before the aim has come."""
-        return []
-
     def keep(self, form: Any, recall: Callable[[], Any]) -> None:
         """A program it wrote is a hypothesis the mind holds: what it reads the
         grid with, and shows the model again, it has back from the mind's memory."""

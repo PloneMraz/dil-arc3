@@ -1,7 +1,7 @@
 """Build the Kaggle dataset and notebook that run dil-arc3.
 
     python scripts/kaggle/build_dil_run.py [--game a,b] [--cycles 60] [--concurrency 4]
-        [--curiosity LAW] [--attention] [--look-ahead N] [--no-suspects] [--notebook SLUG]
+        [--curiosity LAW] [--attention] [--notebook SLUG]
     python scripts/kaggle/build_dil_run.py --served [--model 35b-a3b|27b|flash-next] [--notebook SLUG]
         [--max-tokens 12288] [--max-model-len 65536] ...
     python scripts/kaggle/build_dil_run.py --probe
@@ -504,11 +504,6 @@ def main() -> None:
                          "(2026-09-29), and for the language inducer a notebook of its own (2026-10-05)")
     ap.add_argument("--attention", action="store_true",
                     help="the mind attends to the experiences most like where it stands (mind/learning.py)")
-    ap.add_argument("--look-ahead", type=int, default=None,
-                    help="how many steps the mind looks ahead past where it has stood (mind/learning.py: "
-                         "MAX_IMAGINED_STEPS, when not given)")
-    ap.add_argument("--no-suspects", dest="suspects", action="store_false",
-                    help="the mind does not test, before the aim has come, where its model says it may lie")
     a = ap.parse_args()
 
     dataset, kernel = OUT / "dataset", OUT / "kernel"
@@ -549,10 +544,7 @@ def main() -> None:
     a.notebook = a.notebook or (LEARNING_KERNEL_SLUG if cpu else KERNEL_SLUG)
     if cpu:
         run_args = ["--player", "random_game.py"] if a.probe else ["--inducer", a.inducer, "--curiosity", a.curiosity,
-                                                                        *(["--attention"] if a.attention else []),
-                                                                        *(["--look-ahead", str(a.look_ahead)]
-                                                                          if a.look_ahead is not None else []),
-                                                                        *([] if a.suspects else ["--no-suspects"])]
+                                                                        *(["--attention"] if a.attention else [])]
         cells = [params + f"RUN_ARGS = {run_args!r}\n" + PROBE_CELLS[0], *PROBE_CELLS[1:]]
         nb["cells"] = [{"id": f"cell-{i}", "cell_type": "code", "metadata": {}, "execution_count": None,
                         "outputs": [], "source": src} for i, src in enumerate(cells)]
