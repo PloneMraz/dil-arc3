@@ -169,8 +169,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   no longer used as one, removed; what it said is the learning's experience,
   how it read a grid is grid's). Two inducers (`--inducer`): **grid**
   (`src/mind/models/grid.py`), its reading of a grid and "still", "rewrite" and
-  "aim" hypotheses that apply wherever their cells lie (its docstring declares
-  the language); **language**
+  "aim" hypotheses that apply wherever their cells lie, and — once the aim has
+  come, so that what the mind does before it is unchanged — "move", "block" and
+  "into" (an aim of no one act: a thing moved into cells of these colours) (its
+  docstring declares the language); **language**
   (`src/mind/models/language_inducer.py`), a served language model that writes
   one program — `predict(grid, action, x, y)`, and if it can `where(grid)` and
   `targets(grid)`, its reading of the grid — only when no hypothesis held
