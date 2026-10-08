@@ -91,3 +91,15 @@ def test_the_mind_goes_to_test_a_suspect_and_drops_it_when_the_region_does_not_b
     tested = [d.payload for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "suspect"
               and d.payload["placed"] and [y, x] in [c[:2] for c in d.payload["cells"]]]
     assert tested and tested[-1]["fails"] == 1 and not tested[-1]["holds"], "not borne out: dropped"
+
+
+def test_a_thing_too_large_to_be_more_than_a_wall_is_not_suspected():
+    from mind.models.grid import MAX_SUSPECT_CELLS
+    g = [[0] * 40 for _ in range(40)]
+    for r in range(20):
+        for c in range(15):
+            g[r][c] = 6                                  # 300 cells of 6, the one thing of its colour
+    g[30][30] = 9
+    assert 20 * 15 > MAX_SUSPECT_CELLS
+    colours = {f.cells[0][2] for f in GridInducer(ARC_ORGANS).suspects(g, LEVELLED)}
+    assert colours == {9}
