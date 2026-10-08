@@ -5839,3 +5839,15 @@ committed. What each did instead:
   out of reach), 350 such choices.
 - tn36: 1-cell things of colour 0 clicked 235 times, 12 somewhere new.
 - r11l: 35 kinds of click, 299 states; cn04: act 5 195 times, 159 somewhere new.
+
+### A repetition said again, objected to everywhere: tried and removed
+
+Plone: try both. (A) A "repeating" word said again after it was answered
+objects to the act wherever it is taken, while the onlooker says it — a run
+that reaches a new state at each step otherwise meets its objection nowhere.
+
+The ten games (the six, r11l, tn36, cn04, m0r0), against version 26: every
+level and action count the same but ar25 251 → 253. In lp85 the objection came
+56 times; each time the mind clicked the other thing of the same kind (the
+second arrow, 14,26) once or twice, the onlooker fell quiet, the objection was
+lifted, and it went back. Removed, not committed.
