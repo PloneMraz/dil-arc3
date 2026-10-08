@@ -5957,3 +5957,16 @@ gets are not put at risk.
   still none (its two pieces read as one pattern, their gap changed by the
   aim). The ten games: as step 2; ls20's into aim borne out once, against 13
   times, so dropped. Removed, not committed.
+
+### 2026-10-09
+
+### Version 28 (`9e69156`, moves and into aims once the aim has come): 13 levels, 0.514
+
+Notebook `dil-arc3-learning` version 28: grid (steps 1 and 2 of A), S2b,
+attention, 600 cycles, the 25 games four at once. Not submitted. 25 of 25
+played through, 4,483 s (version 23: 4,359 s).
+
+- **13 levels, 0.51375** (version 23: 13, 0.49871).
+- Every level as version 23 but **tu93's second: 37 actions (50)**, its game
+  0.835 (0.459). Every first level the same, as the rule has it: nothing
+  changes before the first aim.
