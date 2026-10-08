@@ -5950,3 +5950,10 @@ gets are not put at risk.
   read none (ls20's piece changes as it enters the frame; m0r0's two pieces,
   moving as mirrors, are not one move); the rest as version 23.
 - 359 tests pass. Committed on trial.
+- **Then**: when the step that brought the aim does not read as a move (what
+  moved met another thing), the move read from the recent steps it was shown,
+  the last of that act whose pattern lies where it stood (8 back at most).
+  Replayed, ls20 now read one (its 25-cell piece into colours 5 and 9); m0r0
+  still none (its two pieces read as one pattern, their gap changed by the
+  aim). The ten games: as step 2; ls20's into aim borne out once, against 13
+  times, so dropped. Removed, not committed.
