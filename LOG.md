@@ -5781,3 +5781,18 @@ take `suspects=True`; `--no-suspects` leaves them out (`run_game.py`,
 `run_competition.py`, `build_dil_run.py`). Two tests of curiosity alone turn
 them off; one counting what is restored counts what was said of a step. 358
 tests pass.
+
+### Near at a step's scale: tried and removed
+
+tu93's piece stops a gap of three cells short of its goal, so the goal's
+suspect, near at its own size (3), never applied. Tried: near as far as what an
+act that takes no place changes most often spans (`reach`, learned from the
+steps: tu93 9, its piece's way from where it was to where it went), each
+suspect's datum holding the grid around it up to 16 cells each way. Replayed,
+tu93's goal suspect applied from cycle 441, as its piece came near.
+
+The six (S2b, attention, suspects, 600 cycles), against suspects near at their
+own size: tu93's first level in **404** actions (454), its goal suspect borne
+out — but its second level lost (50): going toward suspects, it ended the region
+at cycles 417 and 432 and did not get through in the 196 cycles left. ls20 400
+(381); ar25, vc33, lp85, lf52 the same. 0.502 (0.578). Removed, not committed.
