@@ -5862,3 +5862,22 @@ The ten games, against version 26: **tn36's level lost** (version 26: 33
 actions, 3.36 of the score); vc33 62 and 282 (69 and 244); lf52 134 (138); m0r0
 as before — its 1-cell things still clicked 209 and 135 times; the others the
 same. Removed, not committed.
+
+### `56934496` (version 26, suspects) scored 0.02
+
+Kaggle scored the submission **0.02** (version 23, `56887238`: 0.25; version 18,
+`56820389`: 0.26). On the 25 games here version 26 did better than version 23
+(15 levels, 0.515 against 13, 0.499), so the 25 do not tell how the hidden games
+go. Nothing was pushed to Kaggle while it was scored. A scored run's log is not
+shown, so why is not known. What could be, neither shown nor ruled out:
+
+- The score here is three levels near the human baseline (tn36, lp85, r11l: 10.9
+  of the 12.9 summed); version 23's 0.25 on the hidden games is likely as few.
+  Suspects change what the mind does from the first step; a few such early
+  levels lost there would take nearly all of it.
+- Time: some games took twice version 23's (ka59 1,084 s against 536, dc22 663
+  against 336), the 25 together the same (4,352 s against 4,359). A hidden game
+  far slower would hold its place in the four at once, and the deadline stops
+  the games not started.
+- A game whose process failed scores only what it had gained; here all 25 exited
+  0.
