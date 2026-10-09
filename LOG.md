@@ -5975,3 +5975,16 @@ played through, 4,483 s (version 23: 4,359 s).
 
 Plone approved: `56983446`, notebook `dil-arc3-learning` version 28, code
 `9e69156`. Nothing is pushed to Kaggle while it is scored.
+
+### The Paper Track's sample writeup, read
+
+Plone pointed to the competition's sample writeup (`arc-prize-2026-sample-writeup`,
+posted by Greg Kamradt on 2026-03-25; rendered through a headless browser, the
+text kept in the workspace's `Downloads/pages/paper-track-sample-writeup.txt`).
+It is the 2025 first-place paper, "Less is More: Recursive Reasoning with Tiny
+Networks" (Alexia Jolicoeur-Martineau, Samsung SAIL Montréal), as a Writeup:
+title and subtitle, the abstract (about 140 words), author and affiliation,
+"Read the full paper here" with a Project Link to the arXiv paper
+(2510.04871), licence CC BY 4.0, prize track "Main Track". The Writeup holds
+the abstract only; the paper itself is behind the link. The comment the link
+pointed at (#3424693) did not load in the rendered page and was not read.
