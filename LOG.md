@@ -5970,3 +5970,8 @@ played through, 4,483 s (version 23: 4,359 s).
 - Every level as version 23 but **tu93's second: 37 actions (50)**, its game
   0.835 (0.459). Every first level the same, as the rule has it: nothing
   changes before the first aim.
+
+### Version 28 submitted as `56983446` (Plone)
+
+Plone approved: `56983446`, notebook `dil-arc3-learning` version 28, code
+`9e69156`. Nothing is pushed to Kaggle while it is scored.
