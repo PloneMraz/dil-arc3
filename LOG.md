@@ -6053,3 +6053,14 @@ plan in `paper/PLAN.md`. The Overview and Rules pages read again (copies dated
 the competition a "Featured Hackathon", which settles that §2.2.a's single
 submission applies (CLAUDE.md said a strong inference). A Writeup left in draft
 at the deadline is not considered; a Track must be selected.
+
+### The winning papers of 2024 and 2025, read; the outline
+
+Read for their shape (PDFs in the workspace's `Downloads/papers/`): 2025's 1st
+(Jolicoeur-Martineau) and 3rd (Liao & Gu); 2024's 1st (Li et al.), 2nd (Akyürek
+et al.) and 3rd (Bonnet & Macfarlane). 2025's 2nd (Pourcel, Colas & Oudeyer) is
+on OpenReview, which refused the download; not read. What they share — a title
+that is the finding, an abstract from question to one number, an early figure,
+numbered contributions, each choice set against a measurement, limits and failed
+ideas stated — is in `paper/OUTLINE.md`, with the outline against the six
+criteria and a word budget for the 1,500.
