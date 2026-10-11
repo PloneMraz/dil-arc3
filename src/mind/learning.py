@@ -57,6 +57,16 @@ THE LOOP, one step at a time:
   MAX_IMAGINED_STEPS past them, where a situation not stood in is itself
   something left to try; else RESET, or the known act toward the situation least
   visited.
+- **A collision turns its thinking** (Plone, 2026-10-11: a mismatch is not a
+  penalty; it is data that deviates from what was expected, and the scar it
+  leaves turns how the mind thinks and builds what it does next — which changes
+  the region, which changes what it expects). When a step's return does not
+  come as expected, it thinks on what collided and writes that thought, built
+  from the return: silence where it expected an answer turns it from that kind
+  of act; an answer other than it foresaw turns it to where the answer differed
+  (where its model says an act lies there: `Inducer.unlike`, `Inducer.at`). The
+  turn holds for the next choice, which names the thought among what it was
+  built from; the next collision turns it again. No count is kept of it.
 - **The onlooker's word** strikes the mind as a collision; what it objects to is
   put behind every other act at every point of choice — never over a known way
   to the aim — and lifted when the onlooker says something else. A repetition
@@ -106,7 +116,7 @@ from typing import Any, Callable, Final
 from dil.loop.field import ALERTNESS, axis, rising, shifted_count
 
 from .models.base import Context, Expectation, Inducer, Proposal, Thinking, Write
-from .organs import Act, Organs, Step
+from .organs import Act, Organs, Otherwise, Step
 
 # A hypothesis's tags; its `object`, what it is about, is what the host calls a
 # step's state (`Organs.state_object`).
@@ -188,6 +198,17 @@ class Hypothesis(Weighed):
     @property
     def form(self) -> Any:
         return self.held if self.recall is None else self.recall(self)
+
+
+@dataclass(eq=False)
+class TurnHandle:
+    """A thought on a collision, as a handle: what the choice it turned is built from."""
+
+    cycle: int
+
+
+# What a choice a collision turned says of it.
+TURN_WHYS: Final = ("; turned from what was silent", "; turned to where the answer differed")
 
 
 @dataclass(frozen=True)
@@ -383,6 +404,12 @@ class Learning:
         # Hypotheses about the aim (S4): those that applied to the step being
         # learned, weighed by its report; the step; whether any is held yet.
         self._aim_applied: list[Hypothesis] = []
+        # How a collision turned it, for the next choice (`_think_on_collision`):
+        # ("silence", the kind it turns from, the coarser kind) or
+        # ("unforeseen", where the answer differed); and the thought's handle.
+        self._turn: tuple | None = None
+        self._turn_thought: object | None = None
+        self._expected_otherwise = False
         self._last_step: tuple[str, Act, Step, Any] | None = None
         self._expected_from: tuple[str, ...] = ()
         self._aim_held = False
@@ -619,6 +646,8 @@ class Learning:
             lifted.
 
         What it objected to, and why, is written; that thought is its answer."""
+        if context.on == "frame":
+            return self._think_on_collision(context)
         if context.on != "onlooker":
             return None
         remark = context.remark or {}
@@ -651,6 +680,48 @@ class Learning:
             payload["lifted"] = lifted
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=answer, built_from=built)],
                         answer=tuple(("handle", a) for a in answers))
+
+    def _think_on_collision(self, context: Context) -> Thinking | None:
+        """A step's return did not come as it expected: it thinks on what collided,
+        and the thought turns its next choice (the module's docstring)."""
+        if self._last_step is None:
+            return None
+        source_raw, act, step, unit = self._last_step
+        before, after = step.before, step.after
+        situation = self.inducer.situation(before)
+        if act[0] == self.organs.reset[0]:
+            return None
+        kind = self._kind_of.get((situation, act)) or self.inducer.default_kind(act)
+        if self._expected_otherwise and self.inducer.situation(after) == situation:
+            self._turn = ("silence", kind, self.inducer.coarse(kind) or kind)
+            said = {"collided": "silence", "act": list(act), "turns": "from that kind of act"}
+        elif not self._expected_otherwise and self._expected is not None:
+            where = self.inducer.unlike(self._expected, after)
+            if where is None:
+                return None
+            self._turn = ("unforeseen", where)
+            said = {"collided": "unforeseen", "act": list(act), "turns": "to where it differed"}
+        else:
+            return None
+        self._turn_thought = TurnHandle(self.steps)
+        built = (unit,) if unit is not None else ()
+        payload = {"on": "frame", "cycle": self.steps, "here": self._state_of.get(source_raw), **said}
+        return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
+                                      built_from=built)])
+
+    def _turned(self, here: str, fresh: list[tuple[Act, tuple]]) -> tuple[list[tuple[Act, tuple]], str]:
+        """Of the acts not yet taken here, those a collision turned it to, with why;
+        all of them, and no why, when it turned to none of them or was not turned."""
+        if self._turn is None:
+            return fresh, ""
+        if self._turn[0] == "silence":
+            _, kind, coarse = self._turn
+            others = [ak for ak in fresh if ak[1] != kind and (self.inducer.coarse(ak[1]) or ak[1]) != coarse]
+            return (others, TURN_WHYS[0]) if others else (fresh, "")
+        where = self._turn[1]
+        state = self._state(here)
+        there = [ak for ak in fresh if self.inducer.at(ak[0], state, where)]
+        return (there, TURN_WHYS[1]) if there else (fresh, "")
 
     def _named(self, remark: dict[str, Any]) -> list[Act]:
         """The acts an onlooker's word names, as the body takes them."""
@@ -801,10 +872,20 @@ class Learning:
             state = self.inducer.copy(said.state)
             fields = said.fields
             self._expected = state
+            self._expected_otherwise = False
             return Expectation(state=state, fields=dict(fields) if fields else None,
                                held=(("handle", h),), by_model=True)
+        # Nothing it knows says what will come: it expects the region to be
+        # otherwise than it was — what the act was commanded for (Plone,
+        # 2026-10-11). Silence is then a mismatch; its scar falls on the return
+        # and on what the expectation stood on (T5's standing expectation): the
+        # choice that commanded the act comes back only after this step is met.
         self._expected = self.inducer.copy(step.before)
-        return Expectation(state=self._expected, by_model=False)
+        self._expected_otherwise = True
+        situation = self.inducer.situation(step.before)
+        otherwise = Otherwise(state=self.inducer.as_read(step.before),
+                              differs=lambda after: self.inducer.situation(after) != situation)
+        return Expectation(state=otherwise, by_model=False)
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
                 on_report: bool, seen: list | None = None) -> list[Write]:
@@ -871,6 +952,9 @@ class Learning:
 
     def _learn_step(self, step: Step, unit: Any) -> list[Write]:
         writes: list[Write] = []
+        # A turn holds for the choice after the collision that made it; this step
+        # is met anew, and a collision in it turns the mind again (`think`).
+        self._turn = None
         if self._new:
             writes += self._write(())  # a step whose report never came
         if self._pending:
@@ -1269,8 +1353,9 @@ class Learning:
                 act, through = toward[0][0], [h for _, h in toward]
                 why = f"toward where its hypotheses say an act brings the aim ({len(toward)} steps)"
             elif fresh:
-                act, odds = self._curious(here, fresh)
-                why = "not yet taken from here"
+                turned, turn_why = self._turned(here, fresh)
+                act, odds = self._curious(here, turned)
+                why = "not yet taken from here" + turn_why
             else:
                 # Where it has not tried something it cannot foresee — a situation
                 # it has not stood in is itself such a place; then what it can
@@ -1340,6 +1425,12 @@ class Learning:
             if context.remark_unit is not None:
                 built.append(context.remark_unit)   # what it quotes, it was built from
         built += [("handle", h) for h in through]
+        if self._turn_thought is not None and why.endswith(TURN_WHYS):
+            # What turned it: the return that collided, and the thought on it
+            # (whose id is known only once it comes back, in a later cycle).
+            if self._last_step is not None and self._last_step[3] is not None:
+                built.append(self._last_step[3])
+            built.append(("handle", self._turn_thought))
         built.append(("prior", "task"))
         # And what it read, or computed from what it read, to choose.
         built += [b for b in self._take_used() if b not in built]

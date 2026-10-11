@@ -6094,3 +6094,39 @@ Function, Every Step on the Record". And the paper makes no claim of it: it
 shows a stretch of trace the reader can check — a ResistEvent, the behaviour
 changed, the expectation revised, the next ResistEvent otherwise. `paper/PLAN.md`
 and `paper/OUTLINE.md` say so.
+
+### Silence collides, and a collision turns the mind (Plone: dil-arc3 before the paper)
+
+Plone: a mismatch is not a penalty — it is data that deviates from what was
+expected; silence where an answer was expected is itself a ResistEvent; the scar
+turns how the mind thinks and builds what it does, which changes the region and
+so what it expects, a chain with no stop. Three places where dil-arc3 kept from
+it (CLAUDE.md as it stood): the standing expectation "nothing changes" made an
+act that did nothing a match, so silence never collided; scars changed nothing
+but whether a hypothesis held (`recollection` not wired; the learning chose by
+its counts); the field reached the learning only for how far an objection
+reaches. A curiosity law of mine, "the kind whose expectations collide most",
+was a collision rate as a target — a reward in disguise; Plone corrected it.
+
+1. **Silence collides.** Where nothing it knows says what will come, the mind
+   expects the region to be otherwise than it was (`organs.Otherwise`; the grid
+   as the inducer reads it, the clock left out, `Inducer.as_read`); the host's
+   fit holds when the returned grid differs where the mind reads. The scar falls
+   on the return and on what the expectation stood on: the choice that commanded
+   the act comes back only after the step is met (its id is not yet known).
+2. **A collision turns the mind.** On a frame's collision the learning thinks on
+   what collided and writes the thought, built from the return: silence turns
+   it from that kind of act; an answer other than it foresaw, to where it
+   differed (`Inducer.unlike`, `Inducer.at`). The turn holds for the next choice
+   (its `why`: "turned from what was silent", "turned to where the answer
+   differed"), which names the return among what it was built from. No count.
+3. `scripts/chains.py` reads a game's store alone — `[event]` (its hash chain
+   verified) and `[data]` — and finds the chains: a frame's scar, the thought,
+   the turned choice, the experience of that act there, the next return.
+
+The ten games (S2b, attention, 600 cycles), against version 28: every first
+level kept (lp85 17, r11l 19, tn36 33, m0r0 74, ls20 342, tu93 454 and 37);
+**ar25 1 level in 475 actions** (none); vc33's second 293 (288), lf52 140 (138).
+Turned choices: ls20 67, m0r0 24, lp85 10, tn36 15. Chains found: tn36 141 of
+401 frame scars (the next return met as expected in 50), ls20 129 of 562 (13),
+m0r0 32 of 534 (16). 361 tests pass.

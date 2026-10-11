@@ -57,7 +57,8 @@ class Expectation:
     # Which data the expectation is (`held_by`): its learning's handles for data
     # it had written, or datum ids. Empty: no datum of its learning's is it.
     held: tuple[object, ...] = ()
-    # False: its learning made no expectation; this is the standing one (nothing changes).
+    # False: nothing its learning knows made it — the expectation of an act that
+    # the region will be otherwise (`organs.Otherwise`).
     by_model: bool = True
 
 
@@ -175,6 +176,18 @@ class Inducer(Protocol):
 
     def copy(self, state: State) -> State:
         """A state of its own, as the learning keeps what it expects."""
+
+    def unlike(self, expected: State, came: State) -> Any:
+        """Where what came differs from what was expected, as it reads them —
+        opaque to the learning, handed back to `at`; None to say nothing."""
+
+    def at(self, act: Act, state: State, where: Any) -> bool:
+        """Whether an act, in this state, lies where `where` says (`unlike`)."""
+
+    def as_read(self, state: State) -> State:
+        """A state as it reads it: what it does not read (a clock) left out, as
+        None — what an expectation that the region will be otherwise is laid
+        against."""
 
     def coarse(self, kind: tuple) -> tuple | None:
         """The coarser kind a kind falls in, which the learning reads first — what

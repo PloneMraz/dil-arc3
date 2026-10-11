@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any, Final
 
-from mind.organs import Act, Organs, Step
+from mind.organs import Act, Organs, Otherwise, Step
 
 from .action import COMPLEX_ACTION, RESET, SIMPLE_ACTIONS
 from .command import can_carry_out
@@ -52,8 +52,12 @@ def _step(payload: dict[str, Any]) -> Step | None:
         return None
 
 
-def _expected_payload(payload: dict[str, Any], state: Grid) -> dict[str, Any]:
-    """The frame as an expectation puts it: the grid expected in place of what came."""
+def _expected_payload(payload: dict[str, Any], state: Grid | Otherwise) -> dict[str, Any]:
+    """The frame as an expectation puts it: the grid expected in place of what came;
+    or, for an expectation that it will be otherwise, the grid it was, as the mind
+    reads it (None where it does not read), marked so (`decisions.situation_fit`)."""
+    if isinstance(state, Otherwise):
+        return {**payload, "grids": [state.state], "otherwise": True}
     return {**payload, "grids": [state]}
 
 

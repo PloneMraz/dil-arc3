@@ -16,13 +16,26 @@ shown to a model is the model's business, told what kind of state it is.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable
 
 State = Any
 # An act as the body takes it: its id and the arguments it carries (for an act
 # that takes a place, its x and y; None otherwise).
 Act = tuple[int, "int | None", "int | None"]
+
+
+@dataclass(frozen=True)
+class Otherwise:
+    """An expectation that the region will be otherwise than `state` — what an act
+    is commanded for, where nothing it knows says what will come (Plone,
+    2026-10-11: to act is to expect it to tell; silence where something was
+    expected is itself a ResistEvent). `state` is as its model reads it, what it
+    does not read left out (`Inducer.as_read`); `differs(state)` says whether a
+    state is otherwise, as its model reads it."""
+
+    state: State
+    differs: Callable[[State], bool] = field(compare=False)
 
 
 @dataclass(frozen=True, slots=True)

@@ -322,17 +322,36 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   from, it reads back from the store (above). It may read anything in the
   store: whatever it asks, the answer reaches it.
 - **The mind expects what the region returns**: the next state and the region's
-  report, from the held hypothesis that applies and fits the store best. Where
-  it holds none, the standing expectation holds: nothing changes, and the region
-  reports what it reported last.
-- **A mismatch on any channel is handed to the learning to think on** — the
-  frame, the status, or what the onlooker says — as many times a cycle as the
-  field's alertness allows (`MIND_THOUGHTS_PER_CYCLE`, 1 at NEUTRAL, 2 at full);
-  what the onlooker says, even in a cycle already thought in. The learning
-  learns from every return as it comes (`observe`) and thinks further only on
-  the onlooker's word: for the frame and the status, the bound is a seam no
-  learning here uses. The field reaches the mind at T5 as it reaches every layer
+  report, from the held hypothesis or experience that applies and fits the store
+  best. Where nothing it knows says what will come, it expects the region to be
+  **otherwise than it was** — what the act was commanded for (Plone,
+  2026-10-11: to act is to expect it to tell; silence where an answer was
+  expected is itself a ResistEvent). The frame's expectation is then the grid as
+  the mind reads it, the clock left out (`Inducer.as_read`, `organs.Otherwise`),
+  and the host's fit holds when the grid returned differs from it where the mind
+  reads (`arc3.decisions.situation_fit`). Its scar falls on the return and on
+  what the expectation stood on (T5's standing one): the choice that commanded
+  the act comes back only after the step is met. For the report, the standing
+  expectation holds: the region reports what it reported last.
+- **A mismatch is not a penalty, and a collision turns the mind** (Plone,
+  2026-10-11). A mismatch is data that deviates from what was expected, never a
+  reward or a score; no count of collisions is kept or sought. The scar it
+  leaves turns how the mind thinks and builds what it does next, which changes
+  the region and so what it expects. A mismatch on any channel is handed to the
+  learning to think on — the frame, the status, or what the onlooker says — as
+  many times a cycle as the field's alertness allows (`MIND_THOUGHTS_PER_CYCLE`,
+  1 at NEUTRAL, 2 at full); what the onlooker says, even in a cycle already
+  thought in. On the frame, the learning thinks on what collided and writes that
+  thought, built from the return: silence turns it from that kind of act; an
+  answer other than it foresaw turns it to where the answer differed (where its
+  model says an act lies there: `Inducer.unlike`, `Inducer.at`). The turn holds
+  for the next choice, which says so in its `why` and names the return among
+  what it was built from; the next collision turns it again. On the status it
+  thinks no further. The field reaches the mind at T5 as it reaches every layer
   (INV-7), and the learning reads it (how far an objection reaches).
+  `scripts/chains.py` finds, in a store alone, the chains this leaves: a scar, the
+  thought, the turned choice, what is expected of that act there from then on,
+  the next return.
 - **What an Other says strikes the mind as a mismatch** (Plone, 2026-09-27/28):
   a ResistEvent, not plain data (§8.4, "a collision read into coordinates by a
   third party"). The mind expects the Other to say what it said — or, once it

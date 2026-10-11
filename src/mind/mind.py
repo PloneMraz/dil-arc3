@@ -13,18 +13,20 @@ WHAT IT DOES:
 - **Expects.** For each step the eye delivers, it asks its learning what will
   come back, from where the region stood and the act alone (INV-8): its
   expectation of the step, and the datum its learning says that expectation is,
-  is `held_by` (v0.3.5). Where its learning says nothing, the standing
-  expectation holds: nothing changes, and the region reports what it reported
-  last.
+  is `held_by` (v0.3.5). Where nothing its learning knows says what will come,
+  it expects the region to be otherwise than it was (`organs.Otherwise`): to act
+  is to expect it to tell, and silence collides (Plone, 2026-10-11). The report,
+  where its learning says nothing, it expects as reported last.
 - **Has its learning think when an expectation fails** — the step, or the
   region's report — as often a cycle as alertness allows; on a change of the
   onlooker's word in its own right; and while the body waits for a command. It
   hands its learning what it has: the recent steps (as many as T5's
   window), what memory answered to what was asked, what the onlooker says, what
   the region offers, why it is thinking. Its learning is also shown every
-  return, and learns from it there; it thinks further only on the onlooker's
-  word (`learning.Learning.think`), so the other occasions are seams it leaves
-  unused.
+  return, and learns from it there; it thinks further on a collision of the
+  frame (what collided turns its next choice) and on the onlooker's word
+  (`learning.Learning.think`); the status and the body's waiting are seams it
+  leaves unused.
 - **Commands.** When the region has said all it says in a cycle, it asks its
   learning what to do next and, if the body can carry it out (the body's own
   rule), pushes it as T5's test (§6.4); the body carries it out. With no command
@@ -63,7 +65,7 @@ from dil.loop.types import InfoUnit
 
 from .learning import CURIOSITY, Learning
 from .models.base import Context, Inducer, Learner, Write
-from .organs import Act, Organs, Step
+from .organs import Act, Organs, Otherwise, Step
 
 # How many more times the mind thinks, in the same cycle, when it has no command
 # the body can carry out — while the body waits. DECLARED, not measured.
@@ -313,7 +315,7 @@ class Mind:
         # Kept as long as the longest window the field can ask of T5; read as long
         # as the one it asks now (`_recent`).
         self._seen = [*self._seen, [step, observed, None, None]][-2 * BASELINE_WINDOW:]
-        hit = expected == step.after
+        hit = expected.differs(step.after) if isinstance(expected, Otherwise) else expected == step.after
         self.holds.append(int(hit))
         self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
                                                  seen=self._recent()))

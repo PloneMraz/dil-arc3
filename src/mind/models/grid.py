@@ -510,6 +510,29 @@ class GridInducer:
         """A state of its own, as the learning keeps what it expects."""
         return [row[:] for row in state]
 
+    def unlike(self, expected: Grid, came: Grid) -> frozenset[tuple[int, int]] | None:
+        """The cells, off the clock, where what came differs from what was expected."""
+        cells = frozenset((r, c) for r in range(min(len(expected), len(came))) if r not in self.clock
+                          for c in range(min(len(expected[r]), len(came[r])))
+                          if c not in self.clock_columns and expected[r][c] != came[r][c])
+        return cells or None
+
+    def at(self, act: Act, state: Grid, where: Any) -> bool:
+        """An act that takes a place lies there when the thing it is put on touches
+        those cells (or is next to them); one that takes no place, nowhere."""
+        if not where or act[0] not in self.organs.placed or act[1] is None or act[2] is None:
+            return False
+        x, y = act[1], act[2]
+        if not (0 <= y < len(state) and 0 <= x < len(state[y])):
+            return False
+        thing = self._thing_at(state, x, y)
+        return any((r + dr, c + dc) in where for r, c in thing for dr, dc in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)))
+
+    def as_read(self, state: Grid) -> list[list[int | None]]:
+        """A grid as it reads it: the clock's rows and columns left out (None)."""
+        return [[None if r in self.clock or c in self.clock_columns else v for c, v in enumerate(row)]
+                for r, row in enumerate(state)]
+
     def coarse(self, kind: tuple) -> tuple | None:
         """The coarser kind a kind falls in, read first: putting an act on a thing
         of a colour, whatever its size. None for a kind with none."""

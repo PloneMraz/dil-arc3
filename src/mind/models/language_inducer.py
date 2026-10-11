@@ -245,6 +245,17 @@ class LanguageInducer:
         """A state of its own, as the learning keeps what it expects."""
         return [row[:] for row in state]
 
+    def unlike(self, expected: Grid, came: Grid) -> None:
+        """Where what came differs: it says nothing of it."""
+        return None
+
+    def at(self, act: Act, state: Grid, where: Any) -> bool:
+        return False
+
+    def as_read(self, state: Grid) -> Grid:
+        """A grid as it reads it: all of it."""
+        return [row[:] for row in state]
+
     def coarse(self, kind: tuple) -> tuple | None:
         """No kind falls in a coarser one."""
         return None

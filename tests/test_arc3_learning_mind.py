@@ -130,7 +130,10 @@ def test_an_act_taken_again_is_expected_as_learned_and_the_expectation_is_the_da
     run(cycle, frame(lit(0), lit(1)), status())          # learned: from lit(0), ACTION1 -> lit(1)
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     run(cycle, frame(lit(0), lit(1)), status())          # the same act from the same state
-    assert mind.holds == [0, 0, 1], "the third it expected, from what it learned"
+    # The first two it expected only to be otherwise than they were (nothing it
+    # knew said more), and they were; the third it expected from what it learned.
+    assert mind.holds == [1, 1, 1]
+    assert mind.learning.unseen[:2] == [2, 0], "the first two from nothing it knew"
     learned_id = of_kind(data, "experience")[0][0]
     assert data.get(learned_id).fixed.provenance != "scar"
     assert data.get(learned_id).payload["supports"] == 2, "the experience bore itself out"
@@ -868,3 +871,33 @@ def test_each_weighing_revises_the_hypothesis_datum():
     run(cycle, frame(lit(0), lit(1)), status())
     held = [d for _, d in of_kind(data, "hypothesis") if d.payload["supports"] >= 2]
     assert held, "how often it was borne out is in [data] as it changes"
+
+
+def test_silence_where_it_expected_an_answer_collides():
+    # Plone, 2026-10-11: to act is to expect the region to tell; silence where
+    # something was expected is itself a ResistEvent, and the return is scarred.
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(1), lit(2)), status())                          # something came of it
+    run(cycle, frame(lit(2), lit(2), action=2), status(action=2))     # it acted; nothing came of it
+    assert mind.holds == [1, 1, 0]
+    scarred = {r.datum_id for r in events.all() if type(r).__name__ == "EventRecord"}
+    assert "signal-2-0" in scarred and "signal-1-0" not in scarred
+
+
+def test_silence_turns_the_next_choice_from_that_kind_of_act():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status(affords=(1, 2)))
+    first = mind.commands[-1][1]
+    run(cycle, frame(lit(1), lit(1), action=first[0]), status(affords=(1, 2), action=first[0]))   # nothing came of it
+    thoughts = [d.payload for _, d in of_kind(data, "thought")]
+    assert thoughts and thoughts[-1]["collided"] == "silence", thoughts
+    act, why = mind.learning.thoughts[-1].act, mind.learning.thoughts[-1].why
+    assert act[0] != first[0] and why.endswith("turned from what was silent"), (act, why)
+    choice = sorted((k for k, d in of_kind(data, "choice")), key=lambda k: tuple(map(int, k.split("-")[1:])))
+    assert "signal-1-0" in written_of(events)[choice[-1]], "built from the return that collided"
+
+
+def written_of(events):
+    return {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
+            for w in r.activity.written}
