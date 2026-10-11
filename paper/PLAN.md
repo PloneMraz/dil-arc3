@@ -15,6 +15,20 @@ Kept here so that a new session starts from it, not from memory. History goes in
    The title is settled: "Expect, Collide, Revise: Learning Without a Reward
    Function, Every Step on the Record". The evidence is a checkable chain, not a
    claim (`OUTLINE.md`).
+   **The work on dil-arc3, in order (Plone, 2026-10-11): 3 → 2 → 1 → 4.**
+   Done before it: silence collides; a collision turns the next choice; the
+   field reaches how the mind builds behaviour; every state expected as read;
+   DEVIATION 8; the mind's vote on exploration (LOG.md, 2026-10-11). Then:
+   (3) a collision of the region's report — an end, the aim, any field otherwise
+   — is thought on and turns the mind, as a frame's does; (2) the mind recalls
+   from memory the collisions it met where it stands now, and they turn what it
+   builds; (1) what builds most of its behaviour is no longer a count (S2b's odds
+   of somewhere new, UCB): each command a test of an expectation worth testing,
+   its order from context, memory and the field — a settled law, to be changed
+   with Plone; (4) last, as the dearest evidence: the same game run with the
+   field (GLOB-MOD) or the region set otherwise, several tests, to show
+   expectations differing, so thinking and the behaviour built differing — the
+   individuals the same DIL makes, each read back from its `[event]`.
 1. **Was: the submission the paper describes is version 28** (now to be the
    notebook that shows the chain; version 28 stays the fallback): `56983446`, notebook
    `plonemraz/dil-arc3-learning` version 28, code `9e69156` — grid with moves,
