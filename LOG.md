@@ -6082,3 +6082,15 @@ longer paper as a PDF in the Public Project Link — the route the rules offer
 of your paper"), and the sample writeup's form. Whether the limit binds the PDF
 is not stated; not asked (Plone: no need). CLAUDE.md, `paper/PLAN.md` and
 `paper/OUTLINE.md` say so.
+
+### dil-arc3 before the paper; the title; the evidence a chain (Plone)
+
+Plone: the paper waits; dil-arc3 does not yet show DIL's main contribution —
+learning and changing behaviour from its own collisions with what it expected,
+not from a reward set beforehand (a mismatch is data deviating from the
+expectation, never a penalty; silence where an answer was expected is itself a
+ResistEvent). Title settled: "Expect, Collide, Revise: Learning Without a Reward
+Function, Every Step on the Record". And the paper makes no claim of it: it
+shows a stretch of trace the reader can check — a ResistEvent, the behaviour
+changed, the expectation revised, the next ResistEvent otherwise. `paper/PLAN.md`
+and `paper/OUTLINE.md` say so.

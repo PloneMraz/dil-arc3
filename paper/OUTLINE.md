@@ -32,25 +32,44 @@ read.) PDFs in the workspace's `Downloads/papers/`.
   stands alone, each of these in one or two sentences and the tables carrying
   the numbers; the paper behind the link, in full.
 
-## Title (to choose)
+## Title (Plone, 2026-10-11)
 
-The finding is two-sided: the loop can be read back, and what it learned shows
-why the score barely moved. Candidates:
+**"Expect, Collide, Revise: Learning Without a Reward Function, Every Step on
+the Record"** — DIL's two contributions: behaviour that changes from its own
+collisions with what it expected, not from a reward set beforehand; and every
+step of it auditable. No competition name in the title (not required; most
+winning titles have none; it serves Universality). Subtitle: the DIL protocol on
+ARC-AGI-3, and the submission it describes.
 
-- "Every Belief on the Record: An Auditable Learning Agent for ARC-AGI-3"
-- "An ARC-AGI-3 Agent You Can Audit — and What Its Log Says About Exploration"
-- "What an Event Log Shows: Auditing a Self-Learning Agent on ARC-AGI-3"
+## The evidence is a trace, not a claim (Plone, 2026-10-11)
 
-Subtitle: the DIL protocol; one submission (`56983446`, 0.25).
+The paper does not assert "DIL learns from its own experience". It shows a
+stretch of trace the reader can check for themself: **a ResistEvent occurs →
+the behaviour changes → the expectation is revised → the next ResistEvent is
+otherwise.** One such chain, checkable from `[event]` (hash-chained, with the
+tool to read it), is worth more than ten pages of argument. So:
+
+- the chain is the paper's centre (Figure 2, and section 3), the rest serves it;
+- every link is a record in `[event]`: the scar (which datum, which
+  expectation), the thought it set off and the choice it turned (each naming
+  what it was built from), the revision of what was expected (a hypothesis's
+  or an experience's datum revised, a refutation), the next scar;
+- the evidence script finds such chains in the run's `[event]` itself, counts
+  them, and prints one in full; the reader runs it on the published stores;
+- mismatch is never written as a penalty or reward, nor collisions as a score.
+
+The agent must first produce such chains plainly (Plone: develop dil-arc3
+before the paper; `PLAN.md`).
 
 ## Sections
 
-**Abstract** [120] — Can an agent that learns ARC-AGI-3 from nothing be audited
-by someone else, from its log alone? DIL (the loop) and a neutral learning mind
-whose every expectation, hypothesis, refutation and choice is a datum with what
-it was built from, in a hash-chained `[event]` log. Submission `56983446`: 0.25
-(the random agent: 0.02 and 0.06). The log shows where the actions go and why
-changes to exploration reshuffle which levels are won.
+**Abstract** [120] — An agent that learns ARC-AGI-3 games with no reward
+function: it expects, its expectation collides with what comes back (a
+ResistEvent), and the collision turns what it does next. Every expectation,
+collision, thought and choice is a datum naming what it was built from, in a
+hash-chained `[event]` log. We show chains a reader can check — collision →
+changed behaviour → revised expectation → a different collision — and the
+submission's score, against the random agent's.
 
 **1. Introduction** [200] — RHAE rewards few actions; an agent that learns in the
 game must explore. The question: can what it knew and why it acted be read back
@@ -73,12 +92,13 @@ aim; once the aim has come, moves, blocks and an aim of no one act (version 28's
 addition). The invariants it keeps (INV-4, -5, -6, -8) and the declared
 deviations, in one line each or by reference.
 
-**3. Reading the loop back** [250] — What `[event]` holds (each cycle's layers,
-admissions, scars, reads, writes with `built_from`). Shown on one game of the
-Save & Run (version 29, the submitted code): rebuilt from `[event]` alone — what
-it knew, each change, why it chose, which hypothesis a scar fell on. Figure 2: a
-trace excerpt. The checker's verdicts. Stated: the scored run's logs are not
-shown; the evidence is the same code on the public games.
+**3. A chain the reader can check** [300] — What `[event]` holds (each cycle's
+layers, admissions, scars, reads, writes with `built_from`). One chain in full
+(Figure 2): the ResistEvent, the thought and the turned choice, the revised
+expectation, the next ResistEvent — each record's id, so the reader finds it in
+the published stores; how many such chains the run holds. The checker's
+verdicts. Stated: the scored run's own logs are not shown; the evidence is the
+same code on the public games.
 
 **4. Results** [250] — Table 1: scores, hidden and public — random agent;
 versions 18, 23, 26, 28. Table 2: changes one at a time (from the 10- and
@@ -107,6 +127,6 @@ audit, and a loop that another model or another task can plug into.
 
 ## To settle before drafting
 
-- The title.
-- Whether the trace in Figure 2 is from tu93 (two levels, an aim of no one act)
-  or a shorter game.
+- The submission described: the notebook that shows the chain plainly, once
+  dil-arc3 does (`PLAN.md`).
+- The game Figure 2's chain is from — chosen when the chains are found.

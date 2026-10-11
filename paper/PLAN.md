@@ -6,7 +6,17 @@ Kept here so that a new session starts from it, not from memory. History goes in
 
 ## Settled with Plone (2026-10-11)
 
-1. **The submission the paper describes is version 28**: `56983446`, notebook
+0. **dil-arc3 first, the paper after.** Plone: dil-arc3 does not yet show
+   DIL's main contribution — learning and changing behaviour from its own
+   collisions with what it expected, not from a reward set beforehand. It is
+   developed until it does (silence as a collision; a collision turning what the
+   mind does next; scars and the field reaching how it builds behaviour), and the
+   paper describes the notebook that shows it. The dates below move with it.
+   The title is settled: "Expect, Collide, Revise: Learning Without a Reward
+   Function, Every Step on the Record". The evidence is a checkable chain, not a
+   claim (`OUTLINE.md`).
+1. **Was: the submission the paper describes is version 28** (now to be the
+   notebook that shows the chain; version 28 stays the fallback): `56983446`, notebook
    `plonemraz/dil-arc3-learning` version 28, code `9e69156` — grid with moves,
    blocks and into aims once the aim has come; S2b curiosity; attention; 600
    cycles a game, four at once. Scored 0.25 (as version 23). The notebook
