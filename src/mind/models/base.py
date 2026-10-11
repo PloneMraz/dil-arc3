@@ -289,6 +289,9 @@ class Learner(Protocol):
     def held(self) -> tuple[object, ...]:
         """The data its expectations are, when it made them (its handles)."""
 
+    # Whether the last step came to a situation not met before.
+    came_somewhere_new: bool
+
     def read_field(self, field: Any) -> None:
         """The cycle's field, as it reaches every layer (INV-7)."""
 

@@ -58,7 +58,7 @@ import json
 from typing import Any, Callable, Final
 
 from dil.loop.decisions import BASELINE_WINDOW
-from dil.loop.field import ALERTNESS, EXPLORATION, axis, falling, rising, shifted_count
+from dil.loop.field import ALERTNESS, EXPLORATION, axis, cast_votes, falling, rising, shifted_count
 from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.layers.t5 import Expecting, WriteRequest, persistence
 from dil.loop.types import InfoUnit
@@ -320,6 +320,11 @@ class Mind:
         self.holds.append(int(hit))
         self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
                                                  seen=self._recent()))
+        # Its vote on the field (INV-7: each layer from what it alone sees): how far
+        # the loop leans to explore — whether the region came where it had not
+        # stood. The layers below see tags and entities, never this.
+        if contribute is not None:
+            cast_votes(contribute, {EXPLORATION: 1.0 if self.learning.came_somewhere_new else 0.0})
         # 3. The expectation failed: think.
         if not hit:
             self.think("frame", ask, write)

@@ -415,6 +415,9 @@ class Learning:
         # Hypotheses about the aim (S4): those that applied to the step being
         # learned, weighed by its report; the step; whether any is held yet.
         self._aim_applied: list[Hypothesis] = []
+        # Whether the last step came to a situation not met before (its vote on
+        # the field's exploration, cast by the mind at T5).
+        self.came_somewhere_new = False
         # How a collision turned it, for the next choice (`_think_on_collision`):
         # ("silence", the kind it turns from, the coarser kind) or
         # ("unforeseen", where the answer differed); and the thought's handle.
@@ -1003,6 +1006,7 @@ class Learning:
         known = self._edges.get((source, act))
         applied = list(self._applicable(source, act, step.before))
         new = self.inducer.situation(step.after) not in self._raw_of
+        self.came_somewhere_new = new
         made = False
         if self.curiosity == "made":
             things = self.inducer.made(step)

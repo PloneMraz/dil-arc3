@@ -359,7 +359,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   for (`alertness`, `TURN_HOLD = 2` at NEUTRAL: the field's gain, ½–1½ and never
   below 1, could not move a base of 1), how many steps it looks ahead
   (`exploration`), and how far an objection reaches; each choice says what it
-  read of the field.
+  read of the field. The mind also votes on it, as every layer does from what it
+  alone sees (INV-7, through the `contribute` T5 hands its rule): on
+  `exploration`, whether the region came where it had not stood — the layers
+  below see tags and entities (a frame is always the entity "frame"), never that.
   `scripts/chains.py` finds, in a store alone, the chains this leaves: a scar, the
   thought, the turned choice, what is expected of that act there from then on,
   the next return.

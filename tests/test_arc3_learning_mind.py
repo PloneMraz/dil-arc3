@@ -902,3 +902,11 @@ def test_silence_turns_the_next_choice_from_that_kind_of_act():
 def written_of(events):
     return {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
             for w in r.activity.written}
+
+
+def test_the_mind_votes_on_exploration_from_whether_it_came_somewhere_new():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert mind.learning.came_somewhere_new
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
+    assert not mind.learning.came_somewhere_new, "back where it stood"

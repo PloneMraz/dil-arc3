@@ -6201,3 +6201,17 @@ and the Other's returns alone, 0.262 (frame 0.30, report 0.48, onlooker 0.0).
 
 Plone, on the commits' author field carrying his email: take email off the list
 of personal data never to be published. CLAUDE.md says so.
+
+### The field's exploration: why it stayed low, and the mind's vote on it
+
+Read in the layers: T3 votes the share of descriptions never asked (a frame is
+always `{sense: vision}`, fresh only in the first cycles), T6 the share of
+entities met for the first time (a frame is always the entity "frame"; what is
+new is the agent's own writes coming back), T8 the share of social edges. None
+sees whether the region came somewhere new; the mind at T5 does. Now the mind
+votes on `exploration` through the `contribute` T5 hands its rule (dil-core's
+seam, no deviation): 1 when the step came to a situation not met before, 0
+when not. The ten games: every level and action count as before; exploration
+means tn36 0.11, ls20 0.14, m0r0 0.12, tu93 0.12, lp85 **0.36** (0.06–0.12
+before) — one vote among the layers', blended — and the look-ahead still 2
+steps (it reads 3 at NEUTRAL). 363 tests pass.
