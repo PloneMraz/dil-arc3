@@ -955,8 +955,10 @@ arcprize.org do not say:
   Team may submit one (1) Submission only" — and no per-day limit at all. The
   Paper Track is judged by a rubric with no leaderboard, which §3.7.a says is the
   hackathon shape. So the writeup is one shot, not an iterated leaderboard entry.
-  The rules never state in so many words that this competition is a hackathon, so
-  treat this as a strong inference; a competitor on the forum read it the same way.
+  The rules text does not name this competition a hackathon, but its own page
+  does: its header reads "Featured Hackathon" (read 2026-10-11; LOG.md). A
+  Writeup still in draft at the deadline "will not be considered": it must be
+  submitted, with a Track selected (there is one, Main Track).
 - **The team must match.** §2.1.b: "Team must match the team making a submission
   to either ARC-AGI-2 or ARC-AGI-3." Automatic for a solo entrant, but it shows
   the link to a code submission is structural.

@@ -6041,3 +6041,15 @@ Removed, not committed. (The paper is in the workspace's
    bottom left and turned by the cells of colour 11; the lock it must enter is
    a plain box of 5 whose inside shows no pattern. What the key must match is
    not on the grid as a relation between two things to read. Not built.
+
+### The paper: plan, and the Paper Track read again (Plone)
+
+Plone turned the work to the paper. Settled: the paper describes version 28
+(`56983446`); a Save & Run of the same code for more data (notebook version 29,
+pushed); form (a), the Writeup within 1,500 words; drafts in `paper/`, with the
+plan in `paper/PLAN.md`. The Overview and Rules pages read again (copies dated
+2026-10-11 in the workspace's `Downloads/pages/`): no change of substance since
+2026-09-24 — 7,997 entrants, 246 teams, 264 submissions now. Its header calls
+the competition a "Featured Hackathon", which settles that §2.2.a's single
+submission applies (CLAUDE.md said a strong inference). A Writeup left in draft
+at the deadline is not considered; a Track must be selected.
