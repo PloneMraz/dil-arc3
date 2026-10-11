@@ -365,11 +365,12 @@ class Mind:
             base_content = standing_unit.content if isinstance(standing_unit.content, dict) else {}
             predicted = InfoUnit(content={**base_content, "value": value}, ref_frame=standing_unit.ref_frame,
                                  t=standing_unit.t)
-        if value != payload:
-            self.think("status", ask, write)
         if self._seen and report is not None:
             step, unit, _, _ = self._seen[-1]
             self._write(write, self.learning.observe(step, unit, report, (unit, observed), on_report=True))
+        # The expectation failed: think — once its learning has met the report.
+        if value != payload:
+            self.think("status", ask, write)
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()

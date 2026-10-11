@@ -910,3 +910,16 @@ def test_the_mind_votes_on_exploration_from_whether_it_came_somewhere_new():
     assert mind.learning.came_somewhere_new
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2))
     assert not mind.learning.came_somewhere_new, "back where it stood"
+
+
+def test_the_region_ending_turns_the_mind_from_the_kind_of_act_that_led_there():
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status(affords=(1, 2)))
+    first = mind.commands[-1][1]
+    run(cycle, frame(lit(1), lit(2), action=first[0]), status(state="GAME_OVER", affords=(1, 2), action=first[0]))
+    thought = [d.payload for _, d in of_kind(data, "thought")][-1]
+    assert thought["on"] == "status" and thought["collided"] == "the region ended", thought
+    assert mind.commands[-1][1][0] == 0, "the region ended: RESET"
+    run(cycle, frame(lit(2), lit(3), action=0), status(affords=(1, 2), action=0))   # the start again, somewhere new
+    act, why = mind.learning.thoughts[-1].act, mind.learning.thoughts[-1].why
+    assert act[0] != first[0] and why.endswith("turned from what ended the region"), (act, why)

@@ -6236,3 +6236,23 @@ on the ten.) Not submitted. 25 of 25 played through, **2,804 s** (version 29:
 Notebook `dil-arc3-learning` version 31: version 30 with the mind's vote on the
 field's exploration. 25 of 25 played through, 3,277 s; 14 levels, 0.51296 —
 every game's score as version 30. Not submitted.
+
+### (3) A collision of the region's report, thought on
+
+The mind had its learning think on a report's mismatch before the learning had
+met the report, and the learning thought on none. Now the report is met first,
+then thought on, and the thought written with the fields that deviated
+(before → after), built from the step and the report.
+
+- First: an end turned it from the kind of act that led there (holding through
+  the RESET); any other field otherwise turned it **to** that kind of act, to
+  test whether the report answered again. The ten games: ls20's first level in
+  254 actions (392) — but r11l's lost its luck, 156 (19), tu93 536 and 42 (453
+  and 37), lf52 176 (140); the ten's score 0.78 (1.27). Read back: nearly every
+  such collision was `depthDelta`, a field that changes at every step as a count
+  does (tn36 175 of 184 thoughts, tu93 126, r11l 191): the turn I had made up
+  turned a count into a reason to repeat.
+- Then: an end turns it from that kind of act; the aim and any other field turn
+  nothing of their own (each still thought on and written). The ten games:
+  every level and action count as before (X1); turned from what ended the
+  region: r11l 7, tn36 1. 364 tests pass.

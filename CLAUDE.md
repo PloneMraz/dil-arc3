@@ -351,8 +351,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   answer other than it foresaw turns it to where the answer differed (where its
   model says an act lies there: `Inducer.unlike`, `Inducer.at`). The turn holds
   for the next choice, which says so in its `why` and names the return among
-  what it was built from; the next collision turns it again. On the status it
-  thinks no further. The field reaches the mind at T5 as it reaches every layer
+  what it was built from; the next collision turns it again. On the region's
+  report it thinks too, once it has met the report, and writes the thought with
+  the fields that deviated: an end turns it from the kind of act that led there,
+  through the RESET into the start again ("turned from what ended the region");
+  the aim (learned as S4 has it) and any other field otherwise turn nothing of
+  their own — a field that changes at every step, as a count does, turned it to
+  repeat itself when it did (LOG.md, 2026-10-11). The field reaches the mind at T5 as it reaches every layer
   (INV-7), and the learning reads it on the operations its axes name: how far
   an experience or hypothesis must have been borne out more often than not
   before it expects by it (`trust`), how many choices a collision's turn holds

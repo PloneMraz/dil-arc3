@@ -219,7 +219,8 @@ class TurnHandle:
 # How many choices a collision's turn holds for at NEUTRAL alertness. DECLARED.
 TURN_HOLD: Final = 2
 # What a choice a collision turned says of it.
-TURN_WHYS: Final = ("; turned from what was silent", "; turned to where the answer differed")
+TURN_WHYS: Final = ("; turned from what was silent", "; turned to where the answer differed",
+                    "; turned from what ended the region")
 
 
 @dataclass(frozen=True)
@@ -415,6 +416,10 @@ class Learning:
         # Hypotheses about the aim (S4): those that applied to the step being
         # learned, weighed by its report; the step; whether any is held yet.
         self._aim_applied: list[Hypothesis] = []
+        # The region's report before the last and the last (`_think_on_report`).
+        self._report_was: dict[str, Any] | None = None
+        self._report_now: dict[str, Any] | None = None
+        self._report_unit: Any = None
         # Whether the last step came to a situation not met before (its vote on
         # the field's exploration, cast by the mind at T5).
         self.came_somewhere_new = False
@@ -667,6 +672,8 @@ class Learning:
         What it objected to, and why, is written; that thought is its answer."""
         if context.on == "frame":
             return self._think_on_collision(context)
+        if context.on == "status":
+            return self._think_on_report(context)
         if context.on != "onlooker":
             return None
         remark = context.remark or {}
@@ -712,7 +719,7 @@ class Learning:
             return None
         kind = self._kind_of.get((situation, act)) or self.inducer.default_kind(act)
         if self._expected_otherwise and self.inducer.situation(after) == situation:
-            self._turn = ("silence", kind, self.inducer.coarse(kind) or kind)
+            self._turn = ("from", kind, self.inducer.coarse(kind) or kind, TURN_WHYS[0])
             said = {"collided": "silence", "act": list(act), "turns": "from that kind of act"}
         elif not self._expected_otherwise and self._expected is not None:
             where = self.inducer.unlike(self._expected, after)
@@ -729,15 +736,50 @@ class Learning:
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
                                       built_from=built)])
 
+    def _think_on_report(self, context: Context) -> Thinking | None:
+        """The region's report did not come as it expected: it thinks on what
+        collided, and writes it — an end turns it from the kind of act that led
+        there, through the RESET into the start again; the aim, which it learns
+        from where it learns the report (S4), and any other field otherwise turn
+        nothing of their own (a field that changes at every step, as a count
+        does, turned it to repeat itself: LOG.md, 2026-10-11). Not a penalty, not
+        a reward: a report that deviated (Plone, 2026-10-11)."""
+        if self._last_step is None or self._report_now is None or self._report_was is None:
+            return None
+        source_raw, act, step, unit = self._last_step
+        if act[0] == self.organs.reset[0]:
+            return None
+        now, was = self._report_now, self._report_was
+        fields = {k: [was.get(k), now.get(k)] for k in self.organs.report_fields if was.get(k) != now.get(k)}
+        if not fields:
+            return None
+        situation = self.inducer.situation(step.before)
+        kind = self._kind_of.get((situation, act)) or self.inducer.default_kind(act)
+        coarse = self.inducer.coarse(kind) or kind
+        handle = TurnHandle(self.steps)
+        if self._ended(now) and not self._ended(was):
+            self._turn = ("from", kind, coarse, TURN_WHYS[2])
+            self._turn_thought = handle
+            self._turn_left = round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
+            said = {"collided": "the region ended", "turns": "from that kind of act"}
+        elif self._reached(now):
+            said = {"collided": "the aim came", "turns": "nothing of its own: what brings it is learned (S4)"}
+        else:
+            said = {"collided": "the report otherwise", "turns": "nothing of its own"}
+        built = tuple(u for u in (unit, self._report_unit) if u is not None)
+        payload = {"on": "status", "step": self.steps, "here": self._state_of.get(source_raw),
+                   "act": list(act), "fields": fields, **said}
+        return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=handle, built_from=built)])
+
     def _turned(self, here: str, fresh: list[tuple[Act, tuple]]) -> tuple[list[tuple[Act, tuple]], str]:
         """Of the acts not yet taken here, those a collision turned it to, with why;
         all of them, and no why, when it turned to none of them or was not turned."""
         if self._turn is None:
             return fresh, ""
-        if self._turn[0] == "silence":
-            _, kind, coarse = self._turn
+        if self._turn[0] == "from":
+            _, kind, coarse, turn_why = self._turn
             others = [ak for ak in fresh if ak[1] != kind and (self.inducer.coarse(ak[1]) or ak[1]) != coarse]
-            return (others, TURN_WHYS[0]) if others else (fresh, "")
+            return (others, turn_why) if others else (fresh, "")
         where = self._turn[1]
         state = self._state(here)
         there = [ak for ak in fresh if self.inducer.at(ak[0], state, where)]
@@ -835,6 +877,10 @@ class Learning:
             return self._report_key(report) != ordinary and \
                 report.get(self.organs.state_field) not in self.organs.ended
         return False
+
+    def _ended(self, report: dict[str, Any] | None) -> bool:
+        """Whether a report says the region has ended."""
+        return bool(report) and report.get(self.organs.state_field) in self.organs.ended
 
     def _meet(self, state: Any, unit: Any = None, side: str = "after") -> str:
         """A state met: in hand this cycle, and from the next read from the store,
@@ -991,7 +1037,8 @@ class Learning:
         writes: list[Write] = []
         # A turn holds for as many choices after the collision that made it as
         # alertness says; a collision in this step turns the mind again (`think`).
-        if self._turn is not None:
+        if self._turn is not None and step.act[0] != self.organs.reset[0]:
+            # A RESET the region's end made is no choice the turn was for.
             self._turn_left -= 1
             if self._turn_left <= 0:
                 self._turn = None
@@ -1087,6 +1134,8 @@ class Learning:
             return []
         writes: list[Write] = []
         said = {k: report.get(k) for k in self.organs.report_fields}
+        self._report_was, self._report_now = self._report_now, said
+        self._report_unit = units[-1] if units else None
         key = self._report_key(said)
         self._reports[key] = self._reports.get(key, 0) + 1
         if edge.status is None:
