@@ -6020,3 +6020,24 @@ hypothesis (once the aim has come, as moves are). The ten games: every level
 and action count as version 28 (tu93's second level 37, its third not reached).
 Removed, not committed. (The paper is in the workspace's
 `Downloads/papers/2510.04871v1.pdf`.)
+
+### Step 3 of A, three ways (Plone: test each in turn)
+
+1. **Moves per thing.** A move reads each of several things alike moved alike as
+   the thing that moves; where its pattern lies, each with nothing in its way
+   moves and the others stay, a thing moving onto its like (so two may meet);
+   the into aim read, when the step that brought it does not read as a move,
+   from the recent steps, preferring a thing that moved into its like. The ten
+   games: every level and action count as version 28. m0r0 still read no aim:
+   at its aim the two pieces moved toward each other, as mirrors, which no one
+   shift says. ls20's into aim (colours 5 and 9) 1 for, 13 against, dropped.
+   Removed, not committed.
+2. **A measure of nearness to the aim, for clicked games.** Its ground was tn36,
+   whose 1-cells went from 18 to 0 on the way to its first aim. Read before
+   building: tn36's second level holds 132 such cells and they went to 117 over
+   the run; its first level's aim was more than that (its shape of 9 became 3
+   too). Not built.
+3. **A shape matched.** ls20's piece carries a key, shown in the box at the
+   bottom left and turned by the cells of colour 11; the lock it must enter is
+   a plain box of 5 whose inside shows no pattern. What the key must match is
+   not on the grid as a relation between two things to read. Not built.
