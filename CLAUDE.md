@@ -354,7 +354,8 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   (INV-7), and the learning reads it on the operations its axes name: how far
   an experience or hypothesis must have been borne out more often than not
   before it expects by it (`trust`), how many choices a collision's turn holds
-  for (`alertness`, `TURN_HOLD = 1` at NEUTRAL), how many steps it looks ahead
+  for (`alertness`, `TURN_HOLD = 2` at NEUTRAL: the field's gain, ½–1½ and never
+  below 1, could not move a base of 1), how many steps it looks ahead
   (`exploration`), and how far an objection reaches; each choice says what it
   read of the field.
   `scripts/chains.py` finds, in a store alone, the chains this leaves: a scar, the
@@ -612,6 +613,15 @@ own form (a `present` set, a `predict` rule for T5).
    data read, in the order first read), and the checker holds each to have
    entered before the cycle that read it. dil-core has no such view, which holds
    when a rule takes no `read`; queued in dil-core.
+8. **T5's `alerted_by`** (`create_t5(alerted_by=...)`; 2026-10-11): which
+   returns T5's alertness vote counts, as the host declares it. dil-core counts
+   every entity met in the cycle, among them the agent's own writes coming back
+   and what its memory answers, which never mismatch: in tn36 they held the vote
+   at 0.11 where the region's and the Other's returns alone gave 0.26, and the
+   field's alertness near 0.1–0.2 through hundreds of collisions. This host
+   declares the returns that did not come from the store
+   (`arc3.decisions.from_the_world`; `scripts/run_game.py`). Every return when a
+   host declares none; queued in dil-core.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a

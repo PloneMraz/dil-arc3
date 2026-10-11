@@ -309,3 +309,12 @@ def test_the_driver_adds_nothing_of_its_own():
     cycle, glob = loop()
     cycle.run(HostCycleInput(signals=(sig("a", 1),)))
     assert "resistance" not in glob.current().params
+
+
+def test_alertness_counts_what_the_host_says_can_alert_the_loop():
+    # DEVIATION 8: an echo of the agent's own write never mismatches; counted, it
+    # holds the vote down however often the world collides.
+    from arc3.decisions import from_the_world
+    world = InfoUnit(content={"channel": "arc3-frame", "value": 1}, ref_frame=None, t=0)
+    echo = InfoUnit(content={"channel": "store", "value": 1}, ref_frame=None, t=0)
+    assert from_the_world(world) and not from_the_world(echo)

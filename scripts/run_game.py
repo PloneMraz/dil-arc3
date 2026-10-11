@@ -34,7 +34,7 @@ from arcengine import GameAction
 
 from arc3 import transducers
 from arc3.host import create_source, declaration
-from arc3.decisions import situation_fit
+from arc3.decisions import from_the_world, situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
@@ -117,7 +117,7 @@ mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosit
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-    t5=create_t5(predict=seat, fit=situation_fit), t6=create_t6(),
+    t5=create_t5(predict=seat, fit=situation_fit, alerted_by=from_the_world), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))

@@ -217,7 +217,7 @@ class TurnHandle:
 
 
 # How many choices a collision's turn holds for at NEUTRAL alertness. DECLARED.
-TURN_HOLD: Final = 1
+TURN_HOLD: Final = 2
 # What a choice a collision turned says of it.
 TURN_WHYS: Final = ("; turned from what was silent", "; turned to where the answer differed")
 

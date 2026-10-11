@@ -11,6 +11,7 @@ Ported nothing: this is the host's own declaration.
 import json
 from typing import Any, Final
 
+from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.types import InfoUnit
 
 # ── Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment ──
@@ -135,3 +136,15 @@ def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
                    for r, row in enumerate(was[0]) for c, w in enumerate(row))
     return json.dumps(_as_read(observed.content), sort_keys=True, default=str) == \
         json.dumps(_as_read(predicted.content), sort_keys=True, default=str)
+
+
+# DEVIATION 8 (2026-10-11), declared to T5 (`alerted_by`): what can alert the
+# loop is what the region and the Others push — not the agent's own writes coming
+# back, nor what its memory answers, which come back as they were written and so
+# never mismatch. Counted with them, a cycle's four or more echoes beside three
+# returns held the alertness vote near 0.1 however often the frame collided
+# (LOG.md, 2026-10-11).
+def from_the_world(unit: InfoUnit) -> bool:
+    """Whether a return can alert the loop: one that did not come from its store."""
+    content = unit.content if isinstance(unit.content, dict) else {}
+    return content.get("channel") != STORE_CHANNEL

@@ -6170,3 +6170,29 @@ to where the answer differed") → experience `written-155-1` (the click there
 changes the region, borne out 3 times) → met again at cycles 212 and 259, each
 as expected, no scar → the next return (`signal-156-0`) as expected. 361 tests
 pass.
+
+### The field's alertness: why it stayed low, and DEVIATION 8 (Plone: investigate, handle it in dil-arc3, queue it in dil-core)
+
+Read from the run with expectations as read (tn36, 600 cycles, `[event]`'s
+`expectation` lines): T5 met about 7 entities a cycle — the frame, the region's
+report, the onlooker, and the agent's own writes coming back and the priors its
+memory answered, which return as written and never mismatch (delta 0). Its
+alertness vote, the mean over all of them, averaged 0.112; over the region's
+and the Other's returns alone, 0.262 (frame 0.30, report 0.48, onlooker 0.0).
+
+- **DEVIATION 8**: T5 counts, for its alertness vote, the returns the host
+  declares can alert the loop (`create_t5(alerted_by=...)`, every return by
+  default, as dil-core); this host declares those that did not come from the
+  store (`arc3.decisions.from_the_world`). The ten games: every level and action
+  count as before; alertness means 0.09–0.22, peaks 0.32–0.58 (peaks 0.22–0.28
+  before).
+- **A base the field could not move.** The readings of (a) took a base of 1, and
+  the field's gain (½–1½, a count never below 1) moves a base of 1 only at an
+  axis's very top: whatever the field held, nothing changed. `TURN_HOLD` is now
+  2 (declared): at NEUTRAL alertness a turn holds two choices, at low alertness
+  one, at high three. The ten games: ls20's first level in **392** actions (342),
+  its turned choices 90 (67); tu93 453 (454); the rest the same; the ten's
+  score 1.26981 (1.27017). The field now reaches what the mind does.
+- Queued in dil-core (its CLAUDE.md, "Queued", and CHANGELOG; `11bc720`,
+  `fc83d55`): T5's alertness vote held down by the agent's own echoes; T2's vote
+  counts the same echoes, not changed here. 362 tests pass.

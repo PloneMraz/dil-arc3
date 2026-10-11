@@ -239,8 +239,13 @@ class T5(BaseLayer):
         sufficient_recurrence: int | None = None,
         predict: PredictRule | None = None,
         fit: FitRule | None = None,
+        alerted_by: Callable[[InfoUnit], bool] | None = None,
     ) -> None:
         self._predict = predict if predict is not None else persistence
+        # DEVIATION (dil-arc3, 2026-10-11): what its alertness vote counts, as the
+        # host declares it — the returns it says can alert the loop. Every return,
+        # as dil-core does, when a host declares none.
+        self._alerted_by = alerted_by
         self._fit = fit if fit is not None else _content_equal
         self._predict_tests = _takes_test(self._predict)
         self._predict_field = _takes_field(self._predict)
@@ -361,10 +366,13 @@ class T5(BaseLayer):
                 T5Result(entity_id=entity_id, expectation=expectation, pred_err=pred_err)
             )
 
-        # Its vote: how much of what returned did not match what it expected.
+        # Its vote: how much of what returned did not match what it expected —
+        # of the returns the host says can alert it (DEVIATION 8), all by default.
+        counted = [r for r in results if self._alerted_by is None
+                   or (r.pred_err.observed is not None and self._alerted_by(r.pred_err.observed))]
         cast_votes(
             contribute,
-            {ALERTNESS: sum(r.pred_err.delta for r in results) / len(results) if results else None},
+            {ALERTNESS: sum(r.pred_err.delta for r in counted) / len(counted) if counted else None},
         )
         return T5Output(results=tuple(results), writes=tuple(writes), tests=tuple(tests))
 
@@ -383,10 +391,12 @@ def create_t5(
     sufficient_recurrence: int | None = None,
     predict: PredictRule | None = None,
     fit: FitRule | None = None,
+    alerted_by: Callable[[InfoUnit], bool] | None = None,
 ) -> T5:
     return T5(
         baseline_window=baseline_window,
         sufficient_recurrence=sufficient_recurrence,
         predict=predict,
         fit=fit,
+        alerted_by=alerted_by,
     )
