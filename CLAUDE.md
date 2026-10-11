@@ -1026,8 +1026,11 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
   and is linked, not condensed.
 - **This repository stays private until ARC-AGI-3 ends, then goes public.** The
   paper's required public Notebook carries the code in the meantime.
-- **Follow the rules as written**: keep the Writeup within 1,500 words rather
-  than relying on the PDF route to go past it.
+- **Follow the rules as written**: the Writeup stays within 1,500 words and
+  stands on its own; beside it, a longer PDF of the paper goes in the Public
+  Project Link — the route the rules offer ("instead of using the Kaggle
+  Writeup"), and the sample writeup's form (Plone, 2026-10-11: 1,500 words cannot
+  set out the whole work).
 
 ## Kept for after the competition
 

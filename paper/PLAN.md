@@ -16,8 +16,13 @@ Kept here so that a new session starts from it, not from memory. History goes in
    2026-10-11) for `[event]` logs to read the evidence from. The scored run's
    own logs are not shown by Kaggle, so the evidence is from the same code on the
    25 public games, and the paper says so.
-3. **Form: (a), the Writeup itself, at most 1,500 words** — the rules as written
-   (CLAUDE.md, "Follow the rules as written"). Not the PDF route.
+3. **Form: both** (Plone, 2026-10-11, after first choosing the Writeup alone:
+   "1,500 words cannot set out the whole work"). **The Writeup**, at most 1,500
+   words, standing on its own — the claim, the evidence, the results, the
+   limits — so no penalty is risked. **The paper**, a longer PDF (about 8–12
+   pages) in the Public Project Link, as the sample writeup does: the theory,
+   the full tables, the `[event]` trace, the ideas that failed. The Project
+   Links then hold two: the notebook and the PDF.
 4. **Drafts live in `paper/`**, in English.
 
 ## What the rules ask (read 2026-10-11; texts in the workspace's `Downloads/pages/`)
@@ -52,7 +57,7 @@ Kept here so that a new session starts from it, not from memory. History goes in
 | Completeness | covers the submission thoroughly | layers, invariants, deviations, how it plays on Kaggle |
 | Novelty | against public research | the DIL protocol; a hash-chained event log; "the mind commands, the body carries out" |
 
-## Shape (after the 2025 first-place paper and the sample writeup)
+## Shape (after the winning papers of 2024 and 2025 and the sample writeup)
 
 Title and subtitle; abstract; introduction (the claim); approach (DIL, the four
 roles, the mind and its learning, the inducer); evidence (reading `[event]`
@@ -66,9 +71,10 @@ change in what it does can be read back by a third party from `[event]`.
 |---|---|
 | 2026-10-11 → 12 | outline against the rubric; version 29's data in |
 | 2026-10-12 → 17 | evidence: a script that rebuilds, from one game's `[event]` alone, what the mind knew, what it changed and why, where it was scarred; the conformance checks C1–C7; tables of scores (random agent, versions 18, 23, 26, 28 — hidden and public), of changes one at a time (the ten- and 25-game runs in LOG.md), of ideas that failed; figures (the loop, a trace excerpt) and the cover image |
-| 2026-10-18 → 25 | the draft, section by section, each sent to Plone as it is done |
-| 2026-10-26 → 11-01 | review against each criterion; word count; every number checked against LOG.md; outbound disclosure (no session link, no personal data, no image metadata) |
-| 2026-11-02 → 06 | the Writeup made, notebook, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
+| 2026-10-18 → 25 | the Writeup's draft, section by section, each sent to Plone as it is done |
+| 2026-10-22 → 31 | the paper (PDF), from the Writeup and the evidence: each section widened, the full tables, the trace |
+| 2026-10-26 → 11-01 | review against each criterion; the Writeup's word count; every number in both checked against LOG.md; outbound disclosure (no session link, no personal data, no metadata in the PDF or the images) |
+| 2026-11-02 → 06 | the PDF published where it needs no login; the Writeup made, notebook, PDF, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
 
 Alongside: read the 2024 and 2025 winning papers (arcprize.org; the 2025
 writeups on Kaggle), as the Overview suggests; choose the two final ARC-AGI-3

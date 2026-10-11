@@ -1,6 +1,10 @@
 # The paper — outline
 
-The Writeup, at most 1,500 words (`PLAN.md`), against the six criteria. Every
+The Writeup, at most 1,500 words and standing on its own, and beside it the
+paper as a PDF in the Public Project Link (`PLAN.md`), against the six criteria.
+The Writeup's sections below; the paper widens each, and adds what the Writeup
+has no room for (the full tables, the trace, the theory, the ideas that failed
+one by one). Every
 number below is from `LOG.md` and is checked again against it before the draft.
 Words in brackets are a budget, not a target.
 
@@ -23,9 +27,10 @@ read.) PDFs in the workspace's `Downloads/papers/`.
   (TRM's tables), a study of what each part solves (Li et al.'s complementarity).
 - **The limits and what failed are stated**: TRM's "Ideas that failed",
   Liao & Gu's counterpoint to "conventional wisdom".
-- They are research papers of 10–47 pages behind a short Writeup; ours is the
-  Writeup itself, so each of these is one or two sentences, and the tables carry
-  the numbers.
+- They are research papers of 10–47 pages; the sample writeup holds the
+  abstract and links the paper. Ours: a Writeup of at most 1,500 words that
+  stands alone, each of these in one or two sentences and the tables carrying
+  the numbers; the paper behind the link, in full.
 
 ## Title (to choose)
 

@@ -6072,3 +6072,13 @@ games: 13 levels, 0.51375, 14,975 actions — every number as version 28; 25 of 
 played through, 4,783 s (version 28: 4,483 s). Its output, with every game's
 store (`[event]`, `[data]`, commits), is `scripts/data/kaggle/dil-run/submit-9e69156-v29/`
 (git-ignored): the paper's evidence is read from it.
+
+### The paper's form: the Writeup and a PDF (Plone)
+
+Plone, having first chosen the Writeup alone: 1,500 words cannot set out the
+whole work. Settled: a Writeup within 1,500 words that stands on its own, and a
+longer paper as a PDF in the Public Project Link — the route the rules offer
+("Optionally, instead of using the Kaggle Writeup, you can upload a PDF version
+of your paper"), and the sample writeup's form. Whether the limit binds the PDF
+is not stated; not asked (Plone: no need). CLAUDE.md, `paper/PLAN.md` and
+`paper/OUTLINE.md` say so.
