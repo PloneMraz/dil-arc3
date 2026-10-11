@@ -6010,3 +6010,13 @@ parameters); results against baselines (LLMs, the earlier method); conclusion
 with its limits; hyper-parameters; and a section "Ideas that failed", so that
 others do not repeat them. Its Writeup holds the abstract alone; the paper is
 the Project Link.
+
+### Moves mirrored to the other ways: tried and removed
+
+From the 2025 first-place paper's data augmentation: a move of ACTION1-4 along
+the way the competition names it (up, down, left, right) also suggested the
+same thing moved as far by each of the other three, held and weighed as any
+hypothesis (once the aim has come, as moves are). The ten games: every level
+and action count as version 28 (tu93's second level 37, its third not reached).
+Removed, not committed. (The paper is in the workspace's
+`Downloads/papers/2510.04871v1.pdf`.)
