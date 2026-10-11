@@ -6196,3 +6196,8 @@ and the Other's returns alone, 0.262 (frame 0.30, report 0.48, onlooker 0.0).
 - Queued in dil-core (its CLAUDE.md, "Queued", and CHANGELOG; `11bc720`,
   `fc83d55`): T5's alertness vote held down by the agent's own echoes; T2's vote
   counts the same echoes, not changed here. 362 tests pass.
+
+### Outbound disclosure: the email taken off the list (Plone)
+
+Plone, on the commits' author field carrying his email: take email off the list
+of personal data never to be published. CLAUDE.md says so.
