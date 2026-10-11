@@ -79,6 +79,8 @@ submissions by 2026-11-02 (proposed: versions 28 and 23).
 - Scores and what each run did: `LOG.md` (version 28: 2026-10-09; its score:
   2026-10-11; the ideas that failed: 2026-10-05 to 2026-10-11).
 - Version 28's Save & Run output (25 games, stores): `scripts/data/kaggle/dil-run/submit-9e69156-moves/`
-  (git-ignored); version 29's when it comes.
+  (git-ignored); version 29's, the same code run again (every number as version
+  28), in `scripts/data/kaggle/dil-run/submit-9e69156-v29/` — the evidence is
+  read from it.
 - The rubric, rules and sample writeup: the workspace's `Downloads/pages/`; the
   2025 first-place paper: `Downloads/papers/2510.04871v1.pdf`.

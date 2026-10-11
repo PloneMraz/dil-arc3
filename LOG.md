@@ -6064,3 +6064,11 @@ that is the finding, an abstract from question to one number, an early figure,
 numbered contributions, each choice set against a measurement, limits and failed
 ideas stated — is in `paper/OUTLINE.md`, with the outline against the six
 criteria and a word budget for the 1,500.
+
+### Version 29: version 28's code run again, the same
+
+Notebook `dil-arc3-learning` version 29, code `9e69156` (version 28's), the 25
+games: 13 levels, 0.51375, 14,975 actions — every number as version 28; 25 of 25
+played through, 4,783 s (version 28: 4,483 s). Its output, with every game's
+store (`[event]`, `[data]`, commits), is `scripts/data/kaggle/dil-run/submit-9e69156-v29/`
+(git-ignored): the paper's evidence is read from it.
