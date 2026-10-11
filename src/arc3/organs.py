@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any, Final
 
-from mind.organs import Act, Organs, Otherwise, Step
+from mind.organs import Act, AsRead, Organs, Otherwise, Step
 
 from .action import COMPLEX_ACTION, RESET, SIMPLE_ACTIONS
 from .command import can_carry_out
@@ -58,6 +58,8 @@ def _expected_payload(payload: dict[str, Any], state: Grid | Otherwise) -> dict[
     reads it (None where it does not read), marked so (`decisions.situation_fit`)."""
     if isinstance(state, Otherwise):
         return {**payload, "grids": [state.state], "otherwise": True}
+    if isinstance(state, AsRead):
+        return {**payload, "grids": [state.state], "as_read": True}
     return {**payload, "grids": [state]}
 
 

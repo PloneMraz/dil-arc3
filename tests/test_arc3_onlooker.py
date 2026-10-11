@@ -10,6 +10,7 @@ again.
 
 from __future__ import annotations
 
+from arc3.decisions import situation_fit
 from arc3.host import Arc3Source
 from arc3.observe import ONLOOKER_CHANNEL, admit, move_value, transducers
 from arc3.action import Move
@@ -132,7 +133,7 @@ def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_sti
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(mind)),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit),
             t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,

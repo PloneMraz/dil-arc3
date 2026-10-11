@@ -289,6 +289,9 @@ class Learner(Protocol):
     def held(self) -> tuple[object, ...]:
         """The data its expectations are, when it made them (its handles)."""
 
+    def read_field(self, field: Any) -> None:
+        """The cycle's field, as it reaches every layer (INV-7)."""
+
     def recall_from(self, view: Any) -> None:
         """The store as the mind reads it this cycle (DEVIATION 7), or None."""
 

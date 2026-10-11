@@ -67,6 +67,15 @@ THE LOOP, one step at a time:
   (where its model says an act lies there: `Inducer.unlike`, `Inducer.at`). The
   turn holds for the next choice, which names the thought among what it was
   built from; the next collision turns it again. No count is kept of it.
+- **The field reaches how it builds what it does** (INV-7; Plone, 2026-10-11:
+  context, memory and the field, even half a bit, make expectations and
+  behaviour differ). Each axis on the operation it names: how readily a source
+  is trusted — how far an experience or hypothesis must have been borne out
+  more often than not before it expects by it (`trust`); how alert to mismatch
+  — how many choices a collision's turn holds for (`alertness`); how far it
+  leans to explore — how many steps it looks ahead past where it has stood
+  (`exploration`). At NEUTRAL each is the declared operation; each choice
+  says what it read of the field.
 - **The onlooker's word** strikes the mind as a collision; what it objects to is
   put behind every other act at every point of choice — never over a known way
   to the aim — and lifted when the onlooker says something else. A repetition
@@ -113,10 +122,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Callable, Final
 
-from dil.loop.field import ALERTNESS, axis, rising, shifted_count
+from dil.loop.field import ALERTNESS, EXPLORATION, TRUST, axis, falling, rising, round_half_up, shifted_count
 
 from .models.base import Context, Expectation, Inducer, Proposal, Thinking, Write
-from .organs import Act, Organs, Otherwise, Step
+from .organs import Act, AsRead, Organs, Otherwise, Step
 
 # A hypothesis's tags; its `object`, what it is about, is what the host calls a
 # step's state (`Organs.state_object`).
@@ -207,6 +216,8 @@ class TurnHandle:
     cycle: int
 
 
+# How many choices a collision's turn holds for at NEUTRAL alertness. DECLARED.
+TURN_HOLD: Final = 1
 # What a choice a collision turned says of it.
 TURN_WHYS: Final = ("; turned from what was silent", "; turned to where the answer differed")
 
@@ -408,6 +419,9 @@ class Learning:
         # ("silence", the kind it turns from, the coarser kind) or
         # ("unforeseen", where the answer differed); and the thought's handle.
         self._turn: tuple | None = None
+        self._turn_left = 0
+        # The cycle's field, as every layer reads it (INV-7; `read_field`).
+        self._field: Any = None
         self._turn_thought: object | None = None
         self._expected_otherwise = False
         self._last_step: tuple[str, Act, Step, Any] | None = None
@@ -595,7 +609,9 @@ class Learning:
         """Of the hypotheses that apply and are held, the one right at the highest
         rate (FIT_LAW; Plone, 2026-09-28: a rate, not a count — by a count, a
         hypothesis held longer outranked a truer one met later)."""
-        held = [a for a in self._applicable(situation, act, state) if a[0].holds and a[2] is not None]
+        need = self._borne_out_by()
+        held = [a for a in self._applicable(situation, act, state)
+                if a[0].holds and a[0].supports - a[0].fails >= need and a[2] is not None]
         return max(held, key=lambda a: (a[0].rate, a[0].supports)) if held else None
 
     def _aims(self, situation: str, act: Act, state: Any = None) -> list[Hypothesis]:
@@ -704,8 +720,9 @@ class Learning:
         else:
             return None
         self._turn_thought = TurnHandle(self.steps)
+        self._turn_left = round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
         built = (unit,) if unit is not None else ()
-        payload = {"on": "frame", "cycle": self.steps, "here": self._state_of.get(source_raw), **said}
+        payload = {"on": "frame", "step": self.steps, "here": self._state_of.get(source_raw), **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
                                       built_from=built)])
 
@@ -722,6 +739,20 @@ class Learning:
         state = self._state(here)
         there = [ak for ak in fresh if self.inducer.at(ak[0], state, where)]
         return (there, TURN_WHYS[1]) if there else (fresh, "")
+
+    def read_field(self, field: Any) -> None:
+        """The cycle's field, as it reaches every layer (INV-7)."""
+        self._field = field
+
+    def _borne_out_by(self) -> int:
+        """How many more times than not an experience or hypothesis must have been
+        borne out before it expects by it: 1 at NEUTRAL trust, more as trust falls."""
+        return round_half_up(shifted_count(1, falling(axis(self._field, TRUST))))
+
+    def _look_ahead(self) -> int:
+        """How many steps it looks ahead past where it has stood: MAX_IMAGINED_STEPS
+        at NEUTRAL exploration, fewer as it consolidates, more as it explores."""
+        return round_half_up(shifted_count(MAX_IMAGINED_STEPS, rising(axis(self._field, EXPLORATION))))
 
     def _named(self, remark: dict[str, Any]) -> list[Act]:
         """The acts an onlooker's word names, as the body takes them."""
@@ -873,7 +904,11 @@ class Learning:
             fields = said.fields
             self._expected = state
             self._expected_otherwise = False
-            return Expectation(state=state, fields=dict(fields) if fields else None,
+            # The state it expects, as it reads it: what it does not read (a
+            # clock) it expects nothing of, and an answer is not wrong for it.
+            read = self.inducer.as_read(state)
+            as_read = AsRead(state=read, matches=lambda after: self.inducer.as_read(after) == read)
+            return Expectation(state=as_read, fields=dict(fields) if fields else None,
                                held=(("handle", h),), by_model=True)
         # Nothing it knows says what will come: it expects the region to be
         # otherwise than it was — what the act was commanded for (Plone,
@@ -882,9 +917,8 @@ class Learning:
         # choice that commanded the act comes back only after this step is met.
         self._expected = self.inducer.copy(step.before)
         self._expected_otherwise = True
-        situation = self.inducer.situation(step.before)
-        otherwise = Otherwise(state=self.inducer.as_read(step.before),
-                              differs=lambda after: self.inducer.situation(after) != situation)
+        read = self.inducer.as_read(step.before)
+        otherwise = Otherwise(state=read, differs=lambda after: self.inducer.as_read(after) != read)
         return Expectation(state=otherwise, by_model=False)
 
     def observe(self, step: Step, unit: Any, fields: dict[str, Any] | None, units: tuple[Any, ...],
@@ -952,9 +986,12 @@ class Learning:
 
     def _learn_step(self, step: Step, unit: Any) -> list[Write]:
         writes: list[Write] = []
-        # A turn holds for the choice after the collision that made it; this step
-        # is met anew, and a collision in it turns the mind again (`think`).
-        self._turn = None
+        # A turn holds for as many choices after the collision that made it as
+        # alertness says; a collision in this step turns the mind again (`think`).
+        if self._turn is not None:
+            self._turn_left -= 1
+            if self._turn_left <= 0:
+                self._turn = None
         if self._new:
             writes += self._write(())  # a step whose report never came
         if self._pending:
@@ -1024,7 +1061,7 @@ class Learning:
         # What the inducer said in computing — a language model's answers — kept
         # whole, built from the step it was asked on and the words it was told.
         for said in self.inducer.said():
-            writes.append(Write(payload={**said.payload, "cycle": self.steps}, tags=dict(said.tags),
+            writes.append(Write(payload={**said.payload, "step": self.steps}, tags=dict(said.tags),
                                 built_from=(unit, ("prior", "task"))))
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
@@ -1036,7 +1073,7 @@ class Learning:
         reading = self.inducer.learn_reading(step, kind)
         if reading is not None:
             writes += self._reindex((unit,))
-            writes.append(Write(payload={**reading.payload, "cycle": self.steps},
+            writes.append(Write(payload={**reading.payload, "step": self.steps},
                                 tags=dict(reading.tags), built_from=(unit,)))
         return writes
 
@@ -1265,7 +1302,7 @@ class Learning:
                     node, act, h = prev[node]
                     path.append((act, h))
                 return path[::-1]
-            if past[node] >= MAX_IMAGINED_STEPS:
+            if past[node] >= self._look_ahead():
                 continue
             for act, to, h, said in self._ways(node, offers):
                 if to in prev or (node == start and (start, act) in avoid):
@@ -1397,7 +1434,9 @@ class Learning:
                     else:
                         why = "nothing it can do here"
         self.thoughts.append(Choice(self.steps, act, why, odds))
-        choice: dict[str, Any] = {"cycle": self.steps, "here": here, "chose": list(act) if act else None,
+        choice: dict[str, Any] = {"step": self.steps, "here": here, "chose": list(act) if act else None,
+                                  "field": {name: round(axis(self._field, name), 3) for name in (TRUST, ALERTNESS,
+                                                                                                 EXPLORATION)},
                                   "why": why, "aim": (self._aim or {}).get("aim")}
         if odds is not None:
             if self.curiosity == "changed":
@@ -1417,7 +1456,7 @@ class Learning:
         if lifted:
             choice["lifted"] = lifted
         if context.on == "command again" and self._last_choice is not None \
-                and self._last_choice.get("cycle") == self.steps:
+                and self._last_choice.get("step") == self.steps:
             choice["supersedes"] = {"chose": self._last_choice.get("chose"), "why": self._last_choice.get("why")}
         self._last_choice = choice
         if context.remark and context.remark.get("remark"):

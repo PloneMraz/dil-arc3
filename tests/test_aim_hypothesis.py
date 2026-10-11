@@ -12,6 +12,7 @@ next to the exit (5), and the next level is another layout.
 
 from __future__ import annotations
 
+from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
@@ -102,7 +103,7 @@ def loop():
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,

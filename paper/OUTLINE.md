@@ -114,8 +114,8 @@ reshuffles exploration; the public 25 did not foretell the hidden games
 (suspects: 0.515 public, 0.02 hidden); hence version 28's rule — change nothing
 before the first aim — kept the hidden 0.25.
 
-**6. Limits and conclusion** [130] — Accuracy is low and said so; a scar of an
-experience is mostly the clock's; the act is not yet opaque to the mind; the
+**6. Limits and conclusion** [130] — Accuracy is low and said so; the field's
+alertness stays low though collisions are many (open); the act is not yet opaque to the mind; the
 inducer lacks objects that move together, mirrors, hidden state. What holds: the
 audit, and a loop that another model or another task can plug into.
 

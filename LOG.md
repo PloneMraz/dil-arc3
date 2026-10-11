@@ -6130,3 +6130,43 @@ level kept (lp85 17, r11l 19, tn36 33, m0r0 74, ls20 342, tu93 454 and 37);
 Turned choices: ls20 67, m0r0 24, lp85 10, tn36 15. Chains found: tn36 141 of
 401 frame scars (the next return met as expected in 50), ls20 129 of 562 (13),
 m0r0 32 of 534 (16). 361 tests pass.
+
+### The field reaches how the mind builds what it does; expectations as read; the chains found
+
+(a) **The field.** Each axis on the operation it names: `trust`, how far an
+experience or hypothesis must have been borne out more often than not before
+the mind expects by it; `alertness`, how many choices a collision's turn holds
+for (`TURN_HOLD = 1` at NEUTRAL); `exploration`, how many steps it looks ahead.
+Each choice says what it read. The ten games: every level and action count as
+before. What the field held: trust 0.67–0.81, alertness 0.0–0.28 (mean
+0.1–0.2), exploration mostly 0.01–0.12 — at those values only the look-ahead
+moved (2 steps, not 3), and nothing it chose changed. Alertness stays low
+though the collisions are hundreds: the field does not carry the run of
+collisions the mind meets. Not looked into yet; the field's votes are dil-core's
+port, not changed here.
+
+(b) **Expectations as read; the chain's last links.** Every state the mind
+expects is expected as its model reads it, the clock left out and expected
+nothing of (`organs.AsRead`, the host's fit treating a None cell as anything) —
+the open item "a scar of an experience's expectation is almost always the
+clock's" (CLAUDE.md, measured 2026-09-27) is closed, and CLAUDE.md no longer
+lists it. The mind's own count it writes in a datum is named `step`, not
+`cycle`: it is not `[event]`'s `cycleMark`. The tests' loops now declare the
+host's fit, as `run_game.py` does. `scripts/chains.py` follows each chain on:
+the experience of the act where it collided, each later cycle it was met again
+and whether the frame then collided, and the next collision; a chain's thought
+and choice are those of the collision's own cycle (a later choice names the
+return too, among all it read).
+
+The ten games: every level and action count as (a). Frame scars, against the
+run before (T1): tn36 182 (401), ls20 149 (562), m0r0 47 (534), tu93 186, lp85
+22 — what collides now deviates where the mind reads. Chains: tn36 15 (11 met
+as expected next; 7 with the act met again where it collided, met as expected
+every time), ls20 57 (32; none met again), m0r0 20 (15), tu93 62 (38; 1 met
+again, collided), lp85 10 (2). One in full, tn36: `signal-155-0` scarred (a
+click on 39,36 foreseen otherwise) → thought `written-155-0` ("unforeseen …
+turns to where it differed") → choice `written-155-2` (a click on 47,37, "turned
+to where the answer differed") → experience `written-155-1` (the click there
+changes the region, borne out 3 times) → met again at cycles 212 and 259, each
+as expected, no scar → the next return (`signal-156-0`) as expected. 361 tests
+pass.

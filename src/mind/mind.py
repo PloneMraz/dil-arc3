@@ -65,7 +65,7 @@ from dil.loop.types import InfoUnit
 
 from .learning import CURIOSITY, Learning
 from .models.base import Context, Inducer, Learner, Write
-from .organs import Act, Organs, Otherwise, Step
+from .organs import Act, AsRead, Organs, Otherwise, Step
 
 # How many more times the mind thinks, in the same cycle, when it has no command
 # the body can carry out — while the body waits. DECLARED, not measured.
@@ -315,7 +315,8 @@ class Mind:
         # Kept as long as the longest window the field can ask of T5; read as long
         # as the one it asks now (`_recent`).
         self._seen = [*self._seen, [step, observed, None, None]][-2 * BASELINE_WINDOW:]
-        hit = expected.differs(step.after) if isinstance(expected, Otherwise) else expected == step.after
+        hit = expected.differs(step.after) if isinstance(expected, Otherwise) else \
+            expected.matches(step.after) if isinstance(expected, AsRead) else expected == step.after
         self.holds.append(int(hit))
         self._write(write, self.learning.observe(step, observed, None, (observed,), on_report=False,
                                                  seen=self._recent()))
@@ -506,6 +507,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
         # and the store's view, what it reads its memory through (DEVIATION 7).
         mind._field = field
         mind.learning.recall_from(read)
+        mind.learning.read_field(field)
         content = observed.content if isinstance(observed.content, dict) else {}
         channel = content.get("channel")
         payload = _content_value(observed)

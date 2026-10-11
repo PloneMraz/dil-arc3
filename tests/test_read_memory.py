@@ -9,6 +9,7 @@ it among what it was built from.
 
 from __future__ import annotations
 
+from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from dil.conformance.checker import check_conformance
@@ -41,7 +42,7 @@ def loop(inducer=None, rule=None):
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=rule or mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=rule or mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
@@ -94,7 +95,7 @@ def test_every_read_is_memory_and_the_trace_says_so():
 def test_what_it_chose_names_what_it_read_to_choose():
     mind, cycle, data, events = loop()
     three(cycle)
-    choices = sorted((k for k, d in of_kind(data, "choice") if d.payload["cycle"] == 3), key=str)
+    choices = sorted((k for k, d in of_kind(data, "choice") if d.payload["step"] == 3), key=str)
     assert choices
     assert "signal-0-0" in written(events)[choices[-1]], "the state it stood in, read to choose"
 

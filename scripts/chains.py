@@ -13,9 +13,10 @@ STORE_DIR is a game's store (the folder holding `store/event-log` and
 2. the thought the collision set off (`kind: thought`, built from that return);
 3. the choice it turned (`kind: choice`, built from that return, its `why`
    saying how it turned);
-4. what the mind expects of that act there from then on: the experience written
-   or revised from that return (`kind: experience`), or a hypothesis refuted;
-5. the next step's return: met as expected (no scar), or a collision of its own.
+4. what the mind expects of that act there from then on: the experience of it
+   (`kind: experience`, from where, by what act), and each later cycle it was met
+   again (its revisions) — whether the frame then collided or came as expected;
+5. the next collision after it: which act, and what had been expected.
 """
 
 from __future__ import annotations
@@ -65,17 +66,27 @@ def chains(records, data):
             revisions.setdefault(r["datumId"], []).append(r["cycleMark"])
     out = []
     for sid, scar in sorted(scars.items(), key=lambda kv: kv[1]["cycleMark"]):
-        made = by_source.get(sid, [])
+        # What the collision set off is written in its own cycle (a later choice
+        # may name the return too, among all it read).
+        made = [d for d in by_source.get(sid, []) if written[d]["cycle"] == scar["cycleMark"]]
         thought = next((d for d in made if written[d]["kind"] == "thought"), None)
         choice = next((d for d in made if written[d]["kind"] == "choice"
                        and "turned" in str((data.get(d) or {}).get("payload", {}).get("why", ""))), None)
         if thought is None or choice is None:
             continue
         experience = next((d for d in made if written[d]["kind"] == "experience"), None)
+        said = (data.get(thought) or {}).get("payload", {})
+        if experience is None:
+            # Written later (once the step's report came): found by where and by what act.
+            experience = next((d for d, w in written.items() if w["kind"] == "experience"
+                               and (data.get(d) or {}).get("payload", {}).get("from") == said.get("here")
+                               and (data.get(d) or {}).get("payload", {}).get("act") == said.get("act")), None)
+        met_again = [r for r in revisions.get(experience, []) if r > cycle + 1] if experience else []
         expected = (scar.get("event") or {}).get("expected") or {}
         otherwise = isinstance(expected.get("value"), dict) and bool(expected["value"].get("otherwise"))
         cycle = scar["cycleMark"]
         nxt = frame_of(cycle + 1)
+        later = next((s for s in sorted(scars.values(), key=lambda r: r["cycleMark"]) if s["cycleMark"] > cycle), None)
         out.append({
             "scar": sid, "cycle": cycle, "expected": "otherwise" if otherwise else "a state foreseen",
             "thought": thought, "thought_says": (data.get(thought) or {}).get("payload", {}),
@@ -84,12 +95,16 @@ def chains(records, data):
             "experience": experience,
             "experience_says": {k: (data.get(experience) or {}).get("payload", {}).get(k)
                                 for k in ("act", "seen", "changed", "supports", "fails")} if experience else None,
-            "experience_revised_at": revisions.get(experience, []) if experience else [],
+            "experience_met_again_at": met_again,
+            "met_again_collided": [r for r in met_again if frame_of(r) in scars],
             "next": nxt, "next_collided": nxt in scars,
             "next_expected": ("otherwise" if isinstance(((scars.get(nxt) or {}).get("event") or {}).get("expected", {})
                                                        .get("value"), dict)
                               and scars[nxt]["event"]["expected"]["value"].get("otherwise") else
                               "a state foreseen") if nxt in scars else None,
+            "next_collision": later["datumId"] if later else None,
+            "next_collision_act": ((later.get("event") or {}).get("received") or {}).get("value", {}).get("move")
+            if later else None,
         })
     return out
 
@@ -105,7 +120,10 @@ def main() -> None:
                 and r["datumId"].endswith("-0"))
     found = chains(records, data)
     print(f"frame scars: {scars}; chains (scar → thought → turned choice): {len(found)}; "
-          f"of them the next return met as expected: {sum(not c['next_collided'] for c in found)}")
+          f"of them the next return met as expected: {sum(not c['next_collided'] for c in found)}; "
+          f"with the act met again where it collided: {sum(bool(c['experience_met_again_at']) for c in found)}, "
+          f"then met as expected every time: "
+          f"{sum(bool(c['experience_met_again_at']) and not c['met_again_collided'] for c in found)}")
     for c in found[:a.show]:
         print(json.dumps(c, indent=1, default=str))
 

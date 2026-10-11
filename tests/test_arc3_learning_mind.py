@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pytest
 
+from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
@@ -80,7 +81,7 @@ def loop():
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
@@ -445,7 +446,7 @@ def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
@@ -605,7 +606,7 @@ def test_with_no_goal_the_mind_holds_its_own_aim_and_acts():
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-                      t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8()),
+                      t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8()),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,
     )
@@ -678,7 +679,7 @@ def test_the_choice_names_the_experiences_it_went_by(monkeypatch):
     cycle = create_cycle(
         layers=Layers(
             t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-            t5=create_t5(predict=mind_rule(mind)), t6=create_t6(), t7=create_t7(), t8=create_t8(),
+            t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(), t8=create_t8(),
         ),
         glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
         initial_emission=Emission(action="boot"), admit=admit,

@@ -113,7 +113,9 @@ def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
     as the mind reads it, is what it expected, exactly — or, for an expectation
     that the region will be otherwise (`otherwise`), when the grid returned
     differs from the one it was in a cell the mind reads (not None): silence
-    where it expected an answer is a mismatch (Plone, 2026-10-11)."""
+    where it expected an answer is a mismatch (Plone, 2026-10-11); for a state
+    expected as the mind reads it (`as_read`), when every cell it reads is as
+    expected — a cell it does not read (a clock) is expected nothing of."""
     value = predicted.content.get("value") if isinstance(predicted.content, dict) else None
     if isinstance(value, dict) and value.get("otherwise"):
         came = _as_read(observed.content).get("value", {}).get("grids", [[]])[-1:]
@@ -121,6 +123,15 @@ def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
         if not came or not was:
             return True
         return any(w is not None and (r >= len(came[0]) or c >= len(came[0][r]) or came[0][r][c] != w)
+                   for r, row in enumerate(was[0]) for c, w in enumerate(row))
+    if isinstance(value, dict) and value.get("as_read"):
+        # The grid as the mind reads it: a cell it does not read (None) matches
+        # anything; the rest of the frame as it came.
+        came = _as_read(observed.content).get("value", {}).get("grids", [[]])[-1:]
+        was = value.get("grids", [[]])[-1:]
+        if not came or not was or len(came[0]) != len(was[0]):
+            return False
+        return all(w is None or (c < len(came[0][r]) and came[0][r][c] == w)
                    for r, row in enumerate(was[0]) for c, w in enumerate(row))
     return json.dumps(_as_read(observed.content), sort_keys=True, default=str) == \
         json.dumps(_as_read(predicted.content), sort_keys=True, default=str)

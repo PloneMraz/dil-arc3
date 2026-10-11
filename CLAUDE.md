@@ -331,8 +331,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   and the host's fit holds when the grid returned differs from it where the mind
   reads (`arc3.decisions.situation_fit`). Its scar falls on the return and on
   what the expectation stood on (T5's standing one): the choice that commanded
-  the act comes back only after the step is met. For the report, the standing
-  expectation holds: the region reports what it reported last.
+  the act comes back only after the step is met. Every state it expects is
+  expected **as it reads it** — what it does not read (a clock) left out, and
+  expected nothing of (`organs.AsRead`): a tick of the clock no longer collides
+  with an expectation from an experience or a hypothesis. For the report, the
+  standing expectation holds: the region reports what it reported last.
 - **A mismatch is not a penalty, and a collision turns the mind** (Plone,
   2026-10-11). A mismatch is data that deviates from what was expected, never a
   reward or a score; no count of collisions is kept or sought. The scar it
@@ -348,7 +351,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   for the next choice, which says so in its `why` and names the return among
   what it was built from; the next collision turns it again. On the status it
   thinks no further. The field reaches the mind at T5 as it reaches every layer
-  (INV-7), and the learning reads it (how far an objection reaches).
+  (INV-7), and the learning reads it on the operations its axes name: how far
+  an experience or hypothesis must have been borne out more often than not
+  before it expects by it (`trust`), how many choices a collision's turn holds
+  for (`alertness`, `TURN_HOLD = 1` at NEUTRAL), how many steps it looks ahead
+  (`exploration`), and how far an objection reaches; each choice says what it
+  read of the field.
   `scripts/chains.py` finds, in a store alone, the chains this leaves: a scar, the
   thought, the turned choice, what is expected of that act there from then on,
   the next return.
@@ -435,16 +443,6 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   Made opaque, it would be the host's or the model's to say what an act is —
   a change across organs, learning, inducers and the body; noted, not done
   (Plone, 2026-09-29).
-
-- **A scar of an experience's expectation is almost always the clock's.** It
-  does not predict the clock, so where a region keeps one, an expectation from
-  an experience fails on the clock's rows and columns alone, and its datum is scarred for it
-  (measured, of the exact hypothesis that said what an experience says now:
-  LOG.md, 2026-09-27). Where there is no clock, most
-  scars fall on steps it had no expectation of its own for. So in `[event]` its
-  scars do not read as refutations; a refutation is a datum of its own (a
-  hypothesis that no longer holds). Open: learning how the clock runs, and
-  predicting it. The paper is to say so.
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not

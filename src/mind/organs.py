@@ -38,6 +38,17 @@ class Otherwise:
     differs: Callable[[State], bool] = field(compare=False)
 
 
+@dataclass(frozen=True)
+class AsRead:
+    """An expected state as its model reads it: what it does not read (a clock)
+    left out (`Inducer.as_read`), so that it is expected nothing of (CLAUDE.md
+    had it open: an expectation was scarred on the clock's cells alone).
+    `matches(state)` says whether a state is it, as its model reads it."""
+
+    state: State
+    matches: Callable[[State], bool] = field(compare=False)
+
+
 @dataclass(frozen=True, slots=True)
 class Step:
     """One step as the eye delivers it: where the region stood, the act, where it
