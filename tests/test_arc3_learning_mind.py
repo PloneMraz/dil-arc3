@@ -923,3 +923,27 @@ def test_the_region_ending_turns_the_mind_from_the_kind_of_act_that_led_there():
     run(cycle, frame(lit(2), lit(3), action=0), status(affords=(1, 2), action=0))   # the start again, somewhere new
     act, why = mind.learning.thoughts[-1].act, mind.learning.thoughts[-1].why
     assert act[0] != first[0] and why.endswith("turned from what ended the region"), (act, why)
+
+
+def test_what_an_act_did_where_it_stood_alike_it_expects_again():
+    # Plone, 2026-10-11: memory of collisions reaches what it expects. ACTION1 did
+    # nothing in a state; in one alike to it, ACTION1 is expected to do nothing,
+    # held by that experience — and it does nothing: no collision.
+    from arc3.decisions import situation_fit
+    mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, attention=True)
+    mind.receive("task", MIND_TASK.payload, None)
+    data, events = create_data_store(), create_event_log()
+    cycle = create_cycle(
+        layers=Layers(t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
+                      t5=create_t5(predict=mind_rule(mind), fit=situation_fit), t6=create_t6(), t7=create_t7(),
+                      t8=create_t8()),
+        glob=create_glob_mod({"appraisalGain": 1.0}, 0), data=data, events=events,
+        initial_emission=Emission(action="boot"), admit=admit,
+    )
+    a = [[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+    b = [[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 2]]
+    run(cycle, frame(a, a), status())                              # ACTION1: nothing came of it
+    run(cycle, frame(a, b, action=2), status(action=2))            # ACTION2: somewhere alike
+    run(cycle, frame(b, b), status())                              # ACTION1 here: nothing, as recalled
+    assert mind.holds[-1] == 1, "expected nothing of it, from where it stood alike"
+    assert mind.holds[0] == 0, "the first time, it expected an answer, and silence collided"

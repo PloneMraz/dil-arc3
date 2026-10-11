@@ -336,7 +336,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   the act comes back only after the step is met. Every state it expects is
   expected **as it reads it** — what it does not read (a clock) left out, and
   expected nothing of (`organs.AsRead`): a tick of the clock no longer collides
-  with an expectation from an experience or a hypothesis. For the report, the
+  with an expectation from an experience or a hypothesis. Where nothing it knows
+  of the act here says what will come, it first recalls what the same kind of act
+  did where it stood in states alike (its attention): if that weighs more for
+  nothing coming of it, it expects nothing here, held by those experiences, and
+  counts the act as foreseen (tried last, never out of reach). For the report, the
   standing expectation holds: the region reports what it reported last.
 - **A mismatch is not a penalty, and a collision turns the mind** (Plone,
   2026-10-11). A mismatch is data that deviates from what was expected, never a

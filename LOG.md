@@ -6256,3 +6256,23 @@ then thought on, and the thought written with the fields that deviated
   nothing of their own (each still thought on and written). The ten games:
   every level and action count as before (X1); turned from what ended the
   region: r11l 7, tn36 1. 364 tests pass.
+
+### (2) What an act did where the mind stood alike, it expects again
+
+Memory of collisions reaching what the mind expects, not a rule of reaction:
+where nothing it knows of the act here says what will come, the learning recalls
+what the same kind of act did where it stood in states alike (its attention:
+`ATTENTION_K` experiences, weighed by the inducer's `similarity`); if those weigh
+more for nothing coming of it, it expects nothing here — held by those
+experiences, so an answer collides with them — and counts the act as foreseen
+(tried last, never out of reach); else it expects the region otherwise. The
+likeness is read once a choice, for its place only. 365 tests pass.
+
+The ten games, against (3): the expectations came right more often — tn36
+expected 413 of 444 unseen steps (231 of 530), 329 right (162); its frames met
+as expected 504 of 600 (418); vc33 523 (461); ls20 and tu93 a little; m0r0 the
+same. What the mind did barely changed: tu93's second level 36 (37), vc33's 317
+(293); the ten's score 1.27410 (1.26981). Silent steps did not fall (tn36 356 of
+589, 292 before): the acts foreseen to do nothing are still tried when nothing
+else is open (S3), and more acts are foreseen now — "its hypotheses say where
+each leads" 351 (163). What builds the behaviour is still the count (point 1).

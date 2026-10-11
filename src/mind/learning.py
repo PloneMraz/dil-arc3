@@ -67,6 +67,15 @@ THE LOOP, one step at a time:
   (where its model says an act lies there: `Inducer.unlike`, `Inducer.at`). The
   turn holds for the next choice, which names the thought among what it was
   built from; the next collision turns it again. No count is kept of it.
+- **What it met where it stood alike, it expects again** (Plone, 2026-10-11:
+  memory of collisions reaching what it expects, not a rule of reaction). Where
+  nothing it knows of this act here says what will come, it recalls what the
+  same kind of act did where it stood in states alike to this one (its
+  attention, `ATTENTION_K` experiences by the inducer's `similarity`): if they
+  weigh more for nothing coming of it, it expects nothing to come of it here —
+  held by those experiences, so an answer collides with them — and such an act
+  counts as foreseen (tried last, never out of reach); else it expects the
+  region to be otherwise.
 - **The field reaches how it builds what it does** (INV-7; Plone, 2026-10-11:
   context, memory and the field, even half a bit, make expectations and
   behaviour differ). Each axis on the operation it names: how readily a source
@@ -335,6 +344,8 @@ class Learning:
         # For a choice being made with attention: the experiences ranked by how
         # alike, once, and what each kind or act was found to weigh.
         self._ranked: list[tuple[float, Edge]] | None = None
+        # Where `_alike` was read from: what it recalls holds for that place only.
+        self._alike_for: str | None = None
         self._attend_memo: dict[tuple, tuple] = {}
         # How often each kind of act, and each act, changed the state (for the
         # laws that count a change: S2, S2c, S2d).
@@ -959,12 +970,20 @@ class Learning:
             as_read = AsRead(state=read, matches=lambda after: self.inducer.as_read(after) == read)
             return Expectation(state=as_read, fields=dict(fields) if fields else None,
                                held=(("handle", h),), by_model=True)
-        # Nothing it knows says what will come: it expects the region to be
-        # otherwise than it was — what the act was commanded for (Plone,
+        # Nothing it knows of this act here: what the same kind of act did where
+        # it stood alike, it expects again — nothing, if that weighs more.
+        self._expected = self.inducer.copy(step.before)
+        recalled = self._recalled(source, act)
+        if recalled is not None and recalled[0]:
+            self._expected_otherwise = False
+            read = self.inducer.as_read(step.before)
+            return Expectation(state=AsRead(state=read, matches=lambda after: self.inducer.as_read(after) == read),
+                               held=tuple(("handle", e) for e in recalled[1]), by_model=True)
+        # Nothing it knows or recalls says what will come: it expects the region
+        # to be otherwise than it was — what the act was commanded for (Plone,
         # 2026-10-11). Silence is then a mismatch; its scar falls on the return
         # and on what the expectation stood on (T5's standing expectation): the
         # choice that commanded the act comes back only after this step is met.
-        self._expected = self.inducer.copy(step.before)
         self._expected_otherwise = True
         read = self.inducer.as_read(step.before)
         otherwise = Otherwise(state=read, differs=lambda after: self.inducer.as_read(after) != read)
@@ -1287,7 +1306,11 @@ class Learning:
         return (tried, new, aim), changes
 
     def _look_alike(self, here: str) -> None:
-        """How alike each state met is to where it stands, for a choice (attention)."""
+        """How alike each state met is to where it stands, for a choice (attention);
+        once a choice — again only for another place."""
+        if self._ranked is not None and self._alike_for == here:
+            return
+        self._alike_for = here
         self._alike, self._attended, self._last_attended = {}, [], []
         if not self.attention or here not in self._raw_of:
             return
@@ -1315,7 +1338,27 @@ class Learning:
         if not self.inducer.general:
             return False
         best = self._best(here, act)
-        return best is not None and best[2] in self._raw_of
+        if best is not None:
+            return best[2] in self._raw_of
+        # Recalled from where it stood alike: nothing comes of it — it leads here.
+        if (here, act) in self._edges:
+            return False
+        recalled = self._recalled(here, act)
+        return recalled is not None and recalled[0]
+
+    def _recalled(self, here: str, act: Act) -> tuple[bool, list[Edge]] | None:
+        """What the same kind of act did where it stood in states alike to here
+        (its attention): whether more weight came to nothing, and the experiences
+        that did as that weight says; None without attention or too little alike."""
+        if not self.attention or not self._alike or here != self._alike_for or act[0] == self.organs.reset[0]:
+            return None
+        kind = self._kind_of.get((here, act)) or self.inducer.default_kind(act)
+        got = self._attend(lambda e: e.kind == kind, ("kind", kind))
+        if got is None:
+            return None
+        (tried, _, _), changes = got
+        silent = changes < tried / 2
+        return silent, [e for e, _ in self._last_attended if (not e.changed) == silent]
 
     def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
         """From a situation, where each act leads, by the hypothesis it holds best
@@ -1409,6 +1452,10 @@ class Learning:
         here = self._here
         if here is None:
             return Proposal(None, why="nowhere yet"), []
+        # How alike each state met is to here, read anew for this choice: what it
+        # recalls from where it stood alike (`_recalled`) and what it attends to.
+        self._ranked = None
+        self._look_alike(here)
         offers = context.offers
         through: list[Weighed] = []
         odds: float | None = None
