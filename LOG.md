@@ -5988,3 +5988,25 @@ title and subtitle, the abstract (about 140 words), author and affiliation,
 (2510.04871), licence CC BY 4.0, prize track "Main Track". The Writeup holds
 the abstract only; the paper itself is behind the link. The comment the link
 pointed at (#3424693) did not load in the rendered page and was not read.
+
+### 2026-10-11
+
+### `56983446` (version 28) scored 0.25
+
+Kaggle scored version 28 (moves, blocks and into aims once the aim has come)
+**0.25**, as version 23 (`56887238`). Here it had 0.514 against version 23's
+0.499, all of the difference tu93's second level; on the hidden games what it
+adds after the first aim made no difference to the score shown, and what it
+leaves as it was — everything before the first aim — kept version 23's.
+
+### The 2025 first-place paper, read
+
+Plone put the paper the sample writeup links to in the repository's root
+(`2510.04871v1.pdf`, not tracked): "Less is More: Recursive Reasoning with Tiny
+Networks", 12 pages. Its shape: abstract; introduction; background (the method
+it improves on, with pseudocode); targets for improvement; the method, each
+choice set against an ablation table (one change at a time, test accuracy,
+parameters); results against baselines (LLMs, the earlier method); conclusion
+with its limits; hyper-parameters; and a section "Ideas that failed", so that
+others do not repeat them. Its Writeup holds the abstract alone; the paper is
+the Project Link.
