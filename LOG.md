@@ -6230,3 +6230,9 @@ on the ten.) Not submitted. 25 of 25 played through, **2,804 s** (version 29:
 - Every first level of version 28 kept (lp85 17, r11l 19, tn36 33, m0r0 74,
   sp80, su15, tu93 454 and 37); ar25 one level more; bp35's first in more
   actions (score 0.022, 0.047 before), ls20 392 (342), lf52 and vc33 a few more.
+
+### Version 31 (`ad776be`, with the mind's vote on exploration): as version 30
+
+Notebook `dil-arc3-learning` version 31: version 30 with the mind's vote on the
+field's exploration. 25 of 25 played through, 3,277 s; 14 levels, 0.51296 —
+every game's score as version 30. Not submitted.
