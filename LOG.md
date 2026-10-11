@@ -6215,3 +6215,18 @@ when not. The ten games: every level and action count as before; exploration
 means tn36 0.11, ls20 0.14, m0r0 0.12, tu93 0.12, lp85 **0.36** (0.06–0.12
 before) — one vote among the layers', blended — and the look-ahead still 2
 steps (it reads 3 at NEUTRAL). 363 tests pass.
+
+### Version 30 (`d3bfc5a`): 14 levels, 0.513 — the mind that collides, turns and reads the field
+
+Notebook `dil-arc3-learning` version 30, code `d3bfc5a`: silence collides, a
+collision turns the next choice, the field reaches how the mind builds what it
+does, every state expected as read, DEVIATION 8; grid (moves, blocks and into
+aims once the aim has come), S2b, attention, 600 cycles, the 25 games four at
+once. (The mind's vote on exploration, `ad776be`, came after; it changed nothing
+on the ten.) Not submitted. 25 of 25 played through, **2,804 s** (version 29:
+4,783 s) — with fewer frames scarred, fewer commits.
+
+- **14 levels, 0.51296** (version 28/29: 13, 0.51375).
+- Every first level of version 28 kept (lp85 17, r11l 19, tn36 33, m0r0 74,
+  sp80, su15, tu93 454 and 37); ar25 one level more; bp35's first in more
+  actions (score 0.022, 0.047 before), ls20 392 (342), lf52 and vc33 a few more.
