@@ -6320,3 +6320,19 @@ The ten games (actions of each level completed; S2b in brackets):
   clicks, 250 of them on one kind that never changed anything.
 - Expectations: of the unseen steps it expected, fewer came right (m0r0 105 of
   272; 470 of 483) — it commands what it is least sure of.
+
+#### Version 32 (`a173800`, T1): 13 levels, 0.379
+
+Notebook `dil-arc3-learning` version 32, code `a173800`: as version 30–31
+(grid, attention, 600 cycles, the 25 games four at once), with T1 in S2b's
+place (`--curiosity test`). 25 of 25 played through, 3,175 s. **13 levels,
+0.37927** (version 30: 14, 0.51296). Not submitted (2026-10-18: put to Plone).
+
+- Fewer actions, or a level more: lf52 **31** (140; baseline 32), bp35 64
+  (210), ar25 279 (475), su15 311 (463), tn36 28 (33), ls20 385 (392), vc33's
+  first 62 (69), tu93's first 427 (453); **sc25's first level, 338** (none).
+- More, or a level lost: r11l 56 (19), tu93's second 86 (37), vc33's second
+  316 (293); m0r0's first (74) and sp80's first (271) not reached.
+- Of the twelve games whose levels changed, nine went T1's way in actions or
+  levels; the score lost is r11l's level near the baseline (19 of 22) and
+  m0r0's, as on the ten.
