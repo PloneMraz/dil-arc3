@@ -240,7 +240,9 @@ Requires Python 3.12+. No dependencies.
 # tests
 uv run --with pytest python -m pytest tests/ -q
 
-PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
+# an environment with the game engine, on Python 3.12 (Kaggle's): this
+# repository's own .venv, made with uv and the starter kit's pinned packages
+PY=.venv/bin/python
 
 # a live game, the mind learning with the grid inducer
 $PY scripts/run_game.py ls20 600 --inducer grid

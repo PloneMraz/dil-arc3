@@ -27,7 +27,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-KAGGLE = REPO.parent / "ARC-AGI-3-Kaggle-Starter" / ".venv" / "bin" / "kaggle"
+# The kaggle CLI: this repository's own environment (`.venv`, Python 3.12), else
+# the starter kit's (2026-10-17: the machine's Python 3.12 went with Ubuntu
+# 26.04, and the starter kit's environment with it).
+KAGGLE = next((p for p in (REPO / ".venv" / "bin" / "kaggle",
+                           REPO.parent / "ARC-AGI-3-Kaggle-Starter" / ".venv" / "bin" / "kaggle") if p.exists()),
+              REPO / ".venv" / "bin" / "kaggle")
 OUT = REPO / "scripts" / "data" / "kaggle" / "dil-run"
 KERNEL = "plonemraz/dil-arc3-learning"
 

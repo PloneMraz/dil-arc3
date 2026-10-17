@@ -578,6 +578,26 @@ def test_each_law_of_curiosity_wants_what_it_counts():
         Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="most")
 
 
+def test_by_t1_the_expectation_least_sure_of_is_tested_first():
+    # T1 (Plone, 2026-10-11): no count of outcomes sought — of the acts not yet
+    # taken, the one whose expectation memory is least sure of; nothing known is
+    # the least sure; what brings the aim, first.
+    from mind.learning import Hypothesis, Learning
+    learning = Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="test")
+    sure, unsure = Hypothesis("sure", supports=20, fails=1), Hypothesis("unsure", supports=2, fails=1)
+    held = {1: sure, 2: unsure}
+    learning._best = lambda here, act, state=None: (held[act[0]], None, "x") if act[0] in held else None
+    pool = [((1, None, None), ("act", 1)), ((2, None, None), ("act", 2))]
+    act, spread = learning._least_sure("here", pool)
+    assert act == (2, None, None) and learning._tested_by == [unsure], "the one tested less, and what held it"
+    assert spread == learning._spread(2, 3)
+    assert learning._least_sure("here", [*pool, ((3, None, None), ("act", 3))])[0] == (3, None, None), \
+        "what nothing says is least sure"
+    learning._kinds = {("act", 1): [4, 0, 2]}
+    assert learning._least_sure("here", [*pool, ((3, None, None), ("act", 3))])[0] == (1, None, None), \
+        "what brought the aim, first"
+
+
 def test_the_default_law_is_the_one_measured_before():
     # S2b, as it was computed before the other laws were added: the odds of the
     # aim, then the odds of somewhere new raised by UCB1 — the same numbers.

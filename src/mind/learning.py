@@ -115,6 +115,20 @@ against it (Plone, 2026-09-28):
                          whole change apart, the whole seldom comes again, and
                          somewhere new is everywhere (LOG.md, 2026-10-05); what
                          a step made is its model's to say (`Inducer.made`)
+  test              T1   no count of outcomes sought: each command tests the
+                         expectation memory is least sure of (Plone,
+                         2026-10-11). For each act not yet taken here, what
+                         it expects of it and what holds that expectation —
+                         a hypothesis (its returns), the experiences recalled
+                         from states alike (their weight), or nothing — and
+                         how unsure that is: the spread of its rate,
+                         sqrt(p(1 - p) / (n + 3)), p = (agreeing + 1) / (n + 2),
+                         n the evidence, weighed by the field's trust (½–1½).
+                         Nothing known is the least sure. What brings the aim
+                         first, as for every law; at an equal spread, how
+                         unsure what the kind does everywhere is, coarse first.
+                         The choice says how unsure (`unsure`), and what held
+                         the expectation it tests, which it is built from
 
 What it holds and does not write as such — the counts its curiosity weighs
 with, the situations it visited — follows from its experiences in `[data]`. Not
@@ -171,7 +185,7 @@ ATTENTION_SHARPNESS: Final = 4
 ATTENTION_MIN_WEIGHT: Final = 1.0
 # What the mind counts as worth trying (the docstring's CURIOSITY), by name; the
 # first is the default (S2b).
-CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed", "made")
+CURIOSITY: Final = ("new", "changed", "new-then-changed", "new-plus-changed", "made", "test")
 FIT_LAW: Final = ("held while right more often than wrong (supports > fails); of those that apply, "
                   "the one right at the highest rate, (supports + 1) / (supports + fails + 2), is the "
                   "expectation; at an equal rate, the one right more often")
@@ -340,6 +354,7 @@ class Learning:
         self._alike: dict[str, float] = {}
         self._attended: list[tuple[Edge, float]] = []
         self._last_attended: list[tuple[Edge, float]] = []
+        self._tested_by: list[Hypothesis] = []       # T1: the hypothesis whose expectation a choice tests
         self._attended_change = 0.0
         # For a choice being made with attention: the experiences ranked by how
         # alike, once, and what each kind or act was found to weigh.
@@ -1421,7 +1436,58 @@ class Learning:
         finally:
             self._ranked, self._attend_memo = None, {}
 
+    @staticmethod
+    def _spread(agreeing: float, n: float) -> float:
+        """How unsure an expectation is: the spread of its rate, by its evidence."""
+        p = (agreeing + 1) / (n + 2)
+        return math.sqrt(p * (1 - p) / (n + 3))
+
+    def _held_of(self, here: str, act: Act, kind: tuple) -> tuple[float, float, list[Any]]:
+        """What holds what it expects of an act here, as T1 weighs it: (agreeing,
+        evidence, what holds it) — the hypothesis it expects by, the experiences it
+        recalls from states alike (each with its weight), or nothing."""
+        best = self._best(here, act)
+        if best is not None:
+            h = best[0]
+            return h.supports, h.supports + h.fails, [h]
+        got = self._attend(lambda e: e.kind == kind, ("kind", kind))
+        if got is not None:
+            (tried, _, _), changes = got
+            silent = changes < tried / 2
+            return max(changes, tried - changes), tried, \
+                [(e, w) for e, w in self._last_attended if (not e.changed) == silent]
+        return 0.0, 0.0, []
+
+    def _kind_spread(self, counts, changes: float) -> float:
+        """How unsure what a kind of act does everywhere is: a change or not."""
+        tried = counts[0]
+        return self._spread(max(changes, tried - changes), tried)
+
+    def _least_sure(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
+        """T1: of the acts in `pool`, the one whose expectation memory is least sure
+        of; what brings the aim first."""
+        weight = rising(axis(self._field, TRUST))
+        ranked = []
+        for act, kind in pool:
+            agreeing, n, held = self._held_of(here, act, kind)
+            spread = self._spread(agreeing * weight, n * weight)
+            coarse = self.inducer.coarse(kind)
+            fine = (self._kinds.get(kind, (0, 0, 0)), self._kind_changes.get(kind, 0))
+            wide = (self._coarse.get(coarse, (0, 0, 0)), self._coarse_changes.get(coarse, 0)) \
+                if coarse is not None else fine
+            key = (self._odds_of(wide[0])[0], self._odds_of(fine[0])[0], round(spread, 9),
+                   self._kind_spread(*wide), self._kind_spread(*fine), -act[0])
+            ranked.append((key, act, kind, spread, held))
+        _, act, kind, spread, held = max(ranked, key=lambda r: r[0])
+        self._kind_of[(here, act)] = kind
+        self._chosen_kind = kind
+        self._attended = [ew for ew in held if isinstance(ew, tuple)]
+        self._tested_by = [h for h in held if isinstance(h, Hypothesis)]
+        return act, spread
+
     def _most_curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
+        if self.curiosity == "test":
+            return self._least_sure(here, pool)
         chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
         best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
         self._kind_of[(here, best[0])] = best[1]
@@ -1538,7 +1604,10 @@ class Learning:
                                   "field": {name: round(axis(self._field, name), 3) for name in (TRUST, ALERTNESS,
                                                                                                  EXPLORATION)},
                                   "why": why, "aim": (self._aim or {}).get("aim")}
-        if odds is not None:
+        if odds is not None and self.curiosity == "test":
+            choice["unsure"] = round(odds, 3)
+            through = [*through, *(h for h in self._tested_by if h not in through)]
+        elif odds is not None:
             if self.curiosity == "changed":
                 choice["odds_of_change"] = round(odds, 3)
             else:

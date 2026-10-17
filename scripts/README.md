@@ -4,11 +4,12 @@ The measurement and run scripts behind the numbers in `README.md` and
 `LOG.md`. They were written in a session scratchpad on Windows and moved here
 on 2026-09-24, so that the work is kept with the code it measured.
 
-Run them from the repository root with the starter kit's interpreter, which has
-the game engine:
+Run them from the repository root with an interpreter that has the game engine,
+on Python 3.12 (Kaggle's) — this repository's own `.venv` (`uv venv --python
+3.12 .venv`, then the starter kit's pinned packages):
 
 ```sh
-PY=../ARC-AGI-3-Kaggle-Starter/.venv/bin/python
+PY=.venv/bin/python
 $PY scripts/<script>.py [args]
 ```
 

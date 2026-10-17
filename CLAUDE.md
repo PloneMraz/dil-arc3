@@ -188,14 +188,19 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   word"); each answer names the prior.
 - **Curiosity is for somewhere new** (Plone, 2026-09-28, S2b): a kind of act is
   wanted by how often it reached a situation not met before, not by how often it
-  changed the state. Four other laws are kept beside it to be measured, and the
+  changed the state. Five other laws are kept beside it to be measured, and the
   one that does best across the games chosen after (Plone, 2026-09-28;
   `--curiosity`, `learning.CURIOSITY`): **S2**, a change (back where it stood
   included); **S2c**, somewhere new, then a change between kinds as likely to;
   **S2d**, both odds added; **B1** (`made`, Plone, 2026-10-05), something made
   not made before — where the parts of a whole change apart the whole seldom
   comes again, and what a step made is its model's to say (`Inducer.made`: each
-  part of the cells it changed off the clock, where it lies, as left). A step is
+  part of the cells it changed off the clock, where it lies, as left); **T1**
+  (`test`, Plone, 2026-10-11), no count of outcomes sought: each command tests
+  the expectation memory is least sure of — of the acts not yet taken, the one
+  whose expectation (held by a hypothesis, by experiences recalled from states
+  alike, or by nothing) has the widest spread of its rate, the evidence weighed
+  by the field's trust; the choice names what held it. A step is
   blocked, back where it stood, or somewhere new: S2 counts the last two alike,
   S2b the first two.
 - **What may be tried is every thing seen; which, curiosity says** (Plone,
@@ -869,8 +874,9 @@ Three traps, each of which would cost a day at the deadline:
 2. **`submit` needs `-f` as well as `-k` and `-v`.** Without the output file name
    it returns `400 Bad Request` with no explanation.
 3. **Kaggle runs Python 3.12**, and the starter kit asks for 3.12. A local run on
-   another interpreter is not the graded one; this machine's `python3` and the
-   starter kit's venv are 3.12.3.
+   another interpreter is not the graded one. This machine's `python3` is 3.14
+   since Ubuntu 26.04 (LOG.md, 2026-10-17); runs here use this repository's
+   `.venv`, Python 3.12.14 from uv, with the starter kit's pinned packages.
 
 **While a submission is being scored, nothing is pushed to Kaggle** (Plone,
 2026-10-04): no notebook version, no dataset version, to any notebook.

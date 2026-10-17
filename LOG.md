@@ -6276,3 +6276,47 @@ same. What the mind did barely changed: tu93's second level 36 (37), vc33's 317
 589, 292 before): the acts foreseen to do nothing are still tried when nothing
 else is open (S3), and more acts are foreseen now — "its hypotheses say where
 each leads" 351 (163). What builds the behaviour is still the count (point 1).
+
+### 2026-10-17
+
+#### This machine's Python 3.12 is gone
+
+The machine is on Ubuntu 26.04: `/usr/bin/python3` is 3.14.4 and there is no
+`python3.12`, so the starter kit's environment and this repository's `.venv`
+(both linked to `/usr/bin/python3.12`, or to `python3` with 3.12's packages)
+no longer ran. This repository's `.venv` was made again on Python 3.12.14 from
+uv, with the starter kit's packages at the versions it held (arc_agi 0.9.9,
+arcengine 0.9.3, numpy 2.5.3, kaggle 2.2.4, …); the starter kit's environment
+is left as it is. `push_dil_run.py` and `run_series.py` take the kaggle CLI
+from `.venv` first. 366 tests pass on it. The runs of 2026-10-11 kept in the
+session's scratch space went with a restart; measurements are kept under
+`scripts/data/` now. The ten games under S2b, run again on 3.12.14, gave every
+number of (2): 1.27410, 11 levels.
+
+#### (1) T1: each command tests the expectation memory is least sure of
+
+S2b wants a kind of act by its odds of reaching somewhere new — a count of an
+outcome, sought. T1 (`--curiosity test`) seeks none: of the acts not yet taken
+here, it commands the one whose expectation memory is least sure of. What holds
+that expectation is what `expect` would hold it by — the hypothesis it expects
+by (its returns), the experiences recalled from states alike (their weight), or
+nothing — and how unsure it is, the spread of its rate, sqrt(p(1−p)/(n+3)),
+p = (agreeing+1)/(n+2), the evidence weighed by the field's trust (½–1½);
+nothing known is the least sure. What brings the aim first, as for every law;
+at an equal spread, how unsure what the kind does everywhere is, coarse first.
+The choice says how unsure (`unsure`) and is built from what held the
+expectation it tests. Kept beside S2b, which stays the default. 366 tests pass.
+
+The ten games (actions of each level completed; S2b in brackets):
+
+- lf52 **31** (140; baseline 32), ar25 279 (475), tn36 28 (33), vc33 62 and
+  316 (69 and 317), ls20 385 (392), tu93's first 427 (453), lp85 17 (17).
+- r11l 56 (19), tu93's second 86 (36), m0r0 none (74).
+- 10 levels (11), **0.91775** (1.27410): the score lost is r11l's and m0r0's
+  first levels, which S2b reached early.
+- Silent steps (an act that changed nothing, of all): m0r0 99 of 595 (465),
+  ar25 30 (76), tn36 275 (354); cn04 124 (61), ls20 116 (106). In m0r0 it stood
+  in 232 states (65), mostly by moves — S2b spent 431 of its 600 actions on
+  clicks, 250 of them on one kind that never changed anything.
+- Expectations: of the unseen steps it expected, fewer came right (m0r0 105 of
+  272; 470 of 483) — it commands what it is least sure of.
