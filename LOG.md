@@ -6333,6 +6333,7 @@ place (`--curiosity test`). 25 of 25 played through, 3,175 s. **13 levels,
   first 62 (69), tu93's first 427 (453); **sc25's first level, 338** (none).
 - More, or a level lost: r11l 56 (19), tu93's second 86 (37), vc33's second
   316 (293); m0r0's first (74) and sp80's first (271) not reached.
-- Of the twelve games whose levels changed, nine went T1's way in actions or
-  levels; the score lost is r11l's level near the baseline (19 of 22) and
+- Of the twelve games whose levels changed, seven went T1's way (ar25, bp35,
+  lf52, ls20, sc25, su15, tn36), three S2b's (m0r0, r11l, sp80), and two each
+  way by level (tu93, vc33); the score lost is r11l's level near the baseline (19 of 22) and
   m0r0's, as on the ten.
