@@ -6547,3 +6547,46 @@ vc33, from the store: at step 26 an answer other than foreseen turns the choice
 to where it differed; the field's alertness there is 0.178, so the turn holds 2
 choices (it held 1), and at step 27 it clicks (61, 33) again, "turned to where
 the answer differed", where without B2 it clicked (61, 25).
+
+#### The disk that holds the workspace dropped out (2026-10-18, 17:18)
+
+`sda` (the SSD holding the workspace) lost its SATA link: repeated hard resets,
+the link slowed to 3.0 Gbps, 58 I/O errors (`DID_BAD_TARGET`), and ext4 went to
+emergency read-only. After a reboot (Plone): the link up at 6.0 Gbps, the
+journal recovered, mounted read-write, ext4's error count 0, no I/O error since.
+Read back without writing: `git fsck` clean in all 12 repositories, all 265 run
+databases pass `quick_check`, and all 1,237,711 files of the workspace read
+(`backup from windows/` left out). Nothing lost; the individual I3 was cut off
+and run again. SMART and `fsck` need root, not run here.
+
+#### Point 4: four individuals of the same DIL (B1 and B2)
+
+The same code (S2b, grid, attention, B2), the eleven games, four individuals
+differing only in how they start or how long the field remembers:
+
+| | starts in | carry | levels | score |
+|---|---|---|---|---|
+| B2 (no B1) | NEUTRAL | 0 | 12 | 1.16682 |
+| I0 | NEUTRAL | 0.75 | 10 | 1.08757 |
+| I1 doubting, alert, exploring | trust 0.2, alertness 0.8, exploration 0.8 | 0.75 | 10 | 1.08716 |
+| I2 trusting, calm, consolidating | 0.8, 0.2, 0.2 | 0.75 | 12 | 1.16446 |
+| I3 long memory | NEUTRAL | 0.95 | 12 | **1.16762** |
+
+- They part: I1 and I2 in 10 of 11 games (vc33 at step 27, tu93 36, m0r0 74,
+  cn04 97, ar25 100, ls20 114, r11l 90, lf52 265, sp80 274; tn36 the same at
+  every step), I0 and each of them in 10 of 11 (lp85 never parts).
+- What differs in what they reach is small and mostly tu93: I0 and I1 lose both
+  its levels (0.88 under the others); ar25, ls20, m0r0 and vc33 move a little;
+  the rest are the same levels in the same actions.
+- With a carry the field is smoother: alertness's 95th percentile 0.21–0.22
+  (0.28 without), its median higher (0.11–0.12, 0.07).
+- The chain, tu93, I1 against I2, from the stores: the two start in fields far
+  apart (step 2: trust 0.32 and 0.77, alertness 0.64 and 0.19, exploration 0.73
+  and 0.28; look-ahead 4 and 2, turn hold 2 and 1); by step 34 their fields are
+  nearly one (trust 0.783 and 0.785), but what B2 carries of their rounding is
+  not: at step 35 a silence turns both from the act, and the turn holds 2
+  choices for I1, 1 for I2; at step 36 I1 is still turned and takes act 4, I2
+  takes act 2. What an individual was born as reaches a choice thirty steps on,
+  through what it counted by. The remainder B2 carries is not written in the
+  choice (only the counts it gave); a reader reconstructs it from the fields
+  the choices record, to their three decimals.
