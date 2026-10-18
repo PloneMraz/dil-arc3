@@ -380,7 +380,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   follow the field on average: what rounding leaves over is carried to the next
   cycle, never below 1 (B2, Plone, 2026-10-18: rounded each on its own, they did
   not move in the ranges the field keeps); each choice says the counts it used
-  (`counts`). The mind also votes on it, as every layer does from what it
+  (`counts`) and what rounding left over after them (`carried`). The mind also votes on it, as every layer does from what it
   alone sees (INV-7, through the `contribute` T5 hands its rule): on
   `exploration`, whether the region came where it had not stood — the layers
   below see tags and entities (a frame is always the entity "frame"), never that;
@@ -656,9 +656,9 @@ own form (a `present` set, a `predict` rule for T5).
    the cycle's votes alone, so the field held nothing of the cycles before: a
    field set otherwise lasted one cycle, the axes stood in narrow bands, and
    two individuals of the same DIL could differ in field only as far as one
-   cycle's votes did. This host declares `arc3.decisions.FIELD_CARRY = 0.75`
-   (about four cycles' memory, as T7's attention span; declared, not
-   measured); `run_game.py --field` starts the loop in a field of its own (an
+   cycle's votes did. This host declares `arc3.decisions.FIELD_CARRY = 0.95`
+   (about twenty cycles' memory; of the carries tried on the eleven games, the
+   one that reached the most levels — declared, not measured beyond that); `run_game.py --field` starts the loop in a field of its own (an
    individual's disposition at birth) and `--field-carry` sets another carry.
    0, dil-core's blend, when a host declares none; queued in dil-core.
 

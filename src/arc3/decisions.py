@@ -155,7 +155,9 @@ def from_the_world(unit: InfoUnit) -> bool:
 # when the cycle's votes blend in. dil-core's blend sets an axis to the cycle's
 # votes alone, so the field held nothing of the cycles before: a field set
 # otherwise lasted one cycle, and the axes stood in narrow bands (LOG.md,
-# 2026-10-18). A quarter of each cycle's votes, three quarters of the field
-# before: about four cycles' memory, as T7's attention span (4.0). DECLARED, not
-# measured.
-FIELD_CARRY: Final = 0.75
+# 2026-10-18). A twentieth of each cycle's votes, the rest the field before:
+# about twenty cycles' memory. Of the carries tried on the eleven games, 0.95
+# reached the most levels (12; 0.75, 10 — tu93's two lost), within what any
+# change reshuffles (Plone, 2026-10-18: chosen on it). DECLARED, not measured
+# beyond that.
+FIELD_CARRY: Final = 0.95

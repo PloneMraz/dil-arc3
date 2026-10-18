@@ -1669,6 +1669,9 @@ class Learning:
         self.thoughts.append(Choice(self.steps, act, why, odds))
         choice: dict[str, Any] = {"step": self.steps, "here": here, "chose": list(act) if act else None,
                                   "counts": dict(self._counts),
+                                  # What rounding left over, carried into the next cycle's counts
+                                  # (B2): with the fields, a reader recomputes every count.
+                                  "carried": {k: round(v, 6) for k, v in self._carried.items()},
                                   "field": {name: round(axis(self._field, name), 3) for name in (TRUST, ALERTNESS,
                                                                                                  EXPLORATION)},
                                   "why": why, "aim": (self._aim or {}).get("aim")}

@@ -6590,3 +6590,12 @@ differing only in how they start or how long the field remembers:
   through what it counted by. The remainder B2 carries is not written in the
   choice (only the counts it gave); a reader reconstructs it from the fields
   the choices record, to their three decimals.
+
+#### FIELD_CARRY 0.95; what B2 carries, in each choice (Plone, 2026-10-18)
+
+The carry declared by this host is 0.95 (I3's; 0.75 before): of the carries
+tried on the eleven, the one that reached the most levels, within what any
+change reshuffles. Each choice now writes, beside the counts it used, what
+rounding left over after them (`carried`), so that the chain from a field to a
+count is recomputed from the store alone, not from fields to three decimals.
+369 tests pass.

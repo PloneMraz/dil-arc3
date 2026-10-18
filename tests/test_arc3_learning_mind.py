@@ -970,6 +970,11 @@ def test_what_it_counts_by_the_field_follows_the_field_on_average():
     assert sum(holds) == 13 and set(holds) == {1, 2}, holds       # 2 × 0.65 a cycle, read once a cycle
     assert sum(looks) == 18 and set(looks) == {1, 2}, looks       # 3 × 0.6
     assert learning._borne_out_by() == 1, "never below 1"
+    # What is left over is the choice's to say, so a reader recomputes the counts.
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status())
+    choice = [d.payload for _, d in of_kind(data, "choice")][-1]
+    assert set(choice["counts"]) == set(choice["carried"]) == {"borne_out_by", "turn_hold", "look_ahead"}
 
 
 def test_the_region_ending_turns_the_mind_from_the_kind_of_act_that_led_there():
