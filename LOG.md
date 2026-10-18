@@ -6337,3 +6337,51 @@ place (`--curiosity test`). 25 of 25 played through, 3,175 s. **13 levels,
   lf52, ls20, sc25, su15, tn36), three S2b's (m0r0, r11l, sp80), and two each
   way by level (tu93, vc33); the score lost is r11l's level near the baseline (19 of 22) and
   m0r0's, as on the ten.
+
+#### (1) T1 revised twice: what S2b's order held, and the noisy TV
+
+Plone (2026-10-18) asked whether S2b's "lucky" first levels were luck, since the
+same code gives them again: they are not. Nothing in the code is random; the
+order is the law's and its tie-breaks, and read in the traces it holds a
+principle. m0r0: S2b went on up (ACTION1) while each step came where it had not
+stood, turning only when blocked, and reached far; T1 changed direction at every
+step. r11l: S2b clicked again the kind whose clicks kept opening new states and
+ended the level at cycle 19; T1 left it at cycle 12. lf52: S2b went back to
+ACTION7 again and again — it always came back where it stood, and UCB raised
+what was tried little; T1 tried it once. T1 weighed only whether something would
+change: an act certain to change the state was "sure", though where it leads
+memory could not say.
+
+- **T1b**: how likely what comes is a state memory does not hold — a
+  hypothesis's named state (stood in or not) at its rate; else how often that
+  kind of act came where it had not stood; no UCB; the spread as a tie-break.
+  The eleven games (the ten and sp80): lf52 20, lp85 13, m0r0 248, sp80 422 (S2b
+  271, here), but tn36 and tu93 lost; 9 levels, 0.517. tn36: it clicked two
+  kinds 538 times, each click a whole state never met (272 of 273) — parts
+  toggled into new combinations, everything it made made before. The noisy TV.
+- **T1c** (kept): the same, but what memory does not hold is what a step made,
+  as the model reads it (`Inducer.made`, as B1), not a whole state; and a
+  hypothesis names what will come, unsure only by its being wrong. The eleven:
+  **ar25 122** (S2b 475, T1 279), **cn04's first level, 149** (no law before),
+  lf52 23, lp85 13, m0r0 131, tu93 491 and 61, vc33 62 and 316, r11l 59; ls20,
+  sp80 and tn36 not reached (tn36: of the acts not yet taken, the toggling kinds
+  were left, each making little new — 9 of 165). 10 levels, 0.56883. 366 tests
+  pass.
+
+| game | S2b | T1 | T1b | T1c |
+|---|---|---|---|---|
+| ar25 | 475 | 279 | 395 | **122** |
+| cn04 | – | – | – | **149** |
+| lf52 | 140 | 31 | 20 | 23 |
+| lp85 | 17 | 17 | 13 | 13 |
+| ls20 | 392 | 385 | 528 | – |
+| m0r0 | 74 | – | 248 | 131 |
+| r11l | 19 | 56 | 51 | 59 |
+| sp80 | 271 | (not run) | 422 | – |
+| tn36 | 33 | 28 | – | – |
+| tu93 | 453, 36 | 427, 86 | – | 491, 61 |
+| vc33 | 69, 317 | 62, 316 | 63, 316 | 62, 316 |
+
+Each law reaches another set of first levels: on eleven games no law is ahead
+of the others in levels (S2b 12, T1c 10, T1b 9; T1 10 of ten); RHAE's weight on
+the few near the baseline (r11l 19 of 22, tn36 33 of 32) decides the score.

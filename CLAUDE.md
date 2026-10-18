@@ -196,11 +196,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   not made before — where the parts of a whole change apart the whole seldom
   comes again, and what a step made is its model's to say (`Inducer.made`: each
   part of the cells it changed off the clock, where it lies, as left); **T1**
-  (`test`, Plone, 2026-10-11), no count of outcomes sought: each command tests
-  the expectation memory is least sure of — of the acts not yet taken, the one
-  whose expectation (held by a hypothesis, by experiences recalled from states
-  alike, or by nothing) has the widest spread of its rate, the evidence weighed
-  by the field's trust; the choice names what held it. A step is
+  (`test`, Plone, 2026-10-11/18): each command tests the expectation that least
+  says what will come — of the acts not yet taken, the one likeliest to make
+  something memory does not hold: a hypothesis names what will come and is
+  wrong at its rate; where nothing names it, how often that kind of act made
+  something not made before (`Inducer.made`, alike first), never a whole state
+  never met, which parts changed apart make at every step; no bonus for being
+  tried little; the evidence weighed by the field's trust; the choice names
+  what held the expectation. A step is
   blocked, back where it stood, or somewhere new: S2 counts the last two alike,
   S2b the first two.
 - **What may be tried is every thing seen; which, curiosity says** (Plone,

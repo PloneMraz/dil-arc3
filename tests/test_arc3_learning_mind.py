@@ -578,24 +578,28 @@ def test_each_law_of_curiosity_wants_what_it_counts():
         Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="most")
 
 
-def test_by_t1_the_expectation_least_sure_of_is_tested_first():
-    # T1 (Plone, 2026-10-11): no count of outcomes sought — of the acts not yet
-    # taken, the one whose expectation memory is least sure of; nothing known is
-    # the least sure; what brings the aim, first.
+def test_by_t1_the_expectation_that_least_says_what_will_come_is_tested_first():
+    # T1 (Plone, 2026-10-11/18): of the acts not yet taken, the one likeliest to
+    # come where memory holds nothing; no bonus for being tried little; what
+    # brings the aim, first.
     from mind.learning import Hypothesis, Learning
     learning = Learning(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE}, curiosity="test")
-    sure, unsure = Hypothesis("sure", supports=20, fails=1), Hypothesis("unsure", supports=2, fails=1)
-    held = {1: sure, 2: unsure}
-    learning._best = lambda here, act, state=None: (held[act[0]], None, "x") if act[0] in held else None
-    pool = [((1, None, None), ("act", 1)), ((2, None, None), ("act", 2))]
-    act, spread = learning._least_sure("here", pool)
-    assert act == (2, None, None) and learning._tested_by == [unsure], "the one tested less, and what held it"
-    assert spread == learning._spread(2, 3)
-    assert learning._least_sure("here", [*pool, ((3, None, None), ("act", 3))])[0] == (3, None, None), \
-        "what nothing says is least sure"
-    learning._kinds = {("act", 1): [4, 0, 2]}
-    assert learning._least_sure("here", [*pool, ((3, None, None), ("act", 3))])[0] == (1, None, None), \
-        "what brought the aim, first"
+    learning._best = lambda here, act, state=None: None
+    out, back, unknown = ((1, None, None), ("act", 1)), ((2, None, None), ("act", 2)), ((3, None, None), ("act", 3))
+    learning._kinds = {("act", 1): [10, 9, 0], ("act", 2): [10, 0, 0]}
+    assert learning._least_sure("here", [back, unknown, out])[0] == out[0], \
+        "a kind that kept coming where it had not stood, before what nothing says"
+    assert learning._least_sure("here", [back, unknown])[0] == unknown[0], \
+        "what nothing says, before a kind that always came back where it stood (an undo)"
+    # A hypothesis that names a state it has stood in says what will come.
+    named = Hypothesis("named", supports=5, fails=0)
+    learning._raw_of = {"stood": "raw"}
+    learning._best = lambda here, act, state=None: (named, None, "stood") if act[0] == 3 else None
+    act, unheld = learning._least_sure("here", [unknown, out])
+    assert act == out[0] and learning._least_sure("here", [unknown])[1] == (1 - 6 / 7) * 0.5
+    assert learning._tested_by == [named], "the choice names what held the expectation it tests"
+    learning._kinds[("act", 2)] = [4, 0, 2]
+    assert learning._least_sure("here", [unknown, out, back])[0] == back[0], "what brought the aim, first"
 
 
 def test_the_default_law_is_the_one_measured_before():
