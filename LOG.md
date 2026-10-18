@@ -6515,3 +6515,15 @@ changed a choice). Levels 11 alone (12): ls20's not reached, ar25 sooner (score
 that act at the states the run passed (`objected`), and its second choice of
 the cycle replaces (6, 20, 17) with (6, 14, 26) (`supersedes`). Alone, it clicks
 (20, 17) again, and the two go apart.
+
+#### Version 34 (`1b873a6`, the default): 16 levels, 0.519
+
+Notebook `dil-arc3-learning` version 34, code `1b873a6`: S2b with (3) a
+collision of the region's report thought on, (2) what an act did where the mind
+stood alike expected again, and the mind's vote on trust; grid, attention, 600
+cycles, the 25 games four at once. 25 of 25 played through, 3,717 s. **16
+levels, 0.51853** (version 30: 14, 0.51296): every level of version 30 kept,
+with **sc25's first two levels** (0.096; none before under S2b), tu93 0.882
+(0.835), vc33 0.060 (0.064). The most levels and the highest score of any run on
+the 25. To be submitted (Plone approved it on not scoring below version 30; the
+submit call is his to make here).
