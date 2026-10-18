@@ -6599,3 +6599,14 @@ change reshuffles. Each choice now writes, beside the counts it used, what
 rounding left over after them (`carried`), so that the chain from a field to a
 count is recomputed from the store alone, not from fields to three decimals.
 369 tests pass.
+
+#### Version 35 (`b4d7d5a`, B1 and B2): 16 levels, 0.518
+
+Notebook `dil-arc3-learning` version 35, code `b4d7d5a`: version 34 with B2,
+B1 (DEVIATION 9, carry 0.95) and what B2 carries written in each choice. 25 of
+25 played through, 2,258 s (version 34: 3,717 s). **16 levels, 0.51822**
+(version 34: 16, 0.51853): every level of version 34; ls20 0.0154 (0.0112),
+bp35 0.0240 (0.0222), sc25 0.0827 (0.0964), the rest the same. Below version 34
+by 0.0003, so by the rule set (submit 35 unless below 34) it is version 34's
+turn; put to Plone, since the two differ by less than any change reshuffles and
+version 35 is the notebook that holds point 4's mechanisms.
