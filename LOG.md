@@ -6458,3 +6458,27 @@ left there were smaller still, by how seldom their kinds made something new. Two
 measures on one scale — how likely a named expectation is wrong, how likely an
 unnamed outcome is new — and nothing settles their exchange: T1c (wrong ×
 unnamed) puts the foreseen nearly always last, T1d nearly level.
+
+#### The field's trust as the exchange (T1e); the mind's vote on trust
+
+Before writing it: the field's trust hardly moved — 0.67 to 0.87 in every game
+under T1d, voted by T1, T4 and T8 (whether a channel spoke, whether a unit was
+recognised) and never by the mind. Only the mind sees whether what its memory
+named was borne out. So:
+
+- **The mind votes on trust** (INV-7, beside its vote on exploration): 1 when
+  an expectation its memory named (held by a hypothesis or experiences) was
+  borne out, 0 when it collided, no vote when it named nothing. S2b with the
+  vote, on the eleven: every level and every count of silent steps as without
+  it (12 levels; the ten's score 1.27410 as before). Kept. 367 tests pass.
+- **T1e**: T1d with the exchange set by trust — what memory names unsure by
+  wrong × unnamed ** (½ + trust), so at NEUTRAL T1c's, trusting less nearer
+  T1d's. The eleven: 8 levels, 0.66772 — lf52 23, lp85 13, r11l 42, tu93 420
+  and 29, vc33 63, sp80 471, ar25 586; ls20, tn36, m0r0, cn04 not reached.
+  Trust with the mind's vote: median 0.76–0.85 in every game, 5% at 0.54–0.73 —
+  what memory names is right most of the time everywhere, so trust stood high
+  everywhere and told the games apart no more than before. Not kept: T1 is T1c
+  in the code again (as version 33 ran it); T1d and T1e are this entry.
+
+Five versions of T1 on the eleven (levels; S2b 12): T1 10 of ten, T1b 9, T1c 10,
+T1d 9, T1e 8. Each changes which first levels come; none reaches more.

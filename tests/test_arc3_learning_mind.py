@@ -936,6 +936,26 @@ def test_the_mind_votes_on_exploration_from_whether_it_came_somewhere_new():
     assert not mind.learning.came_somewhere_new, "back where it stood"
 
 
+def test_the_mind_votes_on_trust_from_whether_what_its_memory_named_was_borne_out():
+    # INV-7: from what it alone sees — an expectation its memory named, borne out
+    # (1) or not (0); where it named nothing (the region otherwise), no vote.
+    from dil.loop.field import TRUST
+    mind, cycle, data, events = loop()
+    cast: list = []
+    on_frame = mind.on_frame
+
+    def spy(step, observed, content, payload, window, contribute, ask, write):
+        def counted(v):
+            cast.append(v.get(TRUST))
+            return contribute(v)
+        return on_frame(step, observed, content, payload, window, counted if contribute else None, ask, write)
+    mind.on_frame = spy
+    run(cycle, frame(lit(0), lit(1)), status())        # nothing named: no vote
+    run(cycle, frame(lit(0), lit(1)), status())        # named, borne out
+    run(cycle, frame(lit(0), lit(2)), status())        # named, otherwise
+    assert cast == [None, 1.0, 0.0], cast
+
+
 def test_the_region_ending_turns_the_mind_from_the_kind_of_act_that_led_there():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 2)))

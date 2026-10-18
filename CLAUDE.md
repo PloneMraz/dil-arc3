@@ -379,7 +379,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   read of the field. The mind also votes on it, as every layer does from what it
   alone sees (INV-7, through the `contribute` T5 hands its rule): on
   `exploration`, whether the region came where it had not stood — the layers
-  below see tags and entities (a frame is always the entity "frame"), never that.
+  below see tags and entities (a frame is always the entity "frame"), never that;
+  on `trust`, whether what its memory named (an expectation held by a hypothesis
+  or experiences) was borne out, and no vote where it named nothing.
   `scripts/chains.py` finds, in a store alone, the chains this leaves: a scar, the
   thought, the turned choice, what is expected of that act there from then on,
   the next return.
