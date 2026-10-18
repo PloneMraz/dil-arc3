@@ -650,6 +650,17 @@ own form (a `present` set, a `predict` rule for T5).
    declares the returns that did not come from the store
    (`arc3.decisions.from_the_world`; `scripts/run_game.py`). Every return when a
    host declares none; queued in dil-core.
+9. **GLOB-MOD's `carry`** (`create_glob_mod(carry=...)`; Plone, 2026-10-18):
+   how much of the field before an axis keeps when the cycle's votes blend in —
+   carry·before + (1 − carry)·the votes' mean. dil-core's blend sets an axis to
+   the cycle's votes alone, so the field held nothing of the cycles before: a
+   field set otherwise lasted one cycle, the axes stood in narrow bands, and
+   two individuals of the same DIL could differ in field only as far as one
+   cycle's votes did. This host declares `arc3.decisions.FIELD_CARRY = 0.75`
+   (about four cycles' memory, as T7's attention span; declared, not
+   measured); `run_game.py --field` starts the loop in a field of its own (an
+   individual's disposition at birth) and `--field-carry` sets another carry.
+   0, dil-core's blend, when a host declares none; queued in dil-core.
 
 Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
 by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a

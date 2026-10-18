@@ -34,7 +34,7 @@ from arcengine import GameAction
 
 from arc3 import transducers
 from arc3.host import create_source, declaration
-from arc3.decisions import from_the_world, situation_fit
+from arc3.decisions import FIELD_CARRY, from_the_world, situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
@@ -82,6 +82,12 @@ ap.add_argument("--attention", action="store_true",
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
+ap.add_argument("--field", default="",
+                help="the field the loop starts with, e.g. trust=0.2,alertness=0.8,exploration=0.5 "
+                     "(an individual's disposition at birth; NEUTRAL where not given)")
+ap.add_argument("--field-carry", type=float, default=None,
+                help="how much of the field before each axis keeps (DEVIATION 9); default "
+                     "arc3.decisions.FIELD_CARRY")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
 ap.add_argument("--remote", default=None,
                 help="HOST:PORT of the regions served by run_competition.py; the key is in DIL_REGIONS_KEY")
@@ -120,10 +126,14 @@ layers = Layers(
     t5=create_t5(predict=seat, fit=situation_fit, alerted_by=from_the_world), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
+# The field it starts with, and how much of the field before each axis keeps
+# (DEVIATION 9, arc3.decisions.FIELD_CARRY).
+initial_field = {k.strip(): float(v) for k, v in (kv.split("=") for kv in a.field.split(",") if kv.strip())}
+field_carry = FIELD_CARRY if a.field_carry is None else a.field_carry
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
 daemon = Daemon(
     host=declaration(a.game, store_root=store_root, onlooker=not a.alone), source=host_source, layers=layers,
-    glob=create_glob_mod(), initial_emission=Emission(action=None), respond=carrying_out(source),
+    glob=create_glob_mod(initial_field, carry=field_carry), initial_emission=Emission(action=None), respond=carrying_out(source),
     admit=admit,
     # The scar rhythm alone (Plone, 2026-09-27; decisions.COMMIT_CADENCE): the
     # learning revises data in place (2026-10-04), and what a datum holds is in
@@ -190,6 +200,7 @@ held = sum(1 for h in mind.learning._hypotheses if h.holds)
 print(f"  inducer               : {mind.learning.inducer.kind}  hypotheses {len(mind.learning._hypotheses)} (held {held})")
 print(f"  unseen (situation, act): {mind.learning.unseen[0]}  expected {mind.learning.unseen[1]}  right {mind.learning.unseen[2]}")
 print(f"  why it chose          : {dict(why)}")
+print(f"  field                 : started {initial_field or 'NEUTRAL'}, carry {field_carry}")
 if a.curiosity != CURIOSITY[0]:
     print(f"  curiosity             : {a.curiosity}  changes by kind "
           f"{sorted(mind.learning._kind_changes.items(), key=lambda kv: -kv[1])[:6]}")

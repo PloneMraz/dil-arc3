@@ -148,3 +148,14 @@ def from_the_world(unit: InfoUnit) -> bool:
     """Whether a return can alert the loop: one that did not come from its store."""
     content = unit.content if isinstance(unit.content, dict) else {}
     return content.get("channel") != STORE_CHANNEL
+
+
+# DEVIATION 9 (2026-10-18, Plone; queued in dil-core), declared to GLOB-MOD
+# (`create_glob_mod(carry=...)`): how much of the field before each axis keeps
+# when the cycle's votes blend in. dil-core's blend sets an axis to the cycle's
+# votes alone, so the field held nothing of the cycles before: a field set
+# otherwise lasted one cycle, and the axes stood in narrow bands (LOG.md,
+# 2026-10-18). A quarter of each cycle's votes, three quarters of the field
+# before: about four cycles' memory, as T7's attention span (4.0). DECLARED, not
+# measured.
+FIELD_CARRY: Final = 0.75

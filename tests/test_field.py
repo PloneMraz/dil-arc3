@@ -318,3 +318,19 @@ def test_alertness_counts_what_the_host_says_can_alert_the_loop():
     world = InfoUnit(content={"channel": "arc3-frame", "value": 1}, ref_frame=None, t=0)
     echo = InfoUnit(content={"channel": "store", "value": 1}, ref_frame=None, t=0)
     assert from_the_world(world) and not from_the_world(echo)
+
+
+def test_with_a_carry_the_field_before_blends_in_with_the_votes():
+    # DEVIATION 9 (2026-10-18): with carry, an axis voted on keeps carry of the
+    # field before; with none, dil-core's blend (the cycle's votes alone).
+    from dil.loop.glob_mod import GlobModError, create_glob_mod
+    plain, carried = create_glob_mod({TRUST: 0.2}), create_glob_mod({TRUST: 0.2}, carry=0.75)
+    for glob in (plain, carried):
+        glob.contribute(1, {TRUST: 1.0}, 1.0)
+        glob.advance(1)
+    assert plain.current().params[TRUST] == 1.0
+    assert abs(carried.current().params[TRUST] - (0.75 * 0.2 + 0.25 * 1.0)) < 1e-12
+    carried.advance(2)                       # no vote: the axis carries over unchanged
+    assert abs(carried.current().params[TRUST] - 0.4) < 1e-12
+    with pytest.raises(GlobModError):
+        create_glob_mod(carry=1.0)

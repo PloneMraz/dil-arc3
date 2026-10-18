@@ -58,6 +58,8 @@ ap.add_argument("--attention", action="store_true",
                 help="passed to run_game.py (mind/learning.py: ATTENTION_K)")
 ap.add_argument("--alone", action="store_true",
                 help="passed to run_game.py: no onlooker in the world, the agent meets only the region")
+ap.add_argument("--field", default="", help="passed to run_game.py: the field the loop starts with")
+ap.add_argument("--field-carry", default="", help="passed to run_game.py: DEVIATION 9's carry")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
@@ -147,7 +149,8 @@ while queue or running:
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
              "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"),
              "--inducer", a.inducer, "--curiosity", a.curiosity, *(["--attention"] if a.attention else []),
-             *(["--alone"] if a.alone else [])],
+             *(["--alone"] if a.alone else []), *(["--field", a.field] if a.field else []),
+             *(["--field-carry", a.field_carry] if a.field_carry else [])],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()
