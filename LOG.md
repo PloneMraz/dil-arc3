@@ -6482,3 +6482,36 @@ named was borne out. So:
 
 Five versions of T1 on the eleven (levels; S2b 12): T1 10 of ten, T1b 9, T1c 10,
 T1d 9, T1e 8. Each changes which first levels come; none reaches more.
+
+#### Point 4 begun: what makes two individuals of the same DIL differ
+
+Read first in the code: **the field has no inertia** (`dil/loop/glob_mod.py`,
+`_blend`): each cycle an axis is the plain mean of that cycle's votes (every
+layer's weight 1), the value before kept only when no vote came; a field set
+otherwise at the start lasts one cycle, and two individuals' fields differ only
+as what they met differs. And **the mind reads it in coarse whole numbers**: in
+the ranges measured (trust 0.7–0.87, alertness 0.04–0.3, exploration
+0.03–0.4) how often an expectation must be borne out is 1, how long a turn holds
+1 (2 only from alertness 0.25), how far it looks ahead 2 — the same at every
+step. S2b with and without the mind's trust vote on tn36: trust 0.810 and 0.818,
+all 599 choices the same. The field does not, as it stands, make individuals
+differ.
+
+`scripts/differ.py`: two stores of the same game, from `[data]` and `[event]`
+alone — the field each read, choices, turns, thoughts, scars, the aim; the first
+step they chose otherwise, and there each one's field, why, the Other's word and
+what the choice replaced.
+
+**A1, the Other present or not** (`run_competition.py --alone`, passed to
+`run_game.py`): S2b on the eleven without the onlooker. 9 of 11 games part
+(lp85 at step 27, cn04 60, sp80 62, ar25 70, m0r0 156, ls20 167, lf52 280, vc33
+429, tu93 561); r11l and tn36 choose the same at every step (tn36 thought on the
+Other's word 101 times more, 355 thoughts and 254, and objected to nothing that
+changed a choice). Levels 11 alone (12): ls20's not reached, ar25 sooner (score
+0.029, 0.013), sp80 later (0.022, 0.099). lp85, the chain: the onlooker says
+"repeating" (20, 17), from step 18; the mind weighs it against its own record
+— each step of that run reached a state it had not stood in — and keeps on
+(`kept_on`); at step 27 it says it again ("at_least 8"), the mind objects to
+that act at the states the run passed (`objected`), and its second choice of
+the cycle replaces (6, 20, 17) with (6, 14, 26) (`supersedes`). Alone, it clicks
+(20, 17) again, and the two go apart.
