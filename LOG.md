@@ -6387,3 +6387,32 @@ memory could not say.
 Each law reaches another set of first levels: on eleven games no law is ahead
 of the others in levels (S2b 12, T1c 10, T1b 9; T1 10 of ten); RHAE's weight on
 the few near the baseline (r11l 19 of 22, tn36 33 of 32) decides the score.
+
+#### Version 33 (`47caf79`, T1c) pushed; tn36, ls20, sp80 read for a law
+
+Notebook `dil-arc3-learning` version 33: version 32 with T1c. Running.
+
+Meanwhile, the local runs (S2b, T1, T1b, T1c on the eleven) read for what is
+common to the levels reached and lost, not for each game's trick
+(`scripts/data/t1/reachwhy.py`: for each experience that reached the aim, the
+choice that commanded it):
+
+- Of 41 levels reached, 25 came from an act not yet taken from where it stood,
+  3 from an act a hypothesis said brings the aim (tu93's second), 1 on a way,
+  6 not matched to their choice (lp85, sp80), and **6 from an act its own
+  hypotheses foresaw as leading where it had stood** — vc33's first level under
+  all four laws, tn36's under S2b and T1. An expectation generalised from
+  elsewhere (that this kind of click does nothing) was wrong just there; under
+  S3 such an act is tried only when no act it cannot foresee is left here or
+  on any way it knows.
+- The laws that keep coming into situations never met never get there: tn36,
+  states met and choices of foreseen acts — S2b 54 and 352, T1 53 and 189, T1b
+  535 and 3, T1c 283 and 3. Its toggled parts make a situation never met at
+  almost every click, and each brings its acts "not yet taken from here" anew:
+  T1c weighs what a step made, but which acts are fresh is still decided by the
+  whole situation.
+- ls20's level came from a fresh ACTION1 after about 390 steps under S2b and T1
+  (and 528 under T1b); T1c met 133 states (S2b 214) and did not reach it — its
+  moves seldom make something not made before (26 of 186), so they rank alike.
+  sp80's came from ACTION5 under S2b and T1b, not matched to its choice; T1c met
+  108 states (S2b 406) and chose foreseen acts 191 times from cycle 90 without it.
