@@ -6610,3 +6610,7 @@ bp35 0.0240 (0.0222), sc25 0.0827 (0.0964), the rest the same. Below version 34
 by 0.0003, so by the rule set (submit 35 unless below 34) it is version 34's
 turn; put to Plone, since the two differ by less than any change reshuffles and
 version 35 is the notebook that holds point 4's mechanisms.
+
+Submitted (Plone, 2026-10-19): version 35 as `57371259`, at 22:47 UTC on
+2026-10-18; pending. Version 34 was not submitted. Nothing is pushed to Kaggle
+while it is scored.

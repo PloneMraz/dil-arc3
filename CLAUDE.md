@@ -941,7 +941,12 @@ showed before its last grid (C1), and each inducer standing on its own. A
 seventh, `56934496`, is the same notebook's **version 26**, code `a6c4563`: as
 the sixth, with suspects (where the aim may lie, tested before it has come). An
 eighth, `56983446`, is the same notebook's **version 28**, code `9e69156`: as
-the sixth, with grid reading moves, blocks and into aims once the aim has come. What
+the sixth, with grid reading moves, blocks and into aims once the aim has come. A
+ninth, `57371259`, is the same notebook's **version 35**, code `b4d7d5a`: as the
+eighth, with a collision of the region's report thought on, what an act did where
+the mind stood alike expected again, the mind's vote on trust, the counts it reads
+of the field following the field (B2), the field carrying its history (DEVIATION
+9, carry 0.95), and what B2 carries written in each choice. What
 each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 
