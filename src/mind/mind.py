@@ -327,7 +327,7 @@ class Mind:
             cast_votes(contribute, {EXPLORATION: 1.0 if self.learning.came_somewhere_new else 0.0})
         # 3. The expectation failed: think.
         if not hit:
-            self.think("frame", ask, write)
+            self.think("step", ask, write)
         held = self._resolve(self._held) if by_model else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
@@ -370,7 +370,7 @@ class Mind:
             self._write(write, self.learning.observe(step, unit, report, (unit, observed), on_report=True))
         # The expectation failed: think — once its learning has met the report.
         if value != payload:
-            self.think("status", ask, write)
+            self.think("report", ask, write)
         # The region has said all it says this cycle: construct the next action.
         self.command(ask, write, test)
         held: tuple[object, ...] = (standing_unit,) if window else ()

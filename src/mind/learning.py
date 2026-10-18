@@ -3,8 +3,7 @@
 Plone (2026-09-28): learning is developing experience into what serves the agent,
 not storing it; and it is the mind's, not the model's — another task, another
 model, and learning is not defined again. The mind holds the loop; a model — an
-inducer (`models/grid.py`, `language_inducer.py`) — is its
-computing: what a state is to it, what can be done in one, what an experience
+inducer (`models/`) — is its computing: what a state is to it, what can be done in one, what an experience
 suggests, what a hypothesis predicts.
 
 THE LOOP, one step at a time:
@@ -95,7 +94,7 @@ CURIOSITY. Per kind of act, and per act over every kind of it: how often it was
 tried, how often it reached a situation not met before, how often the aim came
 of it. What most often brought the aim first; then the odds of somewhere new
 (Laplace), raised by how little it has been tried (UCB1). Somewhere new, not a
-change: an act that only takes it back where it stood (an undo) changes the
+change: an act that only takes it back where it stood changes the
 state every time and teaches it nothing (Plone, 2026-09-28: S2b). A kind the
 inducer puts within a coarser one (`Inducer.coarse`) is read coarse first: how
 much the coarser kind is wanted, then the kind itself — what was learned of
@@ -706,9 +705,9 @@ class Learning:
             lifted.
 
         What it objected to, and why, is written; that thought is its answer."""
-        if context.on == "frame":
+        if context.on == "step":
             return self._think_on_collision(context)
-        if context.on == "status":
+        if context.on == "report":
             return self._think_on_report(context)
         if context.on != "onlooker":
             return None
@@ -768,7 +767,7 @@ class Learning:
         self._turn_thought = TurnHandle(self.steps)
         self._turn_left = round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
         built = (unit,) if unit is not None else ()
-        payload = {"on": "frame", "step": self.steps, "here": self._state_of.get(source_raw), **said}
+        payload = {"on": "step", "step": self.steps, "here": self._state_of.get(source_raw), **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
                                       built_from=built)])
 
@@ -803,7 +802,7 @@ class Learning:
         else:
             said = {"collided": "the report otherwise", "turns": "nothing of its own"}
         built = tuple(u for u in (unit, self._report_unit) if u is not None)
-        payload = {"on": "status", "step": self.steps, "here": self._state_of.get(source_raw),
+        payload = {"on": "report", "step": self.steps, "here": self._state_of.get(source_raw),
                    "act": list(act), "fields": fields, **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=handle, built_from=built)])
 
@@ -989,8 +988,8 @@ class Learning:
             fields = said.fields
             self._expected = state
             self._expected_otherwise = False
-            # The state it expects, as it reads it: what it does not read (a
-            # clock) it expects nothing of, and an answer is not wrong for it.
+            # The state it expects, as it reads it: what its model does not read
+            # it expects nothing of, and an answer is not wrong for it.
             read = self.inducer.as_read(state)
             as_read = AsRead(state=read, matches=lambda after: self.inducer.as_read(after) == read)
             return Expectation(state=as_read, fields=dict(fields) if fields else None,

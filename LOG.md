@@ -6416,3 +6416,15 @@ choice that commanded it):
   moves seldom make something not made before (26 of 186), so they rank alike.
   sp80's came from ACTION5 under S2b and T1b, not matched to its choice; T1c met
   108 states (S2b 406) and chose foreseen acts 191 times from cycle 90 without it.
+
+#### The learning's words made neutral where they were not
+
+Read through for words of a region (Plone, 2026-10-18): what the mind hands its
+learning to think on was named by the host's channels, "frame" and "status"; it
+is named by what came now — "step" (the region's return of a step) and "report"
+(its report of itself) — in `Context.on` and in a thought's `on`. An example
+("an undo", "a clock") and the inducers' file names left the learning's
+comments. Behaviour unchanged; 366 tests pass. Left as they are, noted: an act
+is (id, place) and the learning reads its id (CLAUDE.md, open); it takes there to
+be an act that is always open (`organs.reset`); an experience's datum keeps the
+region's report under `status`.
