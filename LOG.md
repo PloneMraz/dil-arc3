@@ -6428,3 +6428,33 @@ comments. Behaviour unchanged; 366 tests pass. Left as they are, noted: an act
 is (id, place) and the learning reads its id (CLAUDE.md, open); it takes there to
 be an act that is always open (`organs.reset`); an experience's datum keeps the
 region's report under `status`.
+
+#### Version 33 (`47caf79`, T1c): 12 levels, 0.255
+
+Notebook `dil-arc3-learning` version 33: version 32 with T1c in T1's place. 25 of
+25 played through, 3,446 s. **12 levels, 0.25470** (version 30, S2b: 14, 0.513;
+version 32, T1: 13, 0.379). As on the eleven: ar25 0.191 (0.013 under S2b),
+**cn04's first level** (0.180; no version before), m0r0 0.250, tu93 0.309, lf52
+as T1, su15 0.014; tn36, ls20, sp80 not reached, nor sc25 (T1 reached it).
+Not submitted.
+
+#### T1d (one scale for foreseen acts), on the eleven; the dilution not borne out
+
+T1d: T1 with S3 folded into its scale — every act not yet taken here, foreseen
+or not, ranked by how unsure what it expects of it is; what names what will
+come unsure by how likely it is wrong (Laplace), not times how unnamed what
+comes instead would be. The eleven: ls20 **256**, sp80 **165**, tn36 51, tu93
+**388 and 28** (each the fewest of any law), lf52 27, lp85 13, r11l 68, vc33 63;
+ar25, cn04, m0r0 and vc33's second not reached. 9 levels, 0.75396. Silent steps
+rose: ar25 345 of 596 (T1c 78), vc33 381 (140), m0r0 318 (41), sp80 325 (200).
+
+Supposed: the evidence of an expectation recalled from states alike was diluted
+by the weights (alike to the 4th), so "nothing comes of it" never grew sure.
+Not borne out: in every game, of the choices of foreseen acts, all or nearly
+all were held by a hypothesis, none by experiences recalled (ar25 426 of 426,
+vc33 414 of 414, m0r0 328 of 328, sp80 401 of 401). Their unsureness was small
+(median 0.025–0.08 in those four games) — and still the largest: the fresh acts
+left there were smaller still, by how seldom their kinds made something new. Two
+measures on one scale — how likely a named expectation is wrong, how likely an
+unnamed outcome is new — and nothing settles their exchange: T1c (wrong ×
+unnamed) puts the foreseen nearly always last, T1d nearly level.
