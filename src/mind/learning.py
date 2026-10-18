@@ -465,6 +465,12 @@ class Learning:
         self._turn_left = 0
         # The cycle's field, as every layer reads it (INV-7; `read_field`).
         self._field: Any = None
+        # B2 (Plone, 2026-10-18): what it reads of the field each cycle, as whole
+        # counts that follow the field on average — each count is the field's
+        # real value plus what earlier cycles' rounding left over (`_counted`).
+        self._counts: dict[str, int] = {}
+        self._carried: dict[str, float] = {}
+        self._counted_at: Any = None
         self._turn_thought: object | None = None
         self._expected_otherwise = False
         self._last_step: tuple[str, Act, Step, Any] | None = None
@@ -765,7 +771,7 @@ class Learning:
         else:
             return None
         self._turn_thought = TurnHandle(self.steps)
-        self._turn_left = round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
+        self._turn_left = self._turn_hold()
         built = (unit,) if unit is not None else ()
         payload = {"on": "step", "step": self.steps, "here": self._state_of.get(source_raw), **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
@@ -795,7 +801,7 @@ class Learning:
         if self._ended(now) and not self._ended(was):
             self._turn = ("from", kind, coarse, TURN_WHYS[2])
             self._turn_thought = handle
-            self._turn_left = round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
+            self._turn_left = self._turn_hold()
             said = {"collided": "the region ended", "turns": "from that kind of act"}
         elif self._reached(now):
             said = {"collided": "the aim came", "turns": "nothing of its own: what brings it is learned (S4)"}
@@ -821,17 +827,50 @@ class Learning:
         return (there, TURN_WHYS[1]) if there else (fresh, "")
 
     def read_field(self, field: Any) -> None:
-        """The cycle's field, as it reaches every layer (INV-7)."""
+        """The cycle's field, as it reaches every layer (INV-7); what it counts by
+        it, once a cycle."""
         self._field = field
+        t = getattr(field, "t", None)
+        if field is None or t is None or t == self._counted_at:
+            return
+        self._counted_at = t
+        self._counts = {
+            "borne_out_by": self._counted("borne_out_by", 1 * falling(axis(field, TRUST))),
+            "turn_hold": self._counted("turn_hold", TURN_HOLD * rising(axis(field, ALERTNESS))),
+            "look_ahead": self._counted("look_ahead", MAX_IMAGINED_STEPS * rising(axis(field, EXPLORATION))),
+        }
+
+    def _counted(self, name: str, real: float) -> int:
+        """A count the field shifts, as a whole number that follows it on average:
+        the real value plus what rounding left over before, rounded down, never
+        below 1; what is left over is carried to the next cycle (B2, Plone,
+        2026-10-18: before, each count was rounded on its own, and in the ranges
+        the field keeps the counts did not move). Deterministic: the same field,
+        the same counts."""
+        total = real + self._carried.get(name, 0.0)
+        n = max(1, math.floor(total + 1e-9))      # what floating point leaves just short of a whole
+        self._carried[name] = total - n if total >= 1 else 0.0
+        return n
 
     def _borne_out_by(self) -> int:
         """How many more times than not an experience or hypothesis must have been
         borne out before it expects by it: 1 at NEUTRAL trust, more as trust falls."""
+        if "borne_out_by" in self._counts:
+            return self._counts["borne_out_by"]
         return round_half_up(shifted_count(1, falling(axis(self._field, TRUST))))
+
+    def _turn_hold(self) -> int:
+        """How many choices a collision's turn holds for: TURN_HOLD at NEUTRAL
+        alertness, more as it grows alert."""
+        if "turn_hold" in self._counts:
+            return self._counts["turn_hold"]
+        return round_half_up(shifted_count(TURN_HOLD, rising(axis(self._field, ALERTNESS))))
 
     def _look_ahead(self) -> int:
         """How many steps it looks ahead past where it has stood: MAX_IMAGINED_STEPS
         at NEUTRAL exploration, fewer as it consolidates, more as it explores."""
+        if "look_ahead" in self._counts:
+            return self._counts["look_ahead"]
         return round_half_up(shifted_count(MAX_IMAGINED_STEPS, rising(axis(self._field, EXPLORATION))))
 
     def _named(self, remark: dict[str, Any]) -> list[Act]:
@@ -1629,6 +1668,7 @@ class Learning:
                         why = "nothing it can do here"
         self.thoughts.append(Choice(self.steps, act, why, odds))
         choice: dict[str, Any] = {"step": self.steps, "here": here, "chose": list(act) if act else None,
+                                  "counts": dict(self._counts),
                                   "field": {name: round(axis(self._field, name), 3) for name in (TRUST, ALERTNESS,
                                                                                                  EXPLORATION)},
                                   "why": why, "aim": (self._aim or {}).get("aim")}

@@ -956,6 +956,22 @@ def test_the_mind_votes_on_trust_from_whether_what_its_memory_named_was_borne_ou
     assert cast == [None, 1.0, 0.0], cast
 
 
+def test_what_it_counts_by_the_field_follows_the_field_on_average():
+    # B2 (Plone, 2026-10-18): a count the field shifts carries what rounding left
+    # over, so the counts follow the field, not stand still in the ranges it keeps.
+    from types import SimpleNamespace
+    learning = seated().learning
+    holds, looks = [], []
+    for t in range(10):
+        learning.read_field(SimpleNamespace(params={"alertness": 0.15, "exploration": 0.1, "trust": 0.8}, t=t))
+        learning.read_field(SimpleNamespace(params={"alertness": 0.15, "exploration": 0.1, "trust": 0.8}, t=t))
+        holds.append(learning._turn_hold())
+        looks.append(learning._look_ahead())
+    assert sum(holds) == 13 and set(holds) == {1, 2}, holds       # 2 × 0.65 a cycle, read once a cycle
+    assert sum(looks) == 18 and set(looks) == {1, 2}, looks       # 3 × 0.6
+    assert learning._borne_out_by() == 1, "never below 1"
+
+
 def test_the_region_ending_turns_the_mind_from_the_kind_of_act_that_led_there():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(affords=(1, 2)))

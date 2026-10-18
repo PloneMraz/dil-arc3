@@ -376,7 +376,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   for (`alertness`, `TURN_HOLD = 2` at NEUTRAL: the field's gain, ½–1½ and never
   below 1, could not move a base of 1), how many steps it looks ahead
   (`exploration`), and how far an objection reaches; each choice says what it
-  read of the field. The mind also votes on it, as every layer does from what it
+  read of the field. The first three are whole counts read once a cycle that
+  follow the field on average: what rounding leaves over is carried to the next
+  cycle, never below 1 (B2, Plone, 2026-10-18: rounded each on its own, they did
+  not move in the ranges the field keeps); each choice says the counts it used
+  (`counts`). The mind also votes on it, as every layer does from what it
   alone sees (INV-7, through the `contribute` T5 hands its rule): on
   `exploration`, whether the region came where it had not stood — the layers
   below see tags and entities (a frame is always the entity "frame"), never that;

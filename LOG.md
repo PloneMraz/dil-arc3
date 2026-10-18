@@ -6527,3 +6527,23 @@ with **sc25's first two levels** (0.096; none before under S2b), tu93 0.882
 (0.835), vc33 0.060 (0.064). The most levels and the highest score of any run on
 the 25. To be submitted (Plone approved it on not scoring below version 30; the
 submit call is his to make here).
+
+#### B2: what the mind counts by the field follows it on average
+
+How often an expectation must be borne out (trust), how long a turn holds
+(alertness) and how far it looks ahead (exploration) were each rounded from the
+field on their own, and in the ranges the field keeps stood still (1, 1, 2).
+Now each is read once a cycle as the field's real value plus what rounding left
+over before, rounded down, never below 1, the rest carried on: at alertness
+0.178 a turn holds 1.36 choices on average, 1 or 2. Deterministic; each choice
+says the counts it used (`counts`). Trust above NEUTRAL still changes nothing
+(the count cannot go below 1). 368 tests pass. Default.
+
+The eleven, against the default without it: 12 levels, 1.16682 (1.16724) — ls20
+0.0115 (0.0112), vc33 0.0550 (0.0598), the rest the same. But the field now
+reaches what the mind does: 8 of 11 games part (vc33 at step 27, cn04 32, r11l
+62, ls20 114, tn36 117, lf52 263, tu93 454, ar25 522); lp85, m0r0 and sp80 not.
+vc33, from the store: at step 26 an answer other than foreseen turns the choice
+to where it differed; the field's alertness there is 0.178, so the turn holds 2
+choices (it held 1), and at step 27 it clicks (61, 33) again, "turned to where
+the answer differed", where without B2 it clicked (61, 25).
