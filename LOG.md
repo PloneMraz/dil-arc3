@@ -7114,3 +7114,32 @@ notebook's `model_sources` without a word. Another copy,
 release), has the same 56 files, each of the size the manifest from Hugging Face
 gives; the notebook checks every file's hash against it before serving. The builder
 now names that copy.
+
+#### Version 10: Qwen3.6-35B-A3B against Qwen3.8-Flash-Next (version 8), the same code
+
+`dil-arc3-language-inducer` version 10 (`0f5fa6c`; as version 8, with the stops on
+runaway answers), Qwen3.6-35B-A3B FP8: its 56 files checked in 56 s, the server ready
+in 200 s (Flash-Next: about 15 minutes). Pushed 16:19 UTC, `COMPLETE` 23:29 — 25,455 s,
+about seven hours of the GPU quota, near three times version 8's. No level.
+
+| | ls20 | tu93 | m0r0 |
+|---|---|---|---|
+| wall, s (version 8) | 6,696 (2,832) | 9,118 (2,412) | killed at cycle 178 (11,174 for 300) |
+| the model's answers (version 8) | 126 (139) | 136 (81) | 459 to cycle 178 (398) |
+| held | 4 | 15 | 32 |
+| programs borne out, by 50 cycles | 39%, 71%, 50% | 33%, 53%, 50%, 59%, 50% | 14%, 11%, 16%, 11% |
+| frame expectation held | 198 of 300 | 183 of 300 | 118 of 179 |
+
+- Slower: the server wrote about 206 tokens a second across its requests (Flash-Next
+  with speculative decoding, about 310), and each game took 2.4 to 3.8 times as long.
+- No better: ls20's and tu93's programs about half right, as Flash-Next's; m0r0's far
+  worse (11–16%), and it asked the model 459 times in 178 cycles.
+- m0r0's process ended with -9 (SIGKILL) at the competition's 25,079th second, about
+  23:24 UTC, before the notebook's deadline (31,200 s); `run_competition.py` stops a
+  game only at the deadline and with SIGTERM. What killed it is not in the logs, and
+  not established. Its store was packed to cycle 178.
+- The cause of the cost is the measurement's: a fixed 300 cycles a game and no limit
+  on a game's time, where a language inducer's game lasts as long as its model is
+  asked. The runs stand paused until a game is given a limit (Plone).
+
+Flash-Next stays the model; B (answers of code only) is to be measured on it.
