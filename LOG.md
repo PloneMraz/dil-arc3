@@ -7040,3 +7040,26 @@ sequences, one digit written 96 times over — longer than any row of a grid, so
 row quoted is not stopped — and is asked again without them if a server refuses
 them (400). Why an answer ended (`finish`) is kept with it. Not changed, not
 understood: the server runs this model with `--no-enable-prefix-caching`.
+
+#### INV-5's accumulation measure could pass falsely; fixed in dil-core, ported (Plone: check, then fix)
+
+The checker's measure of INV-5 (`_measure_accumulation`, C4's claim
+"accumulation observable") passed an entity whose confidence held a value below 1
+and one at 1, in any order and at any recurrence. Run on series made for it:
+recurrence 1, 1 with confidence 0.5 → 1 passed; recurrence standing at 3 with
+confidence 0.2 → 0.6 → 1 passed; confidence fallen from 1 to 0.5 as recurrence rose
+1 → 2 passed (the check "recurrence rose, so confidence must rise" held only while
+unsaturated). The code said less than its docstring, and dil-core had the same
+code. What it could not do was catch a faked trace; the traces this agent writes
+come from T5, where recurrence is a count rising by one at each reading of an
+entity and confidence `min(1, count / SUFFICIENT_RECURRENCE)`.
+
+Fixed in dil-core first (`817bf75`, changelog `4ac3c7a`; five regression tests, 424
+pass, three of the five failing on the old code), then ported: in one entity's
+series it fails where confidence moves with recurrence standing still, or falls
+at any level as recurrence rises; it passes only a reading below saturation
+followed by one at saturation with a greater recurrence.
+`tests/test_conformance_accumulation.py` (six tests; three failing on the old
+code); 400 pass. Run on fifteen real stores — the eleven games of `sync`, version
+7's three language-inducer games, and version 35's ls20 from Kaggle — the claim
+passes in all, as before.

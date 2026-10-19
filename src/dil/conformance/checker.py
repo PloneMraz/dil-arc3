@@ -146,15 +146,23 @@ def _measure_accumulation(readings: Sequence[ExpectationActivity]) -> _Accumulat
 
     The answer to "is this an accruing self or a reloading impostor?", read by a
     third party on a foreign system. Group the readings by entity, ordered by
-    cycle, and inspect each entity's (recurrence, confidence) series:
+    cycle, and inspect each entity's (recurrence, confidence) series. Confidence
+    is a function of the count accrued, monotone until it saturates at 1 (T5), so
+    in one entity's series:
 
-      - FAIL — the reloading signature: recurrence regressed, the count reset, or
-        confidence fell while recurrence rose so accrual is not driving the ramp.
-        A memoryless impostor cannot avoid one of these once it must fake a series.
-      - PASS — an entity's confidence ramped from below saturation up to 1 as its
-        recurrence climbed: accumulation is demonstrably observable in the trace.
-      - PARTIAL — readings present and non-regressing, but none has yet ramped to
+      - FAIL — the reloading signature: recurrence regressed (the count reset);
+        confidence moved while recurrence stood still (it was not accrual that
+        moved it); confidence fell while recurrence rose, at any level, saturation
+        included; or recurrence rose while unsaturated and confidence did not.
+      - PASS — a reading below saturation, and a later one at saturation with a
+        greater recurrence: confidence ramped to 1 as recurrence climbed, which is
+        accumulation demonstrably observable in the trace.
+      - PARTIAL — readings present and none failing, but no entity ramped to
         saturation: too little recurrence to establish the ramp, never a false pass.
+
+    Until 2026-10-19 a pass needed only a confidence below 1 and one at 1 in an
+    entity's series, in any order and at any recurrence (ported from dil-core
+    817bf75).
     """
     if not readings:
         return _Accumulation(
@@ -168,19 +176,30 @@ def _measure_accumulation(readings: Sequence[ExpectationActivity]) -> _Accumulat
 
     saw_ramp = False
     for series in by_entity.values():
-        series.sort(key=lambda e: e.cycle_mark)
+        series.sort(key=lambda e: e.cycle_mark)   # stable: a cycle's readings keep the log's order
         for prev, cur in zip(series, series[1:], strict=False):
+            who = f'entity "{cur.entity}"'
             if cur.recurrence < prev.recurrence:
                 return _Accumulation(
                     "fail",
-                    f'entity "{cur.entity}" recurrence regressed '
-                    f"{prev.recurrence}→{cur.recurrence} — memory reset, the "
-                    "reloading signature (INV-5)",
+                    f"{who} recurrence regressed {prev.recurrence}→{cur.recurrence} — memory reset, "
+                    "the reloading signature (INV-5)",
+                )
+            if cur.recurrence == prev.recurrence and cur.confidence != prev.confidence:
+                return _Accumulation(
+                    "fail",
+                    f"{who} confidence moved {prev.confidence}→{cur.confidence} while recurrence stood "
+                    f"at {cur.recurrence} — not accrual moving it (INV-5)",
+                )
+            if cur.recurrence > prev.recurrence and cur.confidence < prev.confidence:
+                return _Accumulation(
+                    "fail",
+                    f"{who} confidence fell {prev.confidence}→{cur.confidence} as recurrence climbed "
+                    f"{prev.recurrence}→{cur.recurrence} — accrual not driving the ramp (INV-5)",
                 )
             # Genuine accrual: while unsaturated, a rise in recurrence MUST lift
-            # confidence. Recurrence climbing without confidence climbing — flat
-            # or falling — is the broken or faked ramp of something with no real
-            # memory behind the number.
+            # confidence. Recurrence climbing with confidence flat is the broken or
+            # faked ramp of something with no real memory behind the number.
             if (
                 cur.recurrence > prev.recurrence
                 and prev.confidence < 1
@@ -188,13 +207,14 @@ def _measure_accumulation(readings: Sequence[ExpectationActivity]) -> _Accumulat
             ):
                 return _Accumulation(
                     "fail",
-                    f'entity "{cur.entity}" confidence did not rise '
-                    f"{prev.confidence}→{cur.confidence} though recurrence climbed "
-                    "while unsaturated — accrual not driving the ramp (INV-5)",
+                    f"{who} confidence did not rise {prev.confidence}→{cur.confidence} though "
+                    "recurrence climbed while unsaturated — accrual not driving the ramp (INV-5)",
                 )
 
-        confs = [e.confidence for e in series]
-        if confs and min(confs) < max(confs) and max(confs) >= 1:
+        first = next((i for i, e in enumerate(series) if e.confidence < 1), None)
+        if first is not None and any(
+            e.confidence >= 1 and e.recurrence > series[first].recurrence for e in series[first + 1:]
+        ):
             saw_ramp = True
 
     if saw_ramp:
@@ -206,7 +226,7 @@ def _measure_accumulation(readings: Sequence[ExpectationActivity]) -> _Accumulat
         )
     return _Accumulation(
         "partial",
-        "expectation readings present and non-regressing, but none has ramped to "
+        "expectation readings present and none failing, but none has ramped to "
         "saturation yet — insufficient recurrence to establish accumulation",
     )
 
