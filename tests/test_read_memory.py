@@ -35,9 +35,10 @@ from tests.test_arc3_learning_mind import frame, lit, of_kind, run, status
 from tests.test_language_inducer import RIGHT, STILL, Script, block
 
 
-def loop(inducer=None, rule=None):
+def loop(inducer=None, rule=None, told: bool = True):
     mind = Mind(inducer or GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
-    mind.receive("task", MIND_TASK.payload, None)
+    if told:
+        mind.receive("task", MIND_TASK.payload, None)
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
@@ -165,3 +166,17 @@ def test_the_program_the_model_reads_the_grid_with_is_had_back_from_memory(monke
     revised = [r for r in events.all() if getattr(r, "activity_kind", None) == "revision" and r.datum_id == program]
     assert len(revised) >= 2, "weighed at every step, its datum revised"
     assert compiled == [RIGHT, RIGHT], "loaded when written, and once from its datum: its code never changed"
+
+
+def test_a_reading_given_while_the_body_waited_is_had_back_from_memory():
+    from tests.test_language_inducer import NAMES
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(NAMES)))
+    mind, cycle, data, events = loop(inducer, told=False)
+    run(cycle, frame(lit(0), lit(0), action=0), status(action=0, affords=(6,)))   # the start-up's return
+    mind.receive("task", MIND_TASK.payload, None)
+    run(cycle, status(action=0, affords=(6,)))                                    # it asks, and clicks
+    run(cycle, frame(lit(0), lit(1), action=6, x=1, y=0), status(action=6, affords=(6,)))
+    run(cycle, frame(lit(1), lit(1), action=6, x=1, y=0), status(action=6, affords=(6,)))
+    reading = next(k for k, d in of_kind(data, "reading") if d.payload.get("on") == "nothing to do")
+    assert inducer._seeing[0] is None, "not held: had back from the mind's memory"
+    assert any(i == reading for _, i in reads(events).get("reading", [])), "read from the store, recorded"

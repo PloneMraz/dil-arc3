@@ -242,6 +242,22 @@ class Hypothesis(Weighed):
 
 
 @dataclass(eq=False)
+class Reading:
+    """A way of reading states its model gave while the body waited (`consider`):
+    no hypothesis — no step was met to build one from — but what the model reads
+    states with, so its form is in hand only until its datum is in the store, and
+    then read there (`recall`), as a hypothesis's is."""
+
+    held: Any
+    datum_id: str | None = None
+    recall: Callable[["Reading"], Any] | None = field(default=None, repr=False)
+
+    @property
+    def form(self) -> Any:
+        return self.held if self.recall is None else self.recall(self)
+
+
+@dataclass(eq=False)
 class TurnHandle:
     """A thought on a collision, as a handle: what the choice it turned is built from."""
 
@@ -447,6 +463,7 @@ class Learning:
         # Each hypothesis read, by its datum: the payload read, the form restored
         # from it, and what its inducer said in it (the payload off the tallies).
         self._restored: dict[str, tuple[Any, Any, dict[str, Any]]] = {}
+        self._considered: set[str] = set()   # where it thought while the body waited
         self._used: dict[str, None] = {}
         self._chosen_kind: tuple | None = None
         # Hypotheses about the aim (S4): those that applied to the step being
@@ -541,6 +558,18 @@ class Learning:
         if kept is not None and self.inducer.key(form) == self.inducer.key(kept[1]):
             form = kept[1]
         self._restored[h.datum_id] = (payload, form, said)
+        return form
+
+    def _recall_reading(self, r: Reading) -> Any:
+        """A reading's form, read from its datum; restored again only when the datum
+        changed."""
+        payload = self._view.read(r.datum_id, "reading").payload
+        self._used[r.datum_id] = None
+        kept = self._restored.get(r.datum_id)
+        if kept is not None and kept[0] is payload:
+            return kept[1]
+        form = self.inducer.restore(payload)
+        self._restored[r.datum_id] = (payload, form, {})
         return form
 
     def _stood(self, raw: str) -> Any:
@@ -689,6 +718,10 @@ class Learning:
         if isinstance(handle, Hypothesis):
             handle.datum_id = datum_id
             self._settle(handle)
+        elif isinstance(handle, Reading):
+            handle.datum_id = datum_id
+            if self._view is not None and handle.recall is None:
+                handle.held, handle.recall = None, self._recall_reading   # read there from now on
 
     # ── the onlooker ──
 
@@ -704,8 +737,10 @@ class Learning:
           - the onlooker's word (`onlooker`), which reaches the mind as a
             collision, and the mind commands again once it has thought.
 
-        On anything else — the body waiting for want of an aim or a command — it
-        does not think (None), so the mind does not wait on it. On the onlooker's
+        On the body waiting for want of a command, it thinks on where it stands,
+        once in a situation (`_think_while_waiting`); on anything else — the body
+        waiting for want of an aim — it does not think (None), so the mind does
+        not wait on it. On the onlooker's
         word:
 
           - "repeating" an act, or going "back-and-forth" between two: the acts it
@@ -728,6 +763,8 @@ class Learning:
             return self._think_on_collision(context)
         if context.on == "report":
             return self._think_on_report(context)
+        if context.on == "no command":
+            return self._think_while_waiting()
         if context.on != "onlooker":
             return None
         remark = context.remark or {}
@@ -760,6 +797,32 @@ class Learning:
             payload["lifted"] = lifted
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=answer, built_from=built)],
                         answer=tuple(("handle", a) for a in answers))
+
+    def _think_while_waiting(self) -> Thinking | None:
+        """The body waits with nothing it can do here: it thinks on where it
+        stands, asking its model for a way to read this state it does not hold
+        (`Inducer.consider`) — once in a situation, so a wait is thought on and
+        does not set off another thought (the regress stops: the mind thinks on
+        what comes from outside or while the body waits). Its model's answer is
+        kept whole; a reading it gives is written, built from the state it stood
+        in, and every state is read again. None where its model says nothing new
+        (Plone, 2026-10-19: where every act wants what the model names, a model
+        asked only on a step was never asked)."""
+        if self._here is None or self._here in self._considered:
+            return None
+        self._considered.add(self._here)
+        given = self.inducer.consider(self._here, self._state(self._here))
+        built = (self._unit,) if self._unit is not None else ()
+        writes = [Write(payload={**said.payload, "step": self.steps}, tags=dict(said.tags),
+                        built_from=(*built, ("prior", "task"))) for said in self.inducer.said()]
+        if given is not None:
+            form, note = given
+            reading = Reading(held=form)
+            self.inducer.keep(form, lambda r=reading: r.form)
+            writes += self._reindex(built)
+            writes.append(Write(payload={**note.payload, "step": self.steps}, tags=dict(note.tags),
+                                handle=reading, built_from=(*built, ("prior", "task"))))
+        return Thinking(writes=writes) if writes else None
 
     def _think_on_collision(self, context: Context) -> Thinking | None:
         """A step's return did not come as it expected: it thinks on what collided,

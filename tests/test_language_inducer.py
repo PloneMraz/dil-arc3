@@ -71,10 +71,13 @@ def block(code: str) -> str:
     return f"Here it is.\n```python\n{code}```\n"
 
 
-def loop(script: Script):
+def loop(script: Script, told: bool = True):
+    """The loop, the mind seated; `told`: the task's words given now — else later,
+    as in a run, where the mind recalls them after its first cycle."""
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=script)
     mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
-    mind.receive("task", MIND_TASK.payload, None)
+    if told:
+        mind.receive("task", MIND_TASK.payload, None)
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
         layers=Layers(
@@ -326,3 +329,52 @@ def test_what_it_expects_is_the_grid_as_its_where_reads_it():
     assert inducer.as_read(lit(1, 1)) == lit(1, 1), "before a reading it holds: the grid as it came"
     run(cycle, frame(lit(2), lit(2, 1)), status())                            # the where borne out
     assert inducer.as_read(lit(1, 1)) == [[0, 1, 0], [0, 0, 0], [None, 0, 0]], "the clock cell, left out"
+
+
+# A program written from a state alone: where an act that takes a cell may be put.
+NAMES = '''
+def predict(grid, action, x, y):
+    return [row[:] for row in grid]
+
+def where(grid):
+    return [[-1] * len(row) for row in grid]
+
+def targets(grid):
+    return [(1, 0), (2, 0)]
+'''
+
+
+def clicks_only(script: Script):
+    """A run's start in a region of clicks only: the start-up's return before the
+    task's words, then a cycle in which the body has nothing it can do."""
+    mind, inducer, cycle, data = loop(script, told=False)
+    run(cycle, frame(lit(0), lit(0), action=0), status(action=0, affords=(6,)))
+    mind.receive("task", MIND_TASK.payload, None)
+    run(cycle, status(action=0, affords=(6,)))
+    return mind, inducer, cycle, data
+
+
+def test_with_nothing_it_can_do_it_asks_its_model_what_can_be_done_here():
+    script = Script(block(NAMES))
+    mind, inducer, cycle, data = clicks_only(script)
+    assert len(script.shown) == 1, "asked while the body waited"
+    words = script.shown[0][0]["content"]
+    assert "No step has been seen yet" in words and "Starting from this grid" in words
+    assert mind.commands[-1][1] == (6, 1, 0), "it commands at a cell its model named"
+    thought = [d for _, d in of_kind(data, "thought") if d.payload.get("on") == "nothing to do"]
+    assert thought and thought[0].payload["text"] == block(NAMES), "the answer kept whole"
+    assert "no step" in thought[0].payload["where_not"], "a where no step bears out is set aside"
+    reading = [d for _, d in of_kind(data, "reading") if d.payload.get("on") == "nothing to do"]
+    assert reading and reading[0].payload["code"] == NAMES and reading[0].payload["where"] is False
+    assert not of_kind(data, "hypothesis"), "no hypothesis: no step was met to build one from"
+
+
+def test_it_asks_once_in_a_situation_and_not_where_it_can_act():
+    script = Script(block(STILL))                                                 # names no cell
+    mind, inducer, cycle, data = clicks_only(script)
+    run(cycle, status(action=0, affords=(6,)))
+    assert len(script.shown) == 1, "asked once where it stands, though it still can do nothing"
+    assert mind.commands[-1][1] is None, "and the body waits"
+    mind2, inducer2, cycle2, _ = loop(Script(block(STILL)))
+    run(cycle2, frame(lit(0), lit(1)), status())                                 # it can act: asked on the step only
+    assert [a["on"] for a in inducer2.answers] == ["not foreseen"], "never asked what can be done where it can act"

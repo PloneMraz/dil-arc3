@@ -166,6 +166,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   no held hypothesis foresaw — told which of the two it is (`foreseen`) and
   shown the recent steps (`evidence`); what it keys alike is held once; what it
   says in computing (`said`: a language model's answers) is kept whole as data.
+  And while the body waits with nothing it can do, once in a situation, it is
+  asked for a way to read the state it stands in (`consider`; Plone, 2026-10-19):
+  grid has none to give, as it reads every state's things as it meets it; the
+  language inducer's model, shown the state alone, may name cells with
+  `targets` — no hypothesis (no step was met to build one from), a `reading`
+  datum the mind has back from memory, its `where` set aside as no step bears
+  it out. Without it, in a region of clicks only, a language model's program
+  had no step to be asked on, and the body only stood.
   Each inducer stands on its own, implementing `Inducer` (`models/base.py`),
   every computing of it in its own file (Plone, 2026-10-06: the exact inducer,
   no longer used as one, removed; what it said is the learning's experience,
@@ -272,8 +280,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   the mind asks its learning to think again while the body waits, at most
   `MAX_WAIT_THOUGHTS = 2` times (declared, not measured); the learning thinks
   on what collided — a step's return, the region's report, the onlooker's word —
-  and not on the body waiting, so as it stands no thought comes, and the body
-  stands still at once. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
+  and, on the body waiting, once in a situation, asks its inducer what can be
+  done there (`consider`, above); where that gives nothing new, no thought
+  comes, and the body stands still. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
   để đợi"). Cycle 0's RESET is the host's start-up (§4). What else the mind
   sends out is a question to its own memory: `ask(cue)`, a store query, traced
   to T5 with register ↔.
@@ -314,7 +323,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   inducer's program it reads the grid with, and the last it wrote — holds it
   only while new, and then has it back from the mind's memory (`Inducer.keep`). Each cycle's
   reads are recorded in `[event]` (`read`, a line for each purpose: `state`,
-  `hypothesis`, `evidence`), and what is written from what was read — a
+  `hypothesis`, `evidence`, `reading`), and what is written from what was read — a
   hypothesis, its revision, a choice — names it among what it was built from,
   as does what uses a prediction kept from an earlier cycle. The learning's own
   working state (its experiences, counts, the hypotheses' tallies) stays its

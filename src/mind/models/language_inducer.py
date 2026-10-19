@@ -69,7 +69,7 @@ from ..organs import Act, Organs, Step
 from .base import Note, Prediction
 from .language import (
     MAX_EVIDENCE_CHARS, MAX_SHOWN, PROGRAM_SECONDS, THOUGHT_TAGS, ModelEndpoint, ProgramError, Transition, chat,
-    extract_code, misses_text, render_evidence, score,
+    extract_code, misses_text, render_evidence, score, show,
 )
 
 Grid = list[list[int]]
@@ -369,7 +369,60 @@ class LanguageInducer:
     def receive_prior(self, name: str, payload: Any) -> None:
         if name == "task" and isinstance(payload, dict) and all(
                 isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen", "aimed")):
-            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed")}
+            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed", "nothing_seen")
+                           if isinstance(payload.get(k), str)}
+
+    def consider(self, situation: str, state: Grid) -> tuple[ProgramForm, Note] | None:
+        """Asked while the body waits with nothing it can do: the model, shown the
+        state alone, writes a program whose `targets` may name where an act that
+        takes a cell can be put — as grid's reading of a state names things there
+        (its `things`), here the model's. Asked only before it holds a reading.
+        What it writes is no hypothesis: no step was met to build one from
+        (INV-4), and the steps that follow judge it; its `where` is set aside, as
+        no step bears it out. Its answer is kept whole; the reading, a datum the
+        mind has it back from (`keep`). None where it writes nothing it can read
+        a state with."""
+        if self._words is None or "nothing_seen" not in self._words or self._seeing is not None:
+            return None
+        o, words = self.organs, self._words
+        first = words["induce"].format(
+            rows=len(state), cols=len(state[0]) if state else 0,
+            acts=", ".join(n for a, n in sorted(o.acts.items())), placed=", ".join(o.acts[a] for a in sorted(o.placed)),
+            numbers=", ".join(f"{n} is {a}" for a, n in sorted(o.acts.items())),
+            evidence="Starting from this grid (row 0 first):\n" + show(state),
+            also=words["nothing_seen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
+        text, usage, why, form, where_not = "", {}, None, None, None
+        try:
+            text, usage = self._chat(self.endpoint, [{"role": "user", "content": first}])
+        except Exception as exc:  # noqa: BLE001 — the served model, not the mind
+            why = f"the model did not answer: {exc!r}"
+        if why is None:
+            code = extract_code(text)
+            if code is None:
+                why = "the answer holds no code block"
+            else:
+                try:
+                    form = compile_program(code)
+                    if form.where is not None:
+                        where_not = "no step has been seen to bear its where out"
+                        form = replace(form, where=None)
+                    if form.targets is None:
+                        why, form = "it names no cell", None
+                except ProgramError as exc:
+                    why, form = str(exc), None
+        answer = {"on": "nothing to do", "steps": 0, "text": text, "program": form.digest if form else None,
+                  "why_not": why, "where_not": where_not,
+                  "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
+        if usage.get("reasoning"):
+            answer["reasoning"] = usage["reasoning"]
+        self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
+        self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
+        if form is None:
+            return None
+        self._seeing, self._reread = (form, None), False
+        self._situations, self._targets = {}, {}
+        return form, Note(payload={"program": form.digest, "code": form.code, "where": False, "targets": True,
+                                   "on": "nothing to do"}, tags=dict(READING_TAGS))
 
     def hold_aim(self, aim: dict[str, Any]) -> None:
         """The aim the mind holds: what the mind tells its model the program is

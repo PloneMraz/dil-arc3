@@ -213,6 +213,12 @@ class Inducer(Protocol):
         """What it said in computing since last asked, each a datum to keep whole
         (with `payload` and `tags`): a language model's answers. [] for none."""
 
+    def consider(self, situation: str, state: State) -> tuple[Any, Note] | None:
+        """Asked while the body waits with nothing it can do: a way to read this
+        state it did not hold — the form, in hand, and the reading as data, which
+        the mind writes and has the form back from — or None. Never a hypothesis:
+        no step was met to build one from."""
+
     def receive_prior(self, name: str, payload: Any) -> None:
         """A prior the mind recalled, handed on by the learning: what a language
         model is told is data the mind read (`prior:mind-task`), never code."""

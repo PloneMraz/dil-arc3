@@ -6896,3 +6896,61 @@ set aside were most often the bar (rows 61–62): borne out only at a step at
 which the bar changed alone, a move blocked by a wall, and the mind, exploring,
 seldom ran into one within the steps shown. Not established: whether the
 model's programs grow righter with more steps, or more of its time.
+
+#### The language inducer's where judged on every step given; what it expects read through that where (`d54a626`)
+
+Two fixes from version 5: a program's `where` is borne out (or not) on every
+step the mind hands the inducer (up to 32), not only those shown to the model (at
+most 24, then cut to fit), so the bar has more chance of a step at which it
+changed alone; and `as_read` reads a grid through the `where` the inducer holds,
+a cell set to -1 left out, so a frame expected by a program no longer collides at
+a tick of a clock its `where` read out. 382 tests pass.
+
+#### `dil-arc3-language-inducer` version 6: three games, 300 cycles (Plone: measure whether the programs grow righter)
+
+ls20, tu93 and m0r0 (r11l, clicks only, left out: in a stub run its model was never
+asked — below), 300 cycles each, three at once on one server; pushed 07:40 UTC,
+`COMPLETE` 09:16. Server ready in 770 s; ls20 568 s, m0r0 1,216 s, tu93 4,147 s.
+No level in any.
+
+| | ls20 | tu93 | m0r0 |
+|---|---|---|---|
+| the model's answers (s) | 13 (512) | 156 (4,076) | 28 (1,137) |
+| held as hypotheses | 5 | 34 | 13 |
+| states met (grids) | 285 (285) | 223 (223) | 285 (285) |
+| new (situation, act): expected, right | 292: 290, 278 | 286: 217, 95 | 299: 293, 150 |
+| frame expectation held | 286 of 300 | 177 of 300 | 155 of 300 |
+
+Whether the programs grow righter, read by 50 cycles (the returns that bore out
+the program hypotheses written in each, against those that did not): tu93 19%,
+37%, 48%, 51%, 49%, 50% — up over the first 150 cycles, then level; m0r0 43%, 51%,
+46%, 47%, 51% — level; ls20 50% from the 9 written in its first 50 cycles, none
+after. Version 5's ls20 had been 9% and 5% over its 100 cycles.
+
+ls20 stuck: from cycle 50 it took ACTION1 and ACTION2 only (255 and 239 times),
+never ACTION3 or ACTION4, and the onlooker said "repeating" in 251 cycles. Each
+`where` its model wrote set to -1 both the bar and the block the acts move; the
+block's region was not borne out, so the whole `where` was set aside — the bar's
+with it, which the steps did bear out. With the bar read, every grid was new: the
+two acts it took reached somewhere new at almost every step (145 of 154, 139 of
+142), so curiosity (S2b) never turned to the two it had not tried, and each of
+the mind's 235 objections to the repetition was to the act where the region stood
+— a state it never stood in again.
+
+#### Asking the model while the body waits (Plone: let the mind ask from the first state)
+
+In a region of clicks only, the language inducer could not start: a cell to click
+is named by its model's program, and the model was asked only after a step — no
+program, no cell, no step (r11l, stub run: no answer, the body only reset). Grid
+does not meet this: it reads every state's things itself (`things`, a click at
+each). Settled with Plone, for dil-arc3 (not taken as the answer for ARLAVE): the
+learning thinks while the body waits with nothing it can do — once in a situation
+— by asking its inducer for a way to read the state it stands in
+(`Inducer.consider`). Grid gives none; the language inducer's model, shown the
+state alone and told no step has been seen (the prior's `nothing_seen`), may
+name cells with `targets`. What it writes is no hypothesis (INV-4: no step was
+met to build one from); its `where` is set aside; the reading is a datum
+(`kind: reading`, with the code) the mind has the program back from (`Reading`,
+read with purpose `reading`), as a hypothesis's form is. Stub run on r11l, 40
+cycles, a program naming 64 cells: asked once while the body waited, then 39
+clicks, the reading read back 37 times. 385 tests pass.
