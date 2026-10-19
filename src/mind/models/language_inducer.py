@@ -57,7 +57,9 @@ standing expectation holds for it; it does not ask memory (`ASK`).
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import json
 import signal
 import textwrap
@@ -81,6 +83,13 @@ READING_TAGS: Final = {"domain": "mind", "kind": "reading", "object": "frame", "
 # model may use code — here, its own program run for it before it is judged).
 # Declared, not measured.
 MAX_REVISIONS: Final = 2
+# Within one asking, how many times the model may look at the steps with code of
+# its own before it writes its functions: a `look(steps)` it writes, run on the
+# steps it was shown, and what it printed shown to it, cut at LOOK_OUTPUT_CHARS
+# (Plone, 2026-10-19: the model may use code; its own computing, not code's beside
+# it). Declared, not measured.
+MAX_LOOKS: Final = 2
+LOOK_OUTPUT_CHARS: Final = 4000
 
 
 def identity(grid: Grid) -> str:
@@ -205,6 +214,36 @@ def _hiding_only(form: ProgramForm, cells: frozenset[tuple[int, int]]) -> Progra
     return replace(form, where=read, where_cells=cells)
 
 
+def _look_of(code: str) -> Callable[..., Any] | None:
+    """The `look(steps)` an answer holds, when it holds one and no `predict`: the
+    model looking at the steps before it writes its functions."""
+    env: dict[str, Any] = {}
+    try:
+        exec(compile(textwrap.dedent(code), "<look>", "exec"), env)  # noqa: S102 — the model's own code
+    except Exception:  # noqa: BLE001
+        return None
+    look = env.get("look")
+    return look if callable(look) and not callable(env.get("predict")) else None
+
+
+def _looked(look: Callable[..., Any], steps: list[Transition]) -> str:
+    """What the model's `look(steps)` printed (and returned), run on the steps it
+    was shown — each a dict of before, action, x, y, after — cut at
+    LOOK_OUTPUT_CHARS; or why it could not run."""
+    data = [{"before": [r[:] for r in t.before], "action": t.action, "x": t.x, "y": t.y,
+             "after": [r[:] for r in t.after]} for t in steps]
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out):
+            got = _bounded(look, data)
+        printed = out.getvalue() + ("" if got is None else repr(got))
+    except ProgramError as exc:
+        printed = out.getvalue() + f"look {exc}"
+    if len(printed) > LOOK_OUTPUT_CHARS:
+        printed = printed[:LOOK_OUTPUT_CHARS] + f"\n... (cut at {LOOK_OUTPUT_CHARS} characters)"
+    return printed or "(nothing printed)"
+
+
 def compile_program(code: str) -> ProgramForm:
     """The program an answer holds; raises ProgramError when it will not load or
     defines no predict()."""
@@ -237,6 +276,7 @@ class LanguageInducer:
         # program that was a hypothesis: each in hand while new, then — once the
         # mind holds it (`keep`) — only how to have it back from the mind's memory.
         self._seeing: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
+        self._shown: list[Transition] = []   # the steps the model was last shown
         self._reread = False                         # its reading changed since the learning last asked
         self._last: tuple[ProgramForm | None, Callable[[], Any] | None] | None = None
         self._said: list[Note] = []
@@ -406,7 +446,7 @@ class LanguageInducer:
         if name == "task" and isinstance(payload, dict) and all(
                 isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen", "aimed")):
             self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed", "nothing_seen",
-                                                   "unrunnable") if isinstance(payload.get(k), str)}
+                                                   "unrunnable", "look", "looked") if isinstance(payload.get(k), str)}
 
     def consider(self, situation: str, state: Grid) -> tuple[ProgramForm, Note] | None:
         """Asked while the body waits with nothing it can do: the model, shown the
@@ -500,13 +540,34 @@ class LanguageInducer:
         given = seen if seen and seen[-1].after == after else [*seen, Transition(
             before=before, action=act[0], x=act[1], y=act[2], after=after)]
         first, form = self._messages(steps), None
+        shown = self._shown
+        looked: list[dict[str, str]] = []   # its looks at the steps, and what each printed
         messages = first
-        for round_ in range(MAX_REVISIONS + 1):
+        round_ = 0
+        while round_ <= MAX_REVISIONS:
             text, usage, why, where_not, ran = "", {}, None, None, None
             try:
                 text, usage = self._chat(self.endpoint, messages)
             except Exception as exc:  # noqa: BLE001 — the served model, not the mind
                 why = f"the model did not answer: {exc!r}"
+            if why is None and len(looked) < 2 * MAX_LOOKS and "looked" in (self._words or {}):
+                code = extract_code(text)
+                look = _look_of(code) if code is not None else None
+                if look is not None:
+                    printed = _looked(look, shown)
+                    n = len(looked) // 2
+                    answer = {"on": "not foreseen", "steps": len(steps), "look": n, "text": text,
+                              "printed": printed, "tokens": usage.get("completion_tokens"),
+                              "seconds": usage.get("seconds")}
+                    if usage.get("reasoning"):
+                        answer["reasoning"] = usage["reasoning"]
+                    self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
+                    self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
+                    looked += [{"role": "assistant", "content": text},
+                               {"role": "user", "content": self._words["looked"].format(
+                                   printed=printed, left=MAX_LOOKS - n - 1)}]
+                    messages = [*first, *looked]
+                    continue
             if why is None:
                 form, why, where_not, ran = self._judge(text, act, before, after, given)
             answer = {"on": "not foreseen", "steps": len(steps), "round": round_, "text": text,
@@ -518,11 +579,12 @@ class LanguageInducer:
             self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
             if form is not None or round_ == MAX_REVISIONS or why.startswith("the model did not answer"):
                 break
+            round_ += 1
             # Its last answer and where it missed, after what it was shown — not every
             # round before: the asking stays as long as its first round (version 7:
             # four third rounds of m0r0 refused, 400, the conversation grown past
             # the model's context).
-            messages = [*first, {"role": "assistant", "content": text},
+            messages = [*first, *looked, {"role": "assistant", "content": text},
                         {"role": "user", "content": self._told_where_it_missed(ran, why, steps)}]
         if form is not None:
             self._last = (form, None)
@@ -591,6 +653,9 @@ class LanguageInducer:
             rows=len(grid), cols=len(grid[0]) if grid else 0, acts=acts, placed=placed, numbers=numbers,
             evidence=render_evidence(shown, report=True, name=o.name, news=self._news),
             also=words["unforeseen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
+        self._shown = shown
+        if MAX_LOOKS and "look" in words:
+            first += words["look"].format(looks=MAX_LOOKS, chars=LOOK_OUTPUT_CHARS)
         messages = [{"role": "user", "content": first}]
         last = self._now(self._last)
         if last is not None:

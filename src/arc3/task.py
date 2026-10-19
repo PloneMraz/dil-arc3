@@ -73,6 +73,16 @@ UNFORESEEN: Final = "\nNo program you wrote foresaw the last step.\n"
 UNRUNNABLE: Final = ("Your program could not be run on those steps: {why}.\n\n"
                      "Revise it so that it runs and explains all the evidence. Return one ```python code block.")
 
+# The model may look at the steps with code of its own before it writes.
+LOOK: Final = ("\nBefore you write them you may look at the steps with code, up to {looks} times: answer with one "
+               "```python block that defines look(steps) and prints what you want to know. steps is the steps "
+               "above, oldest first, each a dict with before and after (grids as Python data, as your functions "
+               "get them), action, x and y. You will be shown what it printed, cut at {chars} characters. When you "
+               "are ready, answer with your functions instead.\n")
+
+LOOKED: Final = ("look(steps) printed:\n{printed}\n\nYou may look {left} more time(s); then, or now, write "
+                 "predict, where and targets. Return one ```python code block.")
+
 # Asked before any step, where nothing can be done until a program names a cell.
 NOTHING_SEEN: Final = ("\nNo step has been seen yet, and no action can be taken here until a targets of yours "
                        "names a cell. What you write cannot be checked against a step yet; the steps will check it.\n")
@@ -83,7 +93,8 @@ AIMED: Final = "The program is for a mind working toward this: {aim}.\n"
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
     payload={"goal": TASK_GOAL, "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK,
-             "unforeseen": UNFORESEEN, "aimed": AIMED, "nothing_seen": NOTHING_SEEN, "unrunnable": UNRUNNABLE},
+             "unforeseen": UNFORESEEN, "aimed": AIMED, "nothing_seen": NOTHING_SEEN, "unrunnable": UNRUNNABLE,
+             "look": LOOK, "looked": LOOKED},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 

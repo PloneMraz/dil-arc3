@@ -465,3 +465,41 @@ def test_each_round_is_shown_its_last_answer_only_not_every_round_before(monkeyp
     third = script.shown[2]
     assert len(third) == len(script.shown[1]), "the third round no longer than the second"
     assert third[-2]["content"] == block(STILL + "# again"), "shown its last answer"
+
+
+LOOK = '''
+def look(steps):
+    for s in steps:
+        changed = [(r, c) for r in range(len(s["before"])) for c in range(len(s["before"][r]))
+                   if s["before"][r][c] != s["after"][r][c]]
+        print(s["action"], changed)
+'''
+
+
+def test_it_looks_at_the_steps_with_its_own_code_before_it_writes():
+    script = Script(block(LOOK), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert "may look at the steps with code" in script.shown[0][0]["content"]
+    told = script.shown[1][-1]["content"]
+    assert "look(steps) printed:" in told and "1 [(0, 0), (0, 1)]" in told, "what its own code printed, run on the step"
+    looks = [d for _, d in of_kind(data, "thought") if "look" in d.payload]
+    assert looks and looks[0].payload["text"] == block(LOOK) and "1 [(0, 0), (0, 1)]" in looks[0].payload["printed"]
+    assert [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"], "then it wrote, held"
+
+
+def test_it_looks_at_most_max_looks_times_then_must_write(monkeypatch):
+    import mind.models.language_inducer as language
+    monkeypatch.setattr(language, "MAX_LOOKS", 1)
+    script = Script(block(LOOK), block(LOOK), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert len(script.shown) == 2, "one look, then a look taken for its functions: it defines no predict"
+    assert inducer.answers[-1]["why_not"] == "defines no predict()"
+
+
+def test_a_look_that_fails_is_told_so():
+    script = Script(block("def look(steps):\n    print(steps[99])\n"), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert "look raised IndexError" in script.shown[1][-1]["content"]

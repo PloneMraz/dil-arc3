@@ -182,10 +182,10 @@ print(f"  mind asked the store  : {len(queries)} times  cues {sorted({json.dumps
 print(f"  programs in [data]    : {[(k, d.fixed.provenance, d.payload.get('version')) for k, d in programs]}")
 program_ids = {k for k, _ in programs}
 thoughts = [d for _, d in daemon._data.entries() if d.open.get("kind") == "thought"]
-said = [d for d in thoughts if "program" in d.payload]  # a language model's answers, kept whole
+said = [d for d in thoughts if "program" in d.payload or "look" in d.payload]  # a language model's answers, kept whole
 print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id in program_ids]}")
 print(f"  thoughts kept         : {len(thoughts)}  of them the model's answers {len(said)}, "
-      f"a program taken {sum(1 for d in said if d.payload['program'])}")
+      f"a program taken {sum(1 for d in said if d.payload.get('program'))}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
 read_lines = kind("read")
@@ -212,9 +212,13 @@ if a.attention:
     print(f"  attention             : the {ATTENTION_K} experiences most alike")
 if a.inducer == "language":
     answers = mind.learning.inducer.answers
-    why_not = collections.Counter((t["why_not"] or "")[:60] for t in answers if not t["program"])
-    print(f"  the model's answers   : {len(answers)}  programs {sum(1 for t in answers if t['program'])}  "
+    why_not = collections.Counter((t.get("why_not") or "")[:60] for t in answers
+                                  if not t.get("program") and "look" not in t)
+    print(f"  the model's answers   : {len(answers)}  programs {sum(1 for t in answers if t.get('program'))}  "
           f"seconds {sum(t['seconds'] or 0 for t in answers):.0f}  not a hypothesis {dict(why_not)}")
+    print(f"  looks, revisions      : {sum(1 for t in answers if 'look' in t)} looks; programs held after "
+          f"writing again {sum(1 for t in answers if t.get('program') and t.get('round'))}; "
+          f"while the body waited {sum(1 for t in answers if t.get('on') == 'nothing to do')}")
     print(f"  its readings          : {len([1 for _, d in daemon._data.entries() if d.open.get('kind') == 'reading'])}")
 print(f"  kinds of act          : {len(mind.learning._kinds)}  (tried, somewhere new, levels) most tried "
       f"{sorted(mind.learning._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
