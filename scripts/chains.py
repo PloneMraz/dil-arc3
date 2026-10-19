@@ -66,6 +66,7 @@ def chains(records, data):
             revisions.setdefault(r["datumId"], []).append(r["cycleMark"])
     out = []
     for sid, scar in sorted(scars.items(), key=lambda kv: kv[1]["cycleMark"]):
+        cycle = scar["cycleMark"]
         # What the collision set off is written in its own cycle (a later choice
         # may name the return too, among all it read).
         made = [d for d in by_source.get(sid, []) if written[d]["cycle"] == scar["cycleMark"]]
@@ -84,7 +85,6 @@ def chains(records, data):
         met_again = [r for r in revisions.get(experience, []) if r > cycle + 1] if experience else []
         expected = (scar.get("event") or {}).get("expected") or {}
         otherwise = isinstance(expected.get("value"), dict) and bool(expected["value"].get("otherwise"))
-        cycle = scar["cycleMark"]
         nxt = frame_of(cycle + 1)
         later = next((s for s in sorted(scars.values(), key=lambda r: r["cycleMark"]) if s["cycleMark"] > cycle), None)
         out.append({

@@ -6639,3 +6639,14 @@ reading. Done, in the mind's organs, its seams and its learning:
 
 369 tests pass. Behaviour unchanged: vc33 and lp85 run again choose as I3 did
 (the same code before this, carry 0.95) at every step (`scripts/differ.py`).
+
+#### An audit of the repository (Plone, 2026-10-19), and what it fixed
+
+Read through for three things — the code agreeing with itself, the texts with
+each other, the texts with the code — and reported before anything was changed;
+then fixed, in order, at Plone's word:
+
+- `scripts/chains.py` used a collision's cycle before it set it: whether the act
+  was met again "after the collision" was judged against the cycle of the chain
+  before. It ran without failing, so the figure was wrong without a sign (vc33
+  under I3: 8 such chains; 7 counted right).
