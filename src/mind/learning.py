@@ -54,7 +54,8 @@ THE LOOP, one step at a time:
   its held hypotheses predict — through the situations it has stood in and, for
   an inducer whose hypotheses reach past where they were met, up to
   MAX_IMAGINED_STEPS past them, where a situation not stood in is itself
-  something left to try; else RESET, or the known act toward the situation least
+  something left to try; else the act that starts the region again (if the body
+  has one), or the known act toward the situation least
   visited.
 - **A collision turns its thinking** (Plone, 2026-10-11: a mismatch is not a
   penalty; it is data that deviates from what was expected, and the scar it
@@ -706,7 +707,8 @@ class Learning:
             it had not stood in — its own evidence that the repetition is getting
             somewhere — it keeps on, and says why (`kept_on`); told again, it
             objects (Plone, 2026-09-28);
-          - "standing still": it will act; with nothing else to do, RESET;
+          - "standing still": it will act; with nothing else to do, it starts the
+            region again;
           - anything else, or nothing: what it objected to on an earlier word is
             lifted.
 
@@ -780,7 +782,7 @@ class Learning:
     def _think_on_report(self, context: Context) -> Thinking | None:
         """The region's report did not come as it expected: it thinks on what
         collided, and writes it — an end turns it from the kind of act that led
-        there, through the RESET into the start again; the aim, which it learns
+        there, through the restart into the start again; the aim, which it learns
         from where it learns the report (S4), and any other field otherwise turn
         nothing of their own (a field that changes at every step, as a count
         does, turned it to repeat itself: LOG.md, 2026-10-11). Not a penalty, not
@@ -1114,7 +1116,7 @@ class Learning:
         # A turn holds for as many choices after the collision that made it as
         # alertness says; a collision in this step turns the mind again (`think`).
         if self._turn is not None and not self.organs.restarts(step.act):
-            # A RESET the region's end made is no choice the turn was for.
+            # A restart the region's end made is no choice the turn was for.
             self._turn_left -= 1
             if self._turn_left <= 0:
                 self._turn = None
