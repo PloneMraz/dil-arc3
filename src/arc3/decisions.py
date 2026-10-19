@@ -98,7 +98,9 @@ OPEN_TAG_KEYS: Final[dict[str, str]] = {
 # none is revealed in a run.
 # The earlier declaration (equality of an effect signature, `effect.py`) and its
 # measurements are in LOG.md.
-TAG_H_STATUS: Final = "declared — exact equality of the expected and returned grid, the last of the stack"
+TAG_H_STATUS: Final = ("declared — the last grid of the stack as the mind reads it: equal to the one expected, "
+                       "a cell it does not read expected nothing of; or, expected otherwise, differing from "
+                       "the one it was in a cell it reads (situation_fit)")
 
 
 def _as_read(content: Any) -> Any:

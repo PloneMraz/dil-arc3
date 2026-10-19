@@ -693,9 +693,20 @@ class Learning:
     # ── the onlooker ──
 
     def think(self, context: Context) -> Thinking | None:
-        """It learns from every return, so a mismatch sets it thinking no further.
-        The onlooker's word does — it reaches the mind as a collision, and the mind
-        commands again once it has thought:
+        """It thinks on what collided, and writes the thought:
+
+          - a step's return otherwise than it expected (`step`): silence turns it
+            from that kind of act, an answer other than it foresaw to where the
+            answer differed (`_think_on_collision`);
+          - the region's report otherwise (`report`): an end turns it from the
+            kind of act that led there, any other field turns nothing of its own
+            (`_think_on_report`);
+          - the onlooker's word (`onlooker`), which reaches the mind as a
+            collision, and the mind commands again once it has thought.
+
+        On anything else — the body waiting for want of an aim or a command — it
+        does not think (None), so the mind does not wait on it. On the onlooker's
+        word:
 
           - "repeating" an act, or going "back-and-forth" between two: the acts it
             names are objected to — where the region stands now, and, for a
