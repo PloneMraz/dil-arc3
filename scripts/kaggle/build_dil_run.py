@@ -64,7 +64,10 @@ GPU_IMAGE = "gcr.io/kaggle-private-byod/python@sha256:37c64f7dd9c54116ecd1bcc888
 MODELS = {
     "27b": ("michaelpoluektov/qwen3-6-27b-fp8/transformers/default/1",
             "qwen3_6_27b_fp8.manifest.json", "qwen3.6-27b-fp8", "wheelhouse"),
-    "35b-a3b": ("michaelpoluektov/qwen3-6-35b-a3b-fp8/transformers/default/1",
+    # Qwen/Qwen3.6-35B-A3B-FP8: the copy first served (michaelpoluektov/…) was gone
+    # from Kaggle on 2026-10-19 (403); this mirror's 56 files matched its manifest
+    # in name and size, and every file is checked against Hugging Face's hash.
+    "35b-a3b": ("anuragsati6476/qwen3-6-35b-a3b-fp8-20260627/transformers/fp8/1",
                 "qwen3_6_35b_a3b_fp8.manifest.json", "qwen3.6-35b-a3b-fp8", "wheelhouse"),
     # Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 at b771c46af0, as Qwen copied it to Kaggle
     # (2025-08-01; its 15 files' sizes matched before it was taken up, 2026-10-19).

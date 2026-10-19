@@ -7102,3 +7102,15 @@ The programs, by 50 cycles, about half again (tu93 45%, 53%, 53%; m0r0 10%, 41%,
 29 of its answers held no code block — version 8 had no stops on runaway answers
 yet. Next, as settled with Plone: Qwen3.6-35B-A3B on the same three games, the
 same code as version 8 and the stops (A).
+
+#### Version 9 did not start: the Qwen3.6-35B-A3B copy it named was gone
+
+`dil-arc3-language-inducer` version 9 (`bedb38d`, Qwen3.6-35B-A3B FP8) ended in
+`ERROR` at its first cell, seven seconds in: no `model.safetensors.index.json` under
+`/kaggle/input`. The model it named, `michaelpoluektov/qwen3-6-35b-a3b-fp8`, is no
+longer served (403 on the model, 404 on its files), and Kaggle had left it out of the
+notebook's `model_sources` without a word. Another copy,
+`anuragsati6476/qwen3-6-35b-a3b-fp8-20260627` ("mirror created from the 2026-06-27"
+release), has the same 56 files, each of the size the manifest from Hugging Face
+gives; the notebook checks every file's hash against it before serving. The builder
+now names that copy.
