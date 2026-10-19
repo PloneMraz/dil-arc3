@@ -2,7 +2,7 @@
 
     python scripts/kaggle/build_dil_run.py [--game a,b] [--cycles 60] [--concurrency 4]
         [--curiosity LAW] [--attention] [--notebook SLUG]
-    python scripts/kaggle/build_dil_run.py --served [--model 35b-a3b|27b|flash-next] [--notebook SLUG]
+    python scripts/kaggle/build_dil_run.py --served [--model 35b-a3b|27b|coder-30b|flash-next] [--notebook SLUG]
         [--max-tokens 12288] [--max-model-len 65536] ...
     python scripts/kaggle/build_dil_run.py --probe
 
@@ -66,6 +66,10 @@ MODELS = {
             "qwen3_6_27b_fp8.manifest.json", "qwen3.6-27b-fp8", "wheelhouse"),
     "35b-a3b": ("michaelpoluektov/qwen3-6-35b-a3b-fp8/transformers/default/1",
                 "qwen3_6_35b_a3b_fp8.manifest.json", "qwen3.6-35b-a3b-fp8", "wheelhouse"),
+    # Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 at b771c46af0, as Qwen copied it to Kaggle
+    # (2025-08-01; its 15 files' sizes matched before it was taken up, 2026-10-19).
+    "coder-30b": ("qwen-lm/qwen3-coder/transformers/30b-a3b-instruct-fp8/1",
+                  "qwen3_coder_30b_a3b_fp8.manifest.json", "qwen3-coder-30b-a3b-fp8", "wheelhouse"),
     # RadixArk/Qwen3.8-Flash-Next-NVFP4 at 7b71922, as copied to Kaggle by keithtyser;
     # checked file by file against Hugging Face before it is served.
     "flash-next": ("keithtyser/qwen3-8-flash-next-nvfp4/PyTorch/radixark-modelopt-fp4/1",
