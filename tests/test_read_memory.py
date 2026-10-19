@@ -1,5 +1,5 @@
 """(B): what the mind's model computes from, the mind reads from its memory
-(Plone, 2026-10-05; DEVIATION 7, READ).
+(Plone, 2026-10-05; READ, protocol v0.3.7 §9).
 
 The whole store is the agent's memory. What came in a cycle is in hand in that
 cycle; from the next it is read from the store through T5's view, each cycle's
@@ -86,7 +86,7 @@ def test_every_read_is_memory_and_the_trace_says_so():
     three(cycle)
     report = check_conformance(events)
     c6 = next(r for r in report.results if r.id == "6")
-    claim = next(c for c in c6.claims if c.claim.startswith("every datum the agent read"))
+    claim = next(c for c in c6.claims if c.claim.startswith("every datum read of `[data]`"))
     assert claim.verdict == "pass" and c6.verdict == "pass", c6.detail
     for rec in events.all():
         assert deserialize_event_record(serialize_event_record(rec)) == rec

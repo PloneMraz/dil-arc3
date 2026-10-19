@@ -40,7 +40,7 @@ THE LOOP, one step at a time:
   stood in, the hypotheses it predicts with, the recent steps. What came in a
   cycle is in hand in that cycle — met in it, not yet
   memory; from the next, it is read from the store, and its content is no
-  longer held. Each read is the store's to record (DEVIATION 7), and what is
+  longer held. Each read is the store's to record (v0.3.7 §9), and what is
   written from what was read names it among what it was built from.
 - **The aim.** Reaching it is an experience too (S4, Plone, 2026-09-28): asked
   with the step's report and what it expected of the step, the inducer says
@@ -436,7 +436,7 @@ class Learning:
         # The mind's recent steps at the step being learned: what an
         # inducer is shown when it is asked what the step suggests.
         self._seen_now: list = []
-        # Memory as the mind reads it: the store's view this cycle (DEVIATION 7),
+        # Memory as the mind reads it: the store's view this cycle (v0.3.7 §9),
         # each state read this cycle, by where memory holds it; the states met in
         # a cycle that is not memory yet, each with the observation it came in;
         # each hypothesis read, with the datum it was read from; and what was read
@@ -501,7 +501,7 @@ class Learning:
     # ── memory ──
 
     def recall_from(self, view: Any) -> None:
-        """The store as the mind reads it this cycle (DEVIATION 7: `read(datum,
+        """The store as the mind reads it this cycle (v0.3.7 §9: `read(datum,
         purpose)`, `id_of(observation)`). What came in an earlier cycle is memory
         now: read from the store from here on, its content no longer held."""
         if view is self._view:

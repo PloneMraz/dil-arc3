@@ -59,7 +59,7 @@ ap.add_argument("--attention", action="store_true",
 ap.add_argument("--alone", action="store_true",
                 help="passed to run_game.py: no onlooker in the world, the agent meets only the region")
 ap.add_argument("--field", default="", help="passed to run_game.py: the field the loop starts with")
-ap.add_argument("--field-carry", default="", help="passed to run_game.py: DEVIATION 9's carry")
+ap.add_argument("--field-carry", default="", help="passed to run_game.py: GLOB-MOD's carry (FIELD_CARRY)")
 ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")

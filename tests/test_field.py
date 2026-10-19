@@ -15,7 +15,7 @@ import pytest
 from dil.loop.appraisal import AppraisalInput, appraise
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.field import (
-    AXES, EXPLORATION, NEUTRAL, TRUST, axis, falling, rising, shifted_count, votes,
+    ALERTNESS, AXES, EXPLORATION, NEUTRAL, TRUST, axis, falling, rising, shifted_count, votes,
 )
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layer import run_layer
@@ -311,17 +311,27 @@ def test_the_driver_adds_nothing_of_its_own():
     assert "resistance" not in glob.current().params
 
 
-def test_alertness_counts_what_the_host_says_can_alert_the_loop():
-    # DEVIATION 8: an echo of the agent's own write never mismatches; counted, it
-    # holds the vote down however often the world collides.
-    from arc3.decisions import from_the_world
-    world = InfoUnit(content={"channel": "arc3-frame", "value": 1}, ref_frame=None, t=0)
-    echo = InfoUnit(content={"channel": "store", "value": 1}, ref_frame=None, t=0)
-    assert from_the_world(world) and not from_the_world(echo)
+def test_alertness_counts_what_came_from_outside_the_store():
+    # dil-core be73ad7 (was this host's DEVIATION 8): an echo of the agent's own
+    # write never mismatches; counted, it holds the vote down however often the
+    # world collides. The region changed (a mismatch), the echo repeated (a match).
+    def on(channel: str, value: object) -> InfoUnit:
+        return InfoUnit(content={"infoType": "raw", "channel": channel, "value": value},
+                        ref_frame=RefFrame(bound_layer=3, ref=f"channel:{channel}"), t=1)
+
+    def bound(v: object) -> tuple[BoundInfo, ...]:
+        return (BoundInfo(unit=on("arc3-frame", v), entity_id="frame"), BoundInfo(unit=on("store", "m"), entity_id="memo"))
+
+    t5 = create_t5()
+    run_layer(t5, T5Input(bound=bound(1)), EMPTY, datum())
+    run = run_layer(t5, T5Input(bound=bound(2)), EMPTY, datum())
+    assert [c.params[ALERTNESS] for c in run.contributions if ALERTNESS in c.params] == [1.0]
+    only_echo = run_layer(t5, T5Input(bound=(bound(3)[1],)), EMPTY, datum())
+    assert not any(ALERTNESS in c.params for c in only_echo.contributions), "nothing from outside: no vote"
 
 
 def test_with_a_carry_the_field_before_blends_in_with_the_votes():
-    # DEVIATION 9 (2026-10-18): with carry, an axis voted on keeps carry of the
+    # FIELD_CARRY (dil-core 42ee977): with carry, an axis voted on keeps carry of the
     # field before; with none, dil-core's blend (the cycle's votes alone).
     from dil.loop.glob_mod import GlobModError, create_glob_mod
     plain, carried = create_glob_mod({TRUST: 0.2}), create_glob_mod({TRUST: 0.2}, carry=0.75)
@@ -334,3 +344,20 @@ def test_with_a_carry_the_field_before_blends_in_with_the_votes():
     assert abs(carried.current().params[TRUST] - 0.4) < 1e-12
     with pytest.raises(GlobModError):
         create_glob_mod(carry=1.0)
+
+
+def test_t2s_alertness_vote_leaves_out_the_echoes_of_the_agents_store():
+    # dil-core be73ad7: a query answered and a write coming back are SELF_WRITTEN,
+    # but no change the region could have pushed.
+    from dil.loop.layers.t3 import store_query
+    env = create_t1().process((sig("a", 1),), EMPTY, lambda a: None, lambda p, w=1.0: None)
+    query, write = store_query({"domain": "note"}), {"kind": "write", "datum": "written-0-0"}
+    t2 = create_t2(stability_threshold=1)
+    run = run_layer(t2, T2Input(env=env, emitted=Emission(action="move"), lateral=(query, write), changes=(
+        ObservedChange(id="door", value="opened"),
+        ObservedChange(id="note-1", value=query),
+        ObservedChange(id="written-0-0", value=write),
+    )), EMPTY, datum())
+    assert [(t.change.id, t.agency) for t in run.output.tagged] == [
+        ("door", "ENV_PUSHED"), ("note-1", "SELF_WRITTEN"), ("written-0-0", "SELF_WRITTEN")]
+    assert [c.params[ALERTNESS] for c in run.contributions if ALERTNESS in c.params] == [1.0]

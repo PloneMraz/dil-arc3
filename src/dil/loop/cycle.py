@@ -337,7 +337,7 @@ class Cycle:
         # written datum was built from can be recorded by id (v0.3.4 §9). Keyed
         # by the unit's identity; each entry leaves with its unit.
         self._unit_datum: dict[int, str] = {}
-        # The cycle's view of `[data]` for T5, and what it read (DEVIATION: READ).
+        # The cycle's view of `[data]` for T5, and what it read (v0.3.7 §9, Reading memory).
         self._view: StoreView | None = None
         self._reads: dict[str, dict[str, None]] | None = None
         # The host's resistance-retrieval channel (§10), if one is declared. The
@@ -404,7 +404,7 @@ class Cycle:
         weakref.finalize(unit, self._unit_datum.pop, key, None)
 
     def _store_view(self, admitted_now: frozenset[str]) -> StoreView:
-        """The cycle's read-only view of `[data]`, for T5 (DEVIATION: READ).
+        """The cycle's read-only view of `[data]`, for T5 (v0.3.7 §9, Reading memory).
 
         Memory alone: what was admitted this cycle is met in it, not recalled,
         and is not returned. Each read is kept, by purpose, for the cycle's
@@ -835,7 +835,7 @@ class Cycle:
         for e in pass_.emissions:
             self._emit(e.issuing_layer, e.action)
 
-        # ── What T5 read of `[data]` (DEVIATION: READ, declared) ──
+        # ── What T5 read of `[data]` (v0.3.7 §9, "Reading memory") ──
         # One line for each purpose, naming the data read, in the order first read.
         # The view closes with the pass: a read after it is no read of this cycle.
         self._view = None

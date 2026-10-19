@@ -33,7 +33,7 @@ from arcengine import GameAction
 
 from arc3 import transducers
 from arc3.host import create_source, declaration
-from arc3.decisions import FIELD_CARRY, from_the_world, situation_fit
+from arc3.decisions import FIELD_CARRY, situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
@@ -85,7 +85,7 @@ ap.add_argument("--field", default="",
                 help="the field the loop starts with, e.g. trust=0.2,alertness=0.8,exploration=0.5 "
                      "(an individual's disposition at birth; NEUTRAL where not given)")
 ap.add_argument("--field-carry", type=float, default=None,
-                help="how much of the field before each axis keeps (DEVIATION 9); default "
+                help="how much of the field before each axis keeps (FIELD_CARRY); default "
                      "arc3.decisions.FIELD_CARRY")
 ap.add_argument("--out", default=None, help="where the store goes (default: a fresh dir under scripts/data)")
 ap.add_argument("--remote", default=None,
@@ -122,11 +122,11 @@ mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosit
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
-    t5=create_t5(predict=seat, fit=situation_fit, alerted_by=from_the_world), t6=create_t6(),
+    t5=create_t5(predict=seat, fit=situation_fit), t6=create_t6(),
     t7=create_t7(attention_span=4.0), t8=create_t8(),
 )
 # The field it starts with, and how much of the field before each axis keeps
-# (DEVIATION 9, arc3.decisions.FIELD_CARRY).
+# (FIELD_CARRY, declared in arc3.decisions).
 initial_field = {k.strip(): float(v) for k, v in (kv.split("=") for kv in a.field.split(",") if kv.strip())}
 field_carry = FIELD_CARRY if a.field_carry is None else a.field_carry
 store_root = a.out or tempfile.mkdtemp(prefix=f"run-{a.game}-", dir=str(DATA))
@@ -141,7 +141,7 @@ daemon = Daemon(
     # `[data]` and `[event]` synced to disk once a cycle, not each write (Plone,
     # 2026-10-04: a machine's crash loses at most the cycle running; recovery is
     # the commits'). The syncs of each were about 60% of a run (LOG.md).
-    sync_each_cycle=True,
+    sync_cadence="cycle",
     # A commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28): a commit is
     # the costliest thing a cycle does (decisions.COMMIT_EVERY; LOG.md).
     commit_every=COMMIT_EVERY_HERE,
@@ -181,9 +181,11 @@ print(f"  onlooker's remarks    : {len(remarks)} cycles  first {remarks[:3]}")
 print(f"  mind asked the store  : {len(queries)} times  cues {sorted({json.dumps(q.action['cue']) for q in queries})}")
 print(f"  programs in [data]    : {[(k, d.fixed.provenance, d.payload.get('version')) for k, d in programs]}")
 program_ids = {k for k, _ in programs}
-answers = [d for _, d in daemon._data.entries() if d.open.get("kind") == "thought"]
+thoughts = [d for _, d in daemon._data.entries() if d.open.get("kind") == "thought"]
+said = [d for d in thoughts if "program" in d.payload]  # a language model's answers, kept whole
 print(f"  program moves         : {[(r.datum_id, r.from_, r.to, r.cycle_mark) for r in kind('provenance') if r.datum_id in program_ids]}")
-print(f"  answers kept          : {len(answers)}  program not taken: {sum(1 for d in answers if not d.payload.get('kept'))}")
+print(f"  thoughts kept         : {len(thoughts)}  of them the model's answers {len(said)}, "
+      f"a program taken {sum(1 for d in said if d.payload['program'])}")
 print(f"  revisions             : {[(r.datum_id, r.cycle_mark) for r in kind('revision')]}")
 print(f"  commits               : {len(commits)}")
 read_lines = kind("read")
@@ -193,7 +195,10 @@ learned = [d for _, d in daemon._data.entries() if d.open.get("kind") == "hypoth
 why = collections.Counter(t.why.split(" (")[0] for t in mind.thoughts)
 print(f"  hypotheses written    : {len(learned)}  not holding now: {sum(1 for d in learned if not d.payload.get('holds'))}; "
       f"experiences {len([d for _, d in daemon._data.entries() if d.open.get('kind') == 'experience'])}")
-print(f"  states met            : {len(mind.learning._raw_of)} (grids {len(mind.learning._raw)}; clock rows {sorted(mind.learning.inducer.clock)}, columns {sorted(mind.learning.inducer.clock_columns)})")
+# The clock is the grid inducer's reading; another inducer has none to show.
+clock = (f"; clock rows {sorted(mind.learning.inducer.clock)}, columns {sorted(mind.learning.inducer.clock_columns)}"
+         if hasattr(mind.learning.inducer, "clock") else "")
+print(f"  states met            : {len(mind.learning._raw_of)} (grids {len(mind.learning._raw)}{clock})")
 print(f"  held off the clock    : {sum(mind.learning.holds_by_situation)} of {len(mind.learning.holds_by_situation)}")
 held = sum(1 for h in mind.learning._hypotheses if h.holds)
 print(f"  inducer               : {mind.learning.inducer.kind}  hypotheses {len(mind.learning._hypotheses)} (held {held})")

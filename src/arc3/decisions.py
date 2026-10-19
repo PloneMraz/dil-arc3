@@ -11,7 +11,6 @@ Ported nothing: this is the host's own declaration.
 import json
 from typing import Any, Final
 
-from dil.loop.layers.t3 import STORE_CHANNEL
 from dil.loop.types import InfoUnit
 
 # ── Tag A — concrete representation of Signal, InfoUnit, ActivityEnvironment ──
@@ -140,24 +139,12 @@ def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
         json.dumps(_as_read(predicted.content), sort_keys=True, default=str)
 
 
-# DEVIATION 8 (2026-10-11), declared to T5 (`alerted_by`): what can alert the
-# loop is what the region and the Others push — not the agent's own writes coming
-# back, nor what its memory answers, which come back as they were written and so
-# never mismatch. Counted with them, a cycle's four or more echoes beside three
-# returns held the alertness vote near 0.1 however often the frame collided
-# (LOG.md, 2026-10-11).
-def from_the_world(unit: InfoUnit) -> bool:
-    """Whether a return can alert the loop: one that did not come from its store."""
-    content = unit.content if isinstance(unit.content, dict) else {}
-    return content.get("channel") != STORE_CHANNEL
-
-
-# DEVIATION 9 (2026-10-18, Plone; queued in dil-core), declared to GLOB-MOD
+# DECIDE@IMPL (2026-10-18, Plone; dil-core's FIELD_CARRY, 42ee977), declared to GLOB-MOD
 # (`create_glob_mod(carry=...)`): how much of the field before each axis keeps
-# when the cycle's votes blend in. dil-core's blend sets an axis to the cycle's
-# votes alone, so the field held nothing of the cycles before: a field set
-# otherwise lasted one cycle, and the axes stood in narrow bands (LOG.md,
-# 2026-10-18). A twentieth of each cycle's votes, the rest the field before:
+# when the cycle's votes blend in. With none (dil-core's default, 0), an axis is
+# the cycle's votes alone, so the field held nothing of the cycles before: a
+# field set otherwise lasted one cycle, and the axes stood in narrow bands
+# (LOG.md, 2026-10-18). A twentieth of each cycle's votes, the rest the field before:
 # about twenty cycles' memory. Of the carries tried on the eleven games, 0.95
 # reached the most levels (12; 0.75, 10 — tu93's two lost), within what any
 # change reshuffles (Plone, 2026-10-18: chosen on it). DECLARED, not measured

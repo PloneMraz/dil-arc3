@@ -324,9 +324,9 @@ class RevisionActivity:
 
 @dataclass(frozen=True, slots=True)
 class ReadActivity:
-    """A read of `[data]` (DEVIATION from dil-core, declared; dil-arc3, 2026-10-05).
+    """A read of `[data]` (v0.3.7, §9 "Reading memory"; dil-core d472e53).
 
-    The whole store is the agent's memory (v0.3.6 §9), and what a model computes
+    The whole store is the agent's memory, and what a model computes
     from, the mind takes from it: at T5, beside `ask`, `write` and `test`, a view
     of `[data]` it reads directly — no query, no cycle's delay. Each cycle's reads
     are recorded here, one line for each purpose: which data, in which cycle, by

@@ -6684,3 +6684,63 @@ alike states, the mind's votes, B2 and B1 at carry 0.95) scored **0.26** on the
 hidden games — equal to version 18's (`56820389`), the highest of this agent's
 submissions; versions 23 and 28 scored 0.25. Public 25 by Save & Run: 16
 levels, 0.518.
+
+#### dil-arc3 brought to dil-core (`288ad30`): four deviations are dil-core's now
+
+With dil-core's queue done (Plone's word), what dil-arc3 had first declared as
+deviations 6–9 was ported back in dil-core's form and is no longer marked
+`DEVIATION`: `SYNC_CADENCE` (`Daemon(sync_cadence=...)`, "record" by default,
+the run declaring "cycle"); reading memory as protocol v0.3.7 has it (the spec
+copied byte for byte as `spec/DIL-protocol-v0.3.7.md`; schema 4; a `read`
+record's field written `purpose`, `for` still read from older logs); the
+alertness votes leaving out the agent's own echoes; GLOB-MOD's `FIELD_CARRY`
+(0 in dil-core, this run's 0.95 declared in `arc3/decisions.py`).
+
+One of them changes what the loop does here. dil-arc3's `alerted_by` had left
+the store's echoes out of T5's vote only; dil-core's rule (`be73ad7`) leaves
+them out of T2's too — a query answered and a write coming back are tagged
+SELF_WRITTEN, as before, but no longer counted as changes the region could have
+pushed and did not. T5's rule on the store's channel left out the same returns
+`from_the_world` did. On the eleven games, 600 cycles, S2b with attention
+(`scripts/data/t1/sync` against I3, the same code before the port):
+
+- levels 12 of 80 in both; actions 6,589 in both; score 1.106 against 1.168.
+- the field's mean alertness rose — tu93 0.163 → 0.281, ar25 0.103 → 0.226 —
+  trust and exploration within 0.01. A turn now held longer: the two individuals
+  first chose otherwise where one still turned from what was silent (tu93 at
+  step 32, ar25 at 120).
+- what moved the score: tu93's second level took 79 actions (36 under I3), ar25's
+  first 578 (475); ls20 and m0r0 a little fewer; the other seven games the same.
+  A difference of one individual on two games, not a law measured.
+
+370 tests pass; ruff finds nothing.
+
+#### The language inducer checked against a stub endpoint (Plone: check it, then a Save & Run)
+
+Before pushing its notebook again, the language inducer was run here against an
+endpoint that answers every call with the same program, `predict` returning
+the grid unchanged — wrong wherever an act changes anything. ls20 40 cycles
+through `run_game.py`, and ls20 and vc33 30 cycles through
+`run_competition.py` (each game its own process, through `world/remote.py`):
+the model asked at each step none of its hypotheses foresaw, each answer kept
+whole as a thought, its program not taken for the reason it should be ("its
+predict does not give, from the step it was asked on, where the region came
+to"), the evidence read from memory and recorded (`read`, `evidence`); every
+game exited 0.
+
+Two faults in `run_game.py`'s report, neither in the loop:
+
+- it read `inducer.clock`, which only grid has, and the language inducer's run
+  died at its last lines (`AttributeError`). The clock is printed now only by an
+  inducer that reads one.
+- "answers kept … program not taken" counted every thought — the model's
+  answers and the mind's own on the onlooker and on collisions — and "not
+  taken" by a field `kept` no payload has had since the model's answers came to
+  carry `program`: it was always the whole. vc33's ten "answers" were the
+  mind answering "standing still". Now "thoughts kept", of them the model's
+  answers, a program taken.
+
+Seen, by design: the language inducer offers a click only where its model's
+program says (`targets`); with none written, vc33 — clicks only — offered the
+mind nothing, and the body stood still. Played with a served model, a game of
+clicks rests on the model writing `targets`.

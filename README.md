@@ -147,7 +147,7 @@ does, from what it alone sees — on exploration, whether the region came where
 it had not stood; on trust, whether what its memory named was borne out — and
 reads it back in the counts it works by (how often an expectation must be borne
 out, how long a turn holds, how far it looks ahead), each a whole number that
-follows the field on average. The field carries its own history (DEVIATION 9),
+follows the field on average. The field carries its own history (`FIELD_CARRY`),
 so the same DIL, born in another field or meeting the region with or without the
 Other, becomes another individual, and where it parts is read back from the two
 stores (`scripts/differ.py`). An act is opaque to the mind: what an act is, the
@@ -216,7 +216,7 @@ now, in dil-core first and then here.
    pushed, how much was new, how much mismatched or fell silent; each axis is a
    convex blend of the cycle's votes, taking effect the next cycle, and one no
    layer voted on carries over. Here the field before takes part in the blend
-   too, by a declared carry (0.95, DEVIATION 9), so the field holds the loop's
+   too, by a carry this host declares (0.95; dil-core's `FIELD_CARRY`, 0 by default), so the field holds the loop's
    history and not one cycle's votes alone.
 4. **T8 closes back into the loop through the field.** §6.2: "T8 closes back
    into the loop, not into a sink"; the meaning-channel cannot carry its output

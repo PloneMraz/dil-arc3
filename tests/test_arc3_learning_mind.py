@@ -358,7 +358,7 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
 
 def within_a_cycle(model, data):
     """For a test that asks the mind between cycles: the store's view it reads its
-    memory through in a cycle (DEVIATION 7), over the store as it stands."""
+    memory through in a cycle (v0.3.7 §9), over the store as it stands."""
     from dil.loop.layers.t5 import StoreView
     model.recall_from(StoreView(read=lambda datum, purpose: data.get(datum), id_of=lambda unit: None))
 

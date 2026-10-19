@@ -28,6 +28,7 @@ from types import MappingProxyType
 
 from ..invariants.guards import assert_glob_mod_update
 from ..invariants.types import GlobModUpdate, LayerIndex
+from .decisions import FIELD_CARRY
 from .types import ModField
 
 
@@ -63,11 +64,11 @@ def _blend(
     Keys with positive total weight get Σ(wᵢ·vᵢ)/Σ(wᵢ); every other key carries
     over unchanged.
 
-    DEVIATION 9 (FIELD_CARRY, declared by the host; dil-arc3, 2026-10-18): with
-    `carry` > 0, a key that had votes and a value before takes carry·before +
-    (1 − carry)·Σ(wᵢ·vᵢ)/Σ(wᵢ) — the field before blends in with the cycle's
-    votes, so the field holds the loop's history and not one cycle's votes alone.
-    0, dil-core's blend.
+    With `carry` > 0 (FIELD_CARRY, decisions.py, a host's declaration), a key that
+    had votes and a value before takes carry·before + (1 − carry)·Σ(wᵢ·vᵢ)/Σ(wᵢ)
+    — the field before blends in with the cycle's votes, so the field holds the
+    loop's history and not one cycle's votes alone. Ported from dil-core 42ee977
+    (was this host's DEVIATION 9).
     """
     weighted_sum: dict[str, float] = {}
     weight_total: dict[str, float] = {}
@@ -92,8 +93,8 @@ class GlobMod:
     __slots__ = ("_field", "_cycle", "_pending", "_carry")
 
     def __init__(self, initial_params: dict[str, float] | None = None, cycle: int = 0,
-                 carry: float = 0.0) -> None:
-        # DEVIATION 9: how much of the field before each axis keeps (`_blend`).
+                 carry: float = FIELD_CARRY) -> None:
+        # How much of the field before each axis keeps (`_blend`; FIELD_CARRY).
         if not math.isfinite(carry) or not 0.0 <= carry < 1.0:
             raise GlobModError(f"carry must be in [0, 1) (convexity, and the votes must reach it), got {carry}")
         self._field = _sealed_field(dict(initial_params or {}), cycle)
@@ -157,6 +158,6 @@ class GlobMod:
 
 
 def create_glob_mod(
-    initial_params: dict[str, float] | None = None, cycle: int = 0, carry: float = 0.0
+    initial_params: dict[str, float] | None = None, cycle: int = 0, carry: float = FIELD_CARRY
 ) -> GlobMod:
     return GlobMod(initial_params, cycle, carry)

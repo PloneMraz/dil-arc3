@@ -50,7 +50,7 @@ from ..loop.layers.t2 import Emission
 from ..precondition import GateResult, Qualify, check_precondition
 from ..store.commit_store import CommitMarker, DirCommitStore
 from ..store.data_store import DataStore
-from ..store.decisions import COMMIT_EVERY
+from ..store.decisions import COMMIT_EVERY, SYNC_CADENCE
 from ..store.event_log import EventLog
 from .absorption import measure_absorption
 from .commit import (
@@ -77,7 +77,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
-        "_respond", "_recollection", "_admit", "_commit_on_write", "_sync_each_cycle",
+        "_respond", "_recollection", "_admit", "_commit_on_write", "_sync_cadence",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -103,13 +103,15 @@ class Daemon:
         recollection: Any = None,
         admit: AdmitPolicy | None = None,
         commit_on_write: bool = True,
-        sync_each_cycle: bool = False,
+        sync_cadence: str = SYNC_CADENCE,
     ) -> None:
         self._recollection = recollection
-        # DEVIATION (SYNC_CADENCE, dil-arc3, 2026-10-04): sync `[data]` and
-        # `[event]` to disk once a cycle, at its close and before any commit
-        # marker, not each write. False keeps dil-core's sync of each.
-        self._sync_each_cycle = sync_each_cycle
+        # SYNC_CADENCE (store/decisions.py; dil-core c6b8f30): "cycle" syncs
+        # `[data]` and `[event]` to disk once a cycle, at its close and before any
+        # commit marker; "record", the default, each write.
+        if sync_cadence not in ("record", "cycle"):
+            raise ValueError(f"sync_cadence is 'record' or 'cycle', not {sync_cadence!r}")
+        self._sync_cadence = sync_cadence
         # DEVIATION (COMMIT_CADENCE): whether a cycle in which the agent wrote is
         # committed too. False keeps dil-core's scar rhythm alone.
         self._commit_on_write = commit_on_write
@@ -184,6 +186,7 @@ class Daemon:
                 "BASELINE_WINDOW": BASELINE_WINDOW,
                 "SUFFICIENT_RECURRENCE": SUFFICIENT_RECURRENCE,
                 "COMMIT_EVERY": self._commit_every,
+                "SYNC_CADENCE": self._sync_cadence,
             },
         )
         self._scars_since_commit = 0
@@ -206,7 +209,7 @@ class Daemon:
             self._data = self._requisitioned.data
             self._events = self._requisitioned.events
             self._commits = self._requisitioned.commits
-            if self._sync_each_cycle:
+            if self._sync_cadence == "cycle":
                 self._data.sync_each_cycle()
                 self._events.sync_each_cycle()
             if self._chain_head is None:
@@ -304,7 +307,7 @@ class Daemon:
 
     def _sync(self) -> None:
         """At a cycle's close: sync the store to disk, when it is synced once a cycle."""
-        if self._sync_each_cycle:
+        if self._sync_cadence == "cycle":
             for store in (self._data, self._events):
                 sync = getattr(store, "sync", None)
                 if sync is not None:

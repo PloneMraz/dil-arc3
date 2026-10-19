@@ -514,7 +514,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None,
              field=None, read=None):
         # The cycle's field reaches the mind as it reaches every layer (INV-7);
-        # and the store's view, what it reads its memory through (DEVIATION 7).
+        # and the store's view, what it reads its memory through (v0.3.7 §9).
         mind._field = field
         mind.learning.recall_from(read)
         mind.learning.read_field(field)

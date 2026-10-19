@@ -305,7 +305,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   2026-10-05: (B), for every inducer; each read recorded; the model's inputs
   only). What came in a cycle is in hand in that cycle — met in it, not yet
   memory; from the next, the mind reads it through T5's view of `[data]`
-  (deviation 7) and no longer holds its content: each state it has stood in,
+  (protocol v0.3.7 §9) and no longer holds its content: each state it has stood in,
   from the frame it came in; each hypothesis's form, restored by its inducer
   from its datum (`Inducer.restore`) — again only
   when what its inducer said in it changes, not the learning's tallies beside
@@ -629,49 +629,24 @@ own form (a `present` set, a `predict` rule for T5).
    last grid of a frame's stack; compared whole, a stack deeper than one grid
    never fitted, and an expectation that foresaw the last grid was recorded a
    mismatch and its return scarred (LOG.md, 2026-09-29). `scripts/run_game.py` declares `situation_fit`.
-6. **`SYNC_CADENCE`** (`Daemon(sync_each_cycle=True)`; Plone, 2026-10-04): the
-   store synced to disk once a cycle, at its close and before any commit
-   marker, not at each write. Each `[event]` record is still written to its
-   file as it comes, the log still append-only and hash-chained; `[data]`'s
-   writes go in one transaction a cycle. dil-core syncs each record and commits
-   each write, which holds when a host declares none. What a crash of the
-   machine could lose is the cycle running; recovery is what the commits are
-   for. The syncs of each were about 60% of a run (LOG.md, 2026-10-04).
-   `scripts/run_game.py` declares it; queued in dil-core.
-7. **READ: T5's view of `[data]`** (`T5Input.view`, a `StoreView`; Plone,
-   2026-10-05). The rule receives `read` beside `ask`, `write` and `test`:
-   `read(datum, purpose)` returns a datum as `[data]` holds it, in the cycle,
-   with no query and no pass through the layers; `id_of(observation)` names the
-   datum an observation of an earlier cycle came from. Memory alone: a datum
-   admitted in the cycle reading is not returned, and what the rule writes is
-   taken after the pass. The driver records each cycle's reads in `[event]`
-   (`ReadActivity`, form `read`: the cycle datum, the layer, the purpose, the
-   data read, in the order first read), and the checker holds each to have
-   entered before the cycle that read it. dil-core has no such view, which holds
-   when a rule takes no `read`; queued in dil-core.
-8. **T5's `alerted_by`** (`create_t5(alerted_by=...)`; 2026-10-11): which
-   returns T5's alertness vote counts, as the host declares it. dil-core counts
-   every entity met in the cycle, among them the agent's own writes coming back
-   and what its memory answers, which never mismatch: in tn36 they held the vote
-   at 0.11 where the region's and the Other's returns alone gave 0.26, and the
-   field's alertness near 0.1–0.2 through hundreds of collisions. This host
-   declares the returns that did not come from the store
-   (`arc3.decisions.from_the_world`; `scripts/run_game.py`). Every return when a
-   host declares none; queued in dil-core.
-9. **GLOB-MOD's `carry`** (`create_glob_mod(carry=...)`; Plone, 2026-10-18):
-   how much of the field before an axis keeps when the cycle's votes blend in —
-   carry·before + (1 − carry)·the votes' mean. dil-core's blend sets an axis to
-   the cycle's votes alone, so the field held nothing of the cycles before: a
-   field set otherwise lasted one cycle, the axes stood in narrow bands, and
-   two individuals of the same DIL could differ in field only as far as one
-   cycle's votes did. This host declares `arc3.decisions.FIELD_CARRY = 0.95`
-   (about twenty cycles' memory; of the carries tried on the eleven games, the
-   one that reached the most levels — declared, not measured beyond that); `run_game.py --field` starts the loop in a field of its own (an
-   individual's disposition at birth) and `--field-carry` sets another carry.
-   0, dil-core's blend, when a host declares none; queued in dil-core.
+Four more were deviations here first and are dil-core's now (2026-10-19), ported
+back and no longer marked: `SYNC_CADENCE` (dil-core `c6b8f30`), reading memory
+(protocol v0.3.7, `d472e53`), the alertness votes leaving out the agent's own
+echoes (`be73ad7`, a rule on the store's own channel where this host had
+declared `alerted_by`), and GLOB-MOD's `FIELD_CARRY` (`42ee977`). What this host
+declares of them is below.
 
-Declared by the run (`scripts/run_game.py`): T7's `attention_span = 4.0`, scaled
-by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a
+Declared by the run (`scripts/run_game.py`): the store synced once a cycle
+(`Daemon(sync_cadence="cycle")`, dil-core's `SYNC_CADENCE`; Plone, 2026-10-04):
+each `[event]` record still written to its file as it comes, `[data]`'s writes
+in one transaction, both synced at a cycle's close and before any commit marker
+— the syncs of each were about 60% of a run (LOG.md, 2026-10-04); the field's
+carry, `arc3.decisions.FIELD_CARRY = 0.95` (dil-core's `FIELD_CARRY`, 0 by
+default; Plone, 2026-10-18): about twenty cycles' memory, of the carries tried on
+the eleven games the one that reached the most levels — declared, not measured
+beyond that; `run_game.py --field` starts the loop in a field of its own (an
+individual's disposition at birth) and `--field-carry` sets another carry; T7's
+`attention_span = 4.0`, scaled by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a
 commit is the costliest thing a cycle does); the resistance-retrieval channel (`recollection`) is not wired —
 the channel exists, off by default, and is not recommended as a predictor. T3
 asks the store once per description while exploration is at NEUTRAL or below:
@@ -790,7 +765,7 @@ scored better would work against the paper, not for it.
 4. When the six are met, the 25 games are run once, to confirm. Until then the
    25 are run on Kaggle by Save & Run to choose what to submit (LOG.md).
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.6.md` is 63 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.7.md` is 65 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their

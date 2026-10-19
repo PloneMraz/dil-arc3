@@ -31,6 +31,7 @@ from ..decisions import MATCHING_WINDOW, STABILITY_THRESHOLD
 from ..field import ALERTNESS, TRUST, axis, cast_votes, rising, share, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import ActivityEnvironment, ModField
+from .t3 import STORE_CHANNEL
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +90,15 @@ def _json_equal(a: object, b: object) -> bool:
     return json.dumps(a, sort_keys=True, default=str) == json.dumps(
         b, sort_keys=True, default=str
     )
+
+
+def _store_echo(value: Any) -> bool:
+    """A change that is the echo of the agent's own store: a query to it answered
+    (its value the query, on the store's channel) or a datum the agent wrote coming
+    back (its value the write)."""
+    if not isinstance(value, dict):
+        return False
+    return (value.get("kind") == "query" and value.get("channel") == STORE_CHANNEL) or value.get("kind") == "write"
 
 
 class T2(BaseLayer):
@@ -160,8 +170,12 @@ class T2(BaseLayer):
                 agency = "ENV_PUSHED"
             tagged.append(TaggedChange(change=change, agency=agency))
 
-        # Its vote: how much of what it classified the region pushed.
-        classified = [t for t in tagged if t.agency != "UNDECIDED"]
+        # Its vote: how much of what changed the region pushed. The echoes of the
+        # agent's own store — its queries answered, its writes coming back — are
+        # tagged SELF_WRITTEN as they should be, but they are no change the region
+        # could have pushed, and counted they held the vote down. Ported from
+        # dil-core be73ad7.
+        classified = [t for t in tagged if t.agency != "UNDECIDED" and not _store_echo(t.change.value)]
         pushed = sum(1 for t in classified if t.agency == "ENV_PUSHED")
         cast_votes(contribute, {ALERTNESS: share(pushed, len(classified))})
         return T2Output(tagged=tuple(tagged), crystallized=crystallized)

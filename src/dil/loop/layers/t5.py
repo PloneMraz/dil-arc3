@@ -31,7 +31,7 @@ from ..decisions import BASELINE_WINDOW, SUFFICIENT_RECURRENCE
 from ..field import ALERTNESS, EXPLORATION, axis, cast_votes, falling, shifted_count
 from ..layer import BaseLayer, ContributeFn, EmitFn
 from ..types import Expectation, HistoryWindow, InfoUnit, ModField, PredErr
-from .t3 import Description, store_query
+from .t3 import STORE_CHANNEL, Description, store_query
 from .t4 import BoundInfo
 
 # Builds the expectation for one entity (DECIDE@IMPL, host-declared).
@@ -103,9 +103,9 @@ class WriteRequest:
 WriteFn = Callable[[WriteRequest], None]
 
 
-# It can READ. DEVIATION from dil-core, declared, additive and defaulted
-# (dil-arc3, 2026-10-05; queued for dil-core). The whole store is the agent's
-# memory (v0.3.6 §9), and what a model computes from, the mind takes from it.
+# It can READ (protocol v0.3.7, §6.3 T5 and §9 "Reading memory"; done here
+# first, 2026-10-05, and ported back from dil-core d472e53). The whole store is
+# the agent's memory, and what a model computes from, the mind takes from it.
 # `ask` answers a cycle later and runs every layer; `read` is a view of `[data]`
 # the rule reads directly, in the cycle. It is memory alone: a datum admitted in
 # the cycle reading is met in it, not recalled, and the view does not
@@ -151,7 +151,7 @@ class T5Result:
 @dataclass(frozen=True, slots=True)
 class T5Input:
     bound: tuple[BoundInfo, ...] = dc_field(default_factory=tuple)
-    # The cycle's view of `[data]`, from the driver (DEVIATION: READ, above).
+    # The cycle's view of `[data]`, from the driver (READ, above; v0.3.7).
     view: StoreView | None = None
 
 
@@ -204,8 +204,14 @@ def _takes_field(rule: Callable[..., Any]) -> str | None:
     return None
 
 
+def _channel_of(unit: InfoUnit | None) -> Any:
+    """The physical channel a unit arrived on (T3 types it into the content)."""
+    content = unit.content if unit is not None else None
+    return content.get("channel") if isinstance(content, dict) else None
+
+
 def _takes_read(rule: Callable[..., Any]) -> bool:
-    """Whether a rule receives the store's view, by name (DEVIATION: READ)."""
+    """Whether a rule receives the store's view, by name (READ, v0.3.7)."""
     try:
         params = inspect.signature(rule).parameters.values()
     except (TypeError, ValueError):
@@ -239,13 +245,8 @@ class T5(BaseLayer):
         sufficient_recurrence: int | None = None,
         predict: PredictRule | None = None,
         fit: FitRule | None = None,
-        alerted_by: Callable[[InfoUnit], bool] | None = None,
     ) -> None:
         self._predict = predict if predict is not None else persistence
-        # DEVIATION (dil-arc3, 2026-10-11): what its alertness vote counts, as the
-        # host declares it — the returns it says can alert the loop. Every return,
-        # as dil-core does, when a host declares none.
-        self._alerted_by = alerted_by
         self._fit = fit if fit is not None else _content_equal
         self._predict_tests = _takes_test(self._predict)
         self._predict_field = _takes_field(self._predict)
@@ -366,10 +367,13 @@ class T5(BaseLayer):
                 T5Result(entity_id=entity_id, expectation=expectation, pred_err=pred_err)
             )
 
-        # Its vote: how much of what returned did not match what it expected —
-        # of the returns the host says can alert it (DEVIATION 8), all by default.
-        counted = [r for r in results if self._alerted_by is None
-                   or (r.pred_err.observed is not None and self._alerted_by(r.pred_err.observed))]
+        # Its vote: how much of what returned did not match what it expected — of
+        # what the region and the Others returned. What comes back on the store's
+        # own channel (the agent's writes, its memory's answers) returns as it was
+        # written and never mismatches; counted, it held the vote down however
+        # often the region collided. No vote when nothing came from outside.
+        # Ported from dil-core be73ad7 (was this host's DEVIATION 8).
+        counted = [r for r in results if _channel_of(r.pred_err.observed) != STORE_CHANNEL]
         cast_votes(
             contribute,
             {ALERTNESS: sum(r.pred_err.delta for r in counted) / len(counted) if counted else None},
@@ -391,12 +395,10 @@ def create_t5(
     sufficient_recurrence: int | None = None,
     predict: PredictRule | None = None,
     fit: FitRule | None = None,
-    alerted_by: Callable[[InfoUnit], bool] | None = None,
 ) -> T5:
     return T5(
         baseline_window=baseline_window,
         sufficient_recurrence=sufficient_recurrence,
         predict=predict,
         fit=fit,
-        alerted_by=alerted_by,
     )

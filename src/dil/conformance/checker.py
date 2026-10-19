@@ -845,7 +845,7 @@ def check_conformance(
             ),
             None,
         )
-        # DEVIATION 7 (dil-arc3, 2026-10-05): what the agent read of `[data]` was
+        # v0.3.7 §9 ("Reading memory"; dil-core d472e53): what was read of `[data]` was
         # memory — data whose entry the trace shows before the cycle that read
         # them. What arrives in a cycle is met in it, not recalled.
         unremembered = next(
@@ -921,8 +921,8 @@ def check_conformance(
                 "fail" if unbuilt else "pass",
             ),
             _claim(
-                "every datum the agent read of `[data]` shows its entry in the trace "
-                "before the cycle that read it (DEVIATION 7)",
+                "every datum read of `[data]` shows its entry in the trace before the "
+                "cycle that read it (§9, v0.3.7)",
                 "trace",
                 "fail" if unremembered else "pass",
             ),

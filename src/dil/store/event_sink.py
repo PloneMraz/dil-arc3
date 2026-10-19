@@ -251,7 +251,7 @@ def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
             "datumId": rec.datum_id,
             "cycleMark": rec.cycle_mark,
             "issuingLayer": rec.issuing_layer,
-            "for": rec.purpose,
+            "purpose": rec.purpose,
             "read": list(rec.read),
             "t": rec.t,
         }
@@ -338,7 +338,9 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
     if form == "read":
         return ReadActivity(
             datum_id=rec["datumId"], cycle_mark=rec["cycleMark"],
-            issuing_layer=rec["issuingLayer"], purpose=rec["for"],
+            # `purpose`, as dil-core writes it (d472e53); `for` in lines this
+            # port wrote before (2026-10-05 to 2026-10-19).
+            issuing_layer=rec["issuingLayer"], purpose=rec.get("purpose", rec.get("for")),
             read=tuple(rec["read"]), t=rec["t"],
         )
 
@@ -571,7 +573,7 @@ class JsonlFileSink:
                 self._prev = last.hash
 
         self._fh: Any = None
-        # DEVIATION (SYNC_CADENCE, declared by the host; dil-arc3, 2026-10-04):
+        # SYNC_CADENCE (store/decisions.py; dil-core c6b8f30):
         # True syncs each record to disk before `write` returns, as dil-core does.
         # False writes each record to its file at once (flushed to the system) and
         # syncs to disk only on `sync()`, which the daemon calls once a cycle.

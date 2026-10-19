@@ -296,7 +296,7 @@ class Learner(Protocol):
         """The cycle's field, as it reaches every layer (INV-7)."""
 
     def recall_from(self, view: Any) -> None:
-        """The store as the mind reads it this cycle (DEVIATION 7), or None."""
+        """The store as the mind reads it this cycle (v0.3.7 §9), or None."""
 
     def acknowledge(self, handle: object, datum_id: str) -> None:
         """The datum a write became, now that it is known."""

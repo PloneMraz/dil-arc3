@@ -76,7 +76,7 @@ class SqliteDataStore:
         self._db.execute("CREATE TABLE IF NOT EXISTS data (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
         self._db.commit()
         self._held: dict[str, TaggedDatum] | None = None
-        # DEVIATION (SYNC_CADENCE, declared by the host; dil-arc3, 2026-10-04):
+        # SYNC_CADENCE (store/decisions.py; dil-core c6b8f30):
         # True commits each write, as dil-core does; False keeps a cycle's writes
         # in one transaction, committed on `sync()` (once a cycle, by the daemon).
         # Reads in this process see every write either way.

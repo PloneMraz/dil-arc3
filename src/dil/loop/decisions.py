@@ -110,10 +110,10 @@ GLOB_MOD_REPRESENTATION: Final = (
     "ModField.params: dict[str, float] (per-key gains/biases — how to read)"
 )
 GLOB_MOD_UPDATE_LAW: Final = (
-    "convex per-key weighted average of a cycle's contributions; untouched keys "
-    "carry over; effect at N+1"
+    "convex per-key weighted average of a cycle's contributions, blended with the "
+    "field before by FIELD_CARRY (0: none); untouched keys carry over; effect at N+1"
 )
-# Rationale (the chosen law — no inertia constant):
+# Rationale (the chosen law; its inertia, FIELD_CARRY, 0 by default):
 #   - Each layer contributes a value and a non-negative weight for one or more
 #     param keys during cycle N (INV-7: contributions blend, re-weighted each
 #     cycle).
@@ -125,13 +125,20 @@ GLOB_MOD_UPDATE_LAW: Final = (
 #     only at N+1; the active field is immutable within its own cycle (INV-7:
 #     conditions the field only from N+1, never within-cycle).
 #
-# Why no inertia term and no constant: a previous-field inertia weight would be a
-# tag-B constant with no derivation yet, which the protocol forbids inventing,
-# and it would make the field partly self-constituted, softening the guarantee
-# that the field is constituted by the eight layers so runaway is precluded by
-# construction. A convex average of the current cycle's contributions keeps that
-# exact: the result is always within the range of the contributions, so the field
-# cannot amplify itself from within. No gain cap is needed.
+# Inertia, declared and 0 by default (FIELD_CARRY below): with none, a key
+# contributed in a cycle is that cycle's average alone, and the field holds
+# nothing of the cycles before. A host MAY declare a carry in [0, 1): the next
+# value is carry·before + (1 − carry)·the cycle's average — still a convex
+# combination, of the field before and the contributions, so it stays within the
+# range of what the eight layers contributed and the host seeded: the field
+# cannot amplify itself from within, and no gain cap is needed. The value is the
+# host's to declare from its measurements, never invented here.
+
+# DECIDE@IMPL — how much of the field before a contributed key keeps (INV-7,
+# §8.4: a store re-leans by mass and over the long run). 0: the cycle's
+# contributions alone. This host declares its own (arc3.decisions.FIELD_CARRY).
+# Ported from dil-core 42ee977.
+FIELD_CARRY: Final = 0.0
 
 # DECIDE@IMPL — the field's axes (§12, INV-7; DIL-en-v7 §2 "What it carries": "the
 # exact axes and their number are DECIDE@IMPL; what is fixed is their kind" —

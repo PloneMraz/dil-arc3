@@ -31,7 +31,9 @@ from typing import Final
 #       line, hashed with the version-inclusive formula.
 #   3 → v0.3.3's 6-state graph (adds `nascent`), entries by origin (region
 #       returns and the cycle datum enter at `running`), and the `revision` line.
-SCHEMA_VERSION: Final = 3
+#   4 → v0.3.7's `read` line: what T5 read of `[data]`, by id, for what (§9
+#       "Reading memory"). Ported from dil-core d472e53.
+SCHEMA_VERSION: Final = 4
 
 # The first schema version under the self-describing, version-stamped chain — the
 # boundary of the versioned `[event]` chain. A pre-versioning line is NOT
@@ -167,9 +169,19 @@ EVENT_SYNC_POLICY: Final = (
 )
 # Rationale (safe default, NOT derived): the sink fsyncs on every write, so no
 # appended record is ever lost to a crash. A high-throughput deployment MAY batch
-# the fsync to a cycle boundary, trading per-record durability for fewer syncs;
-# that batching is deployment-open and deliberately not built here, so the
-# default stays the one that loses nothing.
+# the sync to a cycle boundary, trading per-record durability for fewer syncs:
+# SYNC_CADENCE below, which a host declares; the default stays the one that
+# loses nothing.
+
+# DECIDE@IMPL tag F — when the store is synced to disk: "record" (the default,
+# EVENT_SYNC_POLICY): each `[event]` record synced before its write returns, each
+# `[data]` write committed; "cycle", a host's declaration: each record still
+# written to its file as it comes — the log still append-only and hash-chained —
+# and `[data]`'s writes in one transaction, both synced once a cycle, at its
+# close and before any commit marker. What a crash of the machine could lose is
+# the cycle running; recovery is what the commits are for. Ported from dil-core
+# c6b8f30 (was this host's DEVIATION 6).
+SYNC_CADENCE: Final = "record"
 
 # DECIDE@IMPL tag F — tamper-evidence of the persisted [event] log.
 EVENT_TAMPER_EVIDENCE: Final = (
