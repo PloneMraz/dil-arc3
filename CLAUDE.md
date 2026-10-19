@@ -471,11 +471,24 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   last served, Qwen3.8-Flash-Next NVFP4, ls20, 100 cycles — built; (2) run by
   Save & Run, to see whether the language inducer as it stands works in the
   loop — how right its `predict` is, whether it finds the way to the aim, how
-  long it takes — read back from `[event]`. Not run yet: each push waited hours
-  in the RTX Pro 6000's queue and was cancelled (LOG.md, 2026-10-05 and
-  2026-10-06); to be pushed again when the queue allows.
+  long it takes — read back from `[event]`. Run (version 4, LOG.md,
+  2026-10-19): it works in the loop end to end, and two faults of the inducer
+  stand, below; the way to the aim (S4 widened to a run) waits on them.
 
 ### Open in the current design
+
+- **The language inducer's program judges itself.** An answer is held as a
+  hypothesis when its `predict` gives, from the step it was asked on, where the
+  region came to — read through that program's own `where` when it writes one
+  (`language_inducer.py`, the `reader`): a `where` that sets to -1 the cells the
+  step changed makes any `predict` pass, and then reads every state as one
+  (ls20, version 4: a `predict` that changed nothing, held; 100 frames read as
+  one situation). The criteria are drawn from what is being judged (INV-8's
+  shape). Not fixed: how an answer is to be judged is Plone's to settle.
+- **The language inducer's words do not say what a program is given.** The
+  model is shown a grid in hex digits and is not told that `predict`, `where`
+  and `targets` receive rows of integers 0–15; its programs compared cells with
+  `'c'` and `'9'` and matched nothing (ls20, version 4). Not fixed.
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
@@ -879,8 +892,11 @@ Three traps, each of which would cost a day at the deadline:
    separate.
 2. **`submit` needs `-f` as well as `-k` and `-v`.** Without the output file name
    it returns `400 Bad Request` with no explanation.
-3. **Kaggle runs Python 3.12**, and the starter kit asks for 3.12. A local run on
-   another interpreter is not the graded one. This machine's `python3` is 3.14
+3. **Kaggle runs Python 3.12** on the images these notebooks run on, and the
+   starter kit asks for 3.12: `dil-arc3-learning`'s (`kaggle-images/python@sha256:dafd4ce5…`,
+   3.12.13), and the GPU notebook's, pinned in `build_dil_run.py` (`GPU_IMAGE`,
+   `dil-arc3-run`'s). A notebook made on 2026-10-19 was given an image with 3.13
+   (LOG.md, 2026-10-19). A local run on another interpreter is not the graded one. This machine's `python3` is 3.14
    since Ubuntu 26.04 (LOG.md, 2026-10-17); runs here use this repository's
    `.venv`, Python 3.12.14 from uv, with the starter kit's pinned packages.
 

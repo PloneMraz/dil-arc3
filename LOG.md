@@ -6809,3 +6809,44 @@ left, not in what was approved: dil-core's `recollecting` (a predict rule that
 asks recollection, then persistence) is not ported, and nothing here uses it;
 the port's `Daemon.stop` syncs once more than dil-core's; a rule here receives
 `read` by that parameter's name, in dil-core as the ninth argument.
+
+#### `dil-arc3-language-inducer` version 4: the language inducer in the loop, end to end
+
+Pushed 05:48 UTC (code `18bb428`, the GPU image pinned to `dil-arc3-run`'s),
+`COMPLETE` at 06:17. Python 3.12.13; the model's files checked in 178 s, the
+runtime extracted in 142 s, the server ready in 910 s; ls20, 100 cycles, 317 s;
+notebook 1,612 s. No level. A short CPU Save & Run beside it
+(`dil-arc3-learning` version 36, ls20, 30 cycles) ran Python 3.12.13 on the
+image version 35 ran on (`…dafd4ce5…`), and its store passed `dil verify` (3,065
+records) — the first store written with the hash as dil-core's.
+
+What the loop did with the model: asked it 13 times (313 s of its answers, 7 to
+46 s each); 3 answers held as hypotheses, 10 not ("its predict does not give,
+from the step it was asked on, where the region came to"); 17 new (situation,
+act), 12 expected, 4 right; the frame's expectation held 6 times in 100; 81
+choices "all known; toward the state visited least"; the report's "states met:
+1 (grids 83)".
+
+Why, read from the store (the answers are kept whole) and by running the three
+programs held on the run's 100 frames:
+
+- **The programs compared cells with characters.** The model is shown a grid in
+  hex digits, and its programs test `grid[r][c] == 'c'`; they are given rows of
+  integers. The second and third programs held gave every frame back unchanged
+  for every act (400 of 400); the first, 300 of 400 (it wrote `'c'` where it
+  moved anything).
+- **They were held because each judged itself.** An answer is judged by
+  reading its `predict`'s grid and the region's through that program's own
+  `where` (`language_inducer.py`: `reader = form if form.where is not None`), and
+  each `where` set to -1 the very cells the step changed — the block that ACTION1
+  to ACTION4 move five cells at a time, which the model took for "the counter"
+  (its first program said it read the move rightly: up, down, left, right by
+  five). Through such a reading a `predict` that changes nothing matches.
+- **And then every state read as one.** The third program's `where` covered rows
+  25–49 and columns 29–53 and the bar at rows 61–62: the 100 frames, 83
+  different grids, read as one situation (the second's, 9; the first's, 82). The
+  mind stood, as it read, in one place, all its acts known there.
+
+Not fixed, for Plone: how an answer is judged (by a reading other than its own;
+the criteria are drawn from what is judged, INV-8's shape), and the words the
+model is told (what a program is given). Both are in CLAUDE.md, open.
