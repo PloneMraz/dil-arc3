@@ -7063,3 +7063,19 @@ followed by one at saturation with a greater recurrence.
 code); 400 pass. Run on fifteen real stores — the eleven games of `sync`, version
 7's three language-inducer games, and version 35's ls20 from Kaggle — the claim
 passes in all, as before.
+
+#### An empty grid fitted an expectation that the region would be otherwise; fixed (Plone: check, then fix)
+
+`arc3.decisions.situation_fit`, in its branch for an expectation that the region
+will be otherwise, returned `True` — the expectation borne out — where either grid
+was missing, against its own docstring ("silence where it expected an answer is a
+mismatch"). Two more of the kind, found in reading it: a returned grid present but
+empty (`[]`) slipped past `not came` and every cell of the grid it was counted as
+"differing", so it fitted too; and in the `as_read` branch two empty grids had the
+same length and `all` of nothing held, so an empty grid matched an expected empty
+grid. `frame.py` refuses an empty stack, and a grid not of the declared size,
+before the loop, so no run met these. Fixed: a grid returned or expected that is no
+grid — none, empty, or of empty rows — bears nothing out and does not fit, in both
+branches. `tests/test_situation_fit.py`, six tests, both branches (two failing on
+the old code); 406 pass. ls20 and vc33 rerun, 600 cycles: the same choice at every
+step as before (`differ.py`).

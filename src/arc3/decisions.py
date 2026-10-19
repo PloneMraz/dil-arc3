@@ -110,6 +110,17 @@ def _as_read(content: Any) -> Any:
     return content
 
 
+def _a_grid(stack: Any) -> list | None:
+    """The last grid of a stack, where it is a grid — rows, none of them empty —
+    else None: nothing returned, or nothing expected, that can bear anything out."""
+    if not isinstance(stack, list) or not stack:
+        return None
+    grid = stack[-1]
+    if not isinstance(grid, list) or not grid or not all(isinstance(r, list) and r for r in grid):
+        return None
+    return grid
+
+
 def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
     """Tag H, told to T5 (its `fit`): the expectation fits when what arrived, read
     as the mind reads it, is what it expected, exactly — or, for an expectation
@@ -117,24 +128,27 @@ def situation_fit(observed: InfoUnit, predicted: InfoUnit) -> bool:
     differs from the one it was in a cell the mind reads (not None): silence
     where it expected an answer is a mismatch (Plone, 2026-10-11); for a state
     expected as the mind reads it (`as_read`), when every cell it reads is as
-    expected — a cell it does not read (a clock) is expected nothing of."""
+    expected — a cell it does not read (a clock) is expected nothing of. A grid
+    returned or expected that is no grid (none, or empty) bears nothing out, and
+    does not fit (2026-10-19: an empty return had fitted an expectation that the
+    region would be otherwise; `frame.py` refuses an empty stack before the loop,
+    so no run met it)."""
     value = predicted.content.get("value") if isinstance(predicted.content, dict) else None
-    if isinstance(value, dict) and value.get("otherwise"):
-        came = _as_read(observed.content).get("value", {}).get("grids", [[]])[-1:]
-        was = value.get("grids", [[]])[-1:]
-        if not came or not was:
-            return True
-        return any(w is not None and (r >= len(came[0]) or c >= len(came[0][r]) or came[0][r][c] != w)
-                   for r, row in enumerate(was[0]) for c, w in enumerate(row))
-    if isinstance(value, dict) and value.get("as_read"):
+    if isinstance(value, dict) and (value.get("otherwise") or value.get("as_read")):
+        came_value = _as_read(observed.content).get("value") if isinstance(observed.content, dict) else None
+        came = _a_grid(came_value.get("grids") if isinstance(came_value, dict) else None)
+        was = _a_grid(value.get("grids"))
+        if came is None or was is None:
+            return False
+        if value.get("otherwise"):
+            return any(w is not None and (r >= len(came) or c >= len(came[r]) or came[r][c] != w)
+                       for r, row in enumerate(was) for c, w in enumerate(row))
         # The grid as the mind reads it: a cell it does not read (None) matches
         # anything; the rest of the frame as it came.
-        came = _as_read(observed.content).get("value", {}).get("grids", [[]])[-1:]
-        was = value.get("grids", [[]])[-1:]
-        if not came or not was or len(came[0]) != len(was[0]):
+        if len(came) != len(was):
             return False
-        return all(w is None or (c < len(came[0][r]) and came[0][r][c] == w)
-                   for r, row in enumerate(was[0]) for c, w in enumerate(row))
+        return all(w is None or (c < len(came[r]) and came[r][c] == w)
+                   for r, row in enumerate(was) for c, w in enumerate(row))
     return json.dumps(_as_read(observed.content), sort_keys=True, default=str) == \
         json.dumps(_as_read(predicted.content), sort_keys=True, default=str)
 
