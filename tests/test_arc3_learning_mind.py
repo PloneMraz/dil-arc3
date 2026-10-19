@@ -106,7 +106,7 @@ def test_what_it_takes_it_learns_as_data_built_from_the_frame_and_report():
     assert datum.open == {**EXPERIENCE_TAGS, "object": "frame"} and datum.fixed.provenance == "nascent"
     assert datum.payload["act"] == [1, None, None] and datum.payload["changed"] is True
     assert (datum.payload["supports"], datum.payload["fails"], datum.payload["holds"]) == (1, 0, True)
-    assert datum.payload["status"] == {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
+    assert datum.payload["report"] == {"stateTo": "NOT_FINISHED", "levelsDelta": 0, "depthDelta": 0}
     written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
                for w in r.activity.written}
     assert written[datum_id] == ("signal-0-0", "signal-0-1"), "built from the frame and the report it came in"
@@ -373,7 +373,7 @@ def test_every_known_act_objected_to_the_act_that_is_always_open():
     run(cycle, frame(lit(1), lit(1), action=1), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
     run(cycle, frame(lit(0), lit(0), action=2), status(action=2), _remark(QUIET))
-    model._learned_since_reset = False
+    model._learned_since_restart = False
     here_raw = model._now_raw
     within_a_cycle(model, data)
     said = ("repeating", (1, None, None))
@@ -381,7 +381,7 @@ def test_every_known_act_objected_to_the_act_that_is_always_open():
     ctx = mind._context("command")
     ctx.remark = {"remark": "repeating", "act": {"act": "ACTION1"}}
     proposal, _ = model.propose(ctx)
-    assert proposal.act == model.organs.reset and "objected" in proposal.why, proposal
+    assert proposal.act == model.organs.restart and "objected" in proposal.why, proposal
 
 
 def test_a_way_whose_first_act_is_objected_is_taken_only_when_there_is_no_other_and_it_says_so():
@@ -403,12 +403,12 @@ def test_told_it_stands_still_with_nothing_to_do_it_resets():
     mind, cycle, data, events = loop()
     model = mind.learning
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
-    model._learned_since_reset = False
+    model._learned_since_restart = False
     ctx = mind._context("command")
     ctx.remark = {"remark": "standing still", "since": 1, "for": 1}
     ctx.offers = ()
     proposal, _ = model.propose(ctx)
-    assert proposal.act == model.organs.reset and "standing still" in proposal.why
+    assert proposal.act == model.organs.restart and "standing still" in proposal.why
 
 
 def test_an_objection_survives_the_clock_growing():
@@ -882,7 +882,7 @@ def test_an_experience_is_a_datum_written_once_and_revised_as_it_changes():
     run(cycle, frame(lit(0), lit(1)), status())
     assert len(of_kind(data, "experience")) == 2, "met again, not written again"
     assert data.get(first_id).payload["seen"] >= 2, "revised in place"
-    assert data.get(first_id).payload["status"] is not None, "with what the region reported"
+    assert data.get(first_id).payload["report"] is not None, "with what the region reported"
     revised = {r.datum_id for r in events.all() if getattr(r, "activity_kind", None) == "revision"}
     assert first_id in revised, "the revision recorded in [event]"
 

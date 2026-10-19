@@ -267,7 +267,7 @@ class LanguageInducer:
         which to try first is the order the model gave."""
         out: list[tuple[Act, tuple]] = []
         for a in sorted(offers):
-            if a == self.organs.reset[0]:
+            if self.organs.restarts((a, None, None)):
                 continue
             if a in self.organs.placed:
                 out += [((a, x, y), kind) for (_, x, y), kind in self._cells(situation, state, a)]

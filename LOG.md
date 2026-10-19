@@ -6614,3 +6614,28 @@ version 35 is the notebook that holds point 4's mechanisms.
 Submitted (Plone, 2026-10-19): version 35 as `57371259`, at 22:47 UTC on
 2026-10-18; pending. Version 34 was not submitted. Nothing is pushed to Kaggle
 while it is scored.
+
+### 2026-10-19
+
+#### The mind's last assumptions about a region, removed (Plone)
+
+Plone: the learning must run in any context; clean what was left of the 18th's
+reading. Done, in the mind's organs, its seams and its learning:
+
+- **An act is opaque to the mind.** `Act` was (id, x, y) in `mind/organs.py`,
+  and the learning read `act[0]` in eighteen places (`act[1]`, `act[2]` in one),
+  turned an Other's words into acts itself, and the mind unpacked an act for the
+  body. Now the host declares what the mind asks of an act — `family`,
+  `offered` and `read_offers`, `order`, `record`, `named_by`, `name_of`, and
+  `can_carry_out(act, state, offers)` — and `arc3/organs.py` answers for its
+  (id, x, y). The inducers, which may know a region's acts, are unchanged but
+  for the names below.
+- **The act that starts the region again is optional**: `Organs.restart`
+  (was `reset`), None when the body has none, asked through `restarts(act)`.
+- **The channels** are named by what arrives: `step` (was `frame`), `report`,
+  `others`.
+- **An experience keeps the region's report under `report`** (was `status`), in
+  `[data]` and in the learning (`Edge.report`).
+
+369 tests pass. Behaviour unchanged: vc33 and lp85 run again choose as I3 did
+(the same code before this, carry 0.95) at every step (`scripts/differ.py`).

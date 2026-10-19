@@ -375,7 +375,7 @@ class GridInducer:
         before, after = step.before, step.after
         per_row = {r: sum(1 for a, b in zip(before[r], after[r]) if a != b)
                    for r in range(min(len(before), len(after))) if before[r] != after[r]}
-        if step.act == self.organs.reset or step.act[0] == self.organs.reset[0] \
+        if self.organs.restarts(step.act) \
                 or sum(per_row.values()) > BIG_CHANGE:
             return None
         self._recent.append((kind, {r: frozenset(c for c, (a, b) in enumerate(zip(before[r], after[r])) if a != b)
@@ -543,7 +543,7 @@ class GridInducer:
         act that takes a place, the colour and size of the thing it is put on."""
         out: list[tuple[Act, tuple]] = []
         for a in sorted(offers):
-            if a == self.organs.reset[0]:
+            if self.organs.restarts((a, None, None)):
                 continue
             if a in self.organs.placed:
                 if situation not in self._things:
@@ -575,7 +575,7 @@ class GridInducer:
             return self._aim(act, before, expected, report, through)
         forms = self._rewrite(act, before, after)
         placed = act[0] in self.organs.placed and act[1] is not None and act[2] is not None
-        if self._aimed and not placed and act[0] != self.organs.reset[0]:
+        if self._aimed and not placed and not self.organs.restarts(act):
             changed = [(r, c) for r in range(min(len(before), len(after))) if r not in self.clock
                        for c in range(min(len(before[r]), len(after[r])))
                        if c not in self.clock_columns and before[r][c] != after[r][c]]

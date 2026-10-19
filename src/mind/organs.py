@@ -12,17 +12,24 @@ priors and learns from what comes back.
 A state is opaque to the mind: it compares two for equality (tag H) and lays a
 part of one over another, through the eye's own operations; how a state is
 shown to a model is the model's business, told what kind of state it is.
+
+So is an act (Plone, 2026-10-19: the learning runs in any context): the mind
+holds it, compares two, and asks the host what it needs to know of it — which of
+the body's acts it is, whether the region offers it, an order to break ties by,
+how it is written as data, which act an Other's word names, and whether the body
+can carry it out. That an act may carry a place, or what it is made of, is the
+host's and the model's, never the mind's.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from collections.abc import Hashable
 from typing import Any, Callable
 
 State = Any
-# An act as the body takes it: its id and the arguments it carries (for an act
-# that takes a place, its x and y; None otherwise).
-Act = tuple[int, "int | None", "int | None"]
+# An act as the body takes it — opaque to the mind: the host says what it is.
+Act = Hashable
 
 
 @dataclass(frozen=True)
@@ -68,9 +75,11 @@ class Organs:
     # What kind of state the eye delivers, and what an act can be — said to a
     # model so it can read them (for a model, not for the mind).
     state_kind: str
-    acts: dict[int, str]                       # every act id -> its name
-    placed: frozenset[int]                     # acts that carry a place (x, y)
-    reset: Act                                 # the act the body can always carry out
+    acts: dict[Any, str]                       # each of the body's acts (its family) -> its name
+    placed: frozenset                          # the families that carry a place
+    # An act the body can always carry out that starts the region again, if it has
+    # one; None, and the mind never commands one.
+    restart: "Act | None"
 
     # The eye: a frame arrival as a step; the state an expectation puts in place
     # of what came; a part of a state laid over one; what of a part did not come.
@@ -92,8 +101,22 @@ class Organs:
 
     # The body: whether it can carry out an act, from the region's state and what
     # it offers; and the test payload that commands an act.
-    can_carry_out: Callable[[int, "int | None", "int | None", "str | None", tuple[int, ...]], bool]
+    can_carry_out: Callable[[Act, "str | None", tuple], bool]
     command: Callable[[Act], dict[str, Any]]
+
+    # What the mind asks of an act, the host's to answer: which of the body's
+    # acts it is, whatever it carries (`family`); whether the region offers it
+    # (`offered`), from what it offers as read from its report (`read_offers`);
+    # an order to break ties by (`order`, a tuple of numbers); how it is written
+    # as data (`record`); the act an Other's word names (`named_by`, None for
+    # none); and its name as a model reads it (`name_of`).
+    family: Callable[[Act], Hashable]
+    offered: Callable[[Act, tuple], bool]
+    read_offers: Callable[[Any], tuple]
+    order: Callable[[Act], tuple]
+    record: Callable[[Act], Any]
+    named_by: Callable[[Any], "Act | None"]
+    name_of: Callable[["Act | None"], str]
 
     # The store's open-tag keys: what a question to memory may be asked by.
     tag_keys: frozenset[str]
@@ -101,8 +124,9 @@ class Organs:
     # What the host calls a step's state: the `object` a datum about it is tagged
     # with.
     state_object: str
-    # The host's channels, by what arrives on them: "frame" (a step), "report"
-    # (the region's report of itself), "others" (what an Other says of the agent).
+    # The host's channels, by what arrives on them: "step" (the region's return of
+    # a step), "report" (the region's report of itself), "others" (what an Other
+    # says of the agent).
     channels: dict[str, str]
     # Keys of a report's payload that carry the agent's own act, not the region's
     # word: not expected back (tag H).
@@ -114,10 +138,11 @@ class Organs:
 
     def name(self, act: Act | None) -> str:
         """An act as a model reads it."""
-        if act is None:
-            return "no action"
-        base = self.acts.get(act[0], f"act {act[0]}")
-        return base + (f" at ({act[1]}, {act[2]})" if act[1] is not None else "")
+        return self.name_of(act)
+
+    def restarts(self, act: Act | None) -> bool:
+        """Whether an act is the one that starts the region again."""
+        return self.restart is not None and act is not None and self.family(act) == self.family(self.restart)
 
 
 __all__ = ["Act", "Organs", "State", "Step"]

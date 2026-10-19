@@ -132,7 +132,7 @@ class Mind:
         self._said: dict[str, Any] | None = None
         self._said_by_model = False
         self._held: tuple[object, ...] = ()
-        self._offers: tuple[int, ...] = ()
+        self._offers: tuple = ()
         # The one aim it holds, and the cycle it asked its memory for its priors.
         self._aim: dict[str, Any] | None = None
         self._asked_at: int | None = None
@@ -342,7 +342,7 @@ class Mind:
         standing_unit = window[-1] if window else observed
         standing = _content_value(standing_unit)
         report = payload.get(o.report_key) if isinstance(payload.get(o.report_key), dict) else None
-        self._offers = tuple(int(a) for a in payload.get(o.offers_key) or ())
+        self._offers = o.read_offers(payload.get(o.offers_key))
         # The step just seen gets what the region reported of itself.
         if self._seen and self._status_seen_at != self.frame_calls and report is not None:
             self._seen[-1][2], self._seen[-1][3] = report, observed
@@ -464,7 +464,7 @@ class Mind:
                 proposal, writes = self.learning.propose(self._context(on))
                 self._write(write, writes)
                 act = proposal.act
-                if act is not None and self.organs.can_carry_out(*act, state, self._offers):
+                if act is not None and self.organs.can_carry_out(act, state, self._offers):
                     self.commands.append((self.frame_calls, act))
                     if test is not None:
                         test(self.organs.command(act))
@@ -526,7 +526,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
             if isinstance(payload, dict):
                 mind.take_return(payload, write, ask, test)
             return observed
-        if channel == channels.get("frame") and isinstance(payload, dict):
+        if channel == channels.get("step") and isinstance(payload, dict):
             step = mind.organs.step(payload)
             if step is not None:
                 return mind.on_frame(step, observed, content, payload, window, contribute, ask, write)

@@ -300,7 +300,7 @@ class Edge(Weighed):
     changed: bool
     supports: int = 1            # it bears itself out
     fails: int = 0
-    status: dict[str, Any] | None = None
+    report: dict[str, Any] | None = None   # what the region reported of itself
     ended: int = 0               # how many times the region ended on it
     seen: int = 1
     new: int = 0                 # how many times it reached a situation not met before
@@ -430,7 +430,7 @@ class Learning:
         self._imagined: dict[str, Any] = {}                  # a situation predicted, never stood in: this choice's
         self._imagined_left = MAX_IMAGINED_PREDICTIONS
         self._against: set[tuple[Edge, Edge]] = set()   # experiences read as one, counted against
-        self._learned_since_reset = True
+        self._learned_since_restart = True
         self.steps = 0
         # The mind's recent steps at the step being learned: what an
         # inducer is shown when it is asked what the step suggests.
@@ -618,7 +618,7 @@ class Learning:
         situation that is: the experiences of the act there, from memory, and the
         hypotheses that apply there — worked out once, and again only for
         hypotheses induced since."""
-        experienced = [(e, Recall(self, e.to, e.status), self._state_of[e.to])
+        experienced = [(e, Recall(self, e.to, e.report), self._state_of[e.to])
                        for e in self._outcomes.get((situation, act), ())]
         stood = situation in self._raw_of
         if not stood and self._imagined_left <= 0:
@@ -742,7 +742,7 @@ class Learning:
         answers = self._answers.setdefault(said, [])
         answers.append(answer)
         payload = {"on": "onlooker", "remark": remark, "here": self._here, "again": again,
-                   "objected": sorted([self._state_of.get(raw, raw), list(act)] for raw, act in pairs)}
+                   "objected": sorted([self._state_of.get(raw, raw), self.organs.record(act)] for raw, act in pairs)}
         if lifted:
             payload["lifted"] = lifted
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=answer, built_from=built)],
@@ -756,18 +756,18 @@ class Learning:
         source_raw, act, step, unit = self._last_step
         before, after = step.before, step.after
         situation = self.inducer.situation(before)
-        if act[0] == self.organs.reset[0]:
+        if self.organs.restarts(act):
             return None
         kind = self._kind_of.get((situation, act)) or self.inducer.default_kind(act)
         if self._expected_otherwise and self.inducer.situation(after) == situation:
             self._turn = ("from", kind, self.inducer.coarse(kind) or kind, TURN_WHYS[0])
-            said = {"collided": "silence", "act": list(act), "turns": "from that kind of act"}
+            said = {"collided": "silence", "act": self.organs.record(act), "turns": "from that kind of act"}
         elif not self._expected_otherwise and self._expected is not None:
             where = self.inducer.unlike(self._expected, after)
             if where is None:
                 return None
             self._turn = ("unforeseen", where)
-            said = {"collided": "unforeseen", "act": list(act), "turns": "to where it differed"}
+            said = {"collided": "unforeseen", "act": self.organs.record(act), "turns": "to where it differed"}
         else:
             return None
         self._turn_thought = TurnHandle(self.steps)
@@ -788,7 +788,7 @@ class Learning:
         if self._last_step is None or self._report_now is None or self._report_was is None:
             return None
         source_raw, act, step, unit = self._last_step
-        if act[0] == self.organs.reset[0]:
+        if self.organs.restarts(act):
             return None
         now, was = self._report_now, self._report_was
         fields = {k: [was.get(k), now.get(k)] for k in self.organs.report_fields if was.get(k) != now.get(k)}
@@ -809,7 +809,7 @@ class Learning:
             said = {"collided": "the report otherwise", "turns": "nothing of its own"}
         built = tuple(u for u in (unit, self._report_unit) if u is not None)
         payload = {"on": "report", "step": self.steps, "here": self._state_of.get(source_raw),
-                   "act": list(act), "fields": fields, **said}
+                   "act": self.organs.record(act), "fields": fields, **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=handle, built_from=built)])
 
     def _turned(self, here: str, fresh: list[tuple[Act, tuple]]) -> tuple[list[tuple[Act, tuple]], str]:
@@ -874,16 +874,10 @@ class Learning:
         return round_half_up(shifted_count(MAX_IMAGINED_STEPS, rising(axis(self._field, EXPLORATION))))
 
     def _named(self, remark: dict[str, Any]) -> list[Act]:
-        """The acts an onlooker's word names, as the body takes them."""
+        """The acts an onlooker's word names, as the body takes them (the host says
+        which act a word names: `Organs.named_by`)."""
         named = [remark.get("act")] if remark.get("act") else list(remark.get("acts") or [])
-        ids = {name.upper(): a for a, name in self.organs.acts.items()}
-        out: list[Act] = []
-        for said in named:
-            if not isinstance(said, dict) or str(said.get("act", "")).upper() not in ids:
-                continue
-            a = ids[str(said["act"]).upper()]
-            out.append((a, said.get("x"), said.get("y")) if a in self.organs.placed else (a, None, None))
-        return out
+        return [act for act in (self.organs.named_by(said) for said in named) if act is not None]
 
     def _said(self, remark: dict[str, Any]) -> tuple | None:
         """What the onlooker says, as one word: its stance and the acts it names."""
@@ -1098,7 +1092,7 @@ class Learning:
         return {"from": self._state_of[edge.source], "act": list(edge.act), "to": self._state_of[edge.to],
                 "kind": list(edge.kind), "changed": edge.changed, "seen": edge.seen, "new": edge.new,
                 **({"made": edge.made} if self.curiosity in MADE_LAWS else {}),
-                "reached": edge.reached, "ended": edge.ended, "status": edge.status,
+                "reached": edge.reached, "ended": edge.ended, "report": edge.report,
                 "holds": edge.holds, "supports": edge.supports, "fails": edge.fails}
 
     def _experiences(self, built_from: tuple[object, ...]) -> list[Write]:
@@ -1119,7 +1113,7 @@ class Learning:
         writes: list[Write] = []
         # A turn holds for as many choices after the collision that made it as
         # alertness says; a collision in this step turns the mind again (`think`).
-        if self._turn is not None and step.act[0] != self.organs.reset[0]:
+        if self._turn is not None and not self.organs.restarts(step.act):
             # A RESET the region's end made is no choice the turn was for.
             self._turn_left -= 1
             if self._turn_left <= 0:
@@ -1148,9 +1142,9 @@ class Learning:
         kind = known.kind if known is not None else (self._kind_of.get((source, act)) or self.inducer.default_kind(act))
         to = self._state_of[to_raw]
         changed = to != source
-        if act[0] != o.reset[0]:
+        if not o.restarts(act):
             coarse = self.inducer.coarse(kind)
-            for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(act[0], [0, 0, 0]),
+            for counts in (self._kinds.setdefault(kind, [0, 0, 0]), self._actions.setdefault(o.family(act), [0, 0, 0]),
                            *([self._coarse.setdefault(coarse, [0, 0, 0])] if coarse is not None else [])):
                 counts[0] += 1
                 counts[1] += int(novel)
@@ -1158,7 +1152,7 @@ class Learning:
                 self._kind_changes[kind] = self._kind_changes.get(kind, 0) + 1
                 if coarse is not None:
                     self._coarse_changes[coarse] = self._coarse_changes.get(coarse, 0) + 1
-                self._action_changes[act[0]] = self._action_changes.get(act[0], 0) + 1
+                self._action_changes[o.family(act)] = self._action_changes.get(o.family(act), 0) + 1
         self._last_new = known is None
         if self._unseen_expected is not None:
             self.unseen[2] += int(self._unseen_expected == to)
@@ -1199,10 +1193,10 @@ class Learning:
         self._last = edge
         self._here, self._unit, self._now_raw = to, unit, to_raw
         self._visits[to] = self._visits.get(to, 0) + 1
-        if act[0] == o.reset[0]:
-            self._learned_since_reset = False
+        if o.restarts(act):
+            self._learned_since_restart = False
         elif known is None:
-            self._learned_since_reset = True
+            self._learned_since_restart = True
         reading = self.inducer.learn_reading(step, kind)
         if reading is not None:
             writes += self._reindex((unit,))
@@ -1220,9 +1214,9 @@ class Learning:
         self._report_unit = units[-1] if units else None
         key = self._report_key(said)
         self._reports[key] = self._reports.get(key, 0) + 1
-        if edge.status is None:
-            edge.status = said
-        elif self._reached(edge.status) != self._reached(said):
+        if edge.report is None:
+            edge.report = said
+        elif self._reached(edge.report) != self._reached(said):
             # The aim from one and not from the other: the experience did not bear
             # out. Whether the region ended is not weighed here: a region may end
             # for what the act did not do.
@@ -1232,7 +1226,7 @@ class Learning:
         for h in self._aim_applied:
             writes += self._weigh(h, self._reached(said), (*units, *self._expected_from))
         self._aim_applied = []
-        if self._reached(said) and edge.act[0] != self.organs.reset[0] and self._last_step is not None:
+        if self._reached(said) and not self.organs.restarts(edge.act) and self._last_step is not None:
             # Reaching the aim is an experience too: what it suggests brings the
             # aim, held and written as any hypothesis is (S4, Plone, 2026-09-28).
             source_raw, act, step, unit = self._last_step
@@ -1242,13 +1236,13 @@ class Learning:
                 self._new = [*self._new, *aims]
         if said.get(self.organs.state_field) in self.organs.ended:
             edge.ended += 1
-        if self._reached(said) and edge.act[0] != self.organs.reset[0]:
+        if self._reached(said) and not self.organs.restarts(edge.act):
             edge.reached += 1
             self._kinds.setdefault(edge.kind, [0, 0, 0])[2] += 1
             coarse = self.inducer.coarse(edge.kind)
             if coarse is not None:
                 self._coarse.setdefault(coarse, [0, 0, 0])[2] += 1
-            self._actions.setdefault(edge.act[0], [0, 0, 0])[2] += 1
+            self._actions.setdefault(self.organs.family(edge.act), [0, 0, 0])[2] += 1
         if self._new:
             writes += self._write(units)
         self._touch(edge)
@@ -1306,7 +1300,7 @@ class Learning:
     def _action_curiosity(self, act: int) -> tuple[float, ...]:
         """How much it wants an act at all, over every kind of it."""
         total = sum(a[0] for a in self._actions.values())
-        attended = self._attend(lambda e: e.act[0] == act, ("act", act))
+        attended = self._attend(lambda e: self.organs.family(e.act) == act, ("act", act))
         if attended is not None:
             return self._wanted(*attended, total)
         return self._wanted(self._actions.get(act, (0, 0, 0)), self._action_changes.get(act, 0), total)
@@ -1352,7 +1346,7 @@ class Learning:
             self._attend_memo[key] = (got, self._last_attended)
             return got
         met = sorted(((self._alike.get(e.source, 0.0), e) for e in self._learned
-                      if e.act[0] != self.organs.reset[0] and which(e)), key=lambda se: -se[0])[:ATTENTION_K]
+                      if not self.organs.restarts(e.act) and which(e)), key=lambda se: -se[0])[:ATTENTION_K]
         return self._attended_from(met)
 
     def _attended_from(self, met: list[tuple[float, Edge]]) -> tuple[tuple[float, float, float], float] | None:
@@ -1381,7 +1375,7 @@ class Learning:
         for raw in {e.source for e in self._learned}:
             self._alike[raw] = self.inducer.similarity(now, self._stood(raw))
         self._ranked = sorted(((self._alike.get(e.source, 0.0), e) for e in self._learned
-                               if e.act[0] != self.organs.reset[0]), key=lambda se: -se[0])
+                               if not self.organs.restarts(e.act)), key=lambda se: -se[0])
         self._attend_memo = {}
 
     def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
@@ -1413,7 +1407,7 @@ class Learning:
         """What the same kind of act did where it stood in states alike to here
         (its attention): whether more weight came to nothing, and the experiences
         that did as that weight says; None without attention or too little alike."""
-        if not self.attention or not self._alike or here != self._alike_for or act[0] == self.organs.reset[0]:
+        if not self.attention or not self._alike or here != self._alike_for or self.organs.restarts(act):
             return None
         kind = self._kind_of.get((here, act)) or self.inducer.default_kind(act)
         got = self._attend(lambda e: e.kind == kind, ("kind", kind))
@@ -1431,7 +1425,7 @@ class Learning:
         ways = []
         taken = self._out.get(node, {})
         for act, edge in taken.items():
-            if act[0] == self.organs.reset[0] or edge.ended >= edge.seen:
+            if self.organs.restarts(act) or edge.ended >= edge.seen:
                 continue
             best = self._best(node, act)
             if best is not None:
@@ -1542,7 +1536,7 @@ class Learning:
             wide = (self._coarse.get(coarse, (0, 0, 0)), self._coarse_changes.get(coarse, 0)) \
                 if coarse is not None else fine
             key = (self._odds_of(wide[0])[0], self._odds_of(fine[0])[0], round(unheld, 9), round(spread, 9),
-                   self._kind_spread(*wide), self._kind_spread(*fine), -act[0])
+                   self._kind_spread(*wide), self._kind_spread(*fine), tuple(-n for n in self.organs.order(act)))
             ranked.append((key, act, kind, unheld, spread, held))
         _, act, kind, unheld, spread, held = max(ranked, key=lambda r: r[0])
         self._unsure = round(spread, 3)
@@ -1555,8 +1549,14 @@ class Learning:
     def _most_curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
         if self.curiosity == "test":
             return self._least_sure(here, pool)
-        chosen = max({a for (a, _, _), _ in pool}, key=lambda a: (self._action_curiosity(a), -a))
-        best = max((ak for ak in pool if ak[0][0] == chosen), key=lambda ak: self._curiosity(ak[1]))
+        # Which of the body's acts first (its family), over every kind of it; at
+        # equal want, the first in the host's order.
+        first: dict = {}
+        for act, _ in pool:
+            f = self.organs.family(act)
+            first[f] = min(first.get(f, self.organs.order(act)), self.organs.order(act))
+        chosen = max(first, key=lambda f: (self._action_curiosity(f), tuple(-n for n in first[f])))
+        best = max((ak for ak in pool if self.organs.family(ak[0]) == chosen), key=lambda ak: self._curiosity(ak[1]))
         self._kind_of[(here, best[0])] = best[1]
         self._chosen_kind = best[1]
         attended = self._attend(lambda e: e.kind == best[1], ("kind", best[1]))     # what the chosen kind was weighed by
@@ -1597,12 +1597,12 @@ class Learning:
         lifted = self._lift(said)
         objected = self.objections()
         if context.ended is not None:
-            act, why = self.organs.reset, f"the region has ended ({context.ended})"
+            act, why = self.organs.restart, f"the region has ended ({context.ended})"
         else:
             # Toward the aim it takes no objection.
-            gained = {self._state_of[e.source] for e in self._learned if e.holds and self._reached(e.status)}
+            gained = {self._state_of[e.source] for e in self._learned if e.holds and self._reached(e.report)}
             aim_here = [e for e in self._learned
-                        if self._state_of[e.source] == here and e.holds and self._reached(e.status)]
+                        if self._state_of[e.source] == here and e.holds and self._reached(e.report)]
             # What its hypotheses say brings the aim, where it stands or where it
             # can go (S4): after what reached it, before what it has not tried.
             said_here = [] if aim_here else self._aims_at(here, offers)
@@ -1650,24 +1650,24 @@ class Learning:
                 elif opened:
                     act, odds = self._curious(here, opened)
                     why = "not yet taken from here; its hypotheses say where each leads"
-                elif self._learned_since_reset:
-                    act, why = self.organs.reset, "nothing left to try from anywhere it can reach"
+                elif self._learned_since_restart:
+                    act, why = self.organs.restart, "nothing left to try from anywhere it can reach"
                 else:
                     known = [e for e in self._out.get(here, {}).values()
-                             if e.act[0] in offers and e.act[0] != self.organs.reset[0]]
+                             if self.organs.offered(e.act, offers) and not self.organs.restarts(e.act)]
                     free = [e for e in known if (here, e.act) not in objected]
                     if free:
                         least = min(free, key=lambda e: (self._visits.get(self._state_of[e.to], 0), e.seen,
-                                                         e.act[0], e.act[1] or 0, e.act[2] or 0))
+                                                         *self.organs.order(e.act)))
                         act, why, through = least.act, "all known; toward the state visited least", [least]
                     elif known:
-                        act, why = self.organs.reset, "every act known here was objected to"
+                        act, why = self.organs.restart, "every act known here was objected to"
                     elif said is not None and said[0] == "standing still":
-                        act, why = self.organs.reset, "standing still, and nothing else it can do here"
+                        act, why = self.organs.restart, "standing still, and nothing else it can do here"
                     else:
                         why = "nothing it can do here"
         self.thoughts.append(Choice(self.steps, act, why, odds))
-        choice: dict[str, Any] = {"step": self.steps, "here": here, "chose": list(act) if act else None,
+        choice: dict[str, Any] = {"step": self.steps, "here": here, "chose": self.organs.record(act) if act is not None else None,
                                   "counts": dict(self._counts),
                                   # What rounding left over, carried into the next cycle's counts
                                   # (B2): with the fields, a reader recomputes every count.
@@ -1691,7 +1691,7 @@ class Learning:
         if odds is not None and self._attended:
             # The experiences it went by (attention), each with its weight; what
             # each suggested, it was built from.
-            choice["attended"] = [{"at": self._state_of[e.source], "act": list(e.act), "weight": round(w, 3)}
+            choice["attended"] = [{"at": self._state_of[e.source], "act": self.organs.record(e.act), "weight": round(w, 3)}
                                   for e, w in self._attended]
             through = [*through, *(e for e, _ in self._attended if e not in through)]
         if lifted:

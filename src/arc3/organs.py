@@ -90,11 +90,57 @@ def _command(act: Act) -> dict[str, Any]:
     return {"kind": "move", "actionId": act[0], "x": act[1], "y": act[2]}
 
 
+# An act here is (action id, x, y): x and y for ACTION6's cell, None otherwise.
+def _can_carry_out(act: Act, state: str | None, offers: tuple) -> bool:
+    return can_carry_out(act[0], act[1], act[2], state, offers)
+
+
+def _family(act: Act) -> int:
+    return act[0]
+
+
+def _offered(act: Act, offers: tuple) -> bool:
+    return act[0] in offers
+
+
+def _read_offers(value: Any) -> tuple[int, ...]:
+    return tuple(int(a) for a in value or ())
+
+
+def _order(act: Act) -> tuple[int, int, int]:
+    return act[0], act[1] or 0, act[2] or 0
+
+
+def _record(act: Act) -> list:
+    return list(act)
+
+
+_NAMES: Final = {RESET: "RESET", **{a: f"ACTION{a}" for a in (*SIMPLE_ACTIONS, COMPLEX_ACTION)}}
+
+
+def _named_by(said: Any) -> Act | None:
+    """The act an onlooker's word names (world/onlooker.py: {"act": "ACTION6", "x", "y"})."""
+    if not isinstance(said, dict):
+        return None
+    ids = {name: a for a, name in _NAMES.items()}
+    a = ids.get(str(said.get("act", "")).upper())
+    if a is None:
+        return None
+    return (a, said.get("x"), said.get("y")) if a == COMPLEX_ACTION else (a, None, None)
+
+
+def _name_of(act: Act | None) -> str:
+    if act is None:
+        return "no action"
+    base = _NAMES.get(act[0], f"act {act[0]}")
+    return base + (f" at ({act[1]}, {act[2]})" if act[1] is not None else "")
+
+
 ARC_ORGANS: Final = Organs(
     state_kind="grid: rows of cells, each a colour 0-15",
-    acts={RESET: "RESET", **{a: f"ACTION{a}" for a in (*SIMPLE_ACTIONS, COMPLEX_ACTION)}},
+    acts=dict(_NAMES),
     placed=frozenset({COMPLEX_ACTION}),
-    reset=(RESET, None, None),
+    restart=(RESET, None, None),
     step=_step,
     expected_payload=_expected_payload,
     overlay=_overlay,
@@ -105,11 +151,18 @@ ARC_ORGANS: Final = Organs(
     state_field="stateTo",
     ended=frozenset(TERMINAL_STATES),
     offers_key="affords",
-    can_carry_out=can_carry_out,
+    can_carry_out=_can_carry_out,
     command=_command,
+    family=_family,
+    offered=_offered,
+    read_offers=_read_offers,
+    order=_order,
+    record=_record,
+    named_by=_named_by,
+    name_of=_name_of,
     tag_keys=frozenset(OPEN_TAG_KEYS),
     state_object=FRAME_ENTITY,
-    channels={"frame": FRAME_CHANNEL, "report": STATUS_CHANNEL, "others": ONLOOKER_CHANNEL},
+    channels={"step": FRAME_CHANNEL, "report": STATUS_CHANNEL, "others": ONLOOKER_CHANNEL},
     own_keys=("context",),
     quiet=_quiet,
 )

@@ -228,8 +228,18 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   problem — in its code, its names and its words. What knows what a state, an
   act or a region is (grids, rows, colours, clicks, clocks, levels) belongs to
   a model or to the host's organs, and the learning asks through a neutral seam
-  (`Inducer.copy`, `coarse`, `made`; `Organs.state_object`). A model may be
-  changed or replaced for a particular problem; the learning may not.
+  (`Inducer.copy`, `coarse`, `made`; `Organs.state_object`). **An act is opaque
+  to the mind** (Plone, 2026-10-19): the mind and its learning hold acts and
+  compare them, and ask the host's organs the rest — which of the body's acts
+  one is (`family`), whether the region offers it (`offered`, `read_offers`), an
+  order to break ties by (`order`), how it is written as data (`record`), the
+  act an Other's word names (`named_by`), whether the body can carry it out
+  (`can_carry_out`), and the act that starts the region again, if the body has
+  one (`restart`, None for none: then the mind never commands one). That an act
+  here is (id, x, y) is `arc3/organs.py`'s and the inducers'. The channels are
+  named by what arrives (`step`, `report`, `others`), and an experience keeps
+  what the region reported under `report`. A model may be changed or replaced
+  for a particular problem; the learning may not.
 - **A foreseen act is put last, never out of reach** (2026-09-28): an untried
   act whose held hypothesis says it leads where the mind has stood is tried
   after the acts it cannot foresee, here and by the ways to them. A hypothesis
@@ -465,13 +475,6 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   2026-10-06); to be pushed again when the queue allows.
 
 ### Open in the current design
-
-- **An act is not yet opaque to the mind.** `Act` is (id, x, y), declared in
-  `src/mind/organs.py`, and the learning reads `act[0]` throughout: that an act
-  may carry a place is an assumption about space, in the mind's own organs.
-  Made opaque, it would be the host's or the model's to say what an act is —
-  a change across organs, learning, inducers and the body; noted, not done
-  (Plone, 2026-09-29).
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
