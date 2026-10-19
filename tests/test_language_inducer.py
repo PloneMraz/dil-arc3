@@ -99,8 +99,8 @@ def test_the_model_writes_a_program_only_on_a_step_no_hypothesis_held_foresaw():
     assert programs[0].payload["code"] == RIGHT, "the program is data, whole"
     assert mind.learning.holds_by_situation[1:] == [1, 1], \
         "the mind expected by the program, where it had never stood, as its where reads the grid"
-    assert mind.holds[-1] == 0, \
-        "where it expected by the program, the whole grid did not hold: this program does not predict the clock"
+    assert mind.holds[-1] == 1, \
+        "where it expected by the program, the frame held: the clock its where reads out is expected nothing of"
 
 
 def test_it_is_shown_the_steps_seen_and_the_step_not_foreseen():
@@ -300,3 +300,29 @@ def test_the_model_is_told_what_its_functions_are_given():
     words = script.shown[0][0]["content"]
     assert "a list of 3 rows, each a list of 3 integers 0-15" in words
     assert "ACTION1 is 1" in words and "ACTION6 is 6" in words
+
+
+def test_a_where_is_borne_out_by_every_step_the_mind_gives_not_only_those_shown():
+    import mind.models.language_inducer as language
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT)))
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind.receive("task", MIND_TASK.payload, None)
+    blocked = (Step(lit(2), (1, None, None), lit(2, 1)), None)              # only the clock: it bears the where out
+    moves = [(Step(lit(c, c), (1, None, None), lit(c + 1, c + 1)), None) for c in (0, 1)] * 13
+    shown_before = language.MAX_SHOWN
+    try:
+        language.MAX_SHOWN = 4                                                # the blocked step not shown
+        inducer.induce(grid_key(lit(1, 1)), (1, None, None), lit(1, 1), lit(2, 2), evidence=(blocked, *moves))
+    finally:
+        language.MAX_SHOWN = shown_before
+    answer = inducer.answers[-1]
+    assert answer["program"] is not None and answer["where_not"] is None
+    assert inducer.situation(lit(1, 0)) == inducer.situation(lit(1, 1)), "the clock read out"
+
+
+def test_what_it_expects_is_the_grid_as_its_where_reads_it():
+    script = Script(block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    assert inducer.as_read(lit(1, 1)) == lit(1, 1), "before a reading it holds: the grid as it came"
+    run(cycle, frame(lit(2), lit(2, 1)), status())                            # the where borne out
+    assert inducer.as_read(lit(1, 1)) == [[0, 1, 0], [0, 0, 0], [None, 0, 0]], "the clock cell, left out"

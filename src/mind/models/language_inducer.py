@@ -295,8 +295,25 @@ class LanguageInducer:
         return False
 
     def as_read(self, state: Grid) -> Grid:
-        """A grid as it reads it: all of it."""
-        return [row[:] for row in state]
+        """A grid as it reads it: as the `where` of the program it reads with sees it,
+        a cell that `where` sets to -1 left out (None) — a `where` it holds only
+        where the steps bore it out; all of the grid before it holds one, or where
+        that `where` fails. Code reads no cell: which are left out is the program's."""
+        form = self._now(self._seeing) if self._seeing is not None else None
+        if form is None or form.where is None:
+            return [row[:] for row in state]
+        try:
+            read = _bounded(form.where, [row[:] for row in state])
+        except ProgramError:
+            return [row[:] for row in state]
+        if not isinstance(read, list) or len(read) != len(state):
+            return [row[:] for row in state]
+        out = []
+        for row, seen_row in zip(state, read):
+            if not isinstance(seen_row, list) or len(seen_row) != len(row):
+                return [r[:] for r in state]
+            out.append([None if v == -1 else cell for cell, v in zip(row, seen_row)])
+        return out
 
     def coarse(self, kind: tuple) -> tuple | None:
         """No kind falls in a coarser one."""
@@ -384,8 +401,9 @@ class LanguageInducer:
         Not asked before it has been told what it is asked (its prior)."""
         if self._words is None:
             return None
-        steps = [Transition(before=s.before, action=s.act[0], x=s.act[1], y=s.act[2], after=s.after, status=r)
-                 for s, r in (evidence or ((Step(before, act, after), None),))][-MAX_SHOWN:]
+        seen = [Transition(before=s.before, action=s.act[0], x=s.act[1], y=s.act[2], after=s.after, status=r)
+                for s, r in (evidence or ((Step(before, act, after), None),))]
+        steps = seen[-MAX_SHOWN:]
         text, usage, why, form, where_not = "", {}, None, None, None
         try:
             text, usage = self._chat(self.endpoint, self._messages(steps))
@@ -404,9 +422,12 @@ class LanguageInducer:
                     # reading the evidence does not hold (INV-8's shape: the
                     # criteria are not drawn from what is judged; Plone, 2026-10-19).
                     if form.where is not None:
-                        shown = steps if steps and steps[-1].after == after else [*steps, Transition(
+                        # Borne out by every step the mind gave, not only those the
+                        # model was shown: more steps, more chance of one at which a
+                        # clock changed alone (version 5, LOG.md, 2026-10-19).
+                        given = seen if seen and seen[-1].after == after else [*seen, Transition(
                             before=before, action=act[0], x=act[1], y=act[2], after=after)]
-                        where_not = _where_not_borne_out(form, shown)
+                        where_not = _where_not_borne_out(form, given)
                         if where_not is not None:
                             form = replace(form, where=None)
                     got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
