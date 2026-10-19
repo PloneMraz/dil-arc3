@@ -6671,3 +6671,8 @@ then fixed, in order, at Plone's word:
   unused variables gone; `build_dil_run.py` takes its laws of curiosity from
   `CURIOSITY`; CLAUDE.md says which games a change has been tried on since
   2026-10-07 (ten, then eleven). 369 tests pass; ruff finds nothing.
+
+The paper's schedule in `paper/PLAN.md` settled with Plone: evidence from
+version 35's stores 2026-10-20 to 23, the Writeup's draft 23 to 28, the PDF
+2026-10-26 to 11-01, review 11-01 to 04, submitted 11-04 to 07. The two final
+ARC-AGI-3 submissions (proposed 35 and 28) wait for version 35's score.

@@ -86,7 +86,7 @@ back); results (scores, and one change at a time); ideas that failed; limits;
 conclusion. The claim, from CLAUDE.md: every thing the loop knows and every
 change in what it does can be read back by a third party from `[event]`.
 
-## Order of work
+## Order of work (settled with Plone, 2026-10-19)
 
 | When | What |
 |---|---|
@@ -97,9 +97,10 @@ change in what it does can be read back by a third party from `[event]`.
 | 2026-11-01 → 04 | review against each criterion; the Writeup's word count; every number in both checked against LOG.md; outbound disclosure (no session link, no personal data, no metadata in the PDF or the images) |
 | 2026-11-04 → 07 | the PDF published where it needs no login; the Writeup made, notebook, PDF, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
 
-Proposed (2026-10-19), to be settled with Plone: the dates above, moved for the
-work on dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by
-2026-11-02 (proposed: versions 35 and 28).
+Settled with Plone (2026-10-19): the dates above, moved for the work on
+dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
+(proposed: versions 35 and 28 — still to be settled, once version 35's score
+has come).
 
 ## Where things are
 
