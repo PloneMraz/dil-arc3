@@ -6744,3 +6744,20 @@ Seen, by design: the language inducer offers a click only where its model's
 program says (`targets`); with none written, vc33 — clicks only — offered the
 mind nothing, and the body stood still. Played with a served model, a game of
 clicks rests on the model writing `targets`.
+
+#### `dil-arc3-language-inducer` version 3: the model's server did not start
+
+Pushed 2026-10-19 05:05 UTC (code `95bfc2f`; Qwen3.8-Flash-Next NVFP4, ls20,
+100 cycles), out of the queue within a minute — the first of this notebook's
+versions to run — and `ERROR` at 05:24, before the loop: the model's 419 files
+checked (250 s), the vLLM runtime's six layers extracted (176 s), then the cell
+that imports `vllm, torch` from the runtime failed — "Failed to load PyTorch C
+extensions" — and the assertion after it on an empty answer (`IndexError`).
+
+What the log shows: the notebook's interpreter was Python **3.13**
+(`arc_agi` installed under `/usr/local/lib/python3.13/dist-packages`), and the
+cell runs `sys.executable` with `PYTHONPATH` on the runtime's
+`usr/local/lib/python3.12/dist-packages`, whose C extensions are built for 3.12.
+Every earlier log here shows 3.12, the GPU notebook's of 2026-09-25 and the CPU
+notebook's of version 35, 2026-10-18. Not established: whether Kaggle's image
+moved to 3.13 for every notebook or only this machine's.
