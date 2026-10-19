@@ -271,8 +271,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   `src/arc3/command.py` carries it out and weighs nothing. With no such command
   the mind asks its learning to think again while the body waits, at most
   `MAX_WAIT_THOUGHTS = 2` times (declared, not measured); the learning thinks
-  only on the onlooker's word, so as it stands none comes, and the body stands
-  still at once. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
+  on what collided — a step's return, the region's report, the onlooker's word —
+  and not on the body waiting, so as it stands no thought comes, and the body
+  stands still at once. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
   để đợi"). Cycle 0's RESET is the host's start-up (§4). What else the mind
   sends out is a question to its own memory: `ask(cue)`, a store query, traced
   to T5 with register ↔.
@@ -583,10 +584,14 @@ are below.
   check the cycle it reads the agent's log, which the onlooker never sees. The
   onlooker's remark enters through the host's transducer on its own channel.
 
-- **Tag H — situation fit.** The frame fits when the grid the mind expected
-  equals, cell for cell, the grid the region returned (the last of each
-  stack), the rest of the frame as it came; T5 compares so, told by the host
-  (`arc3.decisions.situation_fit`, deviation 5). The region's status fits
+- **Tag H — situation fit.** The frame fits when the grid the region returned
+  (the last of each stack), as the mind reads it, is the grid it expected —
+  equal cell for cell where it reads, a cell it does not read (a clock)
+  expected nothing of (`as_read`); or, where it expected the region to be
+  otherwise, when the grid returned differs from the one it was in a cell it
+  reads (`otherwise`: silence is a mismatch); the rest of the frame as it came.
+  T5 compares so, told by the host (`arc3.decisions.situation_fit`, deviation
+  5). The region's status fits
   when the region reports what it reported last — its `context`, the action
   just taken, is the agent's own and is not expected back. Not against a
   correct answer: no answer is ever revealed during a run.

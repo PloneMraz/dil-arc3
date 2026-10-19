@@ -86,37 +86,46 @@ command → body). Contributions:
 **2. Approach** [350] — The four roles (DIL, host, model, the self as a law).
 "The mind acts on nothing; it commands, the body carries out" (T5's test).
 The learning: experience → hypothesis (data) → expectation (the one right at the
-highest rate) → the region's return → scar; curiosity for somewhere new (S2b);
-reaching the aim as an experience (S4). The inducer (grid): still, rewrite,
-aim; once the aim has come, moves, blocks and an aim of no one act (version 28's
-addition). The invariants it keeps (INV-4, -5, -6, -8) and the declared
+highest rate; where nothing it knows says, that the region will be otherwise, or
+what the same kind of act did where it stood alike) → the region's return →
+scar → a thought that turns the next choice (silence, an answer otherwise, an
+end); curiosity for somewhere new (S2b; T1, testing the expectation that least
+says what will come, measured beside it); reaching the aim as an experience
+(S4). The field: every layer's votes and the mind's (trust, exploration),
+carried over cycles (DEVIATION 9), read by the mind in counts that follow it
+(B2). The inducer (grid): still, rewrite, aim; once the aim has come, moves,
+blocks and an aim of no one act (version 28's addition). The invariants it keeps (INV-4, -5, -6, -8) and the declared
 deviations, in one line each or by reference.
 
 **3. A chain the reader can check** [300] — What `[event]` holds (each cycle's
 layers, admissions, scars, reads, writes with `built_from`). One chain in full
 (Figure 2): the ResistEvent, the thought and the turned choice, the revised
 expectation, the next ResistEvent — each record's id, so the reader finds it in
-the published stores; how many such chains the run holds. The checker's
-verdicts. Stated: the scored run's own logs are not shown; the evidence is the
+the published stores; how many such chains the run holds. Two individuals of
+the same DIL parting (`scripts/differ.py`): with the Other and without it (the
+remark said again, the objection, the choice replaced), and born in fields
+apart (what it counted by, thirty steps on). The checker's verdicts. Stated: the scored run's own logs are not shown; the evidence is the
 same code on the public games.
 
 **4. Results** [250] — Table 1: scores, hidden and public — random agent;
-versions 18, 23, 26, 28. Table 2: changes one at a time (from the 10- and
+versions 18 to 35. Table 2: changes one at a time (from the 10- and
 25-game runs). Where the actions went (version 23, 25 games): 29% changed
 nothing, 17% walked back to something left to try; the score is three levels
 near the human baseline.
 
 **5. What did not work, and why** [200] — Table 3: the ideas that failed (B1,
 L2, P1, WAY_LAW, objects, suspects, ends, near at a step's scale, the cap, the
-two level-2 laws, likeness, into-alone, mirrored moves, moves per thing), one
-line and one number each. Why (Theory): every change before the first success
+two level-2 laws, likeness, into-alone, mirrored moves, moves per thing, T1's
+five versions and the noisy TV), one line and one number each. Why (Theory): every change before the first success
 reshuffles exploration; the public 25 did not foretell the hidden games
 (suspects: 0.515 public, 0.02 hidden); hence version 28's rule — change nothing
 before the first aim — kept the hidden 0.25.
 
 **6. Limits and conclusion** [130] — Accuracy is low and said so; the field's
-alertness stays low though collisions are many (open); the act is not yet opaque to the mind; the
-inducer lacks objects that move together, mirrors, hidden state. What holds: the
+axes keep narrow bands, and trust stands high wherever what memory names is
+mostly right, so it tells regions apart little; what an individual is born as
+reaches a choice only through the counts it reads; the inducer lacks objects
+that move together, mirrors, hidden state. What holds: the
 audit, and a loop that another model or another task can plug into.
 
 ## Figures and tables
@@ -127,6 +136,6 @@ audit, and a loop that another model or another task can plug into.
 
 ## To settle before drafting
 
-- The submission described: the notebook that shows the chain plainly, once
-  dil-arc3 does (`PLAN.md`).
-- The game Figure 2's chain is from — chosen when the chains are found.
+- The submission described: version 35 (`57371259`; `PLAN.md`). Settled.
+- The game Figure 2's chain is from — chosen from version 35's stores when the
+  chains are found.

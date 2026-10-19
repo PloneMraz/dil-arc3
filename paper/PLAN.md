@@ -15,31 +15,28 @@ Kept here so that a new session starts from it, not from memory. History goes in
    The title is settled: "Expect, Collide, Revise: Learning Without a Reward
    Function, Every Step on the Record". The evidence is a checkable chain, not a
    claim (`OUTLINE.md`).
-   **The work on dil-arc3, in order (Plone, 2026-10-11): 3 → 2 → 1 → 4.**
-   Done before it: silence collides; a collision turns the next choice; the
-   field reaches how the mind builds behaviour; every state expected as read;
-   DEVIATION 8; the mind's vote on exploration (LOG.md, 2026-10-11). Then:
-   (3) a collision of the region's report — an end, the aim, any field otherwise
-   — is thought on and turns the mind, as a frame's does; (2) the mind recalls
-   from memory the collisions it met where it stands now, and they turn what it
-   builds; (1) what builds most of its behaviour is no longer a count (S2b's odds
-   of somewhere new, UCB): each command a test of an expectation worth testing,
-   its order from context, memory and the field — a settled law, to be changed
-   with Plone; (4) last, as the dearest evidence: the same game run with the
-   field (GLOB-MOD) or the region set otherwise, several tests, to show
-   expectations differing, so thinking and the behaviour built differing — the
-   individuals the same DIL makes, each read back from its `[event]`.
-1. **Was: the submission the paper describes is version 28** (now to be the
-   notebook that shows the chain; version 28 stays the fallback): `56983446`, notebook
-   `plonemraz/dil-arc3-learning` version 28, code `9e69156` — grid with moves,
-   blocks and into aims once the aim has come; S2b curiosity; attention; 600
-   cycles a game, four at once. Scored 0.25 (as version 23). The notebook
-   attached to the writeup is that version; a private one is made public after
-   the deadline.
-2. **More data**: a Save & Run of the same code (notebook version 29, pushed
-   2026-10-11) for `[event]` logs to read the evidence from. The scored run's
-   own logs are not shown by Kaggle, so the evidence is from the same code on the
-   25 public games, and the paper says so.
+   **The work on dil-arc3, in order (Plone, 2026-10-11): 3 → 2 → 1 → 4 —
+   done** (LOG.md, 2026-10-11 to 2026-10-19): (3) a collision of the region's
+   report is thought on and an end turns the mind; (2) what an act did where
+   the mind stood alike is expected again; (1) T1, each command a test of the
+   expectation that least says what will come, measured in five versions and
+   kept as an option (`--curiosity test`), S2b staying the default as it
+   reached the most levels; (4) individuals of the same DIL differ, read back
+   from their stores (`scripts/differ.py`): the Other present or not, and the
+   field — once it carries its history (B1, DEVIATION 9) and the mind's counts
+   follow it (B2) — set otherwise at birth.
+1. **The submission the paper describes is version 35**: `57371259`, notebook
+   `plonemraz/dil-arc3-learning` version 35, code `b4d7d5a` — S2b with
+   attention, collisions of the step and the report turning the mind, recall
+   from alike states, the mind's votes on the field, B1 and B2; 600 cycles a
+   game, four at once. Its score is pending. Version 28 (`56983446`, 0.25)
+   stays the fallback. The notebook attached to the writeup is version 35; a
+   private one is made public after the deadline.
+2. **Data**: version 35's Save & Run on the 25 public games, stores included
+   (`stores.tar.gz`), for `[event]` logs to read the evidence from; and the
+   four individuals of point 4 on eleven games, here. The scored run's own logs
+   are not shown by Kaggle, so the evidence is from the same code on the
+   public games, and the paper says so.
 3. **Form: both** (Plone, 2026-10-11, after first choosing the Writeup alone:
    "1,500 words cannot set out the whole work"). **The Writeup**, at most 1,500
    words, standing on its own — the claim, the evidence, the results, the
@@ -74,10 +71,10 @@ Kept here so that a new session starts from it, not from memory. History goes in
 
 | Criterion | What it asks | What this paper brings |
 |---|---|---|
-| Accuracy | performance on the leaderboard (submission ID) | 0.25, stated plainly; against the random agent on the same road |
+| Accuracy | performance on the leaderboard (submission ID) | version 35's score, stated plainly (version 28: 0.25); against the random agent on the same road |
 | Universality | does it translate beyond the competition | the mind and its learning name no task; host and model replace; the audit holds anywhere |
 | Progress | does it raise anyone's chance of a top score | a loop a third party can check from `[event]`; what did not work, measured |
-| Theory | *why* it works, not only how | expectation → test → scar; why scores barely moved: changes reshuffle exploration, the public 25 do not foretell the hidden games |
+| Theory | *why* it works, not only how | expectation → collision → the mind turned → the next collision otherwise; why the same DIL makes different individuals (the Other, the field); why scores barely moved: changes reshuffle exploration, the public 25 do not foretell the hidden games |
 | Completeness | covers the submission thoroughly | layers, invariants, deviations, how it plays on Kaggle |
 | Novelty | against public research | the DIL protocol; a hash-chained event log; "the mind commands, the body carries out" |
 
@@ -93,24 +90,26 @@ change in what it does can be read back by a third party from `[event]`.
 
 | When | What |
 |---|---|
-| 2026-10-11 → 12 | outline against the rubric; version 29's data in |
-| 2026-10-12 → 17 | evidence: a script that rebuilds, from one game's `[event]` alone, what the mind knew, what it changed and why, where it was scarred; the conformance checks C1–C7; tables of scores (random agent, versions 18, 23, 26, 28 — hidden and public), of changes one at a time (the ten- and 25-game runs in LOG.md), of ideas that failed; figures (the loop, a trace excerpt) and the cover image |
-| 2026-10-18 → 25 | the Writeup's draft, section by section, each sent to Plone as it is done |
-| 2026-10-22 → 31 | the paper (PDF), from the Writeup and the evidence: each section widened, the full tables, the trace |
-| 2026-10-26 → 11-01 | review against each criterion; the Writeup's word count; every number in both checked against LOG.md; outbound disclosure (no session link, no personal data, no metadata in the PDF or the images) |
-| 2026-11-02 → 06 | the PDF published where it needs no login; the Writeup made, notebook, PDF, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
+| 2026-10-11 → 19 | done: the outline; dil-arc3 developed (3 → 2 → 1 → 4); the evidence scripts (`scripts/chains.py`, `scripts/differ.py`); version 35 submitted |
+| 2026-10-20 → 23 | evidence from version 35's stores: the chains a reader can check (a collision → the turned choice → what is expected of that act from then on → the next return), one in full for Figure 2; the individuals of point 4 (the Other; the field), one chain each; the conformance checks C1–C7; tables of scores (random agent, versions 18 to 35 — hidden and public), of changes one at a time, of ideas that failed (T1's five versions among them); figures (the loop, a trace excerpt) and the cover image |
+| 2026-10-23 → 28 | the Writeup's draft, section by section, each sent to Plone as it is done |
+| 2026-10-26 → 11-01 | the paper (PDF), from the Writeup and the evidence: each section widened, the full tables, the trace |
+| 2026-11-01 → 04 | review against each criterion; the Writeup's word count; every number in both checked against LOG.md; outbound disclosure (no session link, no personal data, no metadata in the PDF or the images) |
+| 2026-11-04 → 07 | the PDF published where it needs no login; the Writeup made, notebook, PDF, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
 
-Alongside: read the 2024 and 2025 winning papers (arcprize.org; the 2025
-writeups on Kaggle), as the Overview suggests; choose the two final ARC-AGI-3
-submissions by 2026-11-02 (proposed: versions 28 and 23).
+Proposed (2026-10-19), to be settled with Plone: the dates above, moved for the
+work on dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by
+2026-11-02 (proposed: versions 35 and 28).
 
 ## Where things are
 
-- Scores and what each run did: `LOG.md` (version 28: 2026-10-09; its score:
-  2026-10-11; the ideas that failed: 2026-10-05 to 2026-10-11).
-- Version 28's Save & Run output (25 games, stores): `scripts/data/kaggle/dil-run/submit-9e69156-moves/`
-  (git-ignored); version 29's, the same code run again (every number as version
-  28), in `scripts/data/kaggle/dil-run/submit-9e69156-v29/` — the evidence is
-  read from it.
+- Scores and what each run did: `LOG.md` (versions 28 to 35: 2026-10-09 to
+  2026-10-19; the ideas that failed: 2026-10-05 to 2026-10-18; point 4:
+  2026-10-18).
+- Version 35's Save & Run output (25 games, stores in `stores.tar.gz`):
+  `scripts/data/kaggle/dil-run/submit-b4d7d5a-v35/` (git-ignored) — the evidence
+  is read from it. Version 28's: `submit-9e69156-moves/` and `submit-9e69156-v29/`.
+- Point 4's individuals (B2, I0–I3, and the Other present or not):
+  `scripts/data/t1/` (git-ignored).
 - The rubric, rules and sample writeup: the workspace's `Downloads/pages/`; the
   2025 first-place paper: `Downloads/papers/2510.04871v1.pdf`.
