@@ -49,7 +49,7 @@ THE LOOP, one step at a time:
 - **Choosing.** Toward the aim it has reached before, or where its held
   hypotheses say an act brings it; else what it knows least
   (curiosity, below) — an act its hypotheses say leads where it has stood last,
-  never out of reach;
+  never out of reach, and an act never once taken never so;
   else the shortest way to where something is left to try, looking ahead by what
   its held hypotheses predict — through the situations it has stood in and, for
   an inducer whose hypotheses reach past where they were met, up to
@@ -1467,8 +1467,15 @@ class Learning:
     def _foreseen(self, here: str, act: Act) -> bool:
         """Whether its hypotheses say an act leads where it has stood. Such an act
         is put behind the others, never out of reach: a hypothesis that kept an
-        act from being taken could never be refuted by it."""
+        act from being taken could never be refuted by it. And an act never once
+        taken is never foreseen: what a hypothesis says of an act no return has
+        borne out or refuted is not yet anything learned of it (Plone,
+        2026-10-19: where every state was new, an act still to be tried in each
+        stood ahead of two acts a hypothesis said led nowhere, never having met
+        them, and those two were never taken in 300 steps)."""
         if not self.inducer.general:
+            return False
+        if not self._actions.get(self.organs.family(act), (0, 0, 0))[0]:
             return False
         best = self._best(here, act)
         if best is not None:

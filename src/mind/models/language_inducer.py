@@ -95,6 +95,9 @@ class ProgramForm:
     predict: Callable[..., Any]
     where: Callable[..., Any] | None
     targets: Callable[..., Any] | None
+    # The cells its `where` may set to -1, where the steps bore out only part of
+    # it: a -1 anywhere else is read as the cell it hides (None: all it says).
+    where_cells: frozenset[tuple[int, int]] | None = None
 
 
 def _alarm(_signum: int, _frame: Any) -> None:
@@ -127,30 +130,38 @@ def _grid_of(out: Any) -> Grid:
     return [list(r) for r in out]
 
 
-def _where_not_borne_out(form: ProgramForm, steps: list[Transition]) -> str | None:
-    """Why the steps shown do not bear out a program's `where`, or None when they do.
+def _bear_out(form: ProgramForm, steps: list[Transition]) -> tuple[ProgramForm, str | None]:
+    """A program with its `where` as far as the steps bear it out, and why not all.
 
     A cell it sets to -1 is one that "changes whatever is done" (its words): taken
-    by regions of such cells side by side, each must change at every step shown at
-    which a cell outside it changed, and at some step at which nothing outside it
-    did. A block an act moves is still where no act moved it, and never changes
-    alone; a clock that ticks at every step passes both (ls20, version 4, LOG.md
-    2026-10-19). Two clocks that only ever tick together are not borne out, and a
-    clock slower than the steps not until the steps show it — declared, not
-    measured beyond ls20: a `where` set aside leaves the grid read as it came."""
+    by regions of such cells side by side, each must change at every step at which
+    a cell outside it changed, and at some step at which nothing outside it did. A
+    block an act moves is still where no act moved it, and never changes alone; a
+    clock that ticks at every step passes both (ls20, version 4, LOG.md
+    2026-10-19). The regions borne out are kept and the others struck: its `where`
+    then hides only the cells of the regions kept (`where_cells`) — the steps
+    judging the model's reading, cell by cell, and code reading none of the grid
+    for it (version 6: a `where` set aside whole for the block took the bar with
+    it, and every grid read as new). None kept: set aside. Two clocks that only
+    ever tick together are not borne out, and a clock slower than the steps not
+    until the steps show it — declared, not measured beyond ls20."""
+    if not steps:
+        return replace(form, where=None), "no step has been seen to bear its where out"
     hidden: set[tuple[int, int]] = set()
     for t in steps:
         try:
             read = _bounded(form.where, [row[:] for row in t.before])
         except ProgramError as exc:
-            return f"its where {exc}"
+            return replace(form, where=None), f"its where {exc}"
         if not isinstance(read, list) or not all(isinstance(r, list) for r in read):
-            return "its where does not give a grid"
+            return replace(form, where=None), "its where does not give a grid"
         hidden |= {(r, c) for r, row in enumerate(read) for c, v in enumerate(row) if v == -1}
     changes = [{(r, c) for r in range(min(len(t.before), len(t.after)))
                 for c in range(min(len(t.before[r]), len(t.after[r]))) if t.before[r][c] != t.after[r][c]}
                for t in steps]
     changes = [ch for ch in changes if ch]
+    kept: set[tuple[int, int]] = set()
+    struck: list[str] = []
     while hidden:
         region, edge = set(), [next(iter(hidden))]
         while edge:
@@ -162,11 +173,31 @@ def _where_not_borne_out(form: ProgramForm, steps: list[Transition]) -> str | No
                 edge += [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]
         alone = any(ch <= region for ch in changes)
         always = all(ch & region for ch in changes if ch - region)
-        if not (alone and always):
+        if alone and always:
+            kept |= region
+        else:
             rows, cols = [r for r, _ in region], [c for _, c in region]
-            return (f"its where sets to -1 cells at rows {min(rows)}-{max(rows)}, columns {min(cols)}-{max(cols)}, "
-                    "which the steps shown do not show changing whatever is done")
-    return None
+            struck.append(f"rows {min(rows)}-{max(rows)}, columns {min(cols)}-{max(cols)}")
+    if not struck:
+        return form, None
+    why = ("its where sets to -1 cells at " + "; ".join(struck)
+           + ", which the steps do not show changing whatever is done")
+    if not kept:
+        return replace(form, where=None), why
+    return _hiding_only(form, frozenset(kept)), why + " (struck; the rest kept)"
+
+
+def _hiding_only(form: ProgramForm, cells: frozenset[tuple[int, int]]) -> ProgramForm:
+    """The program, its `where` hiding only these cells: any other it sets to -1 is
+    read as the cell it hides."""
+    where = form.where
+
+    def read(grid: Grid) -> Grid:
+        out = where(grid)
+        return [[v if v != -1 or (r, c) in cells else grid[r][c] for c, v in enumerate(row)]
+                for r, row in enumerate(out)]
+
+    return replace(form, where=read, where_cells=cells)
 
 
 def compile_program(code: str) -> ProgramForm:
@@ -480,9 +511,7 @@ class LanguageInducer:
                         # clock changed alone (version 5, LOG.md, 2026-10-19).
                         given = seen if seen and seen[-1].after == after else [*seen, Transition(
                             before=before, action=act[0], x=act[1], y=act[2], after=after)]
-                        where_not = _where_not_borne_out(form, given)
-                        if where_not is not None:
-                            form = replace(form, where=None)
+                        form, where_not = _bear_out(form, given)
                     got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
                     reader = form if form.where is not None else self._now(self._seeing)
                     if self._read(reader, got) != self._read(reader, after):
@@ -558,13 +587,17 @@ class LanguageInducer:
 
     def describe(self, form: ProgramForm, situation_of) -> dict[str, Any]:
         return {"form": "program", "program": form.digest, "code": form.code,
-                "where": form.where is not None, "targets": form.targets is not None}
+                "where": form.where is not None, "targets": form.targets is not None,
+                "where_cells": sorted([r, c] for r, c in form.where_cells) if form.where_cells else None}
 
     def restore(self, payload: dict[str, Any]) -> ProgramForm:
         """A program from its datum, which holds its code: loaded again — its `where`
         set aside again where it was when the program was held."""
         form = compile_program(payload["code"])
-        return replace(form, where=None) if payload.get("where") is False else form
+        if payload.get("where") is False:
+            return replace(form, where=None)
+        cells = payload.get("where_cells")
+        return _hiding_only(form, frozenset((r, c) for r, c in cells)) if cells and form.where is not None else form
 
 
 __all__ = ["READING_TAGS", "LanguageInducer", "ProgramForm", "compile_program", "identity"]

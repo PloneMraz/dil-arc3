@@ -284,16 +284,31 @@ def test_a_program_is_not_judged_by_a_where_the_steps_do_not_bear_out():
     assert inducer.situation(lit(0)) != inducer.situation(lit(1)), "no state read as another"
 
 
-def test_a_where_set_aside_stays_aside_when_the_program_comes_back_from_memory():
+def test_the_part_of_a_where_the_steps_bear_out_is_kept_and_stays_kept_from_memory():
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(EXACT)))
     mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
     mind.receive("task", MIND_TASK.payload, None)
     forms = inducer.induce(grid_key(lit(2, 1)), (2, None, None), lit(2, 1), lit(1), evidence=STEPS)
     program = forms[-1]
-    assert program.where is None, "held for its predict, judged on the grid as it came; its where set aside"
+    assert program.where_cells == {(2, 0)}, "the clock borne out and kept; the lit row struck"
+    assert "rows 0-0" in inducer.answers[-1]["where_not"] and "the rest kept" in inducer.answers[-1]["where_not"]
+    assert inducer.situation(lit(0)) != inducer.situation(lit(1)), "the lit row read"
+    assert inducer.situation(lit(1, 0)) == inducer.situation(lit(1, 1)), "the clock read out"
     payload = inducer.describe(program, lambda raw: raw)
-    assert payload["where"] is False and inducer.restore(payload).where is None
-    assert inducer.situation(lit(0)) != inducer.situation(lit(1))
+    assert payload["where"] is True and payload["where_cells"] == [[2, 0]]
+    back = inducer.restore(payload)
+    assert back.where_cells == {(2, 0)} and back.where(lit(1, 1))[0] == [0, 1, 0], "struck again from memory"
+
+
+def test_a_where_with_no_region_borne_out_is_set_aside_whole():
+    hides_only_the_row = HIDES.replace("    g[2][0] = -1\n", "")
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(hides_only_the_row.replace(
+        "return [row[:] for row in grid]", "return [row[:] for row in grid]"))))
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind.receive("task", MIND_TASK.payload, None)
+    inducer.induce(grid_key(lit(2, 1)), (2, None, None), lit(2, 1), lit(1), evidence=STEPS)
+    assert "the rest kept" not in inducer.answers[-1]["where_not"]
+    assert inducer.situation(lit(1, 0)) != inducer.situation(lit(1, 1)), "nothing read out"
 
 
 def test_the_model_is_told_what_its_functions_are_given():
@@ -378,3 +393,16 @@ def test_it_asks_once_in_a_situation_and_not_where_it_can_act():
     mind2, inducer2, cycle2, _ = loop(Script(block(STILL)))
     run(cycle2, frame(lit(0), lit(1)), status())                                 # it can act: asked on the step only
     assert [a["on"] for a in inducer2.answers] == ["not foreseen"], "never asked what can be done where it can act"
+
+
+def test_an_act_never_once_taken_is_not_put_last_by_what_a_hypothesis_says_of_it():
+    # Right about acts 1 and 2; says act 3 and 4 change nothing, never having met them.
+    two_acts = RIGHT.replace("    g = [row[:] for row in grid]\n    c =",
+                             "    g = [row[:] for row in grid]\n    if action not in (1, 2):\n        return g\n    c =", 1)
+    script = Script(block(two_acts))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(2), lit(2, 1)), status(affords=(1, 2, 3, 4)))
+    run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2, affords=(1, 2, 3, 4)))
+    assert not mind.learning._foreseen(mind.learning._here, (3, None, None)), "never taken: not foreseen"
+    assert mind.commands[-1][1] == (3, None, None), \
+        "of the acts not yet taken here, the one never taken anywhere, most wanted, is commanded"
