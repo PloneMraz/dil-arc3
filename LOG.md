@@ -6850,3 +6850,49 @@ programs held on the run's 100 frames:
 Not fixed, for Plone: how an answer is judged (by a reading other than its own;
 the criteria are drawn from what is judged, INV-8's shape), and the words the
 model is told (what a program is given). Both are in CLAUDE.md, open.
+
+#### The language inducer's two faults fixed; version 5 against version 4 (Plone: fix both, test again at 100 cycles)
+
+Fixed (code `576ab75`):
+
+- **What the model is told** (`arc3/task.py`, the prior's words): its
+  functions are given the grid as rows of integers 0–15 and the action as its
+  number (`ACTION1 is 1`, …), and the rule a `where` is judged by. Version 4's
+  programs had also compared the action with `"ACTION1"`, where the inducer
+  passes `1` — a third mismatch, found in fixing the first.
+- **How an answer is judged** (`language_inducer.py`): a program's `where` is a
+  reading only where the steps shown bear it out — each region it sets to -1
+  changes at every step at which anything else changed, and at some step at
+  which nothing else did (in ls20's 100 frames the bar passes both: it changed at
+  every move, alone at 5 blocked ones; the block the acts move never changed
+  alone). A `where` not borne out is set aside (and stays aside when the program
+  comes back from memory), and the program is judged by the reading held before
+  it. Replayed on version 4's three held programs: each `where` set aside, none
+  held. Three tests rewritten (they had taken a `where` from a step at which the
+  clock did not change, with nothing to bear it out), three added; 380 pass.
+
+`dil-arc3-language-inducer` version 5 (pushed 06:34 UTC, `COMPLETE` 07:23): ls20,
+100 cycles, server ready in 840 s, the game 1,587 s.
+
+| | version 4 | version 5 |
+|---|---|---|
+| the model's answers | 13 (313 s) | 63 (1,578 s) |
+| held as hypotheses | 3 | 26 |
+| not: predict did not give the step / no code / no grid | 10 / 0 / 0 | 31 / 5 / 1 |
+| programs comparing with a character | 3 of 3 held | 2 of 58 |
+| `where` set aside, of those held | — | 9 of 26 (17 kept) |
+| states met (grids) | 1 (83) | 98 (98) |
+| new (situation, act): expected, right | 17: 12, 4 | 99: 80, 33 |
+| frame expectation held | 6 of 100 | 52 of 100 |
+| why it chose | "all known; toward the state visited least" 81 | "not yet taken from here" 85, "…its hypotheses say where each leads" 16 |
+| levels | 0 | 0 |
+
+What it shows: no state is read as another any more, and the mind explores
+rather than circling one place it believes it knows. The programs are still
+mostly wrong: over the 53 program hypotheses written, 144 returns bore one out
+and 1,568 did not (one held at the end); each answer held is soon refuted, and
+the model is asked again — five times as often, five times the time. The `where`
+set aside were most often the bar (rows 61–62): borne out only at a step at
+which the bar changed alone, a move blocked by a wall, and the mind, exploring,
+seldom ran into one within the steps shown. Not established: whether the
+model's programs grow righter with more steps, or more of its time.
