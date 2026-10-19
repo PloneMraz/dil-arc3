@@ -7079,3 +7079,26 @@ grid — none, empty, or of empty rows — bears nothing out and does not fit, i
 branches. `tests/test_situation_fit.py`, six tests, both branches (two failing on
 the old code); 406 pass. ls20 and vc33 rerun, 600 cycles: the same choice at every
 step as before (`differ.py`).
+
+#### `dil-arc3-language-inducer` version 8: the model given its own code to look with
+
+Version 8 (`492e11b`: as version 7, and the model may look at the steps with a
+`look(steps)` of its own before it writes, twice an asking), pushed 11:59 UTC,
+`COMPLETE` 15:27 (12,468 s). Kaggle served its outputs broken twice ("Server
+Error"); whole at the third try, 15:54. No level in any game.
+
+| | ls20 | tu93 | m0r0 |
+|---|---|---|---|
+| looks | 2 | 2 | 2 |
+| the model's answers, s (version 7) | 139, 2,811 (62, 2,817) | 81, 2,368 (103, 4,147) | 398, 10,519 (140, 4,677) |
+| held / after writing again | 7 / 1 | 17 / 2 | 39 / 2 |
+| states met (grids) | 294 (294) | 59 (272) | 260 (260) |
+| frame expectation held (version 7) | 238 (270) | 187 (187) | 169 (151) |
+
+The model looked at the steps twice in each game, of hundreds of answers: given
+its own code to look with, this model, told so in these words, did not use it.
+The programs, by 50 cycles, about half again (tu93 45%, 53%, 53%; m0r0 10%, 41%,
+52%, 47%, 51%, 50%). m0r0 asked the model near three times as often as version 7;
+29 of its answers held no code block — version 8 had no stops on runaway answers
+yet. Next, as settled with Plone: Qwen3.6-35B-A3B on the same three games, the
+same code as version 8 and the stops (A).
