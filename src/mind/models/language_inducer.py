@@ -62,7 +62,7 @@ import json
 import signal
 import textwrap
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Callable, Final
 
 from ..organs import Act, Organs, Step
@@ -125,6 +125,48 @@ def _grid_of(out: Any) -> Grid:
     if not isinstance(out, list) or not out or not all(isinstance(r, list) for r in out):
         raise ProgramError("did not return a grid")
     return [list(r) for r in out]
+
+
+def _where_not_borne_out(form: ProgramForm, steps: list[Transition]) -> str | None:
+    """Why the steps shown do not bear out a program's `where`, or None when they do.
+
+    A cell it sets to -1 is one that "changes whatever is done" (its words): taken
+    by regions of such cells side by side, each must change at every step shown at
+    which a cell outside it changed, and at some step at which nothing outside it
+    did. A block an act moves is still where no act moved it, and never changes
+    alone; a clock that ticks at every step passes both (ls20, version 4, LOG.md
+    2026-10-19). Two clocks that only ever tick together are not borne out, and a
+    clock slower than the steps not until the steps show it — declared, not
+    measured beyond ls20: a `where` set aside leaves the grid read as it came."""
+    hidden: set[tuple[int, int]] = set()
+    for t in steps:
+        try:
+            read = _bounded(form.where, [row[:] for row in t.before])
+        except ProgramError as exc:
+            return f"its where {exc}"
+        if not isinstance(read, list) or not all(isinstance(r, list) for r in read):
+            return "its where does not give a grid"
+        hidden |= {(r, c) for r, row in enumerate(read) for c, v in enumerate(row) if v == -1}
+    changes = [{(r, c) for r in range(min(len(t.before), len(t.after)))
+                for c in range(min(len(t.before[r]), len(t.after[r]))) if t.before[r][c] != t.after[r][c]}
+               for t in steps]
+    changes = [ch for ch in changes if ch]
+    while hidden:
+        region, edge = set(), [next(iter(hidden))]
+        while edge:
+            cell = edge.pop()
+            if cell in hidden:
+                hidden.discard(cell)
+                region.add(cell)
+                r, c = cell
+                edge += [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]
+        alone = any(ch <= region for ch in changes)
+        always = all(ch & region for ch in changes if ch - region)
+        if not (alone and always):
+            rows, cols = [r for r, _ in region], [c for _, c in region]
+            return (f"its where sets to -1 cells at rows {min(rows)}-{max(rows)}, columns {min(cols)}-{max(cols)}, "
+                    "which the steps shown do not show changing whatever is done")
+    return None
 
 
 def compile_program(code: str) -> ProgramForm:
@@ -344,7 +386,7 @@ class LanguageInducer:
             return None
         steps = [Transition(before=s.before, action=s.act[0], x=s.act[1], y=s.act[2], after=s.after, status=r)
                  for s, r in (evidence or ((Step(before, act, after), None),))][-MAX_SHOWN:]
-        text, usage, why, form = "", {}, None, None
+        text, usage, why, form, where_not = "", {}, None, None, None
         try:
             text, usage = self._chat(self.endpoint, self._messages(steps))
         except Exception as exc:  # noqa: BLE001 — the served model, not the mind
@@ -356,9 +398,18 @@ class LanguageInducer:
             else:
                 try:
                     form = compile_program(code)
+                    # Its `where` is a reading only where the steps shown bear it
+                    # out; else it is set aside, and the program is judged by the
+                    # reading held before it. A program never judges itself by a
+                    # reading the evidence does not hold (INV-8's shape: the
+                    # criteria are not drawn from what is judged; Plone, 2026-10-19).
+                    if form.where is not None:
+                        shown = steps if steps and steps[-1].after == after else [*steps, Transition(
+                            before=before, action=act[0], x=act[1], y=act[2], after=after)]
+                        where_not = _where_not_borne_out(form, shown)
+                        if where_not is not None:
+                            form = replace(form, where=None)
                     got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
-                    # Read as it would be read with this program held: by its own
-                    # `where`, or else by the reading it has now.
                     reader = form if form.where is not None else self._now(self._seeing)
                     if self._read(reader, got) != self._read(reader, after):
                         why = "its predict does not give, from the step it was asked on, where the region came to"
@@ -372,7 +423,8 @@ class LanguageInducer:
                 self._seeing, self._reread = (form, None), True
                 self._situations, self._targets = {}, {}
         answer = {"on": "not foreseen", "steps": len(steps), "text": text, "program": form.digest if form else None,
-                  "why_not": why, "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
+                  "why_not": why, "where_not": where_not,
+                  "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
         if usage.get("reasoning"):
             answer["reasoning"] = usage["reasoning"]
         self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
@@ -392,8 +444,9 @@ class LanguageInducer:
         o = self.organs
         acts = ", ".join(n for a, n in sorted(o.acts.items()))
         placed = ", ".join(o.acts[a] for a in sorted(o.placed))
+        numbers = ", ".join(f"{n} is {a}" for a, n in sorted(o.acts.items()))
         first = words["induce"].format(
-            rows=len(grid), cols=len(grid[0]) if grid else 0, acts=acts, placed=placed,
+            rows=len(grid), cols=len(grid[0]) if grid else 0, acts=acts, placed=placed, numbers=numbers,
             evidence=render_evidence(shown, report=True, name=o.name, news=self._news),
             also=words["unforeseen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
         messages = [{"role": "user", "content": first}]
@@ -434,8 +487,10 @@ class LanguageInducer:
                 "where": form.where is not None, "targets": form.targets is not None}
 
     def restore(self, payload: dict[str, Any]) -> ProgramForm:
-        """A program from its datum, which holds its code: loaded again."""
-        return compile_program(payload["code"])
+        """A program from its datum, which holds its code: loaded again — its `where`
+        set aside again where it was when the program was held."""
+        form = compile_program(payload["code"])
+        return replace(form, where=None) if payload.get("where") is False else form
 
 
 __all__ = ["READING_TAGS", "LanguageInducer", "ProgramForm", "compile_program", "identity"]

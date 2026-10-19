@@ -90,16 +90,17 @@ def loop(script: Script):
 def test_the_model_writes_a_program_only_on_a_step_no_hypothesis_held_foresaw():
     script = Script(block(RIGHT))
     mind, inducer, cycle, data = loop(script)
-    run(cycle, frame(lit(0), lit(1)), status())                         # nothing held: not foreseen
-    run(cycle, frame(lit(1), lit(2, 1)), status())                      # the program foresees it
-    run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2))    # and this
+    run(cycle, frame(lit(2), lit(2, 1)), status())                      # at the edge: only the clock; not foreseen
+    run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2))    # what it commanded, foreseen
+    run(cycle, frame(lit(1), lit(0, 1), action=2), status(action=2))    # and again
     assert len(script.shown) == 1, "asked once: every later step was foreseen by what it wrote"
     programs = [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"]
     assert programs and programs[0].open == {**HYPOTHESIS_TAGS, "object": "frame"}
     assert programs[0].payload["code"] == RIGHT, "the program is data, whole"
     assert mind.learning.holds_by_situation[1:] == [1, 1], \
         "the mind expected by the program, where it had never stood, as its where reads the grid"
-    assert mind.holds[1:] == [0, 0], "the whole grid did not hold: this program does not predict the clock"
+    assert mind.holds[-1] == 0, \
+        "where it expected by the program, the whole grid did not hold: this program does not predict the clock"
 
 
 def test_it_is_shown_the_steps_seen_and_the_step_not_foreseen():
@@ -128,7 +129,7 @@ def test_its_where_is_how_the_grid_is_read_and_a_change_of_reading_is_data():
     script = Script(block(RIGHT))
     mind, inducer, cycle, data = loop(script)
     assert inducer.situation(lit(1, 0)) != inducer.situation(lit(1, 1)), "before any program: the grid as it came"
-    run(cycle, frame(lit(0), lit(1)), status())
+    run(cycle, frame(lit(2), lit(2, 1)), status())   # the clock, changing where nothing else did
     assert inducer.situation(lit(1, 0)) == inducer.situation(lit(1, 1)), "the clock cell, read out by its where"
     readings = of_kind(data, "reading")
     assert readings and readings[0][1].open == READING_TAGS
@@ -233,3 +234,69 @@ def test_an_abandoned_block_before_a_whole_one_is_not_read():
     text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
             "```python\ndef predict(grid, action):\n    return grid\n```\n")
     assert extract_code(text) == "def predict(grid, action):\n    return grid\n"
+
+
+# What version 4's model wrote, in this game (LOG.md, 2026-10-19): a predict that
+# changes nothing, and a where that sets to -1 the cells the act moves.
+HIDES = '''
+def predict(grid, action, x, y):
+    return [row[:] for row in grid]
+
+def where(grid):
+    g = [row[:] for row in grid]
+    g[0] = [-1, -1, -1]
+    g[2][0] = -1
+    return g
+'''
+
+# Right about everything, the clock too, with a where that also hides the lit row.
+EXACT = '''
+def predict(grid, action, x, y):
+    g = [row[:] for row in grid]
+    c = g[0].index(1) if 1 in g[0] else 0
+    n = min(2, max(0, c + (1 if action == 1 else -1 if action == 2 else 0)))
+    g[0] = [1 if i == n else 0 for i in range(3)]
+    g[2][0] = 1 - g[2][0]
+    return g
+
+def where(grid):
+    g = [row[:] for row in grid]
+    g[0] = [-1, -1, -1]
+    g[2][0] = -1
+    return g
+'''
+
+STEPS = ((Step(lit(2), (1, None, None), lit(2, 1)), None), (Step(lit(2, 1), (2, None, None), lit(1)), None))
+
+
+def test_a_program_is_not_judged_by_a_where_the_steps_do_not_bear_out():
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(HIDES)))
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind.receive("task", MIND_TASK.payload, None)
+    forms = inducer.induce(grid_key(lit(2, 1)), (2, None, None), lit(2, 1), lit(1), evidence=STEPS)
+    assert forms[1:] == [], "its predict changes nothing; read through its own where it would have matched"
+    answer = inducer.answers[-1]
+    assert answer["program"] is None and "does not give" in answer["why_not"]
+    assert "rows 0-0" in answer["where_not"], "the lit row never changes alone, and stays put at the edge"
+    assert inducer.situation(lit(0)) != inducer.situation(lit(1)), "no state read as another"
+
+
+def test_a_where_set_aside_stays_aside_when_the_program_comes_back_from_memory():
+    inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(EXACT)))
+    mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind.receive("task", MIND_TASK.payload, None)
+    forms = inducer.induce(grid_key(lit(2, 1)), (2, None, None), lit(2, 1), lit(1), evidence=STEPS)
+    program = forms[-1]
+    assert program.where is None, "held for its predict, judged on the grid as it came; its where set aside"
+    payload = inducer.describe(program, lambda raw: raw)
+    assert payload["where"] is False and inducer.restore(payload).where is None
+    assert inducer.situation(lit(0)) != inducer.situation(lit(1))
+
+
+def test_the_model_is_told_what_its_functions_are_given():
+    script = Script(block(STILL))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    words = script.shown[0][0]["content"]
+    assert "a list of 3 rows, each a list of 3 integers 0-15" in words
+    assert "ACTION1 is 1" in words and "ACTION6 is 6" in words

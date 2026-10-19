@@ -56,6 +56,8 @@ Write Python functions, using only the standard library:
     def targets(grid):
         # if you can: the cells (x, y) worth taking an action that carries a cell on
 
+They are given the grid as Python data: a list of {rows} rows, each a list of {cols} integers 0-15 (the value of the hex digit shown: a is 10, f is 15), and predict and where give back a grid of the same form. action is the action's number ({numbers}); x and y are integers, or None for an action that carries no cell. A cell where sets to -1 must be one the steps show changing whatever is done: changing at every step at which anything else changed, and at some step at which nothing else did.
+
 Each run of predict, where or targets must end within {seconds} seconds.
 
 State the region's own rules, whatever they turn out to be, not these particular steps. Return one ```python code block."""

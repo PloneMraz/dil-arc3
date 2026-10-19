@@ -154,11 +154,11 @@ def test_the_program_the_model_reads_the_grid_with_is_had_back_from_memory(monke
     monkeypatch.setattr(language, "compile_program", lambda code: (compiled.append(code), real(code))[1])
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT)))
     mind, cycle, data, events = loop(inducer)
-    run(cycle, frame(lit(0), lit(1)), status())                        # it writes the program
-    run(cycle, frame(lit(1), lit(2, 1)), status())
+    run(cycle, frame(lit(2), lit(2, 1)), status())                     # it writes the program (only the clock moved)
     run(cycle, frame(lit(2, 1), lit(1), action=2), status(action=2))
     run(cycle, frame(lit(1), lit(0, 1), action=2), status(action=2))
     run(cycle, frame(lit(0, 1), lit(1)), status())
+    run(cycle, frame(lit(1), lit(2, 1)), status())
     program = next(k for k, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program")
     assert inducer._seeing[0] is None and inducer._last[0] is None, "not held: had back from the mind's memory"
     assert any(i == program for _, i in reads(events)["hypothesis"]), "read from the store"
