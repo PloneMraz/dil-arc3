@@ -9,6 +9,8 @@ hypothesis held foresaw a step (LOG.md, 2026-09-28).
 
 from __future__ import annotations
 
+import pytest
+
 from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
@@ -51,6 +53,14 @@ STILL = '''
 def predict(grid, action, x, y):
     return [row[:] for row in grid]
 '''
+
+
+@pytest.fixture(autouse=True)
+def one_answer_an_asking(monkeypatch):
+    """These tests judge one answer an asking; the model writing again within an
+    asking has tests of its own (below), which set MAX_REVISIONS back."""
+    import mind.models.language_inducer as language
+    monkeypatch.setattr(language, "MAX_REVISIONS", 0)
 
 
 class Script:
@@ -406,3 +416,41 @@ def test_an_act_never_once_taken_is_not_put_last_by_what_a_hypothesis_says_of_it
     assert not mind.learning._foreseen(mind.learning._here, (3, None, None)), "never taken: not foreseen"
     assert mind.commands[-1][1] == (3, None, None), \
         "of the acts not yet taken here, the one never taken anywhere, most wanted, is commanded"
+
+
+
+def revising(monkeypatch, n: int = 2) -> None:
+    import mind.models.language_inducer as language
+    monkeypatch.setattr(language, "MAX_REVISIONS", n)
+
+
+def test_a_program_not_held_is_run_on_the_steps_and_the_model_writes_again(monkeypatch):
+    revising(monkeypatch)
+    script = Script(block(STILL), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert len(script.shown) == 2, "asked once, written again within the asking"
+    again = script.shown[1]
+    assert again[-2] == {"role": "assistant", "content": block(STILL)}
+    assert "It got 0/1 exactly right" in again[-1]["content"], "told where its program missed, run on the steps"
+    assert [(a["round"], a["program"] is None) for a in inducer.answers] == [(0, True), (1, False)]
+    assert [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"], "the second held"
+    assert len([d for _, d in of_kind(data, "thought") if "round" in d.payload]) == 2, "each answer kept whole"
+
+
+def test_a_program_that_will_not_run_is_told_why_and_written_again(monkeypatch):
+    revising(monkeypatch)
+    script = Script(block("def predict(grid, action, x, y)\n    return grid\n"), block(RIGHT))   # will not load
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert "could not be run on those steps" in script.shown[1][-1]["content"]
+    assert inducer.answers[-1]["program"] is not None
+
+
+def test_it_writes_again_at_most_max_revisions_times(monkeypatch):
+    revising(monkeypatch, 2)
+    script = Script(block(STILL), block(STILL), block(STILL), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert len(script.shown) == 3 and [a["round"] for a in inducer.answers] == [0, 1, 2]
+    assert not [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"]

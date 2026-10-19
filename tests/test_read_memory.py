@@ -120,7 +120,9 @@ def test_the_view_holds_memory_alone():
     assert reads(events) == {"probe": [(1, "signal-0-0")]}
 
 
-def test_the_recent_steps_are_read_only_when_the_model_looks_at_them():
+def test_the_recent_steps_are_read_only_when_the_model_looks_at_them(monkeypatch):
+    import mind.models.language_inducer as language
+    monkeypatch.setattr(language, "MAX_REVISIONS", 0)   # asked again at the next step, not within the asking
     _, cycle, _, events = loop()
     three(cycle)
     assert "evidence" not in reads(events), "the exact inducer computes nothing from the steps before"

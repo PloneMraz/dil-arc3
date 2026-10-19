@@ -76,6 +76,11 @@ Grid = list[list[int]]
 
 # A change of how it reads states: the program it reads them with now.
 READING_TAGS: Final = {"domain": "mind", "kind": "reading", "object": "frame", "source": "mind"}
+# Within one asking, how many times a program not held is run on the steps shown
+# and the model told where it missed, to write it again (Plone, 2026-10-19: the
+# model may use code — here, its own program run for it before it is judged).
+# Declared, not measured.
+MAX_REVISIONS: Final = 2
 
 
 def identity(grid: Grid) -> str:
@@ -400,8 +405,8 @@ class LanguageInducer:
     def receive_prior(self, name: str, payload: Any) -> None:
         if name == "task" and isinstance(payload, dict) and all(
                 isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen", "aimed")):
-            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed", "nothing_seen")
-                           if isinstance(payload.get(k), str)}
+            self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed", "nothing_seen",
+                                                   "unrunnable") if isinstance(payload.get(k), str)}
 
     def consider(self, situation: str, state: Grid) -> tuple[ProgramForm, Note] | None:
         """Asked while the body waits with nothing it can do: the model, shown the
@@ -482,57 +487,86 @@ class LanguageInducer:
     def _think(self, act: Act, before: Grid, after: Grid, evidence: tuple) -> ProgramForm | None:
         """Have the model write a program from what the mind has seen; the program,
         if it is a hypothesis: it gives, from the step, where the region came to.
-        Not asked before it has been told what it is asked (its prior)."""
+        A program that is not is run on the steps shown and the model told where it
+        missed, and it writes again, at most MAX_REVISIONS times: its program is
+        judged by what the region returned, never by what it says of itself. Each
+        answer is kept whole. Not asked before it has been told what it is asked
+        (its prior)."""
         if self._words is None:
             return None
         seen = [Transition(before=s.before, action=s.act[0], x=s.act[1], y=s.act[2], after=s.after, status=r)
                 for s, r in (evidence or ((Step(before, act, after), None),))]
         steps = seen[-MAX_SHOWN:]
-        text, usage, why, form, where_not = "", {}, None, None, None
-        try:
-            text, usage = self._chat(self.endpoint, self._messages(steps))
-        except Exception as exc:  # noqa: BLE001 — the served model, not the mind
-            why = f"the model did not answer: {exc!r}"
-        if why is None:
-            code = extract_code(text)
-            if code is None:
-                why = "the answer holds no code block"
-            else:
-                try:
-                    form = compile_program(code)
-                    # Its `where` is a reading only where the steps shown bear it
-                    # out; else it is set aside, and the program is judged by the
-                    # reading held before it. A program never judges itself by a
-                    # reading the evidence does not hold (INV-8's shape: the
-                    # criteria are not drawn from what is judged; Plone, 2026-10-19).
-                    if form.where is not None:
-                        # Borne out by every step the mind gave, not only those the
-                        # model was shown: more steps, more chance of one at which a
-                        # clock changed alone (version 5, LOG.md, 2026-10-19).
-                        given = seen if seen and seen[-1].after == after else [*seen, Transition(
-                            before=before, action=act[0], x=act[1], y=act[2], after=after)]
-                        form, where_not = _bear_out(form, given)
-                    got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
-                    reader = form if form.where is not None else self._now(self._seeing)
-                    if self._read(reader, got) != self._read(reader, after):
-                        why = "its predict does not give, from the step it was asked on, where the region came to"
-                        form = None
-                except ProgramError as exc:
-                    why = str(exc)
-                    form = None
+        given = seen if seen and seen[-1].after == after else [*seen, Transition(
+            before=before, action=act[0], x=act[1], y=act[2], after=after)]
+        messages, form = self._messages(steps), None
+        for round_ in range(MAX_REVISIONS + 1):
+            text, usage, why, where_not, ran = "", {}, None, None, None
+            try:
+                text, usage = self._chat(self.endpoint, messages)
+            except Exception as exc:  # noqa: BLE001 — the served model, not the mind
+                why = f"the model did not answer: {exc!r}"
+            if why is None:
+                form, why, where_not, ran = self._judge(text, act, before, after, given)
+            answer = {"on": "not foreseen", "steps": len(steps), "round": round_, "text": text,
+                      "program": form.digest if form else None, "why_not": why, "where_not": where_not,
+                      "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
+            if usage.get("reasoning"):
+                answer["reasoning"] = usage["reasoning"]
+            self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
+            self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
+            if form is not None or round_ == MAX_REVISIONS or why.startswith("the model did not answer"):
+                break
+            messages = [*messages, {"role": "assistant", "content": text},
+                        {"role": "user", "content": self._told_where_it_missed(ran, why, steps)}]
         if form is not None:
             self._last = (form, None)
             if form.where is not None or form.targets is not None:
                 self._seeing, self._reread = (form, None), True
                 self._situations, self._targets = {}, {}
-        answer = {"on": "not foreseen", "steps": len(steps), "text": text, "program": form.digest if form else None,
-                  "why_not": why, "where_not": where_not,
-                  "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
-        if usage.get("reasoning"):
-            answer["reasoning"] = usage["reasoning"]
-        self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
-        self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
         return form
+
+    def _judge(self, text: str, act: Act, before: Grid, after: Grid, given: list[Transition]
+               ) -> tuple[ProgramForm | None, str | None, str | None, ProgramForm | None]:
+        """An answer judged: the program if it is a hypothesis, why not, why its
+        `where` was not kept whole, and the program as it ran (for telling the
+        model where it missed). Its `where` is a reading only as far as the steps
+        given bear it out; the program is judged by that reading, or by the one
+        held before it — never by a reading the evidence does not hold (INV-8's
+        shape: the criteria are not drawn from what is judged; Plone, 2026-10-19).
+        The steps given are every step the mind gave, not only those shown: more
+        steps, more chance of one at which a clock changed alone."""
+        code = extract_code(text)
+        if code is None:
+            return None, "the answer holds no code block", None, None
+        try:
+            form = compile_program(code)
+        except ProgramError as exc:
+            return None, str(exc), None, None
+        where_not = None
+        if form.where is not None:
+            form, where_not = _bear_out(form, given)
+        try:
+            got = _grid_of(_bounded(form.predict, [row[:] for row in before], act[0], act[1], act[2]))
+        except ProgramError as exc:
+            return None, str(exc), where_not, form
+        reader = form if form.where is not None else self._now(self._seeing)
+        if self._read(reader, got) != self._read(reader, after):
+            return None, "its predict does not give, from the step it was asked on, where the region came to", \
+                where_not, form
+        return form, None, where_not, form
+
+    def _told_where_it_missed(self, ran: ProgramForm | None, why: str | None, steps: list[Transition]) -> str:
+        """What the model is told before it writes again: its program run on the
+        steps shown, how many it got exactly right and where it missed — or why it
+        could not be run."""
+        words = self._words or {}
+        if ran is None:
+            return words.get("unrunnable", "{why}").format(why=why)
+        evidence = [Transition(t.before, t.action, t.x, t.y, t.after) for t in steps]
+        ok, misses = score(ran.predict, evidence, (), lambda status: status)
+        return words["induce_feedback"].format(ok=ok, n=len(evidence),
+                                               misses=misses_text(misses, name=self.organs.name))
 
     def _messages(self, steps: list[Transition]) -> list[dict[str, str]]:
         """What the model is shown, in the words it was told: the region as its host

@@ -69,7 +69,16 @@ class Transition:
 
 
 def show(grid: Grid) -> str:
-    return "\n".join("".join(HEX[v] for v in row) for row in grid)
+    """A grid as the model reads it: each cell one hex digit, each row's number at
+    its left and each column's above it, tens over units — what is laid out, not
+    computed (Plone, 2026-10-19: version 4's programs had placed cells off by
+    rows and columns)."""
+    cols = len(grid[0]) if grid else 0
+    w = len(str(max(len(grid) - 1, 0)))
+    pad = " " * (w + 1)
+    tens = pad + "".join(str(c // 10 % 10) for c in range(cols))
+    units = pad + "".join(str(c % 10) for c in range(cols))
+    return "\n".join([tens, units, *(f"{r:>{w}} " + "".join(HEX[v] for v in row) for r, row in enumerate(grid))])
 
 
 def diff(a: Grid, b: Grid) -> list[tuple[int, int, int, int]]:

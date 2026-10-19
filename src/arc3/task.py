@@ -42,7 +42,7 @@ TASK_GOAL: Final = {"aim": "get through the levels", "reached_when": {"fields": 
 
 INDUCE: Final = """You are shown what was seen of a region: its states, the actions taken on it, and what came back. Work out, from what was seen, the rules by which it behaves.
 
-Each step shows the region's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit; the action taken; and what came back. The actions are {acts}; {placed} also carries a cell (x = column, y = row).
+Each step shows the region's state, a grid of {rows}x{cols} cells, each a colour 0-15 written as one hex digit, with each row's number at its left and each column's number above it (tens over units); the action taken; and what came back. The actions are {acts}; {placed} also carries a cell (x = column, y = row).
 
 {evidence}
 {also}{aim}
@@ -70,6 +70,9 @@ Revise your program — predict, where and targets — so it explains all the ev
 
 UNFORESEEN: Final = "\nNo program you wrote foresaw the last step.\n"
 
+UNRUNNABLE: Final = ("Your program could not be run on those steps: {why}.\n\n"
+                     "Revise it so that it runs and explains all the evidence. Return one ```python code block.")
+
 # Asked before any step, where nothing can be done until a program names a cell.
 NOTHING_SEEN: Final = ("\nNo step has been seen yet, and no action can be taken here until a targets of yours "
                        "names a cell. What you write cannot be checked against a step yet; the steps will check it.\n")
@@ -80,7 +83,7 @@ AIMED: Final = "The program is for a mind working toward this: {aim}.\n"
 MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
     payload={"goal": TASK_GOAL, "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK,
-             "unforeseen": UNFORESEEN, "aimed": AIMED, "nothing_seen": NOTHING_SEEN},
+             "unforeseen": UNFORESEEN, "aimed": AIMED, "nothing_seen": NOTHING_SEEN, "unrunnable": UNRUNNABLE},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 
