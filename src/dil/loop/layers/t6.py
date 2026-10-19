@@ -13,7 +13,7 @@ implements `dil.DIL_PROTOCOL_VERSION`).
 from __future__ import annotations
 
 from dataclasses import dataclass, field as dc_field
-from typing import Any, Final
+from typing import Any
 
 from ..field import EXPLORATION, TRUST, axis, cast_votes, rising, share
 from ..layer import BaseLayer, ContributeFn, EmitFn

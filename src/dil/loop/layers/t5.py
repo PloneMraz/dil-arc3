@@ -23,7 +23,7 @@ import inspect
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field as dc_field
-from typing import Any, Final
+from typing import Any
 
 from collections.abc import Callable
 

@@ -40,7 +40,7 @@ from mind.learning import Learning  # noqa: E402
 from mind.models.grid import GridInducer  # noqa: E402
 from mind.models.base import Context  # noqa: E402
 from mind.models.language_inducer import LanguageInducer  # noqa: E402
-from mind.organs import Step  # noqa: E402
+from mind.organs import AsRead, Step  # noqa: E402
 from steps_of import steps_of  # noqa: E402
 
 INDUCERS = {"grid": GridInducer, "language": LanguageInducer}
@@ -87,7 +87,10 @@ def replay(run: str, name: str, program: str | None = None, propose: bool = Fals
             if candidate == model.inducer.learnable(act):
                 model._kind_of[(situation, candidate)] = kind
         e = model.expect(step)
-        ok = e.by_model and model.inducer.situation(e.state) == model.inducer.situation(after)
+        # What it expected, as it reads it (an expectation is a state as read, since
+        # 2026-10-11: `organs.AsRead`), against what came.
+        ok = e.by_model and (e.state.matches(after) if isinstance(e.state, AsRead)
+                             else model.inducer.situation(e.state) == model.inducer.situation(after))
         expected += int(e.by_model)
         right += int(ok)
         if not met:
@@ -97,9 +100,9 @@ def replay(run: str, name: str, program: str | None = None, propose: bool = Fals
         model.observe(step, None, None, (), False)
         if propose:
             t = time.time()
-            model.propose(Context(on="command", frame_calls=model.frame_calls, seen=[], recalled=[],
+            model.propose(Context(on="command", steps_seen=model.steps, seen=[], recalled=[],
                                   offers=tuple(sorted(ARC_ORGANS.acts)), ended=None, remark=None,
-                                  remark_unit=None, missed=None, aim=None, priors={}))
+                                  remark_unit=None, aim=None, priors={}))
             choosing += time.time() - t
     held = sum(1 for h in model._hypotheses if h.holds)
     print(f"{name:6} expected {expected} (right {right})  unseen {unseen}: expected {unseen_expected}"

@@ -26,7 +26,6 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass, field as dc_field
-from pathlib import Path
 
 from ..host import HostDeclaration
 from ..store.commit_store import DirCommitStore, create_dir_commit_store

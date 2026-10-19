@@ -669,7 +669,7 @@ class Learning:
         return [h for h, said, to in self._applicable(situation, act, state)
                 if to is None and h.holds and self._reached(said.fields)]
 
-    def _aims_at(self, situation: str, offers: tuple[int, ...]) -> list[tuple[Act, Hypothesis]]:
+    def _aims_at(self, situation: str, offers: tuple) -> list[tuple[Act, Hypothesis]]:
         """The acts here its held hypotheses say bring the aim, each with the one."""
         if not self._aim_held:
             return []
@@ -1391,10 +1391,10 @@ class Learning:
                                if not self.organs.restarts(e.act)), key=lambda se: -se[0])
         self._attend_memo = {}
 
-    def _candidates(self, here: str, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
+    def _candidates(self, here: str, offers: tuple) -> list[tuple[Act, tuple]]:
         return self.inducer.candidates(here, self._state(here), offers)
 
-    def _open_here(self, here: str, offers: tuple[int, ...],
+    def _open_here(self, here: str, offers: tuple,
                    objected: set[tuple[str, Act]] | None = None) -> list[tuple[Act, tuple]]:
         """The acts not yet taken from here, and not objected to."""
         objected = self.objections() if objected is None else objected
@@ -1430,7 +1430,7 @@ class Learning:
         silent = changes < tried / 2
         return silent, [e for e, _ in self._last_attended if (not e.changed) == silent]
 
-    def _ways(self, node: str, offers: tuple[int, ...]) -> list[tuple[Act, str, Hypothesis, Any]]:
+    def _ways(self, node: str, offers: tuple) -> list[tuple[Act, str, Hypothesis, Any]]:
         """From a situation, where each act leads, by the hypothesis it holds best
         there: the acts taken from it first, in the order taken — never one that
         ended the region every time — then, for an inducer whose hypotheses reach
@@ -1451,7 +1451,7 @@ class Learning:
                         ways.append((act, best[2], best[0], best[1]))
         return ways
 
-    def _path(self, start: str, goal: Callable[[str], bool], offers: tuple[int, ...],
+    def _path(self, start: str, goal: Callable[[str], bool], offers: tuple,
               avoid: set[tuple[str, Act]] | frozenset = frozenset()) -> list[tuple[Act, Hypothesis]] | None:
         """The shortest way from `start` to a situation `goal` holds of, looking
         ahead by what its held hypotheses predict — through situations it has stood
@@ -1582,7 +1582,7 @@ class Learning:
             return best[0], self._change_odds(best[1])
         return best[0], self._odds(best[1])[1]
 
-    def _way(self, here: str, goal: Callable[[str], bool], offers: tuple[int, ...],
+    def _way(self, here: str, goal: Callable[[str], bool], offers: tuple,
              objected: set[tuple[str, Act]]) -> tuple[list[tuple[Act, Hypothesis]] | None, bool]:
         """A way to where `goal` holds whose first act is not objected to; only if
         there is none, one that is (and says so)."""

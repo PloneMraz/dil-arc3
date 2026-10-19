@@ -23,10 +23,10 @@ WHAT IT DOES:
   hands its learning what it has: the recent steps (as many as T5's
   window), what memory answered to what was asked, what the onlooker says, what
   the region offers, why it is thinking. Its learning is also shown every
-  return, and learns from it there; it thinks further on a collision of the
-  frame (what collided turns its next choice) and on the onlooker's word
-  (`learning.Learning.think`); the status and the body's waiting are seams it
-  leaves unused.
+  return, and learns from it there; it thinks further on a collision of a
+  step or of the region's report (what collided turns its next choice) and on
+  the onlooker's word (`learning.Learning.think`); the body's waiting is a seam
+  it leaves unused.
 - **Commands.** When the region has said all it says in a cycle, it asks its
   learning what to do next and, if the body can carry it out (the body's own
   rule), pushes it as T5's test (§6.4); the body carries it out. With no command
@@ -116,7 +116,7 @@ class Mind:
         # attends to the experiences most like where it stands (`learning.ATTENTION_K`).
         self.learning: Learner = Learning(inducer, organs, priors, curiosity=curiosity, attention=attention)
         self.organs = organs
-        self.frame_calls = 0
+        self.steps_seen = 0
         # For the run's report only, never the field: whether each expectation of
         # a step held, and each command given (the trace is `[event]`).
         self.holds: list[int] = []
@@ -128,7 +128,7 @@ class Mind:
         # The recent steps: [step, unit, report or None, the report's unit or
         # None], as long as T5's window.
         self._seen: list[list[Any]] = []
-        self._status_seen_at: int | None = None
+        self._report_seen_at: int | None = None
         self._said: dict[str, Any] | None = None
         self._said_by_model = False
         self._held: tuple[object, ...] = ()
@@ -136,7 +136,7 @@ class Mind:
         # The one aim it holds, and the cycle it asked its memory for its priors.
         self._aim: dict[str, Any] | None = None
         self._asked_at: int | None = None
-        self._status_this_cycle = False
+        self._report_this_cycle = False
         self._remark: dict[str, Any] | None = None
         self._remark_unit: InfoUnit | None = None
         # Its answer to what an Other said, while it stands: the data it is. The
@@ -182,7 +182,7 @@ class Mind:
             if name not in self._priors:
                 ask(dict(cue))
         self._priors_asked = True
-        self._asked_at = self.frame_calls
+        self._asked_at = self.steps_seen
 
     def receive(self, name: str, payload: Any, datum_id: str | None) -> None:
         """A prior it reads, as it came back from memory. A test may hand one in
@@ -234,8 +234,8 @@ class Mind:
             return
         if not self._answers(open_tags, ret.get("fixed")):
             return
-        if self._recalled_at != self.frame_calls:
-            self._recalled, self._recalled_at = {}, self.frame_calls
+        if self._recalled_at != self.steps_seen:
+            self._recalled, self._recalled_at = {}, self.steps_seen
         step = self.organs.step(payload) if isinstance(payload, dict) else None
         self._recalled[entity] = (step, dict(open_tags), payload)
 
@@ -292,15 +292,15 @@ class Mind:
 
     def _own_aim_if_due(self) -> None:
         """No goal came back with what it asked its memory for: its own aim."""
-        if self._aim is None and self._asked_at is not None and self.frame_calls > self._asked_at + GOAL_WAIT:
+        if self._aim is None and self._asked_at is not None and self.steps_seen > self._asked_at + GOAL_WAIT:
             self._hold_aim(dict(OWN_AIM))
 
     # ── arrivals, one rule per channel ──
 
-    def on_frame(self, step: Step, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
+    def on_step(self, step: Step, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
                  window, contribute, ask, write) -> InfoUnit | Expecting:
-        self.frame_calls += 1
-        self._status_this_cycle = False
+        self.steps_seen += 1
+        self._report_this_cycle = False
         self._ask_priors(ask)
         o = self.organs
         # 1. Expect, from the situation alone.
@@ -335,18 +335,18 @@ class Mind:
         held = self._resolve(self._held) if by_model else ()
         return Expecting(predicted=predicted, held_by=held) if held else predicted
 
-    def on_status(self, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
+    def on_report(self, observed: InfoUnit, content: dict[str, Any], payload: dict[str, Any],
                   window, contribute, ask, write, test) -> InfoUnit | Expecting:
-        self._status_this_cycle = True
+        self._report_this_cycle = True
         o = self.organs
         standing_unit = window[-1] if window else observed
         standing = _content_value(standing_unit)
         report = payload.get(o.report_key) if isinstance(payload.get(o.report_key), dict) else None
         self._offers = o.read_offers(payload.get(o.offers_key))
         # The step just seen gets what the region reported of itself.
-        if self._seen and self._status_seen_at != self.frame_calls and report is not None:
+        if self._seen and self._report_seen_at != self.steps_seen and report is not None:
             self._seen[-1][2], self._seen[-1][3] = report, observed
-            self._status_seen_at = self.frame_calls
+            self._report_seen_at = self.steps_seen
         # The expectation: what the region reported last, the agent's own act as
         # it is — or, where its learning said the report, what it said, the fields it
         # left out staying as they were.
@@ -416,11 +416,11 @@ class Mind:
                 self._answer = ()  # it stopped: the answer did what it was for
         else:
             self._answer = ()
-            if self.think("onlooker", ask, write, again=True) and self._status_this_cycle:
+            if self.think("onlooker", ask, write, again=True) and self._report_this_cycle:
                 self.command(ask, write, test, on="command again")  # before the body moves
-        if not self._status_this_cycle:
+        if not self._report_this_cycle:
             self.command(ask, write, test)
-        self._status_this_cycle = False
+        self._report_this_cycle = False
         return expected
 
     # ── commanding ──
@@ -435,7 +435,7 @@ class Mind:
         report = self._seen[-1][2] if self._seen else None
         state = (report or {}).get(self.organs.state_field)
         return Context(
-            on=on, frame_calls=self.frame_calls, seen=[(s, u, r) for s, u, r, _ in self._recent()],
+            on=on, steps_seen=self.steps_seen, seen=[(s, u, r) for s, u, r, _ in self._recent()],
             recalled=[(k, s, t, p) for k, (s, t, p) in self._recalled.items()],
             offers=self._offers, ended=state if state in self.organs.ended else None,
             remark=self._remark, remark_unit=self._remark_unit, aim=self._aim,
@@ -465,14 +465,14 @@ class Mind:
                 self._write(write, writes)
                 act = proposal.act
                 if act is not None and self.organs.can_carry_out(act, state, self._offers):
-                    self.commands.append((self.frame_calls, act))
+                    self.commands.append((self.steps_seen, act))
                     if test is not None:
                         test(self.organs.command(act))
                     return
                 reason = "no command"
             if attempt < MAX_WAIT_THOUGHTS and not self.think(reason, ask, write, again=True):
                 break  # its learning does not think on this: asking again changes nothing
-        self.commands.append((self.frame_calls, None))
+        self.commands.append((self.steps_seen, None))
 
     # ── thinking ──
 
@@ -480,24 +480,24 @@ class Mind:
         """An expectation met a mismatch, or no command came: have its learning think.
         Once a cycle for a mismatch; `again` is the body waiting. False when the
         learning does not think on this."""
-        if self._thought_at != self.frame_calls:
+        if self._thought_at != self.steps_seen:
             self._thoughts_this_cycle = 0
         allowed = shifted_count(MIND_THOUGHTS_PER_CYCLE, rising(axis(self._field, ALERTNESS)))
-        if self._thought_at == self.frame_calls and not again and self._thoughts_this_cycle >= allowed:
+        if self._thought_at == self.steps_seen and not again and self._thoughts_this_cycle >= allowed:
             return True
         if not self._ready():
             self._pending = on  # what it reads has not come back from memory yet
             return True
         self._pending = None
-        self._thought_at = self.frame_calls
+        self._thought_at = self.steps_seen
         if not again:
             self._thoughts_this_cycle += 1
         result = self.learning.think(self._context(on))
         if result is None:
             return False
         if result.asks is not None:
-            self._asks_open = [(at, cue) for at, cue in self._asks_open if at >= self.frame_calls - 1]
-            self._asks_open += [(self.frame_calls, dict(cue)) for cue in result.asks]
+            self._asks_open = [(at, cue) for at, cue in self._asks_open if at >= self.steps_seen - 1]
+            self._asks_open += [(self.steps_seen, dict(cue)) for cue in result.asks]
             if ask is not None:
                 for cue in result.asks:
                     ask(dict(cue))
@@ -529,9 +529,9 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
         if channel == channels.get("step") and isinstance(payload, dict):
             step = mind.organs.step(payload)
             if step is not None:
-                return mind.on_frame(step, observed, content, payload, window, contribute, ask, write)
+                return mind.on_step(step, observed, content, payload, window, contribute, ask, write)
         if channel == channels.get("report") and isinstance(payload, dict):
-            return mind.on_status(observed, content, payload, window, contribute, ask, write, test)
+            return mind.on_report(observed, content, payload, window, contribute, ask, write, test)
         if channel == channels.get("others") and isinstance(payload, dict):
             return mind.on_remark(entity_id, observed, payload, window, contribute, ask, write, test)
         return persistence(entity_id, window, observed, contribute, ask, write)

@@ -6650,3 +6650,24 @@ then fixed, in order, at Plone's word:
   was met again "after the collision" was judged against the cycle of the chain
   before. It ran without failing, so the figure was wrong without a sign (vc33
   under I3: 8 such chains; 7 counted right).
+- `Learning.think`'s docstring and `TAG_H_STATUS` said less than their code
+  (the learning thinks on a step's and the report's collisions; tag H fits as
+  the mind reads, or otherwise); CLAUDE.md's tag H and its waiting-thought
+  sentence the same; `paper/PLAN.md` and `OUTLINE.md` still described version
+  28 and the work 3 → 2 → 1 → 4 as to come — now version 35, the work done, a
+  schedule proposed; README and `scripts/README.md` brought to the code: five
+  other laws of curiosity, what the mind expects and what a collision does, the
+  field's votes, counts and carry, the grid inducer's moves, blocks and into,
+  the run scripts' options, `chains.py` and `differ.py`.
+- Found while fixing: `scripts/replay_inducer.py` had not run since 2026-10-11 —
+  it read an expectation's state as a grid, where an expectation became a state
+  as read (`AsRead`); and with `--propose` it built a `Context` with fields it no
+  longer has (`frame_calls`, `missed`). Fixed and run (lp85 under I3: 32
+  expected, 21 right). `onlooker_answers.py`, `level_steps.py`, `situations.py`
+  and `readlog.py` run as they are.
+- The mind's seams named by what arrives, as its channels are: `on_step`,
+  `on_report`, `steps_seen` (were `on_frame`, `on_status`, `frame_calls`);
+  `offers` typed as the host's opaque tuple; fourteen unused imports and three
+  unused variables gone; `build_dil_run.py` takes its laws of curiosity from
+  `CURIOSITY`; CLAUDE.md says which games a change has been tried on since
+  2026-10-07 (ten, then eleven). 369 tests pass; ruff finds nothing.

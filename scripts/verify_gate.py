@@ -5,7 +5,6 @@ the engine actually sends.
 """
 from _paths import SRC, STARTER  # noqa: E402 — see scripts/_paths.py
 import sys
-from pathlib import Path
 
 ROOT = STARTER
 sys.path.insert(0, str(ROOT))

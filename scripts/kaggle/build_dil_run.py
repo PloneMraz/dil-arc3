@@ -35,12 +35,16 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 import tarfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SCRIPTS = HERE.parent
 REPO = SCRIPTS.parent
+sys.path.insert(0, str(REPO / "src"))
+
+from mind.learning import CURIOSITY  # noqa: E402 — the laws a run may name, as the mind has them
 OUT = SCRIPTS / "data" / "kaggle" / "dil-run"
 
 OWNER = "plonemraz"
@@ -496,8 +500,8 @@ def main() -> None:
                          "now, Plone 2026-09-28); without it, a CPU notebook with --inducer")
     ap.add_argument("--inducer", choices=("grid",), default="grid",
                     help="the mind's model, what its learning computes with")
-    ap.add_argument("--curiosity", choices=("new", "changed", "new-then-changed", "new-plus-changed", "made", "test"),
-                    default="new", help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
+    ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
+                    help="the mind's law of curiosity (mind/learning.py: CURIOSITY)")
     ap.add_argument("--notebook", default=None,
                     help="the notebook's slug (default: dil-arc3-learning on CPU, dil-arc3-run with --served): "
                          "another than one a scored rerun is running from, so a measurement never pushes to it "

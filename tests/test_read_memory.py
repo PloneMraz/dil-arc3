@@ -13,7 +13,7 @@ from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from dil.conformance.checker import check_conformance
-from dil.loop.cycle import HostCycleInput, Layers, create_cycle
+from dil.loop.cycle import Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
 from dil.loop.layers.t2 import Emission, create_t2

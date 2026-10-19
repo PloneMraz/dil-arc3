@@ -29,7 +29,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from typing import Literal, TypeAlias
 
-from ..precondition.gate import GateResult, NonStart, Qualify
+from ..precondition.gate import GateResult, Qualify
 from ..runtime.decisions import REFLECTION_MECHANISM
 from ..store.data_store import is_provenance_edge
 from ..store.event_log import ReadableEventLog

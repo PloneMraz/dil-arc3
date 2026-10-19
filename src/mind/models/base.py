@@ -107,13 +107,13 @@ class Context:
 
     on: str
     # How many steps the mind has seen: the cycle a thought belongs to.
-    frame_calls: int
+    steps_seen: int
     # The recent steps: (step, unit, report fields or None), oldest first.
     seen: list[tuple[Step, Any, dict[str, Any] | None]]
     # What memory answered to what was asked: (datum id, step or None, open
     # tags, payload), oldest first.
     recalled: list[tuple[str, Step | None, dict[str, str], Any]]
-    offers: tuple[int, ...]
+    offers: tuple
     ended: str | None
     remark: dict[str, Any] | None
     # The unit the remark came in: what a datum built from the remark names.
@@ -171,7 +171,7 @@ class Inducer(Protocol):
     def default_kind(self, act: Act) -> tuple:
         """The kind of an act it was not offered as a candidate."""
 
-    def candidates(self, situation: str, state: State, offers: tuple[int, ...]) -> list[tuple[Act, tuple]]:
+    def candidates(self, situation: str, state: State, offers: tuple) -> list[tuple[Act, tuple]]:
         """The acts it can take in a state, each with its kind."""
 
     def copy(self, state: State) -> State:

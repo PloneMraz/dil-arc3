@@ -15,8 +15,8 @@ from arc3.decisions import situation_fit
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
-from mind.learning import CHOICE_TAGS, EXPERIENCE_TAGS, HYPOTHESIS_TAGS, Learning
-from mind.models.grid import CLOCK_WINDOW, GridInducer, grid_key, things
+from mind.learning import CHOICE_TAGS, EXPERIENCE_TAGS, Learning
+from mind.models.grid import CLOCK_WINDOW, GridInducer, things
 from mind.organs import Step
 from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
@@ -319,7 +319,7 @@ def test_quiet_after_an_answer_is_the_answer_holding_and_lifts_the_objection():
     mind, cycle, data, events = loop()
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
-    r = run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
+    run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(said))
     assert mind.learning.objections()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     run(cycle, frame(lit(1), lit(0), action=2), status(action=2), _remark(QUIET))
@@ -344,7 +344,6 @@ def test_a_back_and_forth_is_objected_to_at_the_states_it_ran_through():
 
 
 def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
-    from mind.learning import Edge
     mind, cycle, data, events = loop()
     model = mind.learning
     # A known state a with two known ways out, 1 and 2, both to states with an
@@ -353,7 +352,6 @@ def test_a_way_through_an_objected_act_is_taken_only_when_there_is_no_other():
     here = model._here
     model._objected[("repeating", (1, None, None))] = {(model._now_raw, (1, None, None))}
     assert (here, (1, None, None)) in model.objections()
-    first = [e for e in model._out.get(here, {}).values()]
     path = model._path(here, lambda n: n != here, (1, 2), avoid=model.objections())
     assert path is None or path[0][0] != (1, None, None)
 
@@ -525,7 +523,7 @@ def test_a_choice_commanded_again_says_which_it_replaces():
 def test_what_it_reads_recalled_again_later_is_no_reason_to_command():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
-    mind.commands.append((mind.frame_calls, None))    # the body waits, for its own reasons
+    mind.commands.append((mind.steps_seen, None))    # the body waits, for its own reasons
     pushed: list = []
     mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
                      write=lambda request: None, ask=None, test=pushed.append)
@@ -942,14 +940,14 @@ def test_the_mind_votes_on_trust_from_whether_what_its_memory_named_was_borne_ou
     from dil.loop.field import TRUST
     mind, cycle, data, events = loop()
     cast: list = []
-    on_frame = mind.on_frame
+    on_step = mind.on_step
 
     def spy(step, observed, content, payload, window, contribute, ask, write):
         def counted(v):
             cast.append(v.get(TRUST))
             return contribute(v)
-        return on_frame(step, observed, content, payload, window, counted if contribute else None, ask, write)
-    mind.on_frame = spy
+        return on_step(step, observed, content, payload, window, counted if contribute else None, ask, write)
+    mind.on_step = spy
     run(cycle, frame(lit(0), lit(1)), status())        # nothing named: no vote
     run(cycle, frame(lit(0), lit(1)), status())        # named, borne out
     run(cycle, frame(lit(0), lit(2)), status())        # named, otherwise

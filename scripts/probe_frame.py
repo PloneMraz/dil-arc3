@@ -5,7 +5,6 @@ signature; this reads what the engine actually returns.
 """
 from _paths import STARTER  # noqa: E402 — see scripts/_paths.py
 import sys
-from pathlib import Path
 
 ROOT = STARTER
 sys.path.insert(0, str(ROOT))

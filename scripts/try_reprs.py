@@ -74,7 +74,6 @@ def score(fn, name):
     for game, table in sorted(by_game.items()):
         total = sum(sum(c.values()) for c in table.values())
         pure = sum(sum(c.values()) for c in table.values() if len(c) == 1)
-        acts = sorted({a for c in table.values() for a in c})
         # how many signatures does each single action get split across?
         per_act = defaultdict(set)
         for sig, c in table.items():

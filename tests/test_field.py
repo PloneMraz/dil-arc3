@@ -15,7 +15,7 @@ import pytest
 from dil.loop.appraisal import AppraisalInput, appraise
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.field import (
-    ALERTNESS, AXES, EXPLORATION, NEUTRAL, TRUST, axis, falling, rising, shifted_count, votes,
+    AXES, EXPLORATION, NEUTRAL, TRUST, axis, falling, rising, shifted_count, votes,
 )
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layer import run_layer

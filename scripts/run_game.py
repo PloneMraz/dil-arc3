@@ -23,7 +23,6 @@ Nothing here submits to the competition.
 """
 from _paths import SRC, STARTER, DATA  # noqa: E402 — see scripts/_paths.py
 import argparse, collections, json, os, sys, tempfile, time
-from pathlib import Path
 
 sys.path.insert(0, str(STARTER)); sys.path.insert(0, str(STARTER / "vendor" / "ARC-AGI-3-Agents"))
 sys.path.insert(0, str(SRC))

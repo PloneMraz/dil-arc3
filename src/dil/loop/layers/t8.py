@@ -16,7 +16,6 @@ implements `dil.DIL_PROTOCOL_VERSION`).
 from __future__ import annotations
 
 from dataclasses import dataclass, field as dc_field
-from typing import Final
 
 from ...invariants.guards import assert_correlational
 from ...invariants.types import RunningOutput
