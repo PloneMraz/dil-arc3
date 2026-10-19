@@ -6954,3 +6954,35 @@ met to build one from); its `where` is set aside; the reading is a datum
 read with purpose `reading`), as a hypothesis's form is. Stub run on r11l, 40
 cycles, a program naming 64 cells: asked once while the body waited, then 39
 clicks, the reading read back 37 times. 385 tests pass.
+
+#### What version 6 showed, acted on (Plone: both proposals, then the model's own code and numbered grids)
+
+- **A `where` kept as far as the steps bear it out** (`73630b4`): each region it
+  sets to -1 is judged on its own; those borne out are kept, the others struck,
+  and the `where` hides only the cells kept (kept in the datum, and again when
+  the program comes back from memory). Replayed on version 6's ls20 programs: no
+  bar region was borne out either — within the steps given, the bar never
+  changed alone, as no move was blocked; with the block and the bar always
+  changing together, the steps cannot tell them apart.
+- **An act never once taken is never foreseen** (`73630b4`). The diagnosis of
+  version 6's ls20 given above was wrong in one part: not S2b's law, whose UCB term
+  wants an act never tried far above one tried (3.9 against 1.2 at 300 steps), but
+  the rule that puts a foreseen act last. The one program it held (282 borne out,
+  8 not) said `if action not in (1, 2): return grid` — ACTION3 and ACTION4, never
+  met, change nothing — so both led, as it foresaw, where it stood, and stood
+  behind an act still to be tried in every state, every state being new. What a
+  hypothesis says of an act no return has borne out or refuted is not taken as
+  learned. On the eleven games with grid (from a worktree at that commit): every
+  game the same choice at every step as before (`differ.py`), the same 12
+  levels — grid holds no hypothesis of an act never taken.
+- **The model writes again, told where its program missed** (`ba87fd6`): a
+  program not held is run on the steps shown and the model told how many it got
+  exactly right and where it missed — or, where its code would not load, why — and
+  writes again, at most `MAX_REVISIONS = 2` times in one asking (declared, not
+  measured). Judged by what the region returned; each answer kept whole.
+- **Rows and columns numbered** where a grid is shown to the model (`ba87fd6`),
+  tens over units, and the model told so. `scripts/wm_probe.py`, a probe, shows
+  grids so too.
+
+390 tests pass. `dil-arc3-language-inducer` version 7 (all of the above; ls20, tu93,
+m0r0, 300 cycles) pushed at 10:05 UTC.
