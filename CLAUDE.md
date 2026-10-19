@@ -622,7 +622,7 @@ own form (a `present` set, a `predict` rule for T5).
    form, whose program was revised in place. No run of this host uses it now:
    the mind keeps dil-core's scar rhythm alone (Plone, 2026-09-27). Its learning
    revises data in place (2026-10-04); what a datum holds is in `[data]`, and a
-   commit's snapshot is for recovery, not for reading (protocol v0.3.6 §9).
+   commit's snapshot is for recovery, not for reading (protocol v0.3.7 §9).
 5. **T5's `FitRule`** (`create_t5(fit=...)`): whether an observation fits its
    expectation, declared by the host (tag H). dil-core compares the whole
    content, which holds when a host declares none. This host's mind expects the
@@ -1057,7 +1057,7 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
 
 - **The 1,500-word limit is real.** "Your Writeup should not exceed 1,500
   words. Submissions over this limit may be subject to penalty." So the paper is
-  1,500 words set against a 63 KB specification: it states the claim, the
+  1,500 words set against a 65 KB specification: it states the claim, the
   evidence and the limits, and points to the repository for the rest.
 - **The score is a mean.** "Each criterion is scored on a scale from 0 (lowest)
   to 5 (highest), with the final score calculated as the average of all six."

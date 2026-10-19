@@ -6761,3 +6761,51 @@ cell runs `sys.executable` with `PYTHONPATH` on the runtime's
 Every earlier log here shows 3.12, the GPU notebook's of 2026-09-25 and the CPU
 notebook's of version 35, 2026-10-18. Not established: whether Kaggle's image
 moved to 3.13 for every notebook or only this machine's.
+
+#### dil-arc3 against dil-core, read together (Plone: check, then fix what was found)
+
+Read side by side, module by module: every module of dil-core's mechanism is
+ported; every constant its `decisions` declares has the same value here (the
+differences are the language's — `bound_layer`, `1/2`, `0.0` — or this host's
+declarations: the onlooker as `REFLECTION_MECHANISM`, `COMMIT_CADENCE`); the four
+items ported this morning agree condition for condition (T2's and T5's echo
+rules, the carry, the sync cadence, the `read` record and its form on disk). The
+spec copies match dil-core's byte for byte; the 16 dil-core commits this
+repository cites exist and say what they are cited for. dil-core's own CLI read
+dil-arc3's stores: `inspect` read every record; `conformance` gave the verdicts
+dil-arc3's checker gives (five stores).
+
+`verify` did not: `BROKEN at line 39` on every store written here, where
+dil-arc3's verifier passed them. dil-core hashes `JSON.stringify(record)`; this
+port hashed the same record as Python writes it, and Python writes a float with
+no fraction as `1.0` where JavaScript writes `1`. An expectation's `confidence`
+and `delta` are floats (`0.0`, `1.0`), so the first expectation of every log
+broke the chain under dil-core — 5,103 of tu93's 61,778 lines, 14,626 of version
+35's ls20 (155,412 lines). The module's docstring said nothing written here
+carries floats, and that a log written by either implementation verifies under
+the other: neither held.
+
+Fixed (`src/dil/store/hash_chain.py`): a record is hashed with its floats as
+JavaScript writes them — no fraction as an integer, `-0.0` as `0`, the exponent
+where JavaScript puts it (below 1e-6, from 1e21), past 2**53 the shortest digits
+padded with zeros. Checked against node's `JSON.stringify` on 50,017 values and
+as many records with strings that look like numbers: no difference. A store
+written now passes `dil verify` (ls20, 60 cycles: 6,948 records). A line written
+before verifies here still, by the form it was written in, and is counted
+(`ChainOk.legacy`); an altered record breaks under either form. The cost: 2.3 s
+where Python's text alone took 2.0 s, over tu93's 61,778 records (the floats found
+with `str.find`, not by a regular expression over a frame's grids, which took
+5.8 s). 377 tests pass (`tests/test_hash_chain_numbers.py`, the hash expected
+computed by node).
+
+What stays: every store written before — version 35's, the submission the paper
+is to name, among them — verifies under dil-arc3's verifier and not under
+dil-core's.
+
+Also fixed: T5's comment said dil-core hard-codes persistence (it has had a
+`predict` rule a host declares since `a8ef7ce`); six citations of "v0.3.6 §9"
+now cite v0.3.7, whose §9 says the same; CLAUDE.md's "63 KB" is 65. Found and
+left, not in what was approved: dil-core's `recollecting` (a predict rule that
+asks recollection, then persistence) is not ported, and nothing here uses it;
+the port's `Daemon.stop` syncs once more than dil-core's; a rule here receives
+`read` by that parameter's name, in dil-core as the ninth argument.

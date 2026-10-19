@@ -118,7 +118,7 @@ class ActivityEvent:
     # The full tag set of every datum the agent wrote this cycle — written anew
     # (entering at `nascent`) or revised (its provenance unchanged) — as it stands
     # once written. Tags only, never content: what a revised datum holds is in
-    # `[data]` (v0.3.6 §9). Each arrives at T1 the next cycle and runs every
+    # `[data]` (v0.3.7 §9). Each arrives at T1 the next cycle and runs every
     # layer. Empty, and then not written, when nothing was written. Ported from
     # dil-core 44309b7 (v0.3.3).
     written: tuple["WrittenTags", ...] = ()
@@ -311,7 +311,7 @@ class RevisionActivity:
     revision occurred: which datum, in which cycle, by which layer. It carries no
     content, as no `[event]` does; what the datum holds is in `[data]`. A commit's
     snapshot keeps the store's content by design, outside the store, for recovery
-    — not for reading (v0.3.6 §9).
+    — not for reading (v0.3.7 §9).
     """
 
     datum_id: str

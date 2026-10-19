@@ -288,7 +288,7 @@ class Daemon:
         # fires at the close of every cycle in which the agent wrote a datum, so
         # each version of what it wrote is in a snapshot the marker ties to its
         # place in `[event]` — kept for recovery: what a datum holds is in
-        # `[data]` (v0.3.6 §9).
+        # `[data]` (v0.3.7 §9).
         self._sync()
         if self._commits is not None and (
             self._scars_since_commit >= self._commit_every

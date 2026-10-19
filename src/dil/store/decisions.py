@@ -232,7 +232,7 @@ MIN_SNAPSHOTS_RETAINED: Final = 9
 # for an agent that writes often, a snapshot per write is too heavy a cost.
 # The learning mind writes every cycle and revises data in place (2026-10-04):
 # what a datum holds is in `[data]`, and a commit's snapshot is for recovery,
-# not for reading (protocol v0.3.6 §9). A snapshot per write made each cycle
+# not for reading (protocol v0.3.7 §9). A snapshot per write made each cycle
 # slower than the last and a 400-cycle store 2 GB (LOG.md), so a run keeps the
 # scar rhythm alone (Plone, 2026-09-27; `Daemon(commit_on_write=False)`).
 COMMIT_CADENCE: Final = (

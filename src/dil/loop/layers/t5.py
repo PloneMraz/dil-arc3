@@ -36,8 +36,9 @@ from .t4 import BoundInfo
 
 # Builds the expectation for one entity (DECIDE@IMPL, host-declared).
 #
-# DEVIATION from dil-core, declared. dil-core hard-codes persistence because its
-# minimal host has no model; **this is the seam the thinking organ plugs into**.
+# DEVIATION from dil-core, declared, in this port's own form: dil-core has the seam
+# too (`createT5({ predict })`, persistence when a host declares none), and this is
+# where the thinking organ plugs in; its `test` was dil-core `a8ef7ce`.
 # A model supplies the EXPECTATION here and nothing else — it never sees the
 # afforded set and never reaches the committed action, so it cannot choose. That
 # is the settled architecture in the type: the model thinks, the self acts.
