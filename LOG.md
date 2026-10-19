@@ -6986,3 +6986,35 @@ clicks, the reading read back 37 times. 385 tests pass.
 
 390 tests pass. `dil-arc3-language-inducer` version 7 (all of the above; ls20, tu93,
 m0r0, 300 cycles) pushed at 10:05 UTC.
+
+#### `dil-arc3-language-inducer` version 7 against version 6
+
+Version 7 (`ba87fd6`: the `where` kept in part, an act never taken never
+foreseen, the model writing again, numbered grids), pushed 10:05 UTC, `COMPLETE`
+11:48; ls20, tu93, m0r0, 300 cycles each. No level in any.
+
+| | ls20 | tu93 | m0r0 |
+|---|---|---|---|
+| acts taken (kinds) | 4 (v6: 2) | 4 | 6 |
+| states met (grids) | 293 (293) | 48 (261; v6 223 of 223) | 279 (279) |
+| frame expectation held | 270 (v6 286) | 187 (v6 177) | 151 (v6 155) |
+| the model's answers, s | 62, 2,817 (v6 13, 512) | 103, 4,147 | 140, 4,677 |
+| held: at the first round / after writing again | 4 / 2 | 14 / 6 | 17 / 3 |
+| the game's wall time | 2,861 s (v6 568) | 4,199 s | 4,766 s |
+
+- ls20 took ACTION3 and ACTION4 (68 and 80 times); its states were still all new:
+  51 of its 62 answers had their `where` set aside and 4 kept in part, and no bar
+  region was kept — the onlooker said "back-and-forth" in 228 cycles. Two of its
+  programs were borne out 92% and 95% of the times they applied.
+- tu93's `where` was kept whole in 94 of 103 answers: its 261 grids read as 48
+  situations.
+- The programs, by 50 cycles: tu93 40%, 56%, 66%, 52%, 50%; m0r0 42%, 51%, 48%,
+  50%, 49%, 50%; ls20 17%, then 92%, 95%, 52% for the few written after. As in
+  version 6, about half.
+- Writing again held 11 of the 46 programs held.
+- m0r0's model refused four askings, `400 Bad Request`, all at the third round.
+  The server's log does not say why; the likely cause, not established, is the
+  conversation grown past the context (65,536 tokens with 12,288 asked for the
+  answer) as each round carried every round before. Fixed: each round is shown
+  the first message, its last answer and where that missed, so a round is as long
+  as the second (391 tests pass).

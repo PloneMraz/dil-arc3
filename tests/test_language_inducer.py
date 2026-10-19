@@ -454,3 +454,14 @@ def test_it_writes_again_at_most_max_revisions_times(monkeypatch):
     run(cycle, frame(lit(0), lit(1)), status())
     assert len(script.shown) == 3 and [a["round"] for a in inducer.answers] == [0, 1, 2]
     assert not [d for _, d in of_kind(data, "hypothesis") if d.payload.get("form") == "program"]
+
+
+
+def test_each_round_is_shown_its_last_answer_only_not_every_round_before(monkeypatch):
+    revising(monkeypatch, 2)
+    script = Script(block(STILL), block(STILL + "# again"), block(RIGHT))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    third = script.shown[2]
+    assert len(third) == len(script.shown[1]), "the third round no longer than the second"
+    assert third[-2]["content"] == block(STILL + "# again"), "shown its last answer"

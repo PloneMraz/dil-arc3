@@ -499,7 +499,8 @@ class LanguageInducer:
         steps = seen[-MAX_SHOWN:]
         given = seen if seen and seen[-1].after == after else [*seen, Transition(
             before=before, action=act[0], x=act[1], y=act[2], after=after)]
-        messages, form = self._messages(steps), None
+        first, form = self._messages(steps), None
+        messages = first
         for round_ in range(MAX_REVISIONS + 1):
             text, usage, why, where_not, ran = "", {}, None, None, None
             try:
@@ -517,7 +518,11 @@ class LanguageInducer:
             self.answers.append({k: v for k, v in answer.items() if k not in ("text", "reasoning")})
             if form is not None or round_ == MAX_REVISIONS or why.startswith("the model did not answer"):
                 break
-            messages = [*messages, {"role": "assistant", "content": text},
+            # Its last answer and where it missed, after what it was shown — not every
+            # round before: the asking stays as long as its first round (version 7:
+            # four third rounds of m0r0 refused, 400, the conversation grown past
+            # the model's context).
+            messages = [*first, {"role": "assistant", "content": text},
                         {"role": "user", "content": self._told_where_it_missed(ran, why, steps)}]
         if form is not None:
             self._last = (form, None)
