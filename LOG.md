@@ -6676,3 +6676,11 @@ The paper's schedule in `paper/PLAN.md` settled with Plone: evidence from
 version 35's stores 2026-10-20 to 23, the Writeup's draft 23 to 28, the PDF
 2026-10-26 to 11-01, review 11-01 to 04, submitted 11-04 to 07. The two final
 ARC-AGI-3 submissions (proposed 35 and 28) wait for version 35's score.
+
+#### Version 35 scored 0.26
+
+`57371259` (version 35, code `b4d7d5a`: S2b with report collisions, recall from
+alike states, the mind's votes, B2 and B1 at carry 0.95) scored **0.26** on the
+hidden games — equal to version 18's (`56820389`), the highest of this agent's
+submissions; versions 23 and 28 scored 0.25. Public 25 by Save & Run: 16
+levels, 0.518.
