@@ -97,6 +97,9 @@ inducer stands on its own. There are two (`--inducer`):
   comes it suggests what brought it: "this act, taken where these cells lie,
   brings the aim" — the cells the act was to change, or the thing it was put on,
   with what lay around them — which the mind carries to the next level (S4).
+  Once the aim has come, and only then, it also reads what moved ("this act
+  moves this thing by so much"), what blocked it, and an aim of no one act: a
+  thing moved into cells of these colours.
 - **language** (`src/mind/models/language_inducer.py`) is a served language
   model. Asked only when no hypothesis the mind holds foresaw a step, and shown
   the recent steps, it writes one program:
@@ -113,9 +116,11 @@ inducer stands on its own. There are two (`--inducer`):
 Curiosity counts how often a kind of act reached a situation not met before
 (S2b). An act that takes a place may be put on any thing the inducer sees — a
 region of one colour, every one — and its kind is the thing's colour first,
-then its size, so what a colour did carries to a thing of it at another size; four other laws — a change (S2), somewhere new then a change (S2c), the
-two added (S2d), and something made not made before (B1, `made`: what a step
-made is the model's to say) — are kept to be measured against it (`--curiosity`). With
+then its size, so what a colour did carries to a thing of it at another size; five other laws — a change (S2), somewhere new then a change (S2c), the
+two added (S2d), something made not made before (B1, `made`: what a step
+made is the model's to say), and T1 (`test`: each command tests the expectation
+that least says what will come, no count of outcomes sought) — are kept to be
+measured against it (`--curiosity`). With
 `--attention` (off by default), what an act did is read not from everywhere but
 from the sixteen situations most like where the mind stands, each weighed by how
 alike — the inducer says how alike two states are — and the choice names the
@@ -123,6 +128,30 @@ experiences it went by. An
 untried act its hypotheses say leads where it has stood is tried last, after the
 acts it cannot foresee here and the ways to them elsewhere — never out of reach,
 or the hypothesis could never be refuted.
+
+**What it expects, and what a collision does.** Where nothing it knows says
+what will come, it first recalls what the same kind of act did where it stood
+in states alike, and expects that again; failing that, it expects the region to
+be otherwise than it was — to act is to expect it to tell, so silence is a
+mismatch. Every state it expects is expected as it reads it: what its model does
+not read (a clock) is expected nothing of. A mismatch is not a penalty or a
+score; it is data that deviates from what was expected, and it turns the mind:
+on a step, silence turns its next choice from that kind of act and an answer
+other than it foresaw turns it to where the answer differed; on the region's
+report, an end turns it from the kind of act that led there. Each turn is a
+thought written as data, built from the return that collided, and the choice it
+turned names both (`scripts/chains.py` finds these chains in a store alone).
+
+**The field, and the individual.** The mind votes on the field as every layer
+does, from what it alone sees — on exploration, whether the region came where
+it had not stood; on trust, whether what its memory named was borne out — and
+reads it back in the counts it works by (how often an expectation must be borne
+out, how long a turn holds, how far it looks ahead), each a whole number that
+follows the field on average. The field carries its own history (DEVIATION 9),
+so the same DIL, born in another field or meeting the region with or without the
+Other, becomes another individual, and where it parts is read back from the two
+stores (`scripts/differ.py`). An act is opaque to the mind: what an act is, the
+host declares in its organs, and the mind only asks.
 
 The whole store is the agent's memory, and what a model computes from, the mind
 reads there: what came in a cycle is in hand in that cycle, and from the next it
@@ -186,7 +215,9 @@ now, in dil-core first and then here.
    an axis from what it alone sees — whether the region spoke, how much it
    pushed, how much was new, how much mismatched or fell silent; each axis is a
    convex blend of the cycle's votes, taking effect the next cycle, and one no
-   layer voted on carries over.
+   layer voted on carries over. Here the field before takes part in the blend
+   too, by a declared carry (0.95, DEVIATION 9), so the field holds the loop's
+   history and not one cycle's votes alone.
 4. **T8 closes back into the loop through the field.** §6.2: "T8 closes back
    into the loop, not into a sink"; the meaning-channel cannot carry its output
    down, so T8 votes on the dispositions the layers below it read — `trust`,
@@ -224,11 +255,11 @@ now, in dil-core first and then here.
    held while the onlooker says it and lifted when it stops.
 9. **The language model's prompt does not show the field.** The field reaches
    the mind at T5 and conditions it whatever its model: its alertness bounds how
-   often in a cycle the mind hands a mismatch to its learning to think on (a
-   seam: the learning thinks further only on the onlooker's word), and the
-   learning reads it (how far an objection reaches); a language model is not shown it — neither the earlier
-   form nor the language inducer — so what it writes is not conditioned by the
-   loop's disposition.
+   often in a cycle the mind hands a mismatch to its learning to think on, and
+   the learning reads it in the counts it works by and in how far an objection
+   reaches; a language model is not shown it — neither the earlier form nor the
+   language inducer — so what it writes is not conditioned by the loop's
+   disposition.
 
 Local to this repository, not upstream's.
 
