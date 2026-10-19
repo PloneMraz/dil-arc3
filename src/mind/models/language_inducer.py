@@ -488,7 +488,8 @@ class LanguageInducer:
                     why, form = str(exc), None
         answer = {"on": "nothing to do", "steps": 0, "text": text, "program": form.digest if form else None,
                   "why_not": why, "where_not": where_not,
-                  "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
+                  "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds"),
+                  "finish": usage.get("finish_reason")}
         if usage.get("reasoning"):
             answer["reasoning"] = usage["reasoning"]
         self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
@@ -558,7 +559,7 @@ class LanguageInducer:
                     n = len(looked) // 2
                     answer = {"on": "not foreseen", "steps": len(steps), "look": n, "text": text,
                               "printed": printed, "tokens": usage.get("completion_tokens"),
-                              "seconds": usage.get("seconds")}
+                              "seconds": usage.get("seconds"), "finish": usage.get("finish_reason")}
                     if usage.get("reasoning"):
                         answer["reasoning"] = usage["reasoning"]
                     self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))
@@ -572,7 +573,8 @@ class LanguageInducer:
                 form, why, where_not, ran = self._judge(text, act, before, after, given)
             answer = {"on": "not foreseen", "steps": len(steps), "round": round_, "text": text,
                       "program": form.digest if form else None, "why_not": why, "where_not": where_not,
-                      "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds")}
+                      "tokens": usage.get("completion_tokens"), "seconds": usage.get("seconds"),
+                  "finish": usage.get("finish_reason")}
             if usage.get("reasoning"):
                 answer["reasoning"] = usage["reasoning"]
             self._said.append(Note(payload=answer, tags=dict(THOUGHT_TAGS)))

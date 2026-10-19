@@ -24,6 +24,7 @@ import re
 import signal
 import threading
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Callable, Final
@@ -249,12 +250,32 @@ class ModelEndpoint:
     api_key_env: str | None = None
 
 
+# An answer that runs away — one hex digit written on and on, a grid's row copied
+# past any row's width, until the tokens run out — is stopped where the run is
+# longer than any row a grid has (version 7: 11 answers written to the 12,288
+# tokens' end so, about 95 s each, none with its code whole). A run of one digit
+# no longer than a row, as a row quoted, is not stopped.
+RUNAWAY_RUN: Final = 96
+RUNAWAY_STOP: Final = tuple(digit * RUNAWAY_RUN for digit in HEX)
+
+
 def chat(endpoint: ModelEndpoint, messages: list[dict[str, str]]) -> tuple[str, dict[str, Any]]:
     payload: dict[str, Any] = {
         "model": endpoint.model, "messages": messages,
         "temperature": endpoint.temperature, "max_tokens": endpoint.max_tokens,
+        "stop": list(RUNAWAY_STOP),
     }
     payload.update(endpoint.extra)
+    try:
+        return _send(endpoint, payload)
+    except urllib.error.HTTPError as exc:
+        if exc.code != 400 or "stop" in endpoint.extra:
+            raise
+        # A server that will not take the stops is asked as before, without them.
+        return _send(endpoint, {k: v for k, v in payload.items() if k != "stop"})
+
+
+def _send(endpoint: ModelEndpoint, payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     headers = {"Content-Type": "application/json"}
     if endpoint.api_key_env is not None:
         key = os.environ.get(endpoint.api_key_env)

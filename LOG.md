@@ -7018,3 +7018,25 @@ foreseen, the model writing again, numbered grids), pushed 10:05 UTC, `COMPLETE`
   answer) as each round carried every round before. Fixed: each round is shown
   the first message, its last answer and where that missed, so a round is as long
   as the second (391 tests pass).
+
+#### Where the language inducer's time goes (version 7), and runaway answers stopped
+
+Read from version 7's stores and its server's log: of each game's wall time, the
+model's answers took 98% (ls20 2,817 of 2,861 s), 99% (tu93 4,147 of 4,199) and 98%
+(m0r0 4,677 of 4,766); the loop, the mind and the programs run, the rest. An answer
+took 28 to 43 s at the median (90–137 s at most), the time of writing it — about
+130 tokens a second a request (310 together, three at once), 3,435 to 5,721 tokens
+at the median, 9,343 to 12,288 at the 90th percentile. Most of an answer is prose
+before the code ("To determine the rules governing the region, we analyze…"): the
+words ask for one code block and nothing more, and thinking is off, so what the
+model writes before its code is the only thinking it does before it. Eleven
+answers (ls20 7, m0r0 4) ran away — one hex digit written on, a grid's row copied
+past any row's width, to the 12,288 tokens' end — about 95 s each, none with its
+code whole. A notebook's start took about 20 minutes: the model's files checked
+(178 s), the runtime extracted (142 s), the model loaded (770–910 s).
+
+Fixed (Plone: A first; B, code only, to be measured): a request carries `stop`
+sequences, one digit written 96 times over — longer than any row of a grid, so a
+row quoted is not stopped — and is asked again without them if a server refuses
+them (400). Why an answer ended (`finish`) is kept with it. Not changed, not
+understood: the server runs this model with `--no-enable-prefix-caching`.
