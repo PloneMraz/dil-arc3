@@ -55,6 +55,11 @@ WHEELHOUSE = "driessmit1/arc3-vllm-h100-wheelhouse-v3"
 # its layers on Kaggle; vLLM stock releases up to v0.29 cannot load the model.
 FLASH_RUNTIME = "keithtyser/qwen38-flash-next-vllm-nvfp4-runtime-v1"
 COMPETITION = "arc-prize-2026-arc-agi-3"
+# The GPU notebook's image, pinned: the one `dil-arc3-run` served Qwen3.8-Flash-Next
+# on (Python 3.12, 2026-09-25). The vLLM runtime ships its packages and no
+# interpreter, built for 3.12; on the image a new notebook was given on 2026-10-19,
+# Python 3.13, torch could not load (LOG.md, 2026-10-19).
+GPU_IMAGE = "gcr.io/kaggle-private-byod/python@sha256:37c64f7dd9c54116ecd1bcc88817c5469b88387388fade02bfa8bf3fc647d461"
 # name: (Kaggle model handle, manifest from Hugging Face, served name, serving)
 MODELS = {
     "27b": ("michaelpoluektov/qwen3-6-27b-fp8/transformers/default/1",
@@ -95,6 +100,7 @@ for name, path in [("dil-arc3 data", DATA_DIR), ("model", MODEL_DIR), ("vLLM", S
                    ("arc wheels", ARC_WHEELS), ("environments", ENVS)]:
     print(f"{name:14}: {path}")
 print("games:", sorted(p.name for p in ENVS.iterdir()))
+print("python        :", sys.version.split()[0], sys.executable)
 print(subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
                      capture_output=True, text=True).stdout)
 print(subprocess.run(["free", "-g"], capture_output=True, text=True).stdout)''',
@@ -332,6 +338,7 @@ probe = subprocess.run([sys.executable, "-c",
     f"print(vllm.__version__, torch.__version__, type(g(c, {PLE_PREFIX!r})).__name__)"],
     env=ENV, capture_output=True, text=True)
 print(probe.stdout, probe.stderr[-3000:])
+assert probe.returncode == 0, f"the runtime's vllm and torch did not import under Python {sys.version.split()[0]}"
 assert probe.stdout.split()[-1] == "Qwen3_8FlashNextPLEFp8EmbeddingMethod", "the PLE gate did not select FP8"''',
     4: '''# The model's server, in its own session. Its PID is kept, and only its group is stopped.
 # The PLE embedding stays in host memory (VLLM_PLE_CPU_OFFLOAD); the rest fits the GPU.
@@ -412,7 +419,8 @@ SCRIPTS_DIR = find("random_game.py")
 ARC_WHEELS = find("arc_agi_3_wheels", kind="dir")
 ENVS = ARC_WHEELS.parent / "environment_files"
 print("dil-arc3 scripts:", SCRIPTS_DIR, " arc wheels:", ARC_WHEELS)
-print("games:", sorted(p.name for p in ENVS.iterdir()))''',
+print("games:", sorted(p.name for p in ENVS.iterdir()))
+print("python:", sys.version.split()[0], sys.executable)''',
     CELLS[2],
     '''REPO = W / "dil-arc3"
 shutil.rmtree(REPO, ignore_errors=True)
@@ -570,6 +578,7 @@ def main() -> None:
         "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
         "is_private": True, "enable_gpu": True, "enable_tpu": False, "enable_internet": False,
         "machine_shape": "NvidiaRtxPro6000", "keywords": [],
+        "docker_image": GPU_IMAGE, "docker_image_pinning_type": "original",
         "dataset_sources": [FLASH_RUNTIME if serving == "flash-next" else WHEELHOUSE,
                             f"{OWNER}/{DATASET_SLUG}"],
         "competition_sources": [COMPETITION], "kernel_sources": [], "model_sources": [handle],
