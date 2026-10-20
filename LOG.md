@@ -7510,3 +7510,10 @@ Kaggle's version 36 is the short environment check (ls20, 30 cycles) and was not
 to submit, caught before the submit call. Grid, S2b with attention, 600 cycles, four at
 once; its Save & Run: 16 of 183 levels, 0.491, all 25 stores verifying under dil-core.
 Nothing is pushed to Kaggle until it is scored.
+
+#### Submission `57443352` scored: 0.25
+
+`COMPLETE` by 02:04 (+0700, 2026-10-21), about eleven hours after it was submitted:
+public score **0.25**, against version 35's `57371259` 0.26 and version 28's
+`56983446` 0.25. Version 37's Save & Run had scored 0.491 on the 25 games against
+version 35's 0.518, its levels the same (16). Kaggle is free to use again.
