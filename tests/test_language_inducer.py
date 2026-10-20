@@ -503,3 +503,16 @@ def test_a_look_that_fails_is_told_so():
     mind, inducer, cycle, data = loop(script)
     run(cycle, frame(lit(0), lit(1)), status())
     assert "look raised IndexError" in script.shown[1][-1]["content"]
+
+
+def test_told_to_answer_with_its_code_alone_only_when_so_seated():
+    script = Script(block(STILL))
+    mind, inducer, cycle, data = loop(script)
+    run(cycle, frame(lit(0), lit(1)), status())
+    assert "code block alone" not in script.shown[0][0]["content"], "by default, nothing said of its prose"
+    script2 = Script(block(STILL))
+    inducer2 = LanguageInducer(ARC_ORGANS, chat_fn=script2, code_only=True)
+    mind2 = Mind(inducer2, ARC_ORGANS, priors={"task": TASK_CUE})
+    mind2.receive("task", MIND_TASK.payload, None)
+    inducer2.induce(grid_key(lit(0)), (1, None, None), lit(0), lit(1))
+    assert "Answer with the one ```python code block alone" in script2.shown[0][0]["content"]

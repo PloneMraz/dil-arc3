@@ -67,6 +67,8 @@ ap.add_argument("cycles", nargs="?", type=int, default=10)
 ap.add_argument("--endpoint", default="http://127.0.0.1:8080/v1")
 ap.add_argument("--model", default="local")
 ap.add_argument("--max-tokens", type=int, default=12288)
+ap.add_argument("--code-only", action="store_true",
+                help="the language inducer tells its model to answer with its code alone (a measurement)")
 ap.add_argument("--think", action="store_true")
 ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
                 help="the mind's model, what its learning computes with: hypotheses that reach past where they "
@@ -114,7 +116,8 @@ extra = {} if a.think else {"chat_template_kwargs": {"enable_thinking": False}}
 # The host declares its organs, and the mind reads the task for its goal.
 if a.inducer == "language":
     inducer = LanguageInducer(ARC_ORGANS, ModelEndpoint(url=a.endpoint, model=a.model,
-                                                        max_tokens=a.max_tokens, extra=extra))
+                                                        max_tokens=a.max_tokens, extra=extra),
+                              code_only=a.code_only)
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,

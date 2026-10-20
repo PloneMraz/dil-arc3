@@ -7143,3 +7143,25 @@ about seven hours of the GPU quota, near three times version 8's. No level.
   asked. The runs stand paused until a game is given a limit (Plone).
 
 Flash-Next stays the model; B (answers of code only) is to be measured on it.
+
+#### A game's time limit, answers of code alone, and thinking passed through (Plone: approved)
+
+Plone did not touch version 10's notebook while it ran: what killed m0r0's process
+(-9, about 23:24 UTC) is still not established — not `run_competition.py`, not
+Plone.
+
+- `run_competition.py --game-seconds`: a game still running at its limit is stopped
+  (SIGTERM, the PID it started), its store kept, `stopped at its time limit` in the
+  scorecard's exits; the notebook builder's `--game-minutes` passes it. Tried on
+  ls20 and vc33 at 8 s: both stopped, both stores verified by `dil verify`.
+- `--code-only` (run_game, run_competition, the builder): the language inducer tells
+  its model "Answer with the one ```python code block alone: no explanation, analysis
+  or text before or after it" (the prior's `code_only`). For measuring B.
+- `--think` passed from the builder and `run_competition.py` to `run_game.py`, which
+  had it: for measuring thinking on with answers of code alone, after B.
+
+407 tests pass. Plone asked whether thinking on and answers of code alone can run
+together: yes — the server puts the thinking in its own channel, kept with the
+answer as `reasoning` — but `max_tokens` counts the thinking too, and in the probe of
+2026-09-24 thinking ran 26,000 to 100,000 characters a round and often never reached
+code; it is to be measured after B, with a larger budget and a game's time limit.

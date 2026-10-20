@@ -268,8 +268,11 @@ class LanguageInducer:
     general = True
 
     def __init__(self, organs: Organs, endpoint: ModelEndpoint | None = None,
-                 chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat) -> None:
+                 chat_fn: Callable[..., tuple[str, dict[str, Any]]] = chat, code_only: bool = False) -> None:
         self.organs = organs
+        # Whether the model is told to answer with its code alone (the prior's
+        # `code_only`): a measurement of what its prose before the code is worth.
+        self.code_only = code_only
         self.endpoint = endpoint or ModelEndpoint()
         self._chat = chat_fn
         # The program whose where/targets it reads the grid with, and the last
@@ -446,7 +449,7 @@ class LanguageInducer:
         if name == "task" and isinstance(payload, dict) and all(
                 isinstance(payload.get(k), str) for k in ("induce", "induce_feedback", "unforeseen", "aimed")):
             self._words = {k: payload[k] for k in ("induce", "induce_feedback", "unforeseen", "aimed", "nothing_seen",
-                                                   "unrunnable", "look", "looked") if isinstance(payload.get(k), str)}
+                                                   "unrunnable", "look", "looked", "code_only") if isinstance(payload.get(k), str)}
 
     def consider(self, situation: str, state: Grid) -> tuple[ProgramForm, Note] | None:
         """Asked while the body waits with nothing it can do: the model, shown the
@@ -467,6 +470,8 @@ class LanguageInducer:
             numbers=", ".join(f"{n} is {a}" for a, n in sorted(o.acts.items())),
             evidence="Starting from this grid (row 0 first):\n" + show(state),
             also=words["nothing_seen"], aim=self._aim_said(), seconds=PROGRAM_SECONDS)
+        if self.code_only and "code_only" in words:
+            first += words["code_only"]
         text, usage, why, form, where_not = "", {}, None, None, None
         try:
             text, usage = self._chat(self.endpoint, [{"role": "user", "content": first}])
@@ -658,6 +663,8 @@ class LanguageInducer:
         self._shown = shown
         if MAX_LOOKS and "look" in words:
             first += words["look"].format(looks=MAX_LOOKS, chars=LOOK_OUTPUT_CHARS)
+        if self.code_only and "code_only" in words:
+            first += words["code_only"]
         messages = [{"role": "user", "content": first}]
         last = self._now(self._last)
         if last is not None:

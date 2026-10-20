@@ -204,7 +204,8 @@ RERUN = bool(os.environ.get("KAGGLE_IS_COMPETITION_RERUN"))
 DEADLINE = T0 + 9 * 3600 - 20 * 60  # nothing starts after, and what runs stops: 20 min kept for the end
 cmd = [sys.executable, "-u", str(REPO / "scripts" / "run_competition.py"),
        "--endpoint", BASE, "--model", "SERVED", "--max-tokens", str(MAX_TOKENS), "--inducer", "language",
-       "--cycles", str(CYCLES), "--concurrency", str(CONCURRENCY), "--deadline", str(DEADLINE), "--out", str(W)]
+       "--cycles", str(CYCLES), "--concurrency", str(CONCURRENCY), "--deadline", str(DEADLINE), "--out", str(W),
+       *EXTRA]
 if RERUN:
     os.environ.setdefault("ARC_API_KEY", "test-key-123")
     os.environ.setdefault("ARC_BASE_URL", "http://gateway:8001/")
@@ -521,6 +522,11 @@ def main() -> None:
                     help="the notebook's slug (default: dil-arc3-learning on CPU, dil-arc3-run with --served): "
                          "another than one a scored rerun is running from, so a measurement never pushes to it "
                          "(2026-09-29), and for the language inducer a notebook of its own (2026-10-05)")
+    ap.add_argument("--code-only", action="store_true",
+                    help="served: the language inducer tells its model to answer with its code alone")
+    ap.add_argument("--think", action="store_true", help="served: the model thinks before it answers")
+    ap.add_argument("--game-minutes", type=float, default=None,
+                    help="served: a game's wall-time limit, stopped there with its store kept (a measurement)")
     ap.add_argument("--attention", action="store_true",
                     help="the mind attends to the experiences most like where it stands (mind/learning.py)")
     a = ap.parse_args()
@@ -540,8 +546,10 @@ def main() -> None:
     }, indent=1))
 
     games = [g.strip() for g in a.game.split(",") if g.strip()]
+    extra = [*(["--code-only"] if a.code_only else []), *(["--think"] if a.think else []),
+             *(["--game-seconds", str(a.game_minutes * 60)] if a.game_minutes else [])]
     params = (f"GAMES = {games!r}\nCYCLES = {a.cycles}\nMAX_TOKENS = {a.max_tokens}\n"
-              f"CONCURRENCY = {a.concurrency}\n")
+              f"CONCURRENCY = {a.concurrency}\nEXTRA = {extra!r}\n")
     chosen = list(CELLS)
     if serving == "flash-next":
         for i, cell in FLASH_CELLS.items():

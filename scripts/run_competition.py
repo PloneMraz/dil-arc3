@@ -64,6 +64,11 @@ ap.add_argument("--player", default="run_game.py",
                 help="the script that plays each game, in scripts/: run_game.py, the agent; "
                      "random_game.py, the starter's random agent, to probe this path (LOG.md, 2026-09-27)")
 ap.add_argument("--max-tokens", type=int, default=12288)
+ap.add_argument("--code-only", action="store_true", help="passed to run_game.py")
+ap.add_argument("--think", action="store_true", help="passed to run_game.py: the model thinks before it answers")
+ap.add_argument("--game-seconds", type=float, default=None,
+                help="a game's wall-time limit: stopped there, its store kept — for measurements, where a "
+                     "language inducer's game lasts as long as its model is asked (LOG.md, 2026-10-20)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--stores", default=None, help="where each game's store goes (default: --out)")
 ap.add_argument("--drop-stores", action="store_true",
@@ -127,6 +132,16 @@ while queue or running:
             if a.drop_stores:
                 shutil.rmtree(stores / f"store-{g}", ignore_errors=True)
             say(f"{g}: exit {proc.returncode}; {len(done)} done, {len(queue)} waiting")
+    if a.game_seconds is not None:
+        for g, (proc, began) in list(running.items()):
+            if time.time() - began >= a.game_seconds:
+                proc.terminate()  # the PID this script started, and nothing else
+                proc.wait(timeout=60)
+                done[g] = "stopped at its time limit"
+                del running[g]
+                if a.drop_stores:
+                    shutil.rmtree(stores / f"store-{g}", ignore_errors=True)
+                say(f"{g}: stopped at its time limit ({a.game_seconds:.0f}s); {len(done)} done, {len(queue)} waiting")
     late = a.deadline is not None and time.time() >= a.deadline
     if late:
         for g, (proc, _) in running.items():
@@ -150,7 +165,8 @@ while queue or running:
              "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"),
              "--inducer", a.inducer, "--curiosity", a.curiosity, *(["--attention"] if a.attention else []),
              *(["--alone"] if a.alone else []), *(["--field", a.field] if a.field else []),
-             *(["--field-carry", a.field_carry] if a.field_carry else [])],
+             *(["--field-carry", a.field_carry] if a.field_carry else []),
+             *(["--code-only"] if a.code_only else []), *(["--think"] if a.think else [])],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)
         running[g] = (proc, time.time())
         threading.Thread(target=pump, args=(g, proc), daemon=True).start()

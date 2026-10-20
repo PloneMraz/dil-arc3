@@ -83,6 +83,10 @@ LOOK: Final = ("\nBefore you write them you may look at the steps with code, up 
 LOOKED: Final = ("look(steps) printed:\n{printed}\n\nYou may look {left} more time(s); then, or now, write "
                  "predict, where and targets. Return one ```python code block.")
 
+# For a mind that asks its model for code alone (`--code-only`, a measurement).
+CODE_ONLY: Final = ("\nAnswer with the one ```python code block alone: no explanation, analysis or text "
+                    "before or after it.\n")
+
 # Asked before any step, where nothing can be done until a program names a cell.
 NOTHING_SEEN: Final = ("\nNo step has been seen yet, and no action can be taken here until a targets of yours "
                        "names a cell. What you write cannot be checked against a step yet; the steps will check it.\n")
@@ -94,7 +98,7 @@ MIND_TASK: Final = PreexistingItem(
     id="prior:mind-task",
     payload={"goal": TASK_GOAL, "induce": INDUCE, "induce_feedback": INDUCE_FEEDBACK,
              "unforeseen": UNFORESEEN, "aimed": AIMED, "nothing_seen": NOTHING_SEEN, "unrunnable": UNRUNNABLE,
-             "look": LOOK, "looked": LOOKED},
+             "look": LOOK, "looked": LOOKED, "code_only": CODE_ONLY},
     open={"domain": TASK_DOMAIN, "kind": "instructions", "source": TASK_SOURCE, "object": "mind"},
 )
 
