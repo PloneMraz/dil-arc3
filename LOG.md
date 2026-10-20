@@ -7199,3 +7199,26 @@ Told to, the model all but always wrote its code alone. What it did to the progr
 is mixed: better in ls20 (fewer answers, more of them right, a third less time),
 worse in tu93 (twice as many answers early, fewer right), mixed in m0r0. One run each
 cannot tell this from noise; B does not show itself an improvement.
+
+#### Version 12: Flash-Next thinking, answering with its code alone
+
+`dil-arc3-language-inducer` version 12 (`076c737`'s code; Flash-Next with thinking
+on, `--code-only`, 32,768 tokens an answer, a 98,304-token context — the model takes
+262,144 — and 60 minutes a game), pushed 03:12 UTC, `COMPLETE` 04:42; 5,254 s, the
+server ready in 1,160 s. All three games stopped at their hour. No level.
+
+| | ls20 | tu93 | m0r0 |
+|---|---|---|---|
+| cycles played in the hour | 4 | 4 | 5 |
+| answers | 11 | 9 | 12 |
+| seconds an answer, median | 301 | 301 | 316 |
+| ended at the token limit | 9 | 9 | 9 |
+| thinking, characters an answer, median | 105,157 | 107,876 | 123,851 |
+| answers with code | 3 | 0 | 5 |
+| held as hypotheses | 0 | 0 | 1 |
+
+27 of the 32 answers ran to the 32,768 tokens inside their thinking, 105,000 to
+130,000 characters of it, and never reached code — as in the probe of 2026-09-24,
+where thinking ran 26,000 to 100,000 characters a round. At about five minutes an
+answer, a game played four or five cycles an hour. Thinking on is not a way this
+inducer can be run within a Kaggle session, at this budget or any it could afford.
