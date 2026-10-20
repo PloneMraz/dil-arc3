@@ -7337,3 +7337,20 @@ constant alone changed): 2 — 11 levels, 1.034 (ls20 back to 0.019, tu93 0.276)
 Three stays. The score moves far with it — tu93 0.795 at 3 and 0 at 4, ls20 0.409 at
 3 and 0.019 at 2 — so how much of 3's lead is the law's and how much one run's is not
 established.
+
+#### The objects inducer (step 3) on the 25 games, by Save & Run
+
+`dil-arc3-learning`, Kaggle's version 38, code `183cd53`: as version 36 (S2b with
+attention, 600 cycles, four at once) with `--inducer objects`; pushed 09:28 UTC,
+`COMPLETE` 10:37. Against version 36 (grid):
+
+| | grid (v36) | objects |
+|---|---|---|
+| score | 0.4915 | 0.4997 |
+| levels | 16 of 183 | 15 of 183 |
+| ls20 / tu93 / sc25 | 0.0208 / 0.1862 / 0.0956 | 0.4091 / 0.7950 / 0.1315 |
+| m0r0 / ar25 / sp80 | 0.8042 / 0.0085 (1) / 0.0986 | 0.0261 / 0 / 0.0562 |
+
+The eleven games came out exactly as on this machine (the loop is deterministic);
+of the other fourteen, sc25 better and su15 a little, the rest as grid. A score a
+little above grid's with a level fewer, its gains and losses in a few games.
