@@ -7254,3 +7254,10 @@ inducer's model answers with a program predicting the whole grid, judged cell by
 cell (1,700–3,600 tokens at the median), asked at every step none foresaw, with up
 to 60,000 characters of steps. Queued (CLAUDE.md, "Queued"): a short context,
 asking less often, the grid shown as an image.
+
+Plone asked whether an inducer could be made for playing games. Four directions,
+queued in CLAUDE.md ("Queued", 2026-10-20): object-centred (grid grown); predicting
+outcomes rather than every cell — the cell-exact target drove most of versions 4–12's
+cost and failure; a small neural model learned within the game; a language model
+writing laws in a small DSL, asked rarely. None begun, with 13 days to the last
+submission and 20 to the paper.

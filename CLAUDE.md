@@ -510,6 +510,31 @@ are what can be learned without that:
 Each is measured as the language-inducer runs have been: three games, a game's
 time limit, against version 8.
 
+Four directions for an inducer made for playing games (Plone, 2026-10-20; queued,
+not begun). The learning stays neutral; an inducer may be made for a kind of
+problem, so long as it names no game:
+
+- **Object-centred, grid grown.** Read each frame as things whose identity is
+  followed from frame to frame, with hypotheses as laws of things: an act moves a
+  thing by (dx, dy), a colour blocks it, touching changes it, a bar counts down.
+  Grid has the seed of it (`things`; "move", "block", "into"). Cheap, needing few
+  steps, readable, no GPU.
+- **Predict the outcome, not every cell.** The language inducer is judged by
+  predicting the whole grid cell for cell, where the mind needs whether an act
+  changes anything, where the moved thing will be, whether the aim comes nearer. An
+  inducer that predicts outcomes (blocked, moved, somewhere new, the aim), checked
+  against what the region returns as it reads it, keeps "every state expected as it
+  reads it". Most of versions 4 to 12's cost and failure came from the cell-exact
+  target.
+- **A small neural model learned within the game.** As the preview's winner did
+  (StochasticGoose: reinforcement learning with convolutional networks). Learned
+  from the steps met, it keeps INV-5; weights trained beforehand by this project
+  would fall under ARC-AGI-3's OSAID rule (training data to be published).
+- **A language model writing laws in a small language.** Laws of things in a DSL
+  rather than Python predicting the whole grid, computed exactly by an interpreter
+  and asked for rarely (once a level, say): the model using code, not a second
+  computing beside it, and far fewer tokens.
+
 ### Open in the current design
 
 - **The language inducer reads the whole grid in what it expects.** Its
