@@ -109,6 +109,15 @@ OTHERWISE THAN GRID, as it is done (each measured on the eleven games, LOG.md):
    level and tu93's two lost, the mind going the long way toward states its moves
    foresaw ("toward a state with an act not yet taken": tu93 433 choices against
    296, m0r0 249 against 44) and m0r0's frame scarred 145 times against 46.
+
+2. **A move says nothing until it has been seen happening MOVE_SEEN times**
+   (2026-10-20). Step 1's moves led the mind the long way when they were wrong; a
+   move now applies only once the steps have shown it MOVE_SEEN times (by what it
+   says: the pattern, the shift, the trail), so that what the mind looks ahead by
+   is a law the region has shown, not one guess. Measured (as in 1): 11 levels
+   against grid's 12, score 1.121 against 1.106 — ls20's level 1 at 0.409 (grid
+   0.021), tu93's two at 0.795 (grid 0.186), m0r0's level back but dear (0.026,
+   grid 0.804), ar25's lost, sp80 0.056 (grid 0.099).
 """
 
 from __future__ import annotations
@@ -230,6 +239,10 @@ MAX_MOVE_CELLS: Final = 256
 # How many of an act's moves a blocked step is read against, the latest first.
 # DECLARED, a bound on work.
 MOVES_KEPT: Final = 4
+# How many times a move must be seen happening before it says anything (OTHERWISE
+# THAN GRID, 2): a move it has not seen this often applies nowhere. Declared, not
+# measured.
+MOVE_SEEN: Final = 3
 
 
 @dataclass(eq=False)
@@ -381,6 +394,8 @@ class ObjectsInducer:
         # It reads things as moving from the first step (OTHERWISE THAN GRID, 1):
         # grid waits for the aim, so that what its mind does before it is as it was.
         self._aimed = True
+        # How many times it has seen each move happen (by what the move says).
+        self._move_seen: dict[tuple, int] = {}
         # Each act's moves it suggested, had back from the mind's memory (`keep`).
         self._moves_of: dict[int, list[Any]] = {}
         # (situation, move or block) -> (the form, where its pattern lies once, or None).
@@ -767,6 +782,8 @@ class ObjectsInducer:
             return None
         if isinstance(form, AimForm):
             return self._aim_predict(form, placed, situation, state, act)
+        if isinstance(form, MoveForm) and self._move_seen.get(form.key, 0) < MOVE_SEEN:
+            return None   # not yet seen happening often enough to say anything (OTHERWISE THAN GRID, 2)
         if isinstance(form, (MoveForm, BlockForm)):
             return None if placed else self._move_predict(form, situation, state)
         if isinstance(form, StillForm):
@@ -896,7 +913,10 @@ class ObjectsInducer:
     def _moved(self, act: int, before: Grid, after: Grid, changed: list[tuple[int, int]]) -> list[Any]:
         """A move, if what changed reads as one."""
         found = self._move_read(act, before, after, changed)
-        return [found[0]] if found is not None else []
+        if found is None:
+            return []
+        self._move_seen[found[0].key] = self._move_seen.get(found[0].key, 0) + 1
+        return [found[0]]
 
     def _move_read(self, act: int, before: Grid, after: Grid,
                    changed: list[tuple[int, int]]) -> tuple[Any, tuple[int, int]] | None:
@@ -1097,4 +1117,4 @@ def _part(said: dict[str, Any]) -> Part:
 
 __all__ = ["BIG_CHANGE", "CLOCK_CELLS", "CLOCK_KINDS", "CLOCK_TAGS", "CLOCK_WINDOW", "COUNTER_CELLS", "COUNTER_EDGE",
            "COUNTER_TICKS", "MAX_REWRITE_CELLS", "MAX_THING_SHARE", "OFF_GRID", "PART_GAP", "AimForm", "ObjectsInducer",
-           "BlockForm", "IntoForm", "MAX_MOVE_CELLS", "MOVES_KEPT", "MoveForm", "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]
+           "BlockForm", "IntoForm", "MAX_MOVE_CELLS", "MOVES_KEPT", "MOVE_SEEN", "MoveForm", "Part", "RewriteForm", "StillForm", "grid_key", "parts", "things"]

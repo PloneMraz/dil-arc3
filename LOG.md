@@ -7307,3 +7307,26 @@ four at once, on Python 3.12.13 (the notebook's pinned image); pushed 05:43 UTC,
   all 25; 22 stores score 5 pass, 1 partial, 0 fail, 1 not verifiable; cd82, dc22
   and m0r0 fail C7 (diversity-loss: one source over the last 8 records), as open in
   CLAUDE.md — the onlooker speaks only when the agent looks stuck.
+
+#### The objects inducer, step 3: a move says nothing until seen three times (Plone: this first)
+
+Step 2's moves led the mind the long way where they were wrong. Now a move applies
+only once the steps have shown it happen `MOVE_SEEN = 3` times (declared, not
+measured), by what it says — the pattern, the shift, the trail; the inducer counts
+the moves it reads, and says where its hypothesis applies, the learning untouched.
+On the eleven games, against grid and step 2:
+
+| | grid | step 2 | step 3 |
+|---|---|---|---|
+| levels | 12 | 9 | 11 |
+| score | 1.106 | 1.025 | **1.121** |
+| ls20 | 0.0208 | 0.0729 | 0.4091 |
+| tu93 | 0.1862 (2) | 0 | 0.7950 (2) |
+| m0r0 | 0.8042 (1) | 0 | 0.0261 (1) |
+| ar25 | 0.0085 (1) | 0.0281 (1) | 0 |
+| sp80 | 0.0986 | 0.1247 | 0.0562 |
+
+The first score above grid's on the eleven, from ls20's level 1 (about twenty times
+grid's score there) and tu93's two; m0r0's level back but in many more actions,
+ar25's lost. One run each; ls20's mind still chose "toward a state with an act not
+yet taken" 457 times of 600.
