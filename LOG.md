@@ -7261,3 +7261,30 @@ outcomes rather than every cell — the cell-exact target drove most of versions
 cost and failure; a small neural model learned within the game; a language model
 writing laws in a small DSL, asked rarely. None begun, with 13 days to the last
 submission and 20 to the paper.
+
+#### An inducer made for playing games, steps 1 and 2 (Plone: the first direction, a new inducer, grid left as it was)
+
+Step 1 (`1c81761`): `src/mind/models/objects.py`, the objects inducer, begins as a copy
+of `grid.py` in a file of its own — nothing imported from grid, grid unchanged, the
+submission's model and the paper's — seated by `--inducer objects`. As copied it made
+grid's choices: ls20 and vc33, 600 cycles, the same choice at every step.
+
+Step 2, its first difference: grid reads moves and blocks of things only once the aim
+has come (A, 2026-10-08, so that what its mind does before the first aim is as it
+was); the objects inducer reads them from the first step, so the mind can look ahead
+by laws of things — a move applies wherever its pattern lies once — before any aim.
+On the eleven games (600 cycles, S2b with attention), against grid (`foreseen`):
+
+| | grid | objects |
+|---|---|---|
+| levels | 12 of 80 | 9 of 80 |
+| score | 1.106 | 1.025 |
+| ar25 / ls20 / sp80 (level 1) | 0.0085 / 0.0208 / 0.0986 | 0.0281 / 0.0729 / 0.1247 |
+| m0r0 / tu93 | 0.8042 (1) / 0.1862 (2) | 0 / 0 |
+
+Level 1 came in fewer actions in ar25, ls20 and sp80, where the moves held; m0r0's
+level and tu93's two were lost: the mind went the long way toward states its moves
+foresaw ("toward a state with an act not yet taken": tu93 433 choices against 296,
+m0r0 249 against 44), and in m0r0 the moves were often wrong (617 hypotheses written,
+the frame scarred 145 times against 46). The first differences start at step 27
+(tu93) and 9 (m0r0).

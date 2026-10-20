@@ -96,6 +96,19 @@ aim is as it was):
 
 The clock's rows and columns are no part of any of them: what lies there matches
 anything.
+
+OTHERWISE THAN GRID, as it is done (each measured on the eleven games, LOG.md):
+
+1. **Things move from the first step** (2026-10-20). Grid reads moves and blocks
+   only once the aim has come, so that what its mind does before the first aim is
+   unchanged; here they are read from the first step. A move applies wherever its
+   pattern lies once, at states never met as well, so the mind can look ahead by
+   laws of things before it has reached any aim. Measured (eleven games, 600
+   cycles, S2b with attention, against grid): 9 levels where grid has 12, score
+   1.025 against 1.106 — level 1 in fewer actions in ar25, ls20 and sp80; m0r0's
+   level and tu93's two lost, the mind going the long way toward states its moves
+   foresaw ("toward a state with an act not yet taken": tu93 433 choices against
+   296, m0r0 249 against 44) and m0r0's frame scarred 145 times against 46.
 """
 
 from __future__ import annotations
@@ -365,8 +378,9 @@ class ObjectsInducer:
         self._where: dict[str, dict[int, list[tuple[int, int]]]] = {}   # situation -> colour -> cells
         # (situation, part) -> (the part, where it lies): the part is kept, so its id is not reused.
         self._found: dict[tuple[str, int], tuple[Part, tuple[int, int] | None]] = {}
-        # Whether the aim has come: from then it reads things as moving, too.
-        self._aimed = False
+        # It reads things as moving from the first step (OTHERWISE THAN GRID, 1):
+        # grid waits for the aim, so that what its mind does before it is as it was.
+        self._aimed = True
         # Each act's moves it suggested, had back from the mind's memory (`keep`).
         self._moves_of: dict[int, list[Any]] = {}
         # (situation, move or block) -> (the form, where its pattern lies once, or None).
