@@ -7330,3 +7330,10 @@ The first score above grid's on the eleven, from ls20's level 1 (about twenty ti
 grid's score there) and tu93's two; m0r0's level back but in many more actions,
 ar25's lost. One run each; ls20's mind still chose "toward a state with an act not
 yet taken" 457 times of 600.
+
+MOVE_SEEN tried at 2 and 4 on the eleven games (two worktrees at `183cd53`, the
+constant alone changed): 2 — 11 levels, 1.034 (ls20 back to 0.019, tu93 0.276); 4 —
+8 levels, 1.047 (tu93's two lost, m0r0's one); 3 — 11 levels, 1.121, as above.
+Three stays. The score moves far with it — tu93 0.795 at 3 and 0 at 4, ls20 0.409 at
+3 and 0.019 at 2 — so how much of 3's lead is the law's and how much one run's is not
+established.
