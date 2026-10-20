@@ -7473,3 +7473,31 @@ lost both its levels. In sc25 step 4's acts reached somewhere new far less often
 against 44): with a move known by its thing's colours wherever that thing lies, more
 of where an act leads is foreseen. That is the reading, not measured on its own.
 Step 3 stays the objects inducer's best on the 25 games, and grid has the most levels.
+
+#### Why the 25 games' situations grow, read again on the objects inducer; `made`; a bar away from the edge
+
+Plone: improve the objects inducer before submitting version 36. In the twelve games
+of 25 where neither inducer gains a level, nearly every step reached a situation not
+met before (version 39: tr87's ACTION4 295 of 297, re86's ACTION5 195 of 203, sk48's
+ACTION3 230 of 252, wa30's ACTION4 163 of 202; grid's version 36 the same), where in
+ls20 and tu93 a fifth to a third did. `scripts/situations.py` on version 39's stores
+reads as it did on version 19's (above): a counter the clock rules miss in sk48 alone
+(masking row 53 as well, 508 situations → 64); elsewhere the growth is real, parts of
+the grid changing apart (masking the 128 cells most often among those that made a
+grid new: tr87 570 → 50, ka59 313 → 45, cd82 85 → 16; wa30 and cn04 not at all).
+
+Two tries, the 11 games, 600 cycles, against step 4 (`obj3`):
+
+- **`made` (B1) as the objects inducer's curiosity** (`obj-made`, no code changed):
+  0.9413, 11 levels against 1.1028 and 12 — sp80 without its level, ls20 0.4091 →
+  0.0250, tn36 3.3583 → 1.9779; m0r0 0.0877 → 0.1399.
+- **A bar away from the edge** (`obj-bar`, the 11 and sk48): the edge rule's bar
+  (`COUNTER_TICKS` changes of 1 to `COUNTER_CELLS` cells, one way, each next to the
+  last) taken away from the edge too, when its changes came under two kinds of act or
+  more. It took sk48's row 53 (situations 508 → 274) and sk48 gained no level; ls20
+  0.4091 → 0.1161, its clock (rows 61-62) taken at step 6 instead of 8, and the run
+  went otherwise from there; the other ten unchanged. 0.9865 over the twelve.
+
+Neither kept; the code is as step 4 left it. Where the parts of a grid change apart,
+what would answer is a situation read by its parts, not its whole — a change in what
+a situation is to the learning, not tried.
