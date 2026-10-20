@@ -7423,3 +7423,31 @@ met, it is chosen among the acts not yet taken there, and curiosity (S2b: somewh
 new) favours the acts that reached somewhere new most, which a mover's moves do.
 That is the reading now, not measured on its own. Reverted; the trade accepted, as
 Plone said.
+
+#### The objects inducer under T1 and S2 curiosity (Plone: try it while waiting)
+
+To test the reading above — that S2b, wanting what reached somewhere new, favours a
+mover's moves in m0r0 — the objects inducer (step 4) under the curiosity laws already
+kept, no code changed: the 11 games, 600 cycles, attention
+(`scripts/data/t1/obj-test`, `obj-changed`; S2b is `obj3`, grid `foreseen`):
+
+| | objects S2b | objects T1 (`test`) | objects S2 (`changed`) | grid S2b |
+|---|---|---|---|---|
+| score (11 games) | 1.1028 | 0.6177 | 1.1184 | 1.1060 |
+| levels | 12 | 10 | 12 | 12 |
+| m0r0 | 0.0877 | 0.0157 | 0.2575 | 0.8042 |
+| ls20 | 0.4091 | 0 (0) | 0.0154 | 0.0208 |
+| tu93 | 0.5206 | 0.6539 | 0.1518 | 0.1862 |
+| lf52 | 0.0950 | 1.8182 | 0.7447 | 0.0950 |
+| ar25 | 0.0096 | 0.0156 | 0 (0) | 0.0085 |
+| cn04 | 0 (0) | 0 (0) | 0.0316 (1) | 0 (0) |
+| vc33 / sp80 | 0.0550 / 0.0562 | 0.0775 / 0.0645 | 0.1016 / 0.1016 | 0.0550 / 0.0986 |
+
+lp85, r11l and tn36 as S2b under S2; under T1 r11l lower and tn36 and ls20 without
+their level. T1 is far worse. S2 takes back part of m0r0 (0.0877 → 0.2575, grid's
+0.8042 still far above) and gives up ls20 and tu93, the games where the objects
+inducer had gained most over grid; ar25's level traded for cn04's; a score a little
+above S2b's with as many levels. So the reading holds in part: what the mind is
+curious about is what decides m0r0, not the move laws. Nothing changed: S2 for the
+objects inducer would be a run's declaration (`--curiosity changed`), measured on
+the 25 games before it is chosen.
