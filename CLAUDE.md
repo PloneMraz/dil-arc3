@@ -488,6 +488,28 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   about one time in eleven, and the way to the aim (S4 widened to a run) is not
   built.
 
+### Queued (Plone, 2026-10-20)
+
+Three lessons for the language inducer from how others play ARC-AGI-3 with a
+language model (LOG.md, 2026-10-20), none taken up yet. The leading entries let the
+model choose the actions, which this design forbids (the mind commands), so these
+are what can be learned without that:
+
+- **A short context.** Show the model fewer steps, dropping the oldest as new
+  ones come ("infinite play via eviction", Tufa Labs' Duck harness), where it is
+  now shown up to 60,000 characters of steps an asking: a lighter prompt, and more
+  games at once on one server's KV cache.
+- **Ask less often.** Ask the model again only when the program held is wrong
+  often, not at every step no hypothesis foresaw (version 8's m0r0: 398 answers in
+  300 cycles).
+- **Let the model see images.** Show the grid rendered as an image beside (or in
+  place of) its hex digits: the leading entries all name perception as what
+  matters, and Qwen3.8-Flash-Next takes images (its config has an
+  `image_token_id`).
+
+Each is measured as the language-inducer runs have been: three games, a game's
+time limit, against version 8.
+
 ### Open in the current design
 
 - **The language inducer reads the whole grid in what it expects.** Its

@@ -7222,3 +7222,35 @@ server ready in 1,160 s. All three games stopped at their hour. No level.
 where thinking ran 26,000 to 100,000 characters a round. At about five minutes an
 answer, a game played four or five cycles an hour. Thinking on is not a way this
 inducer can be run within a Kaggle session, at this budget or any it could afford.
+
+#### How others play ARC-AGI-3 with a language model (read 2026-10-20; Plone: queue three lessons)
+
+Read from ARC Prize's post on Milestone #1 and Tufa Labs' own write-up:
+
+- **Tufa Labs, "The Duck"** (first, Milestone #1): Qwen 3.6 27B FP8 — the model this
+  project's probe of 2026-09-24 found weakest — as the agent itself, in a Python REPL
+  where the game's observations are variables; the grid as an image and as ASCII;
+  the context kept short by evicting the oldest messages. ARC Prize reports the team
+  found that "hand-crafted tools actually hurt the model". Tufa Labs reports a mean
+  of 1.60 ± 0.45 over the 25 public games, and a cost "an order of magnitude"
+  below an "Executable World Models" agent on GPT 5.4.
+- **Reki and "forge"** (second and third): Gemma-4-31B as a vision policy: frames
+  rendered as labelled images, one short JSON a turn with what changed, a plan and
+  the next 1–4 actions; a reflection memory refreshed about every 10 steps; a numpy
+  heuristic for where to click and a check that stops clicking kinds of thing that
+  never change anything (which this agent's grid inducer has in its own form:
+  `things`, and turning from what was silent). forge's best run turned all its extra
+  machinery off.
+- **WorldCoder** (NeurIPS 2024): a model that writes a world model as code and
+  plans with it, the language inducer's idea, reported more compute-efficient than
+  ReAct-style agents, on small gridworlds.
+- A score of 55.89 for Tufa Labs in early October is reported by secondary sources
+  and was not confirmed on Kaggle's page; one calls it a community, self-reported
+  board.
+
+Where the cost differs: their model answers with actions or short REPL calls, a
+few tens of tokens, often several actions a call, in a short context; this
+inducer's model answers with a program predicting the whole grid, judged cell by
+cell (1,700–3,600 tokens at the median), asked at every step none foresaw, with up
+to 60,000 characters of steps. Queued (CLAUDE.md, "Queued"): a short context,
+asking less often, the grid shown as an image.
