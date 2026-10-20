@@ -1010,9 +1010,10 @@ the mind stood alike expected again, the mind's vote on trust, the counts it rea
 of the field following the field (B2), the field carrying its history (DEVIATION
 9, carry 0.95), and what B2 carries written in each choice. A tenth,
 `57443352`, is the same notebook's **version 37**, code `9fcaafc`: as the ninth,
-with the store's hash as dil-core's, so its stores verify under dil-core's own
-verifier, the echo rule and INV-5's measure brought from dil-core, on the pinned
-Python 3.12 image. What
+with an act opaque to the mind, an act never once taken never foreseen, a grid that
+is no grid bearing nothing out, the store's hash as dil-core's (its stores verify
+under dil-core's own verifier), and what was brought from dil-core 288ad30 and
+817bf75; on the pinned Python 3.12 image. What
 each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 
