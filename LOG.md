@@ -7288,3 +7288,22 @@ foresaw ("toward a state with an act not yet taken": tu93 433 choices against 29
 m0r0 249 against 44), and in m0r0 the moves were often wrong (617 hypotheses written,
 the frame scarred 145 times against 46). The first differences start at step 27
 (tu93) and 9 (m0r0).
+
+#### Version 36 (Save & Run): as version 35 in levels, and its stores verify under dil-core
+
+`dil-arc3-learning`, Kaggle's version 37 (36 was the short environment check of
+2026-10-19), code `9fcaafc`: grid, S2b with attention, the 25 games, 600 cycles,
+four at once, on Python 3.12.13 (the notebook's pinned image); pushed 05:43 UTC,
+`COMPLETE` 06:57, the runs 4,024 s. Against version 35's Save & Run:
+
+- 16 of 183 levels in both; score 0.491 against 0.518. The difference is tu93's
+  (0.88 → 0.19, its second level in more actions), as on this machine after the
+  echo rule was brought from dil-core (`sync`, 2026-10-19); ls20, m0r0 and sc25 a
+  little better, ar25, bp35 and vc33 a little worse, the rest the same.
+- All 25 stores verify under dil-core's own verifier (`dil verify`) — the first of
+  this agent's runs on Kaggle whose logs the reference implementation can check;
+  version 35's cannot (LOG, 2026-10-19).
+- dil-core's checker (with INV-5's measure fixed): the accumulation claim passes in
+  all 25; 22 stores score 5 pass, 1 partial, 0 fail, 1 not verifiable; cd82, dc22
+  and m0r0 fail C7 (diversity-loss: one source over the last 8 records), as open in
+  CLAUDE.md — the onlooker speaks only when the agent looks stuck.
