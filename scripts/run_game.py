@@ -39,6 +39,7 @@ from arc3.task import TASK_CUE
 from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.grid import GridInducer
+from mind.models.objects import ObjectsInducer
 from mind.models.language import ModelEndpoint
 from mind.models.language_inducer import LanguageInducer
 from arc3.observe import admit
@@ -70,7 +71,7 @@ ap.add_argument("--max-tokens", type=int, default=12288)
 ap.add_argument("--code-only", action="store_true",
                 help="the language inducer tells its model to answer with its code alone (a measurement)")
 ap.add_argument("--think", action="store_true")
-ap.add_argument("--inducer", choices=("grid", "language"), default="grid",
+ap.add_argument("--inducer", choices=("grid", "objects", "language"), default="grid",
                 help="the mind's model, what its learning computes with: hypotheses that reach past where they "
                      "were met (mind/models/grid.py), or programs a served language model writes "
                      "(mind/models/language_inducer.py, at --endpoint)")
@@ -118,6 +119,8 @@ if a.inducer == "language":
     inducer = LanguageInducer(ARC_ORGANS, ModelEndpoint(url=a.endpoint, model=a.model,
                                                         max_tokens=a.max_tokens, extra=extra),
                               code_only=a.code_only)
+elif a.inducer == "objects":
+    inducer = ObjectsInducer(ARC_ORGANS)
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
