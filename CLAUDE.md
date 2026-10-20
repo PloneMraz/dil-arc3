@@ -1008,7 +1008,11 @@ ninth, `57371259`, is the same notebook's **version 35**, code `b4d7d5a`: as the
 eighth, with a collision of the region's report thought on, what an act did where
 the mind stood alike expected again, the mind's vote on trust, the counts it reads
 of the field following the field (B2), the field carrying its history (DEVIATION
-9, carry 0.95), and what B2 carries written in each choice. What
+9, carry 0.95), and what B2 carries written in each choice. A tenth,
+`57443352`, is the same notebook's **version 37**, code `9fcaafc`: as the ninth,
+with the store's hash as dil-core's, so its stores verify under dil-core's own
+verifier, the echo rule and INV-5's measure brought from dil-core, on the pinned
+Python 3.12 image. What
 each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 

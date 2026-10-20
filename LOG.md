@@ -7501,3 +7501,12 @@ Two tries, the 11 games, 600 cycles, against step 4 (`obj3`):
 Neither kept; the code is as step 4 left it. Where the parts of a grid change apart,
 what would answer is a situation read by its parts, not its whole — a change in what
 a situation is to the learning, not tried.
+
+#### Submitted: version 37, code `9fcaafc` (Plone)
+
+Submission `57443352`, 15:12 UTC: `dil-arc3-learning` **version 37** — the run called
+"version 36" in the entries above and in `scripts/data/kaggle/dil-run/submit-9fcaafc-v36`;
+Kaggle's version 36 is the short environment check (ls20, 30 cycles) and was not the one
+to submit, caught before the submit call. Grid, S2b with attention, 600 cycles, four at
+once; its Save & Run: 16 of 183 levels, 0.491, all 25 stores verifying under dil-core.
+Nothing is pushed to Kaggle until it is scored.
