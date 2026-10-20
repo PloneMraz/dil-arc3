@@ -7165,3 +7165,37 @@ together: yes — the server puts the thinking in its own channel, kept with the
 answer as `reasoning` — but `max_tokens` counts the thinking too, and in the probe of
 2026-09-24 thinking ran 26,000 to 100,000 characters a round and often never reached
 code; it is to be measured after B, with a larger budget and a game's time limit.
+
+#### Version 11: B, Flash-Next answering with its code alone; and a correction
+
+`dil-arc3-language-inducer` version 11 (`6da5d11`: as version 10's code, Flash-Next,
+`--code-only`, 60 minutes a game), pushed 01:02 UTC, `COMPLETE` 02:30 — 5,226 s,
+about an hour and a half of quota. ls20 played its 300 cycles (1,928 s; version 8,
+2,832); tu93 and m0r0 were stopped at their hour, at cycles 94 and 79. No level.
+
+**Correction** of the entry "Where the language inducer's time goes": "Most of an
+answer is prose before the code" was wrong, read from the longest answers. Over all
+answers, the text outside the code is 0% at the median in every game of versions 7,
+8 and 11; most answers begin with the code (version 7: 53 of 55, 62 of 103, 80 of
+132; version 8: 125 of 135, 66 of 79, 332 of 367). Prose came in a minority of
+answers, chiefly tu93's and m0r0's, and there ran long (76–83% of the text at the
+90th percentile). An answer is long mostly because its code is.
+
+B against version 8 (Flash-Next, the same three games), over the same cycles:
+
+| programs borne out, by 50 cycles | version 8 | version 11 |
+|---|---|---|
+| ls20 0–49, 50–99, 100–149 | 35%, 26%, 50% | 42%, 65%, 50% |
+| tu93 0–49, 50–99 | 45%, 53% | 32%, 51% |
+| m0r0 0–49, 50–99 | 10%, 41% | 21%, 12% |
+
+| | version 8 | version 11 |
+|---|---|---|
+| answers starting with the code | 125/135, 66/79, 332/367 | 68/69, 147/153, 173/175 |
+| tokens an answer, median (ls20, tu93, m0r0) | 1,743, 2,347, 3,588 | 2,091, 1,737, 1,914 |
+| answers a cycle (ls20, tu93, m0r0) | 0.46, 0.26, 1.32 | 0.23, 1.66, 2.23 |
+
+Told to, the model all but always wrote its code alone. What it did to the programs
+is mixed: better in ls20 (fewer answers, more of them right, a third less time),
+worse in tu93 (twice as many answers early, fewer right), mixed in m0r0. One run each
+cannot tell this from noise; B does not show itself an improvement.
