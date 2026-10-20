@@ -7451,3 +7451,25 @@ above S2b's with as many levels. So the reading holds in part: what the mind is
 curious about is what decides m0r0, not the move laws. Nothing changed: S2 for the
 objects inducer would be a run's declaration (`--curiosity changed`), measured on
 the 25 games before it is chosen.
+
+#### The objects inducer (step 4) on the 25 games, by Save & Run
+
+`dil-arc3-learning`, Kaggle's version 39, code `6985a47` (step 4, S2b, attention,
+600 cycles, four at once); pushed 18:52 (+0700), `COMPLETE` 19:57. Against version 36
+(grid) and version 38 (step 3):
+
+| | grid (v36) | objects step 3 (v38) | objects step 4 (v39) |
+|---|---|---|---|
+| score | 0.4915 | 0.4997 | 0.4863 |
+| levels | 16 of 183 | 15 | 14 |
+| sc25 | 0.0956 (2) | 0.1315 (2) | 0 (0) |
+| tu93 | 0.1862 | 0.7950 | 0.5206 |
+| m0r0 | 0.8042 | 0.0261 | 0.0877 |
+| ar25 | 0.0085 (1) | 0 (0) | 0.0096 (1) |
+
+The eleven games as on this machine (`obj3`); the rest as version 38 but sc25, which
+lost both its levels. In sc25 step 4's acts reached somewhere new far less often
+(ACTION1 49 times in 127, against 87 in 118 under step 3; 27 kinds of act tried
+against 44): with a move known by its thing's colours wherever that thing lies, more
+of where an act leads is foreseen. That is the reading, not measured on its own.
+Step 3 stays the objects inducer's best on the 25 games, and grid has the most levels.
