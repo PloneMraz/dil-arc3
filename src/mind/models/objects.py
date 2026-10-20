@@ -118,6 +118,15 @@ OTHERWISE THAN GRID, as it is done (each measured on the eleven games, LOG.md):
    against grid's 12, score 1.121 against 1.106 — ls20's level 1 at 0.409 (grid
    0.021), tu93's two at 0.795 (grid 0.186), m0r0's level back but dear (0.026,
    grid 0.804), ar25's lost, sp80 0.056 (grid 0.099).
+
+3. **A thing is known by its colours** (2026-10-20). A move says what it moves
+   by the thing's colours and how many cells of each, not by its every cell, so a
+   thing that turns or changes a cell is the same thing and its move the same law,
+   seen as often as it happens. Where a move's pattern lies nowhere once, it moves
+   the one thing of those colours, as that thing lies now. Measured (as in 1): 12
+   levels, grid's count, score 1.103 against step 2's 1.121 and grid's 1.106 —
+   ar25's level back (0.0096, grid 0.0085), m0r0 0.088 (step 2 0.026, grid 0.804),
+   tu93 0.521 (step 2 0.795, grid 0.186), ls20 as step 2 (0.409).
 """
 
 from __future__ import annotations
@@ -325,7 +334,10 @@ class MoveForm:
 
     @property
     def key(self) -> tuple:
-        return ("move", self.act, self.pattern, self.dr, self.dc, self.trail, self.after)
+        # What it says, by the thing it moves — its colours, so many cells of each
+        # — not by its every cell (OTHERWISE THAN GRID, 3): a thing that turns or
+        # changes a cell is the same thing, its move the same law.
+        return ("move", self.act, _signature(self.pattern), self.dr, self.dc, self.trail)
 
 
 @dataclass(eq=False)
@@ -396,6 +408,8 @@ class ObjectsInducer:
         self._aimed = True
         # How many times it has seen each move happen (by what the move says).
         self._move_seen: dict[tuple, int] = {}
+        # (situation, a thing's colours) -> (the one thing of them there, or None).
+        self._things_of: dict[tuple, tuple] = {}
         # Each act's moves it suggested, had back from the mind's memory (`keep`).
         self._moves_of: dict[int, list[Any]] = {}
         # (situation, move or block) -> (the form, where its pattern lies once, or None).
@@ -1062,8 +1076,15 @@ class ObjectsInducer:
 
     def _move_predict(self, form: Any, situation: str, state: Grid) -> Prediction | None:
         """A block: nothing changes where what is in the way is of its colours. A
-        move: the pattern moved, where nothing is in its way."""
+        move: the pattern moved, where nothing is in its way — or, where its pattern
+        lies nowhere once, the one thing of its colours, as it lies now, moved
+        (OTHERWISE THAN GRID, 3)."""
         corner = self._lies_once(form, situation, state)
+        if corner is None and isinstance(form, MoveForm):
+            found = self._thing_of(_signature(form.pattern), situation, state)
+            if found is not None:
+                pattern, corner = found
+                form = MoveForm(act=form.act, pattern=pattern, dr=form.dr, dc=form.dc, trail=form.trail)
         if corner is None:
             return None
         in_the_way = self._in_the_way(form, corner, state)
@@ -1077,6 +1098,49 @@ class ObjectsInducer:
         for r, c, v in form.came:
             out[corner[0] + r + form.dr][corner[1] + c + form.dc] = v
         return Prediction(state=out)
+
+    def _thing_of(self, signature: tuple, situation: str, state: Grid
+                  ) -> tuple[tuple[tuple[int, int, int], ...], tuple[int, int]] | None:
+        """The one thing in a state of these colours, so many cells of each — a
+        region joined side to side of its colours alone, off the clock — as a
+        pattern from its corner, and the corner; None at none or at several."""
+        known = self._things_of.get((situation, signature))
+        if known is not None:
+            return known[0]
+        colours = {v for v, _ in signature}
+        size = sum(n for _, n in signature)
+        rarest = min(signature, key=lambda vn: vn[1])[0]
+        seen: set[tuple[int, int]] = set()
+        found: list[tuple[tuple[tuple[int, int, int], ...], tuple[int, int]]] = []
+        for r, row in enumerate(state):
+            if r in self.clock:
+                continue
+            for c, v in enumerate(row):
+                if v != rarest or (r, c) in seen or c in self.clock_columns:
+                    continue
+                region, stack = [], [(r, c)]
+                seen.add((r, c))
+                while stack and len(region) <= size:
+                    rr, cc = stack.pop()
+                    region.append((rr, cc))
+                    for q in ((rr + 1, cc), (rr - 1, cc), (rr, cc + 1), (rr, cc - 1)):
+                        if q not in seen and 0 <= q[0] < len(state) and 0 <= q[1] < len(state[q[0]]) \
+                                and q[0] not in self.clock and q[1] not in self.clock_columns \
+                                and state[q[0]][q[1]] in colours:
+                            seen.add(q)
+                            stack.append(q)
+                if len(region) != size:
+                    continue
+                pattern, r0, c0 = _pattern(state, region)
+                if _signature(pattern) == signature:
+                    found.append((pattern, (r0, c0)))
+                    if len(found) > 1:
+                        break
+            if len(found) > 1:
+                break
+        out = found[0] if len(found) == 1 else None
+        self._things_of[(situation, signature)] = (out,)
+        return out
 
     def restore(self, payload: dict[str, Any]) -> Any:
         """A still, rewrite or aim hypothesis from its datum alone."""
@@ -1099,6 +1163,15 @@ class ObjectsInducer:
             return AimForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"],
                            status=dict(payload["status"]))
         return RewriteForm(act=payload["act"], placed=payload["placed"], parts=parts_, colour=payload["colour"])
+
+
+def _signature(pattern: tuple[tuple[int, int, int], ...]) -> tuple[tuple[int, int], ...]:
+    """A thing's identity, as the objects inducer takes it: its colours, and how
+    many cells of each (OTHERWISE THAN GRID, 3)."""
+    counts: dict[int, int] = {}
+    for _, _, v in pattern:
+        counts[v] = counts.get(v, 0) + 1
+    return tuple(sorted(counts.items()))
 
 
 def _pattern(grid: Grid, cells: list[tuple[int, int]]) -> tuple[tuple[tuple[int, int, int], ...], int, int]:

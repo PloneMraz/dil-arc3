@@ -7354,3 +7354,26 @@ attention, 600 cycles, four at once) with `--inducer objects`; pushed 09:28 UTC,
 The eleven games came out exactly as on this machine (the loop is deterministic);
 of the other fourteen, sc25 better and su15 a little, the rest as grid. A score a
 little above grid's with a level fewer, its gains and losses in a few games.
+
+#### The objects inducer, step 4: a thing known by its colours (Plone: the design approved)
+
+A move now says what it moves by the thing's colours and how many cells of each,
+not by its every cell (its key; the learning holds what keys alike once), so a thing
+that turns or changes a cell is the same thing, its move the same law, seen as often
+as it happens (`MOVE_SEEN` counts by it). Where a move's pattern lies nowhere once,
+it moves the one thing of those colours — a region joined side to side of its colours
+alone, off the clock — as that thing lies now; at none or at several, it says
+nothing. Blocks as before. On the eleven games:
+
+| | grid | step 3 | step 4 |
+|---|---|---|---|
+| levels | 12 | 11 | 12 |
+| score | 1.106 | 1.121 | 1.103 |
+| ls20 / tu93 | 0.0208 / 0.1862 | 0.4091 / 0.7950 | 0.4091 / 0.5206 |
+| m0r0 / ar25 | 0.8042 / 0.0085 | 0.0261 / 0 | 0.0877 / 0.0096 |
+
+ar25's level back and m0r0 better, tu93 slower than step 3 (still near three times
+grid's); grid's count of levels with nearly its score. Mixed against step 3: kept as
+the inducer's step 4, step 3 to be had back by reverting it if preferred. (A stash of
+`objects.py` for a few seconds during this run, to commit the 25 games' entry alone,
+started no game; the last began two minutes before.)
