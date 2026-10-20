@@ -7377,3 +7377,24 @@ grid's); grid's count of levels with nearly its score. Mixed against step 3: kep
 the inducer's step 4, step 3 to be had back by reverting it if preferred. (A stash of
 `objects.py` for a few seconds during this run, to commit the 25 games' entry alone,
 started no game; the last began two minutes before.)
+
+#### Why the objects inducer loses m0r0 (Plone: look into it first)
+
+Grid reached m0r0's first level in 73 actions, the objects inducer (step 4) in 221
+(baseline 30); both by ACTION4. Read from the two stores:
+
+- Not a wrong law: the objects inducer's 26 moves in m0r0 were borne out 34 times and
+  never refuted; what collided were rewrites (411 hypotheses, 1,111 times not borne
+  out) and stills (484), as grid has them.
+- The difference is where the mind went. Up to the aim, grid took ACTION1 24 times and
+  ACTION2 7; the objects inducer 89 and 63. With moves it foresees states it has not
+  stood in, and a state foreseen has every act still to be tried there, so it stands
+  as a place worth going: "toward a state with an act not yet taken" 261 choices
+  against grid's 44, and 92 situations in its first 220 choices against 71. It went
+  up and down the region's breadth before the act that brought the aim.
+- The same pull brought ls20's and tu93's levels far sooner: going where it has not
+  been is there what wins. In m0r0 it is what loses — a trade, not a fault.
+
+Not changed. A law that a foreseen state is not, by itself, a place worth going
+would be a law of the learning — grid's too, once its aim has come — and is
+Plone's to decide.
