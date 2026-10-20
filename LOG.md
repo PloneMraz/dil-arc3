@@ -7398,3 +7398,28 @@ Grid reached m0r0's first level in 73 actions, the objects inducer (step 4) in 2
 Not changed. A law that a foreseen state is not, by itself, a place worth going
 would be a law of the learning — grid's too, once its aim has come — and is
 Plone's to decide.
+
+#### A state it has stood in first: tried, not kept
+
+Plone: try it, and if nothing improves, accept the trade. Tried in the learning: of
+the places with an act not yet taken, one stood in first; one only foreseen only where
+none stood in is left (`--inducer objects`, the 11 games, 600 cycles, against step 4,
+`scripts/data/t1/obj-stood` and `obj3`):
+
+| | step 4 | stood in first |
+|---|---|---|
+| score (11 games) | 1.1028 | 1.0979 |
+| levels | 12 | 11 |
+| m0r0 | 0.0877 (1/6) | 0 (0/6) |
+| sp80 | 0.0562 | 0.0892 |
+
+Every other game unchanged. In m0r0 the law did what it says — "toward a state with an
+act not yet taken" 115 choices against 302, 11 of them to a state not stood in — and the
+level was not reached at all: ACTION1 217 and ACTION2 227 of 655 choices (step 4: 165
+and 214 of 679), ACTION4 104 (143), most of them "not yet taken from here" (434 against
+316). So the explanation logged above is not borne out: the pull of foreseen states
+was not what kept the mind from ACTION4. Where every step a move makes is a state not
+met, it is chosen among the acts not yet taken there, and curiosity (S2b: somewhere
+new) favours the acts that reached somewhere new most, which a mover's moves do.
+That is the reading now, not measured on its own. Reverted; the trade accepted, as
+Plone said.
