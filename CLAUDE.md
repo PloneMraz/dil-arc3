@@ -582,7 +582,9 @@ problem, so long as it names no game:
 
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
-  arise here. Open in dil-core too.
+  arise here. To be fixed in dil-core (Plone, 2026-10-21): such a mismatch scars
+  the datum recalled, as a recalled scar is the datum its record names; ported
+  here once done, though nothing here meets it.
 - A run that stops at its cycle budget leaves its last choice `awaiting`: what
   it awaited would have come back in a cycle that never ran, so no `built_after`
   follows.
