@@ -43,18 +43,18 @@ Settled deliberately, with Plone.
 | role | what it is | in this repo |
 |---|---|---|
 | **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
-| **host** | the body: takes in what the region returns and carries it inward, carries out the mind's command; declares its eye and body to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
+| **host** | its sensory organs take in what the region returns and carry it inward; its effectors carry out the mind's command; it declares both to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
 | **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py` |
-| **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the body's motion under the mind's command. | none: the word is not used in the code |
+| **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the host's acting under the mind's command. | none: the word is not used in the code |
 
 Outside all four is the **world** (`src/world/`): the region the agent acts on,
 and an onlooker, an Other who sees it act and says what it sees (tag E). The host
 touches the region and hears the onlooker; it holds neither.
 
-The line that matters: **the mind acts on nothing; it commands, and the body
-carries out.** The mind constructs the next action toward getting through the
-level and commands it as T5's test (§6.4); the body carries it out, or, with no
-command it can carry out, waits. What judges a command is the region's return,
+The line that matters: **the mind acts on nothing; it commands, and the host
+carries the command out through its effectors.** The mind constructs the next
+action toward getting through the level and commands it as T5's test (§6.4); the
+host carries it out, or, with no command it can carry out, waits. What judges a command is the region's return,
 which scars the experience or hypothesis the expectation came from when it does
 not hold. What else the mind sends out is a
 question to its own memory: a store query, by cue, that it chooses itself
@@ -62,7 +62,7 @@ question to its own memory: a store query, by cue, that it chooses itself
 mind read is in `[event]`. What it writes, it writes as data (§9 `nascent`), with
 what it was built from.
 
-**Seeing is the body's; computing is the mind's.** The host takes the grid in as
+**Seeing is the host's; computing is the mind's.** The host takes the grid in as
 the engine returns it; working out what is in it is the mind's computing.
 
 ## What the mind is
@@ -251,7 +251,7 @@ now, in dil-core first and then here.
 8. **What the onlooker says reaches no further than the acts it names.** It
    strikes the mind as a collision, and the mind answers there and then — it
    objects to the named acts where they were taken and commands again before
-   the body moves. It learns nothing wider from being told: an objection is
+   the host acts. It learns nothing wider from being told: an objection is
    held while the onlooker says it and lifted when it stops.
 9. **The language model's prompt does not show the field.** The field reaches
    the mind at T5 and conditions it whatever its model: its alertness bounds how
@@ -310,7 +310,7 @@ src/mind/         the one mind, neutral about its region; its learning
                   (learning.py); the models it learns with (grid, objects,
                   language, which holds what a served language model
                   needs). Imports nothing from arc3.
-src/arc3/         the body, its declared organs, and what the mind is told.
+src/arc3/         the host, its declared organs, and what the mind is told.
 src/world/        what lies outside the agent: the region it acts on, served to
                   a game's own process in a scored run, and the onlooker.
 spec/             the DIL protocol and the specification it derives from,

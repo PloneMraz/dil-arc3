@@ -74,7 +74,7 @@ submission's score, against the random agent's.
 **1. Introduction** [200] — RHAE rewards few actions; an agent that learns in the
 game must explore. The question: can what it knew and why it acted be read back
 by a third party? Figure 1 (the loop: region → host (senses) → DIL layers →
-mind → host (body) → region; host and body are one: the body is the host's).
+mind → host (effectors) → region: one host, its sensory organs and its effectors).
 Contributions:
 1. an agent whose beliefs, refutations and choices are all data with provenance,
    in a hash-chained log, checked by a conformance checker (C1–C7);
@@ -85,7 +85,8 @@ Contributions:
 4. a ledger of the ideas that failed, each with its numbers.
 
 **2. Approach** [350] — The four roles (DIL, host, model, the self as a law).
-"The mind acts on nothing; it commands, the body carries out" (T5's test).
+"The mind acts on nothing; it commands, and the host carries the command out
+through its effectors" (T5's test).
 The learning: experience → hypothesis (data) → expectation (the one right at the
 highest rate; where nothing it knows says, that the region will be otherwise, or
 what the same kind of act did where it stood alike) → the region's return →

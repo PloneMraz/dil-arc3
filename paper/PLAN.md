@@ -83,7 +83,7 @@ Kept here so that a new session starts from it, not from memory. History goes in
 | Progress | does it raise anyone's chance of a top score | a loop a third party can check from `[event]`; what did not work, measured |
 | Theory | *why* it works, not only how | expectation → collision → the mind turned → the next collision otherwise; why the same DIL makes different individuals (the Other, the field); why scores barely moved: changes reshuffle exploration, the public 25 do not foretell the hidden games |
 | Completeness | covers the submission thoroughly | layers, invariants, deviations, how it plays on Kaggle |
-| Novelty | against public research | the DIL protocol; a hash-chained event log; "the mind commands, the body carries out" |
+| Novelty | against public research | the DIL protocol; a hash-chained event log; "the mind commands, the host carries the command out through its effectors" |
 
 ## Shape (after the winning papers of 2024 and 2025 and the sample writeup)
 

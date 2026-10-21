@@ -62,28 +62,29 @@ electrodes and stimulated to show the mechanism runs. It has no region to meet,
 which is why its terminal emission is a fixed marker —
 `{ kind: "respond", cycle, valence }` — and never a move.
 
-This repository is a whole body, built as one from the start. Four roles, and
+This repository is a whole agent, built as one from the start. Four roles, and
 they are not interchangeable:
 
 | | |
 |---|---|
-| **DIL** | the operating mechanism of the whole. Not a part beside other parts — how the body runs. Present everywhere, located nowhere. |
-| **host** | the container and the sense organs. It declares its faculties; DIL threads through. |
+| **DIL** | the operating mechanism of the whole. Not a part beside other parts — how the agent runs. Present everywhere, located nowhere. |
+| **host** | the container: its sensory organs, which take in what the region returns, and its effectors, which carry out the mind's command. It declares its faculties; DIL threads through. |
 | **model** | the thinking organ's engine: replaceable. The **mind** is the design — it reads, expects, is curious, wants, and constructs behaviour; another model changes how well it thinks, not what it is. |
-| **the self** | what the loop produces when it runs (§7): a law, not a part, **located in no file** — "host, self, and agent are one motion at three descriptive levels, not three entities" (§2). Its behaviour is the body's motion under the mind's command. The word is not used in the code (Plone, 2026-09-25). |
+| **the self** | what the loop produces when it runs (§7): a law, not a part, **located in no file** — "host, self, and agent are one motion at three descriptive levels, not three entities" (§2). Its behaviour is the host's acting under the mind's command. The word is not used in the code (Plone, 2026-09-25). |
 
 ### The line that must not be crossed
 
-**The mind acts on nothing; it commands, and the body carries out.** The body
-takes in what the region returns; the mind reads it, forms expectations, is
+**The mind acts on nothing; it commands, and the host carries the command out
+through its effectors.** The host's sensory organs take in what the region
+returns; the mind reads it, forms expectations, is
 curious and wants — in its thinking, not in a formula — and constructs the next
-action toward getting through the level; it commands it; the body carries it
+action toward getting through the level; it commands it; the host carries it
 out; mismatch comes back; the loop goes on (Plone, 2026-09-25). The command is
 T5's **test** (§6.4: "an action that pushes to the region to see whether the
 return matches the Expectation just built"), recorded from T5 in `[event]` and
-carried out by the body at link 5 in the same cycle. The mind sees what the
+carried out by the host at link 5 in the same cycle. The mind sees what the
 region offers — it reads everything — and a command the region does not afford
-is not carried out: the body waits.
+is not carried out: the host waits.
 
 What judges a command is the region, never the mind: the move's return is
 compared with what the mind expected, and when it does not hold, what the
@@ -166,14 +167,14 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   no held hypothesis foresaw — told which of the two it is (`foreseen`) and
   shown the recent steps (`evidence`); what it keys alike is held once; what it
   says in computing (`said`: a language model's answers) is kept whole as data.
-  And while the body waits with nothing it can do, once in a situation, it is
+  And while the host waits with nothing it can do, once in a situation, it is
   asked for a way to read the state it stands in (`consider`; Plone, 2026-10-19):
   grid has none to give, as it reads every state's things as it meets it; the
   language inducer's model, shown the state alone, may name cells with
   `targets` — no hypothesis (no step was met to build one from), a `reading`
   datum the mind has back from memory, its `where` set aside as no step bears
   it out. Without it, in a region of clicks only, a language model's program
-  had no step to be asked on, and the body only stood.
+  had no step to be asked on, and the host only stood.
   Each inducer stands on its own, implementing `Inducer` (`models/base.py`),
   every computing of it in its own file (Plone, 2026-10-06: the exact inducer,
   no longer used as one, removed; what it said is the learning's experience,
@@ -238,11 +239,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   a model or to the host's organs, and the learning asks through a neutral seam
   (`Inducer.copy`, `coarse`, `made`; `Organs.state_object`). **An act is opaque
   to the mind** (Plone, 2026-10-19): the mind and its learning hold acts and
-  compare them, and ask the host's organs the rest — which of the body's acts
+  compare them, and ask the host's organs the rest — which of the host's acts
   one is (`family`), whether the region offers it (`offered`, `read_offers`), an
   order to break ties by (`order`), how it is written as data (`record`), the
-  act an Other's word names (`named_by`), whether the body can carry it out
-  (`can_carry_out`), and the act that starts the region again, if the body has
+  act an Other's word names (`named_by`), whether the host can carry it out
+  (`can_carry_out`), and the act that starts the region again, if the host has
   one (`restart`, None for none: then the mind never commands one). That an act
   here is (id, x, y) is `arc3/organs.py`'s and the inducers'. The channels are
   named by what arrives (`step`, `report`, `others`), and an experience keeps
@@ -265,7 +266,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   neutral about the environment: what is particular to one region is data the
   mind reads (its priors), not code. In the code: `src/mind/` imports nothing
   from `arc3` — `mind.py` (the seams), `organs.py` (what a host declares of its
-  eye and body), `learning.py` (its learning), `models/`; `src/arc3/organs.py`
+  sensory organs and effectors), `learning.py` (its learning), `models/`; `src/arc3/organs.py`
   is this host's declaration, every value read from its own code. The task's aim reaches a model that reads no text as data
   (`prior:mind-task`'s `aim`).
 - **Seeing is the eye's, computing is the brain's.** The host takes the signal in
@@ -273,23 +274,24 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   engine returned them) and the region's status each cycle, and — when the world
   has an onlooker — what it says of the agent, after them. Never name a
   computation of the mind with a verb of the senses.
-- **The mind commands; the body carries out.** Once the region has said all it
-  says in a cycle — on its status; in a cycle the body stood still in, after
+- **The mind commands; the host carries the command out through its effectors.**
+  Once the region has said all it says in a cycle — on its status; in a cycle
+  the host stood still in, after
   the onlooker's remark — the mind chooses from where the region stands and
-  pushes the next action as T5's `test`, if the body can carry it out: RESET
+  pushes the next action as T5's `test`, if the host can carry it out: RESET
   always, any other action the region offers unless the game has ended.
   `src/arc3/command.py` carries it out and weighs nothing. With no such command
-  the mind asks its learning to think again while the body waits, at most
+  the mind asks its learning to think again while the host waits, at most
   `MAX_WAIT_THOUGHTS = 2` times (declared, not measured); the learning thinks
   on what collided — a step's return, the region's report, the onlooker's word —
-  and, on the body waiting, once in a situation, asks its inducer what can be
+  and, on the host waiting, once in a situation, asks its inducer what can be
   done there (`consider`, above); where that gives nothing new, no thought
-  comes, and the body stands still. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
+  comes, and the host stands still. In an informational region the run then ends — no action is made up in the mind's place (Plone: "Cơ thể có thể đơ
   để đợi"). Cycle 0's RESET is the host's start-up (§4). What else the mind
   sends out is a question to its own memory: `ask(cue)`, a store query, traced
   to T5 with register ↔.
 - **Curiosity, want and expectation are the mind's own computation.** Nothing
-  computes them on the mind's behalf — not the host, not the body, not code
+  computes them on the mind's behalf — not the host, not its effectors, not code
   standing beside the mind (Plone, 2026-09-27: "cấm tính hộ, không phải cấm
   code"). A mind that is itself code computes them in itself. They are the
   mind's whatever its model: "Chỉ cần model tư duy theo đúng chỉ thị thì
@@ -302,7 +304,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   through the tagging-gate, and the mind recalls it at its first arrival; the
   learning hands it on to the inducer, and what a language model is told is
   these words, never text in code (Plone, 2026-09-25).
-- **What the body can carry out is one rule** (`command.can_carry_out`), which the
+- **What the host can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
   proposal as a command.
 - **The whole store is the agent's memory** (Plone, 2026-10-04: "Toàn bộ
@@ -422,7 +424,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   — the answer, when the remark is said again after it, or held while the
   agent keeps doing what it names: the answer did not do what it was for. The
   mind thinks on the collision there and then and, if it thought, commands
-  again before the body moves; the body carries out the last command of the
+  again before the host acts; the host carries out the last command of the
   cycle. Read back: a cycle's T5 tests in `[event]` are its commands, in order,
   and the last is the one carried out; the mind's second `choice`
   says which it replaces (`supersedes`). The mind does not wait for the Other. The first time a remark comes
@@ -438,9 +440,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   no aim (both declared, a law of the
   mind: `src/mind/mind.py`). The learning holds the same aim (`hold_aim`) and
   tells its model what it is for; no model has an aim. With no aim yet held —
-  the cycle before the answer — the mind commands nothing and the body waits.
+  the cycle before the answer — the mind commands nothing and the host waits.
 - **Where a regress stops.** (1) The mind thinks only on what comes from outside
-  — a return, the onlooker — or while the body waits; one thought never sets off
+  — a return, the onlooker — or while the host waits; one thought never sets off
   another. (2) An aim must ground out in what comes back: an aim nothing coming
   back could show is not taken. (3) Standing still is said by the onlooker each
   moment, and standing costs the run's budget, which ends it.
@@ -498,9 +500,9 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   claim to be right). Told it stands still with nothing to do, it resets. What
   it objected to is held while the onlooker says it, and lifted when it says
   something else or nothing; it is read under the clock it holds.
-- **A cycle the body stood still in is a cycle.** The region returns nothing, the
+- **A cycle the host stood still in is a cycle.** The region returns nothing, the
   host reports only what it hears, and T7 counts no absence of the region
-  (nothing was done to it). The mind commands after the onlooker; the body goes
+  (nothing was done to it). The mind commands after the onlooker; the host goes
   by the frame it stands on. Such cycles count against the run's budget and cost
   no action. Without an onlooker nothing arrives in them, so the mind is never
   asked, and the run spends its budget standing.
@@ -627,7 +629,7 @@ are below.
 
   - **Where it stands: in the world, not in the host** (Plone, 2026-09-25).
     `src/world/` is what lies outside the agent: the region it acts on, and the
-    Others who see it act. The host's body touches the region and, when it does
+    Others who see it act. The host's effectors touch the region and, when it does
     not act, lets a moment pass (`World.idle`); the Others see each act or its
     lack. The host hears what they say on its own channel (`onlooker`, declared
     by `declaration(onlooker=True)`); it does not hold, wrap or call them, and
@@ -692,10 +694,10 @@ own form (a `present` set, a `predict` rule for T5).
    expectation; it may `ask`, `write` and `test` (dil-core `a8ef7ce`).
 3. **`Cycle(respond=...)`, a host-declared `RespondPolicy`**, at the close of the
    meaning-channel after appraisal, issuing layer T8, with the cycle's T5 tests in
-   `RespondContext.tests`. `src/arc3/command.py` is the body carrying out the
-   mind's command: the last T5 test, if the region affords it; RESET at cycle 0;
-   otherwise it waits. dil-core has no body and hands the tests over after the
-   cycle (`CycleResult.tests`).
+   `RespondContext.tests`. `src/arc3/command.py` is the host's effectors carrying
+   out the mind's command: the last T5 test, if the region affords it; RESET at cycle 0;
+   otherwise it waits. dil-core carries out no command itself and hands the tests
+   to its host after the cycle (`CycleResult.tests`).
 4. **`COMMIT_CADENCE`** (Plone: too costly for a full agent, right for this one):
    the daemon can also commit at the close of every cycle in which the agent
    wrote a datum (`commit_on_write`), which served the language model's earlier
