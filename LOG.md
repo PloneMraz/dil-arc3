@@ -7718,3 +7718,11 @@ submission `57443352`):
   §13.1, §13.3, §13.5, §13.6 pass in all 25; §13.4 partial in all 25, and no store
   reads "not monotonic" any longer; §13.7 fails in six — cd82, dc22, g50t, ls20, m0r0,
   sc25 — on diversity-loss, as declared.
+
+#### Version 41 (Save & Run): as version 40, choice for choice
+
+`dil-arc3-learning`, Kaggle's version 41, code `963b7fb` (version 40's, with a recalled
+datum scarred as its own and the comments corrected): `COMPLETE`; 15 of 183 levels,
+0.4892 — the scorecard version 40's, and every choice in all 25 stores the same, step,
+act and why. All 25 stores verify under dil-core's verifier. Version 40's unpacked
+stores were removed; its `stores.tar.gz` is kept.
