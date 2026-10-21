@@ -9,14 +9,14 @@ seams ask what will come back, show what came back, and ask what to do next
 
 Its model is what is replaceable: the part of the one mind that computes — not a
 second mind beside it, not a second brain (Plone, 2026-09-27). It is an inducer
-(`Inducer`: `grid.py`, `language_inducer.py`), which only computes for the
+(`Inducer`: `grid.py`, `objects.py`, `language_inducer.py`), which only computes for the
 learning; each stands on its own (Plone, 2026-10-06). Its
 learning writes nothing and asks nothing itself: it says what should be written
 and asked, and the mind does it, so every write and question goes through the
 one mind's seams.
 
-A language model is an inducer too (`language_inducer.py`; the endpoint and the
-program's run are in `language.py`). Its earlier form,
+A language model is an inducer too (`language_inducer.py`, with the endpoint and
+the program's run). Its earlier form,
 which submission `56588469` ran, sat where the learning sits and is gone:
 `3b31806` keeps it (LOG.md, 2026-09-29).
 """

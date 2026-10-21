@@ -18,8 +18,7 @@ from arc3.observe import FRAME_CHANNEL, STATUS_CHANNEL, admit, transducers
 from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.mind import Mind, mind_rule
-from mind.models.language import ModelEndpoint
-from mind.models.language_inducer import LanguageInducer
+from mind.models.language_inducer import LanguageInducer, ModelEndpoint
 from dil.loop.cycle import HostCycleInput, Layers, create_cycle
 from dil.loop.glob_mod import create_glob_mod
 from dil.loop.layers.t1 import create_t1
@@ -100,7 +99,7 @@ def test_the_key_reaches_the_header_and_nothing_the_mind_keeps(monkeypatch):
 
 def test_a_missing_key_is_named_not_shown(monkeypatch):
     monkeypatch.delenv("DIL_TEST_API_KEY", raising=False)
-    from mind.models.language import chat
+    from mind.models.language_inducer import chat
     try:
         chat(ModelEndpoint(url="http://127.0.0.1:9/v1", api_key_env="DIL_TEST_API_KEY"), [])
     except RuntimeError as exc:

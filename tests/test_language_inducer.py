@@ -236,14 +236,14 @@ def test_the_mind_tells_the_model_what_the_program_is_for():
 
 
 def test_a_fence_inside_a_docstring_does_not_close_the_block():
-    from mind.models.language import extract_code
+    from mind.models.language_inducer import extract_code
     code = 'def predict(grid, action, x=None, y=None):\n    """Like this:\n    ```\n    x\n    ```\n    """\n    return grid\n'
     assert extract_code(f"Here it is.\n```python\n{code}```\n") == code
     assert extract_code("    ```python\n    x = 1\n    ```") == "    x = 1\n    ", "all fences indented: read as before"
 
 
 def test_an_abandoned_block_before_a_whole_one_is_not_read():
-    from mind.models.language import extract_code
+    from mind.models.language_inducer import extract_code
     text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
             "```python\ndef predict(grid, action):\n    return grid\n```\n")
     assert extract_code(text) == "def predict(grid, action):\n    return grid\n"

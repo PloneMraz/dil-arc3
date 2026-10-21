@@ -7517,3 +7517,23 @@ Nothing is pushed to Kaggle until it is scored.
 public score **0.25**, against version 35's `57371259` 0.26 and version 28's
 `56983446` 0.25. Version 37's Save & Run had scored 0.491 on the 25 games against
 version 35's 0.518, its levels the same (16). Kaggle is free to use again.
+
+### 2026-10-21
+
+#### `language.py` gathered into `language_inducer.py` (Plone)
+
+`src/mind/models/language.py` called itself "shared computing", but what shared it —
+the language model's earlier form and the exact inducer — is gone: the language
+inducer alone used it (and `run_game.py` and two tests, for `ModelEndpoint`, `chat`
+and `extract_code`). Under the rule that each inducer stands on its own, every
+computing of it in its own file (Plone, 2026-10-06), it is now part of
+`language_inducer.py` (1,011 lines): its docstring a paragraph of the inducer's, its
+code unchanged, the imports in `run_game.py`, `test_api_key.py` and
+`test_language_inducer.py` repointed. 407 tests pass. Corrected on the way: the
+layout in README.md, `base.py`'s list of inducers and `scripts/README.md`'s
+`--inducer` choices did not name the objects inducer.
+
+Corrected in conversation: `src/arc3/task.py` and `scripts/replay_inducer.py` had
+been named as users of `language.py`; a search matched `models.language_inducer`.
+`task.py` names the language inducer in a comment only, and `replay_inducer.py`
+imports `LanguageInducer`.

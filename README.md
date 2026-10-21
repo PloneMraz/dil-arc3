@@ -307,9 +307,9 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   the runtime, the conformance checker. Knows nothing about
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
-                  (learning.py); the models it learns with (grid,
-                  language_inducer), and what a served language model needs
-                  (language.py). Imports nothing from arc3.
+                  (learning.py); the models it learns with (grid, objects,
+                  language_inducer, which holds what a served language model
+                  needs). Imports nothing from arc3.
 src/arc3/         the body, its declared organs, and what the mind is told.
 src/world/        what lies outside the agent: the region it acts on, served to
                   a game's own process in a scored run, and the onlooker.

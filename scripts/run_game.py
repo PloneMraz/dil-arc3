@@ -40,8 +40,7 @@ from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.grid import GridInducer
 from mind.models.objects import ObjectsInducer
-from mind.models.language import ModelEndpoint
-from mind.models.language_inducer import LanguageInducer
+from mind.models.language_inducer import LanguageInducer, ModelEndpoint
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
