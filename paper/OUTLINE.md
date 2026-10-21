@@ -101,14 +101,19 @@ deviations, in one line each or by reference.
 layers, admissions, scars, reads, writes with `built_from`). One chain in full
 (Figure 2): the ResistEvent, the thought and the turned choice, the revised
 expectation, the next ResistEvent — each record's id, so the reader finds it in
-the published stores; how many such chains the run holds. Two individuals of
+the published stores; how many such chains the run holds, and that every choice a
+collision turned names the return and, once its id came back, the thought
+(`scripts/thoughts.py`). Two individuals of
 the same DIL parting (`scripts/differ.py`): with the Other and without it (the
 remark said again, the objection, the choice replaced), and born in fields
-apart (what it counted by, thirty steps on). The checker's verdicts. Stated: the scored run's own logs are not shown; the evidence is the
+apart (what it counted by, thirty steps on). dil-core's own verifier on every
+store, and its conformance checker's verdicts (§13.4 partial by design: continuity
+is a third party's to say; §13.7 failing where the onlooker had no reason to
+object). Stated: the scored run's own logs are not shown; the evidence is the
 same code on the public games.
 
 **4. Results** [250] — Table 1: scores, hidden and public — random agent;
-versions 18 to 35. Table 2: changes one at a time (from the 10- and
+versions 18 to 41. Table 2: changes one at a time (from the 10- and
 25-game runs). Where the actions went (version 23, 25 games): 29% changed
 nothing, 17% walked back to something left to try; the score is three levels
 near the human baseline.
@@ -116,7 +121,9 @@ near the human baseline.
 **5. What did not work, and why** [200] — Table 3: the ideas that failed (B1,
 L2, P1, WAY_LAW, objects, suspects, ends, near at a step's scale, the cap, the
 two level-2 laws, likeness, into-alone, mirrored moves, moves per thing, T1's
-five versions and the noisy TV), one line and one number each. Why (Theory): every change before the first success
+five versions and the noisy TV; the objects inducer, steps 1–4, and the language
+inducer — a served model's programs right about one step in eleven), one line and
+one number each. Why (Theory): every change before the first success
 reshuffles exploration; the public 25 did not foretell the hidden games
 (suspects: 0.515 public, 0.02 hidden); hence version 28's rule — change nothing
 before the first aim — kept the hidden 0.25.
@@ -126,7 +133,11 @@ axes keep narrow bands, and trust stands high wherever what memory names is
 mostly right, so it tells regions apart little; what an individual is born as
 reaches a choice only through the counts it reads; the inducer lacks objects
 that move together, mirrors, hidden state. What holds: the
-audit, and a loop that another model or another task can plug into.
+audit, and a loop that another model or another task can plug into. Also
+stated: a run that stops at its cycle budget leaves its last choice awaiting the
+ids it was built from; writing what the mind learns is itself data that comes back
+into the loop, so how it is written can move what it does (the relinking moved
+nine games of eleven a little, LOG.md, 2026-10-21).
 
 ## Figures and tables
 
@@ -136,6 +147,8 @@ audit, and a loop that another model or another task can plug into.
 
 ## To settle before drafting
 
-- The submission described: version 35 (`57371259`; `PLAN.md`). Settled.
-- The game Figure 2's chain is from — chosen from version 35's stores when the
+- The submission described: proposed version 41 (`57470744`), fallback version 37;
+  version 35 set aside, its stores not verifying under dil-core (`PLAN.md`). To be
+  settled with Plone once version 41's score comes.
+- The game Figure 2's chain is from — chosen from version 41's stores when the
   chains are found.
