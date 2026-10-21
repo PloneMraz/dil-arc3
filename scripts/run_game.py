@@ -40,7 +40,7 @@ from mind.learning import ATTENTION_K, CURIOSITY
 from mind.mind import Mind, mind_rule as seat_rule
 from mind.models.grid import GridInducer
 from mind.models.objects import ObjectsInducer
-from mind.models.language_inducer import LanguageInducer, ModelEndpoint
+from mind.models.language import LanguageInducer, ModelEndpoint
 from arc3.observe import admit
 from world import Onlooker, World
 from arc3.command import carrying_out
@@ -73,7 +73,7 @@ ap.add_argument("--think", action="store_true")
 ap.add_argument("--inducer", choices=("grid", "objects", "language"), default="grid",
                 help="the mind's model, what its learning computes with: hypotheses that reach past where they "
                      "were met (mind/models/grid.py), or programs a served language model writes "
-                     "(mind/models/language_inducer.py, at --endpoint)")
+                     "(mind/models/language.py, at --endpoint)")
 ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
                 help="what the mind counts as worth trying: new (S2b, the default), changed (S2), "
                      "new-then-changed (S2c), new-plus-changed (S2d) — mind/learning.py")

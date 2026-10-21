@@ -9,7 +9,7 @@ import json
 
 from arc3.organs import ARC_ORGANS
 from mind.models.grid import AimForm, GridInducer, RewriteForm, StillForm, grid_key
-from mind.models.language_inducer import LanguageInducer, compile_program
+from mind.models.language import LanguageInducer, compile_program
 from mind.organs import Step
 from tests.test_aim_hypothesis import LEVELLED, board as layout
 from tests.test_grid_inducer import board

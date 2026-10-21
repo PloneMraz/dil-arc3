@@ -16,7 +16,7 @@ from arc3.organs import ARC_ORGANS
 from arc3.task import MIND_TASK, TASK_CUE
 from mind.learning import HYPOTHESIS_TAGS
 from mind.mind import Mind, mind_rule
-from mind.models.language_inducer import READING_TAGS, LanguageInducer, identity as grid_key
+from mind.models.language import READING_TAGS, LanguageInducer, identity as grid_key
 from mind.organs import Step
 from arc3.observe import admit, transducers
 from dil.loop.cycle import Layers, create_cycle
@@ -59,7 +59,7 @@ def predict(grid, action, x, y):
 def one_answer_an_asking(monkeypatch):
     """These tests judge one answer an asking; the model writing again within an
     asking has tests of its own (below), which set MAX_REVISIONS back."""
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     monkeypatch.setattr(language, "MAX_REVISIONS", 0)
 
 
@@ -236,14 +236,14 @@ def test_the_mind_tells_the_model_what_the_program_is_for():
 
 
 def test_a_fence_inside_a_docstring_does_not_close_the_block():
-    from mind.models.language_inducer import extract_code
+    from mind.models.language import extract_code
     code = 'def predict(grid, action, x=None, y=None):\n    """Like this:\n    ```\n    x\n    ```\n    """\n    return grid\n'
     assert extract_code(f"Here it is.\n```python\n{code}```\n") == code
     assert extract_code("    ```python\n    x = 1\n    ```") == "    x = 1\n    ", "all fences indented: read as before"
 
 
 def test_an_abandoned_block_before_a_whole_one_is_not_read():
-    from mind.models.language_inducer import extract_code
+    from mind.models.language import extract_code
     text = ("```python\ndef predict(grid, action):\n    \"\"\"\n    thinking, never closed\n\n"
             "```python\ndef predict(grid, action):\n    return grid\n```\n")
     assert extract_code(text) == "def predict(grid, action):\n    return grid\n"
@@ -331,7 +331,7 @@ def test_the_model_is_told_what_its_functions_are_given():
 
 
 def test_a_where_is_borne_out_by_every_step_the_mind_gives_not_only_those_shown():
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     inducer = LanguageInducer(ARC_ORGANS, chat_fn=Script(block(RIGHT)))
     mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE})
     mind.receive("task", MIND_TASK.payload, None)
@@ -420,7 +420,7 @@ def test_an_act_never_once_taken_is_not_put_last_by_what_a_hypothesis_says_of_it
 
 
 def revising(monkeypatch, n: int = 2) -> None:
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     monkeypatch.setattr(language, "MAX_REVISIONS", n)
 
 
@@ -489,7 +489,7 @@ def test_it_looks_at_the_steps_with_its_own_code_before_it_writes():
 
 
 def test_it_looks_at_most_max_looks_times_then_must_write(monkeypatch):
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     monkeypatch.setattr(language, "MAX_LOOKS", 1)
     script = Script(block(LOOK), block(LOOK), block(RIGHT))
     mind, inducer, cycle, data = loop(script)

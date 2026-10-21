@@ -39,7 +39,7 @@ from arc3.task import MIND_TASK, TASK_CUE  # noqa: E402
 from mind.learning import Learning  # noqa: E402
 from mind.models.grid import GridInducer  # noqa: E402
 from mind.models.base import Context  # noqa: E402
-from mind.models.language_inducer import LanguageInducer  # noqa: E402
+from mind.models.language import LanguageInducer  # noqa: E402
 from mind.organs import AsRead, Step  # noqa: E402
 from steps_of import steps_of  # noqa: E402
 

@@ -20,7 +20,7 @@ They are this project's own words, and the tag says so (`source: dil-arc3`).
   what the program is for (`aimed`, filled with the aim the mind holds). What
   the region is like is filled in from what the host declares of it: `{rows}`,
   `{cols}`, `{acts}`, `{placed}`; and `{evidence}`, `{also}`, `{aim}`,
-  `{seconds}` when the mind asks (`mind/models/language_inducer.py`).
+  `{seconds}` when the mind asks (`mind/models/language.py`).
 
 The words the language model's earlier form was told (`TASK`, `FEEDBACK`, and
 `prior:mind-aim`) went with it; `3b31806` keeps them (LOG.md, 2026-09-29).

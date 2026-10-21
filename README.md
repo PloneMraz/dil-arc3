@@ -100,7 +100,7 @@ inducer stands on its own. There are two (`--inducer`):
   Once the aim has come, and only then, it also reads what moved ("this act
   moves this thing by so much"), what blocked it, and an aim of no one act: a
   thing moved into cells of these colours.
-- **language** (`src/mind/models/language_inducer.py`) is a served language
+- **language** (`src/mind/models/language.py`) is a served language
   model. Asked only when no hypothesis the mind holds foresaw a step, and shown
   the recent steps, it writes one program:
   `predict(grid, action, x, y)`, a hypothesis that applies wherever the region
@@ -308,7 +308,7 @@ src/dil/          the protocol — invariants, the eight-layer loop, the store,
                   ARC-AGI-3.
 src/mind/         the one mind, neutral about its region; its learning
                   (learning.py); the models it learns with (grid, objects,
-                  language_inducer, which holds what a served language model
+                  language, which holds what a served language model
                   needs). Imports nothing from arc3.
 src/arc3/         the body, its declared organs, and what the mind is told.
 src/world/        what lies outside the agent: the region it acts on, served to

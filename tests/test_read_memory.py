@@ -30,7 +30,7 @@ from arc3.observe import FRAME_CHANNEL, admit, transducers
 from mind.learning import Recalled
 from mind.mind import Mind, mind_rule
 from mind.models.grid import GridInducer
-from mind.models.language_inducer import LanguageInducer
+from mind.models.language import LanguageInducer
 from tests.test_arc3_learning_mind import frame, lit, of_kind, run, status
 from tests.test_language_inducer import RIGHT, STILL, Script, block
 
@@ -121,7 +121,7 @@ def test_the_view_holds_memory_alone():
 
 
 def test_the_recent_steps_are_read_only_when_the_model_looks_at_them(monkeypatch):
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     monkeypatch.setattr(language, "MAX_REVISIONS", 0)   # asked again at the next step, not within the asking
     _, cycle, _, events = loop()
     three(cycle)
@@ -151,7 +151,7 @@ def test_a_revision_of_its_tallies_alone_restores_nothing():
 
 
 def test_the_program_the_model_reads_the_grid_with_is_had_back_from_memory(monkeypatch):
-    import mind.models.language_inducer as language
+    import mind.models.language as language
     compiled: list = []
     real = language.compile_program
     monkeypatch.setattr(language, "compile_program", lambda code: (compiled.append(code), real(code))[1])

@@ -183,7 +183,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   come, so that what the mind does before it is unchanged — "move", "block" and
   "into" (an aim of no one act: a thing moved into cells of these colours) (its
   docstring declares the language); **language**
-  (`src/mind/models/language_inducer.py`), a served language model that writes
+  (`src/mind/models/language.py`), a served language model that writes
   one program — `predict(grid, action, x, y)`, and if it can `where(grid)` and
   `targets(grid)`, its reading of the grid — only when no hypothesis held
   foresaw a step; all that reads the grid is the model's, code keeping only a

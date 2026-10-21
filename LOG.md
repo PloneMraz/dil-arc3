@@ -7537,3 +7537,12 @@ Corrected in conversation: `src/arc3/task.py` and `scripts/replay_inducer.py` ha
 been named as users of `language.py`; a search matched `models.language_inducer`.
 `task.py` names the language inducer in a comment only, and `replay_inducer.py`
 imports `LanguageInducer`.
+
+#### `language_inducer.py` renamed `language.py` (Plone)
+
+For one naming with the other two inducers (`grid.py`, `objects.py`), the language
+inducer's file is now `src/mind/models/language.py` — the name the helper it
+absorbed earlier today had. Imports and the paths named in CLAUDE.md, README.md,
+`base.py`, `task.py`, `run_game.py`, `replay_inducer.py` and the tests follow; the
+test module keeps its name, `test_language_inducer.py`, as `test_grid_inducer.py`
+does. Entries above, written before, name the files as they were. 407 tests pass.
