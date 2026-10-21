@@ -7614,3 +7614,28 @@ Measured, grid, the 11 games, 600 cycles, attention (`scripts/data/t1/relink`, a
   field depart at the 21st choice and the choices at the 47th. The revisions are data
   written, and data written comes back into the loop as the store's arrivals, which
   move the field a little.
+
+#### What else limits the read-back, before a Save & Run (Plone: check first)
+
+On the 11 stores of `relink` (code `0be88d6`):
+
+- **All 11 verify under dil-core's verifier.** dil-core's conformance checker:
+  §13.1, §13.3, §13.5, §13.6 pass in all 11; §13.7 fails in ls20 and m0r0
+  (diversity-loss, as CLAUDE.md keeps open: the onlooker speaks only when the agent
+  looks stuck); §13.2 Host is unverifiable from disk by design.
+- **§13.4 Self is partial in all 11, and its text says "cycle-marks not monotonic —
+  either a recovery fork re-entered earlier cycles … or accrual is suspect".** No
+  fork and no reloading: the checker walks the scar records and cycle seals in log
+  order and asks each one's `cycleMark` to be no smaller than the last, but a scar
+  record carries the cycle-mark its datum was stamped with when it entered. Since
+  v0.3.5 every datum an expectation was (`held_by`) is scarred when the expectation
+  fails — a hypothesis written in cycle 4, scarred in cycle 10 — and a remark is
+  scarred a cycle after it came: in m0r0, 16 such steps back on `written-*` data and
+  36 on remarks and returns. A check in dil-core's checker, not in this host; the
+  section stays partial regardless, as self-continuity is a third party's to say.
+- **Objections are named.** Every choice made while an objection held — from the
+  thought that objected to the one, or the choice, that lifted it — is built from
+  that thought or the remark it objected on: ls20 84 of 84, m0r0 24 of 24.
+- **Relinking leaves one choice a game awaiting**: the last choice of a run that
+  stops at its cycle budget, in 4 of the 11 games; it says `awaiting`, and no
+  `built_after` follows because nothing follows.
