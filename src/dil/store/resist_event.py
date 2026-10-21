@@ -42,9 +42,10 @@ class ResistEvent:
 class ContextAnchor:
     """The full field-state anchored with an event (DECIDE@IMPL tag G).
 
-    PROVISIONAL shape: the full ModField/GLOB-MOD type lands with the loop; for
-    now the anchor carries the cycle's field parameters verbatim so the depth is
-    genuinely "full field-state", not a lossy trace.
+    The anchor carries the cycle's field parameters verbatim — the field's
+    params, the whole of GLOB-MOD's representation, its time being the anchor's
+    own cycle — so the depth is genuinely "full field-state", not a lossy trace
+    (dil-core 90518dc).
     """
 
     cycle: int

@@ -7682,3 +7682,24 @@ failing without the port), 413 pass here. This mind returns store arrivals as th
 are and never meets such a mismatch: the run is unchanged. The item leaves CLAUDE.md's
 open list; the settled rule on the cycle datum says it. Version 40's Save & Run, pushed
 before, runs `394c499`, without it.
+
+#### dil-core's remaining limits, and what came of them (Plone)
+
+Read from dil-core's README ("Open items") and its code's markers: nothing deferred;
+four items deployment-open by design (tags D, E, F, the chain head's anchor); the
+scar re-entry roads, built, met by no condition in its scripted host; and the
+language mind's two residuals. Done, at Plone's word, in dil-core and pushed:
+
+- `43824af`: the language mind's expectation is held by the thought it came from,
+  once the thought's id comes back (`Write.handle`, `Model.acknowledge`) — a failed
+  expectation scars the thought too (one test, failing on the old code; 429 pass).
+  Its other residual, one expected value per entity, stays: the reference mind is
+  minimal by design.
+- `90518dc`: five comments that still called built things deferred or provisional
+  (commit/snapshot in `event-sink.ts` and `event-log.ts`, `ContextAnchor`, the live
+  Mode-B source, the invariant types). The two of them this port carries
+  (`resist_event.py`, `invariants/types.py`) are corrected here too; dil-arc3's mind
+  is its own, so `43824af` has nothing here to land on.
+
+ARLAVE brought the four commits with code from dil-core (`cac2b40`, `6c14499`,
+`43824af`, `90518dc`), one commit each, its README kept; 429 tests pass there.

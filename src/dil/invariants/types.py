@@ -1,10 +1,10 @@
-"""Minimal, provisional types the invariant guards operate on.
+"""Minimal types the invariant guards operate on.
 
-PROVISIONAL: this stage needs only enough structure to state what each guard
-checks. The full shared types (protocol §6.1 — Signal, InfoUnit, AgencyTag,
-ModField, …) arrive with the loop; these definitions are deliberately narrow and
-will be reconciled with them. They introduce no thresholds and no DECIDE@IMPL
-constants; the invariants are structural laws (protocol §5).
+Deliberately narrow: each states only the structure a guard checks. The loop's
+full types (`dil.loop.types`, protocol §6.1 — Signal, InfoUnit, AgencyTag,
+ModField, …) carry that structure (dil-core 90518dc). They introduce no
+thresholds and no DECIDE@IMPL constants; the invariants are structural laws
+(protocol §5).
 
 Naming: the reference implementation is TypeScript, so its fields are camelCase.
 They are snake_case here because this is Python, and `LoopEdge.from` is spelled
