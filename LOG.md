@@ -7703,3 +7703,18 @@ language mind's two residuals. Done, at Plone's word, in dil-core and pushed:
 
 ARLAVE brought the four commits with code from dil-core (`cac2b40`, `6c14499`,
 `43824af`, `90518dc`), one commit each, its README kept; 429 tests pass there.
+
+#### Version 40 (Save & Run): the relinked choices on the 25 games
+
+`dil-arc3-learning`, Kaggle's version 40, code `394c499`: grid, S2b, attention, 600
+cycles, four at once, with turned choices relinked, §13.4's check fixed and the world's
+prior recalled; pushed 11:48 (+0700), `COMPLETE` 12:47. Against version 37 (the
+submission `57443352`):
+
+- 15 of 183 levels against 16; score 0.4892 against 0.4915. sc25 lost its second
+  level (0.0956 → 0.0215), ls20 a little (0.0208 → 0.0149); ar25 (0.0085 → 0.0126)
+  and bp35 (0.0201 → 0.0388) gained; the other 21 games the same.
+- All 25 stores verify under dil-core's verifier. dil-core's checker (with `cac2b40`):
+  §13.1, §13.3, §13.5, §13.6 pass in all 25; §13.4 partial in all 25, and no store
+  reads "not monotonic" any longer; §13.7 fails in six — cd82, dc22, g50t, ls20, m0r0,
+  sc25 — on diversity-loss, as declared.
