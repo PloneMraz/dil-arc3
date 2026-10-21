@@ -28,8 +28,9 @@ learns from — not a score to raise, but data that changes what it does next.
 
 Our question is whether a third party can read back, from the agent's record
 alone, what it knew at each step and why it acted. Figure 1 shows the loop: the
-game returns a frame, the host takes it in, the protocol's layers carry it, the
-mind compares it with what it expected and commands, and the body acts.
+game returns a frame, the host's senses take it in, the protocol's layers carry
+it, the mind compares it with what it expected and commands, and the host's body
+carries the command out.
 
 Contributions:
 
@@ -40,4 +41,4 @@ Contributions:
    success did not carry from the public games to the hidden ones.
 4. A ledger of the ideas that failed, each measured.
 
-*Figure 1: region → host → layers T1–T8 → mind → command → body.* [[to draw]]
+*Figure 1: region → host (senses) → layers T1–T8 → mind → host (body) → region.* [[to draw]]
