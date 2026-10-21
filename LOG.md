@@ -7680,5 +7680,5 @@ against what the region returned. One test there (failing on the old code), 428 
 Ported to `src/dil/loop/cycle.py` with the same test (`tests/test_store_query.py`,
 failing without the port), 413 pass here. This mind returns store arrivals as they
 are and never meets such a mismatch: the run is unchanged. The item leaves CLAUDE.md's
-open list; the settled rule on the cycle datum says it. Version 41's Save & Run, pushed
+open list; the settled rule on the cycle datum says it. Version 40's Save & Run, pushed
 before, runs `394c499`, without it.
