@@ -7639,3 +7639,14 @@ On the 11 stores of `relink` (code `0be88d6`):
 - **Relinking leaves one choice a game awaiting**: the last choice of a run that
   stops at its cycle budget, in 4 of the 11 games; it says `awaiting`, and no
   `built_after` follows because nothing follows.
+
+#### §13.4's monotonicity, fixed in dil-core and ported (Plone)
+
+dil-core `cac2b40` (changelog `6b85e7d`, pushed): the checker reads each scar by the
+cycle it happened in (`anchor.cycle`), a seal by its cycle, and asks those to be
+non-decreasing in log order; and, stricter than before, no scar may record a datum
+stamped after the collision it met. Three regression tests there (two failed on the
+old checker), 427 pass; ported to `src/dil/conformance/checker.py` with the same
+three (`tests/test_conformance_monotonic.py`), 411 pass here. On `relink`'s m0r0,
+dil-core's checker now says "state accrues (cycle-marks non-decreasing, INV-5)";
+§13.4 stays partial, as self-continuity is a third party's to say.

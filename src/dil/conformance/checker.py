@@ -621,13 +621,23 @@ def check_conformance(
             "no [event] records to read",
         )
     else:
-        marks = [
-            (_datum_of(r).fixed.cycle_mark if _datum_of(r).fixed.cycle_mark is not None else -1)
-            for r in datum_bearing
-        ]
+        # The cycle each record HAPPENED in, in log order: a seal's is its cycle
+        # datum's mark; a scar's is its anchor's cycle — not the mark its datum was
+        # stamped with, which is the cycle the datum entered. Since v0.3.5 a datum
+        # an expectation was (held_by) is scarred when the expectation fails,
+        # cycles after it entered, so its stamp may lie behind the log's present
+        # without anything having re-entered an earlier cycle. What a scar's stamp
+        # may not do is lie AHEAD of its anchor: no datum is scarred before it
+        # entered. Ported from dil-core cac2b40.
+        def stamp(r: EventRecord | CycleSealActivity) -> int:
+            mark = _datum_of(r).fixed.cycle_mark
+            return mark if mark is not None else -1
+
+        marks = [r.anchor.cycle if isinstance(r, EventRecord) else stamp(r) for r in datum_bearing]
+        scarred_ahead = [r for r in datum_bearing if isinstance(r, EventRecord) and stamp(r) > r.anchor.cycle]
         non_decreasing = all(
             marks[i] >= marks[i - 1] for i in range(1, len(marks))
-        )
+        ) and not scarred_ahead
 
         # §7 crystallization: T2 draws the self/environment distinction ONCE, at
         # the T2 of cycle-0. The trace must show it as a one-time act — at most
@@ -694,6 +704,11 @@ def check_conformance(
             "continuity claim; self-continuity itself is attributable only by a "
             "third party (§7)"
             if non_decreasing
+            else (
+                "a scar records a datum stamped in a later cycle than the collision "
+                f"({scarred_ahead[0].datum_id or 'the cycle datum'}) — no datum is scarred before it entered"
+            )
+            if scarred_ahead
             else "cycle-marks not monotonic — either a recovery fork re-entered "
             "earlier cycles (cross-check the commit DAG: fork markers carry "
             "recoveredFrom) or accrual is suspect"
