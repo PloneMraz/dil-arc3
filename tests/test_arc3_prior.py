@@ -103,3 +103,14 @@ def test_an_item_carrying_a_verdict_is_refused_not_smuggled(tmp_path):
         assert got.data.get("prior:bad") is None
     finally:
         got.close()
+
+
+def test_every_item_is_about_something_an_arrival_asks_with():
+    """An item waits in the store until an arrival describes what it is about (T3's
+    query): one whose description no channel asks with is never recalled. Until
+    2026-10-21 the item about the world's things waited for "things", which no
+    channel has sent since the host stopped computing things."""
+    from arc3.observe import ACTIONS_OBJECT, LEVELS_OBJECT, STATUS_OBJECT, VISION_SENSE
+    cues = [{"sense": VISION_SENSE}, {"object": STATUS_OBJECT}, {"object": LEVELS_OBJECT}, {"object": ACTIONS_OBJECT}]
+    for item in RULES:
+        assert any(all(item.open.get(k) == v for k, v in cue.items()) for cue in cues), item.id

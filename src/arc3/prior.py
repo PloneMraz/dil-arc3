@@ -26,7 +26,8 @@ dimensions the channels describe their arrivals with (`object`, and `sense` for
 the item about seeing), and T3 asks the store with those descriptions (§6.4
 query). A status report is about the region's status, its levels and what may be
 done next, so the first one recalls the directive, the level structure and both
-items about actions; the first thing seen recalls the item about seeing. That
+items about actions; the first thing seen recalls the items about seeing and
+about the world's things. That
 recall is the protocol's, and the trace records it (`prior → running`).
 
 **What the mind reads of it.** What T3 recalls is the protocol's recall, traced,
@@ -223,6 +224,11 @@ WORLD: Final = _item(
                "or cultural conventions (like green meaning “go”).", REPORT),
         ],
     },
+    # What it says is of what is seen: the first frame recalls it, with the item
+    # about seeing (2026-10-21: tagged by its object alone, it waited for an
+    # arrival about "things", which no channel sends since the host stopped
+    # computing things, and was never recalled).
+    sense=VISION_SENSE,
 )
 
 RULES: Final[tuple[PreexistingItem, ...]] = (

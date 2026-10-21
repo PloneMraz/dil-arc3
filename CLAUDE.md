@@ -384,8 +384,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   thought, built from the return: silence turns it from that kind of act; an
   answer other than it foresaw turns it to where the answer differed (where its
   model says an act lies there: `Inducer.unlike`, `Inducer.at`). The turn holds
-  for the next choice, which says so in its `why` and names the return among
-  what it was built from; the next collision turns it again. On the region's
+  for as many choices as alertness says (`TURN_HOLD`, below), each saying so in
+  its `why` and naming among what it was built from the return that collided
+  and, once the thought's id comes back, the thought (`built_after`, next
+  section); the next collision turns it again. On the region's
   report it thinks too, once it has met the report, and writes the thought with
   the fields that deviated: an end turns it from the kind of act that led there,
   through the RESET into the start again ("turned from what ended the region");
@@ -444,7 +446,18 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   moment, and standing costs the run's budget, which ends it.
 - **Every written datum records what it was built from** (protocol v0.3.4): ids
   only, never content; `()` for nothing held. A hypothesis names the step and
-  the report it came from; a choice, what it was chosen from.
+  the report it came from; a choice, what it was chosen from. A handle of the
+  learning's own whose id has not come back when a datum is written is left out
+  of it; a datum that asks (`Write.relinks`: choices do) is written with
+  `awaiting` (how many) and, once the last id comes, revised with `built_after`
+  (their ids), the revision built from all the datum was built from
+  (`Mind._relink`). The revisions are data written, and come back into the loop
+  as the store's arrivals.
+- **A thought that changes nothing writes nothing.** Every way the learning thinks
+  that changes what it holds — a turn, an objection, keeping on, a lift — writes
+  the thought; one that writes nothing has changed nothing, and leaves no line
+  beyond the query it asked with; the time any thought took shows as the gap
+  between T4 and T5 (measured on version 37's stores: LOG.md, 2026-10-21).
 - **What the region returns is data, and the scar is on it.** Each return enters
   through the tagging-gate as `signal-<cycle>-<i>` at `running`, its tags (never
   its content) in the cycle's record under `admitted`; when the expectation
@@ -466,6 +479,28 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   names**, moved `scar → running` once.
 - **Every record takes the clock when it happens**; the cycle datum keeps its
   cycle's start and the seal adds `closedAt`.
+- **The onlooker's remark reaches behaviour only through the mind.** It strikes
+  the mind as a collision (Plone, 2026-09-27/28): the acts the onlooker names
+  are objected to — for "repeating", where the region stands now; for
+  "back-and-forth", at the states the alternation ran through; said again after
+  it was answered, over the run the onlooker points at, as far as the field's
+  alertness reaches (½–1½ of it, within the recent steps). Told once that
+  it repeats an act whose every step reached a state it had not stood in, the
+  mind weighs the word against that evidence and keeps on, writing why
+  (`kept_on`); told again, it objects (Plone, 2026-09-28). An objection
+  puts an act behind every other at every point of choice: a way whose first
+  act is objected to is taken only when there is no other, every act known here
+  objected to gives the act that is always open (RESET), and it is said so in
+  the choice. A known way to the aim takes no objection (the onlooker does not
+  claim to be right). Told it stands still with nothing to do, it resets. What
+  it objected to is held while the onlooker says it, and lifted when it says
+  something else or nothing; it is read under the clock it holds.
+- **A cycle the body stood still in is a cycle.** The region returns nothing, the
+  host reports only what it hears, and T7 counts no absence of the region
+  (nothing was done to it). The mind commands after the onlooker; the body goes
+  by the frame it stands on. Such cycles count against the run's budget and cost
+  no action. Without an onlooker nothing arrives in them, so the mind is never
+  asked, and the run spends its budget standing.
 
 ### In hand (Plone, 2026-10-05; queued 2026-10-04)
 
@@ -537,11 +572,6 @@ problem, so long as it names no game:
 
 ### Open in the current design
 
-- **The language inducer reads the whole grid in what it expects.** Its
-  `as_read` is all of the grid (code reads none of it), so a frame expected by
-  one of its programs collides wherever the program does not predict the
-  clock, even where the program's `where`, borne out by the steps, reads the
-  clock out of the situation.
 - **A `where` is a reading only where the steps shown bear it out**
   (`_where_not_borne_out`): each region it sets to -1 must change at every step
   at which anything else changed, and at some step at which nothing else did.
@@ -553,38 +583,15 @@ problem, so long as it names no game:
 - A store arrival that mismatches is not tied to its own datum; the cycle datum
   stands for it. This mind returns store arrivals as they are, so it does not
   arise here. Open in dil-core too.
-- A thought the mind does not keep changes no datum, so it leaves no line beyond
-  the query it asked with; the time it took shows only as the gap between T4 and
-  T5.
-- Nothing that arrives is about "things" now, so the prior item about the
-  world's things is never recalled; the one about seeing is, on the first frame.
+- A run that stops at its cycle budget leaves its last choice `awaiting`: what
+  it awaited would have come back in a cycle that never ran, so no `built_after`
+  follows.
 - **C7 is `fail` wherever the agent does not look stuck.** The onlooker speaks
   only when it judges the agent stuck, so an agent that keeps varying its moves
   meets one resistance source, the frame, and C7 establishes diversity-loss.
   Declared, not arranged: the diversity C7 asks for is only as real as the
-  onlooker's reasons to object.
-- **The onlooker's remark reaches behaviour only through the mind.** It strikes
-  the mind as a collision (Plone, 2026-09-27/28): the acts the onlooker names
-  are objected to — for "repeating", where the region stands now; for
-  "back-and-forth", at the states the alternation ran through; said again after
-  it was answered, over the run the onlooker points at, as far as the field's
-  alertness reaches (½–1½ of it, within the recent steps). Told once that
-  it repeats an act whose every step reached a state it had not stood in, the
-  mind weighs the word against that evidence and keeps on, writing why
-  (`kept_on`); told again, it objects (Plone, 2026-09-28). An objection
-  puts an act behind every other at every point of choice: a way whose first
-  act is objected to is taken only when there is no other, every act known here
-  objected to gives the act that is always open (RESET), and it is said so in
-  the choice. A known way to the aim takes no objection (the onlooker does not
-  claim to be right). Told it stands still with nothing to do, it resets. What
-  it objected to is held while the onlooker says it, and lifted when it says
-  something else or nothing; it is read under the clock it holds.
-- **A cycle the body stood still in is a cycle.** The region returns nothing, the
-  host reports only what it hears, and T7 counts no absence of the region
-  (nothing was done to it). The mind commands after the onlooker; the body goes
-  by the frame it stands on. Such cycles count against the run's budget and cost
-  no action. Without an onlooker nothing arrives in them, so the mind is never
-  asked, and the run spends its budget standing.
+  onlooker's reasons to object (Plone, 2026-10-21: left so, to be said so in
+  the paper; a second source would have to be a real one).
 
 ## DECIDE@IMPL — what this implementation declares
 

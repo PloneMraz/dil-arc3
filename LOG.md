@@ -7650,3 +7650,22 @@ old checker), 427 pass; ported to `src/dil/conformance/checker.py` with the same
 three (`tests/test_conformance_monotonic.py`), 411 pass here. On `relink`'s m0r0,
 dil-core's checker now says "state accrues (cycle-marks non-decreasing, INV-5)";
 §13.4 stays partial, as self-continuity is a third party's to say.
+
+#### The open items, settled one by one (Plone)
+
+- **The prior item about the world's things is recalled**, with the item about seeing,
+  by the first frame: it now carries `sense: vision` beside `object: things`
+  (`arc3/prior.py`). Tagged by its object alone it waited for an arrival about
+  "things", which no channel has sent since the host stopped computing things. A test
+  holds every item to a description some arrival asks with (it failed on the old
+  tagging); on ls20, `prior:world` goes `prior → running` in cycle 1 with the rest.
+- **C7 is left as it is** (Plone): the diversity it asks for is only as real as the
+  onlooker's reasons to object; a second source would have to be a real one. The
+  paper is to say so.
+- CLAUDE.md made to say what holds: the language inducer's `as_read` reads through
+  the `where` it holds (done in the language-inducer rounds; the open item still said
+  the whole grid); the onlooker's remark and a cycle stood still moved from "open" to
+  the settled design, as what they are; a thought that changes nothing writes nothing,
+  stated as a property; the relinking (`awaiting`, `built_after`) and a held turn's
+  naming written where what a datum is built from is; a run's last choice left
+  `awaiting` added to what is open.
