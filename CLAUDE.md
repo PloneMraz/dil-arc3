@@ -474,7 +474,10 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   store scars no expecting side.
 - **The cycle datum goes to `scar` only when what it carries collides**: an
   outcome it cast (`projected → scar`), or a collision with no return of its own
-  — an absence, a return the host kept out, a store arrival. Otherwise a cast
+  — an absence, a return the host kept out, the agent's own write coming back. A
+  mismatch on what a query recalled scars the datum recalled (dil-core
+  `6c14499`, Plone, 2026-10-21; this mind returns store arrivals as they are, so
+  it does not meet one). Otherwise a cast
   returns `projected → running`. **A recalled scar is the datum its record
   names**, moved `scar → running` once.
 - **Every record takes the clock when it happens**; the cycle datum keeps its
@@ -580,11 +583,6 @@ problem, so long as it names no game:
   ls20, a move blocked by a wall); a `where` set aside leaves the grid read as
   it came.
 
-- A store arrival that mismatches is not tied to its own datum; the cycle datum
-  stands for it. This mind returns store arrivals as they are, so it does not
-  arise here. To be fixed in dil-core (Plone, 2026-10-21): such a mismatch scars
-  the datum recalled, as a recalled scar is the datum its record names; ported
-  here once done, though nothing here meets it.
 - A run that stops at its cycle budget leaves its last choice `awaiting`: what
   it awaited would have come back in a cycle that never ran, so no `built_after`
   follows.

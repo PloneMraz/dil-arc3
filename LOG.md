@@ -7669,3 +7669,16 @@ dil-core's checker now says "state accrues (cycle-marks non-decreasing, INV-5)";
   stated as a property; the relinking (`awaiting`, `built_after`) and a held turn's
   naming written where what a datum is built from is; a run's last choice left
   `awaiting` added to what is open.
+
+#### A store arrival's mismatch tied to its datum: dil-core, then ported (Plone)
+
+dil-core `6c14499` (changelog `ebbaa20`, pushed): a mismatch on what a query
+recalled scars the datum recalled — `running → scar`, the record naming it — and the
+cycle datum no longer stands for it; the agent's own write coming back still has the
+cycle datum stand for it (its own act), and the expecting side is still scarred only
+against what the region returned. One test there (failing on the old code), 428 pass.
+Ported to `src/dil/loop/cycle.py` with the same test (`tests/test_store_query.py`,
+failing without the port), 413 pass here. This mind returns store arrivals as they
+are and never meets such a mismatch: the run is unchanged. The item leaves CLAUDE.md's
+open list; the settled rule on the cycle datum says it. Version 41's Save & Run, pushed
+before, runs `394c499`, without it.

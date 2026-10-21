@@ -810,12 +810,19 @@ class Cycle:
         for i, datum_id in admitted_ids.items():
             if i < len(pass_.units):
                 self._remember_unit(pass_.units[i], datum_id)
-        # What came back from the store, recalled or written, is a datum too.
+        # What came back from the store, recalled or written, is a datum too. What a
+        # query brought back is a datum held, recalled: an expectation that fails on
+        # it fails on that datum, which holds the scar (as a recalled scar is the
+        # datum its record names). A write coming back is the agent's own act.
+        # Ported from dil-core 6c14499.
+        recalled_of: dict[int, str] = {}
         for i in range(len(region_input.signals), min(len(host.signals), len(pass_.units))):
             payload = host.signals[i].raw_payload
             entity = payload.get("entity") if isinstance(payload, dict) else None
             if isinstance(entity, str):
                 self._remember_unit(pass_.units[i], entity)
+                if i < len(region_input.signals) + len(returned):
+                    recalled_of[id(pass_.units[i])] = entity
 
         # ── §7 crystallization: T2 drew the self/environment distinction ──
         # The one-time act where the from-within standpoint begins. Recorded as a
@@ -1182,12 +1189,15 @@ class Cycle:
         # outcome it cast — `projected → scar`, "the emission was made, the region
         # returned, and the datum collided and held" — or a collision that has no
         # return of its own to hold the scar (an absence, where nothing returned;
-        # a return the host kept out; a store arrival), for which it stands.
-        # Otherwise the region's return is the datum that collided, and a cast
+        # a return the host kept out; the agent's own write coming back), for
+        # which it stands. Otherwise the datum that came back is the one that
+        # collided — the region's return, or what a query recalled — and a cast
         # that did not collide returns to use: `projected → running`. Ported from
-        # dil-core 6c74f0c; settled with Plone.
+        # dil-core 6c74f0c and 6c14499; settled with Plone.
         def return_of(e) -> str | None:
-            return datum_of.get(id(e.observed)) if e.observed is not None else None
+            if e.observed is None:
+                return None
+            return datum_of.get(id(e.observed)) or recalled_of.get(id(e.observed))
 
         cycle_collides = any(
             return_of(e) is None or (forward_built and source_id in cast)

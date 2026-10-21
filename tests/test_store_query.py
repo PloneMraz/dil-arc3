@@ -380,3 +380,38 @@ def test_a_rule_that_asks_leaves_a_trace_the_checker_accepts():
 
     failed = [f"{r.id}: {r.detail}" for r in check_conformance(events).results if r.verdict == "fail"]
     assert failed == []
+
+
+# A store arrival that mismatches holds its own scar (ported from dil-core 6c14499):
+# what a query recalled is a datum held, and an expectation that fails on it fails on
+# that datum, not on the cycle datum standing for it.
+
+def expecting_otherwise():
+    """Asks about the world once, and expects of what it recalls something other than it holds."""
+    asked = []
+
+    def rule(entity_id, window, observed, contribute=None, ask=None, write=None):
+        if not asked:
+            asked.append(True)
+            ask({"kind": "world"})
+        if entity_id == UNRELATED:
+            from dataclasses import replace
+            return replace(observed, content={"says": "Not what it holds."})
+        return persistence(entity_id, window, observed, contribute, ask, write)
+
+    return rule
+
+
+def test_an_expectation_that_fails_on_what_a_query_recalled_scars_the_datum_recalled():
+    data = seeded_store()
+    events = create_event_log()
+    cycle = cycle_with_rule(data, events, expecting_otherwise())
+    run(cycle, 1)
+    run(cycle, 2)
+    scars = [r for r in events.all() if type(r).__name__ == "EventRecord"]
+    assert len(scars) == 1, "one collision"
+    assert scars[0].datum_id == UNRELATED, "its record names the datum recalled"
+    assert data.get(UNRELATED).fixed.provenance == "scar"
+    assert [f"{m.from_}→{m.to}" for m in moves(events, UNRELATED)] == ["prior→running", "running→scar"]
+    assert not any(m.to == "scar" for m in moves(events, "cycle-1")), "the cycle datum does not stand for it"
+    assert next(r for r in check_conformance(events).results if r.id == "6").verdict != "fail"
