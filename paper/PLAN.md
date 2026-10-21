@@ -25,18 +25,25 @@ Kept here so that a new session starts from it, not from memory. History goes in
    from their stores (`scripts/differ.py`): the Other present or not, and the
    field — once it carries its history (B1, DEVIATION 9) and the mind's counts
    follow it (B2) — set otherwise at birth.
-1. **The submission the paper describes is version 35**: `57371259`, notebook
-   `plonemraz/dil-arc3-learning` version 35, code `b4d7d5a` — S2b with
-   attention, collisions of the step and the report turning the mind, recall
-   from alike states, the mind's votes on the field, B1 and B2; 600 cycles a
-   game, four at once. Its score is pending. Version 28 (`56983446`, 0.25)
-   stays the fallback. The notebook attached to the writeup is version 35; a
-   private one is made public after the deadline.
-2. **Data**: version 35's Save & Run on the 25 public games, stores included
-   (`stores.tar.gz`), for `[event]` logs to read the evidence from; and the
-   four individuals of point 4 on eleven games, here. The scored run's own logs
-   are not shown by Kaggle, so the evidence is from the same code on the
-   public games, and the paper says so.
+1. **The submission the paper describes: proposed version 41** (2026-10-21, to be
+   settled with Plone once its score comes): `57470744`, notebook
+   `plonemraz/dil-arc3-learning` version 41, code `963b7fb` — grid, S2b with
+   attention, 600 cycles a game, four at once; each choice a collision turned
+   names the return and the thought, and all 25 stores of its Save & Run verify
+   under dil-core's verifier. Version 37 (`57443352`, 0.25; its stores verify
+   too) is the fallback. **Version 35 (`57371259`, 0.26) is set aside**: its
+   stores do not verify under dil-core's verifier (the hash of floats changed
+   after it, LOG.md, 2026-10-19), and the paper's claim is that a third party
+   checks the log. The notebook attached is the version described; a private
+   one is made public after the deadline.
+2. **Data**: version 41's Save & Run on the 25 public games, stores unpacked in
+   `scripts/data/kaggle/dil-run/submit-963b7fb-v41/stores/` (the commit
+   snapshots left packed), for `[event]` logs to read the evidence from. The
+   individuals of point 4 are to be run again with version 41's code: their
+   stores were removed with the old measurements' on 2026-10-20 (their reports
+   and scorecards kept). The scored run's own logs are not shown by Kaggle, so
+   the evidence is from the same code on the public games, and the paper says
+   so.
 3. **Form: both** (Plone, 2026-10-11, after first choosing the Writeup alone:
    "1,500 words cannot set out the whole work"). **The Writeup**, at most 1,500
    words, standing on its own — the claim, the evidence, the results, the
@@ -99,7 +106,7 @@ change in what it does can be read back by a third party from `[event]`.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
-(proposed: versions 35 and 28 — still to be settled, once version 35's score
+(proposed 2026-10-21: versions 41 and 37 — to be settled once version 41's score
 has come).
 
 ## Where things are
@@ -107,10 +114,11 @@ has come).
 - Scores and what each run did: `LOG.md` (versions 28 to 35: 2026-10-09 to
   2026-10-19; the ideas that failed: 2026-10-05 to 2026-10-18; point 4:
   2026-10-18).
-- Version 35's Save & Run output (25 games, stores in `stores.tar.gz`):
-  `scripts/data/kaggle/dil-run/submit-b4d7d5a-v35/` (git-ignored) — the evidence
-  is read from it. Version 28's: `submit-9e69156-moves/` and `submit-9e69156-v29/`.
-- Point 4's individuals (B2, I0–I3, and the Other present or not):
-  `scripts/data/t1/` (git-ignored).
+- Version 41's Save & Run output (25 games): `scripts/data/kaggle/dil-run/submit-963b7fb-v41/`
+  (git-ignored) — the evidence is read from it; what the scripts found, in its
+  `evidence/`. Version 37's: `submit-9fcaafc-v36/`; version 35's:
+  `submit-b4d7d5a-v35/` (their `stores.tar.gz`).
+- Point 4's individuals: reports and scorecards in `scripts/data/t1/` (git-ignored);
+  their stores to be made again.
 - The rubric, rules and sample writeup: the workspace's `Downloads/pages/`; the
   2025 first-place paper: `Downloads/papers/2510.04871v1.pdf`.
