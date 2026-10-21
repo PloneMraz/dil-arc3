@@ -73,8 +73,9 @@ submission's score, against the random agent's.
 
 **1. Introduction** [200] — RHAE rewards few actions; an agent that learns in the
 game must explore. The question: can what it knew and why it acted be read back
-by a third party? Figure 1 (the loop: region → host → DIL layers → mind →
-command → body). Contributions:
+by a third party? Figure 1 (the loop: region → host (senses) → DIL layers →
+mind → host (body) → region; host and body are one: the body is the host's).
+Contributions:
 1. an agent whose beliefs, refutations and choices are all data with provenance,
    in a hash-chained log, checked by a conformance checker (C1–C7);
 2. a learning mind neutral about its environment, with a replaceable model (the
