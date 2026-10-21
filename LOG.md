@@ -7745,3 +7745,25 @@ turned it. It now keeps the cycle each datum entered in and all it was built fro
 across its lines: on version 41, ls20 57 chains, sb26 82; on version 37's ls20, 46 as
 before. `thoughts.py`, which takes the last line, reads a relinked choice rightly
 (the revision names all the first line did, and the thought).
+
+#### The evidence on version 41's 25 stores (for the paper)
+
+`scripts/chains.py` and `scripts/thoughts.py` on the 25 stores of version 41's Save &
+Run (outputs in `submit-963b7fb-v41/evidence/`):
+
+- **Chains**: 2,757 frame scars; 1,130 chains of a scar, the thought it set off and
+  the choice it turned, each built from that return (tr87 none, r11l 125); of them
+  717 met the next return as expected; 60 met the act again where it had collided,
+  and in 32 of them it came as expected every time.
+- **Turned choices**: 1,742 in all; every one has a turning thought before it and is
+  built from the return that collided; 1,740 name the thought's id. The other two are
+  each game's last choice, at step 600 (sb26, su15), still `awaiting`, as declared.
+- **A whole chain for Figure 2**, lp85 (the level the agent reaches in its human
+  baseline's 17 actions): `signal-9-0`, a click at (37, 20) the mind expected to make
+  the region otherwise, came back unchanged and was scarred; the thought `written-9-0`
+  ("silence", turns "from that kind of act"); the choice `written-9-3`, a click at
+  (5, 32), "not yet taken from here; turned from what was silent", relinked to name
+  the thought; the experience `written-9-2`, that the click at (37, 20) there changed
+  nothing (1 borne out, 0 not); the same act met again at cycle 22 and came as now
+  expected; the next return, `signal-10-0`, as expected. Every id is a record a reader
+  finds in the published store.
