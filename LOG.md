@@ -7790,7 +7790,11 @@ machine's too), and three made here (`scripts/data/t1/i1-v41`, `i2-v41`, `alone-
   turns both from the act; at step 72 I1 is still turned and takes act 1, I2 is not and
   takes act 2 — the turn's hold is one of the counts each reads of its field, and the
   two were born in fields apart. They choose alike at 213 of 599 steps.
-- **The chain of the Other, m0r0, I0 against A1**: at step 69 and 70 the onlooker says
-  I0 repeats ACTION1; at step 71 I0, having thought on the word, commands again — the
-  choice records the one it supersedes — while A1, with no one to say it, keeps the turn
-  it was in. From there I0 reaches the level in far fewer actions (0.80 against 0.19).
+- **The chain of the Other, m0r0, I0 against A1**: at step 70 a silence turns both from
+  the act, and both take act 4; but the turn's hold each reads of its field differs —
+  1 choice for I0, 2 for A1 (the `counts` of their step-70 choices). At step 71 I0 is no
+  longer turned and takes act 1 (its second choice that cycle, made again after the
+  onlooker's word, supersedes the first with the same act); A1, still turned, takes act
+  4. The Other reached this choice through the field it had moved over the steps before,
+  not by the word itself. From there I0 reaches the level in far fewer actions (0.80
+  against 0.19).
