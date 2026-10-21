@@ -7630,8 +7630,8 @@ On the 11 stores of `relink` (code `0be88d6`):
   record carries the cycle-mark its datum was stamped with when it entered. Since
   v0.3.5 every datum an expectation was (`held_by`) is scarred when the expectation
   fails — a hypothesis written in cycle 4, scarred in cycle 10 — and a remark is
-  scarred a cycle after it came: in m0r0, 16 such steps back on `written-*` data and
-  36 on remarks and returns. A check in dil-core's checker, not in this host; the
+  scarred a cycle after it came: in m0r0, walking scars and seals in log order as the
+  checker does, 16 steps back fall on `written-*` data and 37 on returns and remarks. A check in dil-core's checker, not in this host; the
   section stays partial regardless, as self-continuity is a third party's to say.
 - **Objections are named.** Every choice made while an objection held — from the
   thought that objected to the one, or the choice, that lifted it — is built from
