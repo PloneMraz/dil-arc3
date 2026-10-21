@@ -7734,3 +7734,14 @@ Submission `57470744`, 07:03 UTC: `dil-arc3-learning` version 41 — grid, S2b, 
 scarred as their own, the world's prior recalled. Its Save & Run: 15 of 183 levels,
 0.489, all 25 stores verifying under dil-core. Nothing is pushed to Kaggle until it is
 scored.
+
+#### `chains.py` read a relinked choice by its last line
+
+Run on version 41's 25 stores, `chains.py` found one chain in 25 games, where version
+37's ls20 alone held 46. It kept, for each datum, the last `written` line of a cycle
+seal; a choice the mind relinked is written again cycles later (its `built_after`
+revision), so the choice no longer seemed written in the cycle of the collision that
+turned it. It now keeps the cycle each datum entered in and all it was built from,
+across its lines: on version 41, ls20 57 chains, sb26 82; on version 37's ls20, 46 as
+before. `thoughts.py`, which takes the last line, reads a relinked choice rightly
+(the revision names all the first line did, and the thought).

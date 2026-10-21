@@ -50,12 +50,16 @@ def chains(records, data):
     choice built from it, with the links it has."""
     scars = {r["datumId"]: r for r in records if r.get("form") == "scar" and r.get("datumId", "").endswith("-0")
              and str(r.get("datumId", "")).startswith("signal-")}
+    # Each datum by the cycle it entered in, and all it was built from: a datum the
+    # mind relinked (`built_after`) is written again, cycles later, built from what
+    # it was and the ids that came back since.
     written: dict[str, dict] = {}
     for r in records:
         if r.get("form") == "cycle-seal":
             for w in r["activity"].get("written", []):
-                written[w["datumId"]] = {"cycle": r["cycleMark"], "kind": w["open"].get("kind"),
-                                         "built": w.get("builtFrom") or []}
+                entry = written.setdefault(w["datumId"], {"cycle": r["cycleMark"], "kind": w["open"].get("kind"),
+                                                          "built": []})
+                entry["built"] += [b for b in (w.get("builtFrom") or []) if b not in entry["built"]]
     by_source: dict[str, list[str]] = {}
     for d, w in written.items():
         for b in w["built"]:
