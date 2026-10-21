@@ -7767,3 +7767,30 @@ Run (outputs in `submit-963b7fb-v41/evidence/`):
   nothing (1 borne out, 0 not); the same act met again at cycle 22 and came as now
   expected; the next return, `signal-10-0`, as expected. Every id is a record a reader
   finds in the published store.
+
+#### Point 4 again, on version 41's code: individuals of the same DIL
+
+The eleven games, 600 cycles, grid, S2b, attention, carry 0.95 — I0 being version 41's
+own stores (NEUTRAL, the onlooker present; the loop is deterministic, so they are this
+machine's too), and three made here (`scripts/data/t1/i1-v41`, `i2-v41`, `alone-v41`):
+
+| | starts in | Other | levels | score (11) |
+|---|---|---|---|---|
+| I0 | NEUTRAL | present | 12 | 1.1059 |
+| I1 doubting, alert, exploring | trust 0.2, alertness 0.8, exploration 0.8 | present | 12 | 1.0159 |
+| I2 trusting, calm, consolidating | 0.8, 0.2, 0.2 | present | 12 | 1.1496 |
+| A1 | NEUTRAL | absent (`--alone`) | 12 | 1.0402 |
+
+- Where each first chooses otherwise than I0: I1 in 8 of 11 games (tn36 at step 10 …
+  lf52 296; lp85, tu93, vc33 never), I2 in 9 (vc33 27 … lf52 296), A1 in all 11, and
+  early (ls20 16, lp85 18, ar25 19 … lf52 227). I1 and I2 part in 9 of 11.
+- What differs in what they reach is mostly tu93 (I2 1.27 against 0.19), m0r0 (I0 0.80,
+  I2 and A1 0.19, I1 0.01) and sp80 (A1 0.02 against 0.10).
+- **The chain of a field, tu93, I1 against I2** (`differ.py`): a silence at step 71
+  turns both from the act; at step 72 I1 is still turned and takes act 1, I2 is not and
+  takes act 2 — the turn's hold is one of the counts each reads of its field, and the
+  two were born in fields apart. They choose alike at 213 of 599 steps.
+- **The chain of the Other, m0r0, I0 against A1**: at step 69 and 70 the onlooker says
+  I0 repeats ACTION1; at step 71 I0, having thought on the word, commands again — the
+  choice records the one it supersedes — while A1, with no one to say it, keeps the turn
+  it was in. From there I0 reaches the level in far fewer actions (0.80 against 0.19).
