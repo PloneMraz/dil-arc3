@@ -7546,3 +7546,40 @@ absorbed earlier today had. Imports and the paths named in CLAUDE.md, README.md,
 `base.py`, `task.py`, `run_game.py`, `replay_inducer.py` and the tests follow; the
 test module keeps its name, `test_language_inducer.py`, as `test_grid_inducer.py`
 does. Entries above, written before, name the files as they were. 407 tests pass.
+
+#### Does a thought that changes what the mind does leave a datum? Read on version 37's stores (for the paper's limits)
+
+CLAUDE.md keeps open that "a thought the mind does not keep changes no datum, so it
+leaves no line beyond the query it asked with". Checked before the paper states it,
+in the submitted code (`9fcaafc`) and in two of version 37's stores (ls20, m0r0,
+`scripts/thoughts.py`, new):
+
+- **In the code**, every path of the learning's `think` that changes what it holds —
+  a turn from a kind of act or to where an answer differed, an objection, keeping on
+  against the onlooker, lifting an objection — returns a thought to be written; a
+  path that writes nothing has changed nothing. The one exception is bookkeeping:
+  thinking while the body waits marks the situation as considered before asking the
+  inducer, and grid's `consider` gives nothing, so it never changes a choice. The
+  open item stands as stated, and it is not a gap in what the log can show.
+- **In the stores**: 273 thoughts in ls20 and 78 in m0r0. Every choice whose `why`
+  says a collision turned it has a turning thought written before it (83 of 83, 30
+  of 30). 106 of the 113 are built from the return that thought was built from — the
+  link `chains.py` follows. **The thought's own id is named by 1 of 113**: a choice
+  made in the cycle of the thought refers to it by a handle whose id comes back only
+  later, and `Mind._resolve` drops a handle not yet known. **The 7 others are the
+  second choice of a turn held for two** (`turn_hold`): its `why` says it was turned,
+  but its `built_from` names neither the thought nor its return; the reader finds the
+  turn by the thought before it and the counts the choices carry.
+- An objection puts acts behind others without the choice saying so, except where it
+  forced the choice ("objected to, and no other way"; one choice in m0r0, none in
+  ls20); what was objected to, and when it was lifted, is in the thoughts (48 and 27
+  in ls20).
+- 422 returns were scarred in ls20 and 112 in m0r0; a thought was built from 273 and
+  78 of them — the others turned nothing (a collision on the frame where nothing
+  differed where the mind reads, a report that deviated in no field, or a cycle's
+  thoughts spent).
+
+For the paper: the claim holds — every change in what the mind does is written —
+with two limits to state: a choice names a thought written in its own cycle only
+through the return it shares with it, and a turn held into a second choice is named
+by neither.
