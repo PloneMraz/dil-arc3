@@ -2,8 +2,8 @@
 
 Tag A asks for the concrete `ActivityEnvironment`: the space the agent can act
 into. That space is declared here. **Nothing in this module produces a move.**
-The mind chooses one and commands it as T5's test; the body carries it out at
-T8 (`command.py`). This file stops at "what a legal move looks like" and "how
+The mind chooses one and commands it as T5's test; the host's effectors carry it
+out at T8 (`command.py`). This file stops at "what a legal move looks like" and "how
 to send one".
 
 Ported nothing: dil-core's minimal host emits a fixed marker, because it had no

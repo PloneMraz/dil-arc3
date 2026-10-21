@@ -1,7 +1,7 @@
 """DIL — the operating mechanism of this agent.
 
 Not a library the host calls, and not a part sitting beside the other parts: it
-is how the whole body runs. The host declares its faculties and DIL threads
+is how the whole agent runs. The host declares its faculties and DIL threads
 through them; the self is what occurs while the loop runs, and the self is what
 acts.
 

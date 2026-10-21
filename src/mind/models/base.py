@@ -64,7 +64,7 @@ class Expectation:
 
 @dataclass
 class Proposal:
-    """What the mind's learning proposes the body do next, and why."""
+    """What the mind's learning proposes the host do next, and why."""
 
     act: Act | None
     why: str | None = None
@@ -219,7 +219,7 @@ class Inducer(Protocol):
         (with `payload` and `tags`): a language model's answers. [] for none."""
 
     def consider(self, situation: str, state: State) -> tuple[Any, Note] | None:
-        """Asked while the body waits with nothing it can do: a way to read this
+        """Asked while the host waits with nothing it can do: a way to read this
         state it did not hold — the form, in hand, and the reading as data, which
         the mind writes and has the form back from — or None. Never a hypothesis:
         no step was met to build one from."""

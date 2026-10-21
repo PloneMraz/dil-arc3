@@ -565,7 +565,7 @@ class GridInducer:
         """A prior the mind recalled: it reads no words."""
 
     def consider(self, situation: str, state: Grid) -> None:
-        """Asked while the body waits: it reads every state's things as it meets it
+        """Asked while the host waits: it reads every state's things as it meets it
         (`candidates`), so there is nothing more to consider."""
         return None
 

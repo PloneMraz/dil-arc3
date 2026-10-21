@@ -52,7 +52,7 @@ def test_the_directive_is_the_one_sentence_every_model_is_given():
 
 
 def test_the_directive_names_what_a_frame_reports():
-    """It must be written in what the body can sense, or the mind could never
+    """It must be written in what the host can sense, or the mind could never
     connect it to anything it sees."""
     assert DIRECTIVE.payload["objective"]["state"] == "WIN"
     assert DIRECTIVE.payload["ended_without"]["state"] == "GAME_OVER"

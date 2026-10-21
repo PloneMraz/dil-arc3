@@ -8,7 +8,7 @@
 The host carries the whole frame; the mind expects it from the hypotheses its
 learning holds, computed by its model — the inducer — and thinks when an
 expectation meets a mismatch — the frame, the status, the onlooker — or while
-the body waits. Each hypothesis, each choice and each thought is kept as data.
+the host waits. Each hypothesis, each choice and each thought is kept as data.
 What is printed is read back from the run's own `[event]` log, `[data]` and
 commits — the same ones a third party would read.
 
@@ -223,13 +223,13 @@ if a.inducer == "language":
           f"seconds {sum(t['seconds'] or 0 for t in answers):.0f}  not a hypothesis {dict(why_not)}")
     print(f"  looks, revisions      : {sum(1 for t in answers if 'look' in t)} looks; programs held after "
           f"writing again {sum(1 for t in answers if t.get('program') and t.get('round'))}; "
-          f"while the body waited {sum(1 for t in answers if t.get('on') == 'nothing to do')}")
+          f"while the host waited {sum(1 for t in answers if t.get('on') == 'nothing to do')}")
     print(f"  its readings          : {len([1 for _, d in daemon._data.entries() if d.open.get('kind') == 'reading'])}")
 print(f"  kinds of act          : {len(mind.learning._kinds)}  (tried, somewhere new, levels) most tried "
       f"{sorted(mind.learning._kinds.items(), key=lambda kv: -kv[1][0])[:6]}")
 print(f"  the mind's commands   : {[(c, p[0] if p else None) for c, p in mind.commands]}")
 print(f"  frame expectation held: {sum(mind.holds)} of {len(mind.holds)}")
-print(f"  the body stood still  : {source.waits} cycles")
+print(f"  the host stood still  : {source.waits} cycles")
 print(f"  the aim held          : {mind._aim and {k: v for k, v in mind._aim.items() if k != 'reached_when'}}")
 held_scars = collections.Counter(r.datum_id.split('-')[0] for r in recs if type(r).__name__ == "EventRecord")
 print(f"  scars by datum kind   : {dict(held_scars)}")

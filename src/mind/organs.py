@@ -1,9 +1,9 @@
-"""What a host declares of its eye and its body, for the one mind to read through.
+"""What a host declares of its sensory organs and effectors, for the one mind to read through.
 
 The mind knows no region (Plone, 2026-09-27: its code is neutral; what is
 particular to one region is data it reads). It still needs to know how its own
 organs work: how an arrival carries where the region stands and the act that
-led there, what the region reports of itself, what the body can carry out. That
+led there, what the region reports of itself, what the host can carry out. That
 is the host's to declare — "the host declares where its faculties are" — as it
 declares its channels; it is not knowledge of the world, and it is not learned.
 What the region is, what it wants, how it behaves: that the mind reads from its
@@ -15,8 +15,8 @@ shown to a model is the model's business, told what kind of state it is.
 
 So is an act (Plone, 2026-10-19: the learning runs in any context): the mind
 holds it, compares two, and asks the host what it needs to know of it — which of
-the body's acts it is, whether the region offers it, an order to break ties by,
-how it is written as data, which act an Other's word names, and whether the body
+the host's acts it is, whether the region offers it, an order to break ties by,
+how it is written as data, which act an Other's word names, and whether the host
 can carry it out. That an act may carry a place, or what it is made of, is the
 host's and the model's, never the mind's.
 """
@@ -28,7 +28,7 @@ from collections.abc import Hashable
 from typing import Any, Callable
 
 State = Any
-# An act as the body takes it — opaque to the mind: the host says what it is.
+# An act as the host takes it — opaque to the mind: the host says what it is.
 Act = Hashable
 
 
@@ -70,14 +70,14 @@ class Step:
 
 @dataclass(frozen=True)
 class Organs:
-    """The host's declaration of its eye and body, as the mind uses them."""
+    """The host's declaration of its sensory organs and effectors, as the mind uses them."""
 
     # What kind of state the eye delivers, and what an act can be — said to a
     # model so it can read them (for a model, not for the mind).
     state_kind: str
-    acts: dict[Any, str]                       # each of the body's acts (its family) -> its name
+    acts: dict[Any, str]                       # each of the host's acts (its family) -> its name
     placed: frozenset                          # the families that carry a place
-    # An act the body can always carry out that starts the region again, if it has
+    # An act the host can always carry out that starts the region again, if it has
     # one; None, and the mind never commands one.
     restart: "Act | None"
 
@@ -99,12 +99,12 @@ class Organs:
     ended: frozenset[str]
     offers_key: str
 
-    # The body: whether it can carry out an act, from the region's state and what
+    # The effectors: whether they can carry out an act, from the region's state and what
     # it offers; and the test payload that commands an act.
     can_carry_out: Callable[[Act, "str | None", tuple], bool]
     command: Callable[[Act], dict[str, Any]]
 
-    # What the mind asks of an act, the host's to answer: which of the body's
+    # What the mind asks of an act, the host's to answer: which of the host's
     # acts it is, whatever it carries (`family`); whether the region offers it
     # (`offered`), from what it offers as read from its report (`read_offers`);
     # an order to break ties by (`order`, a tuple of numbers); how it is written

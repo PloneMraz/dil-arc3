@@ -4,7 +4,8 @@ It holds the seams with the loop, and its learning (`learning.py`), which is its
 own whatever its model: the model's seat takes an inducer, the part of it that
 computes (`models/`; Plone, 2026-09-27: not a second mind, not a second brain;
 2026-09-28: another model, and learning is not defined again). It knows no
-region: how its eye and body work is the host's declaration (`organs.py`); what
+region: how its sensory organs and effectors work is the host's declaration
+(`organs.py`); what
 the region is, what it is for, how it behaves, it reads from its priors and
 learns from what comes back.
 
@@ -19,20 +20,20 @@ WHAT IT DOES:
   where its learning says nothing, it expects as reported last.
 - **Has its learning think when an expectation fails** — the step, or the
   region's report — as often a cycle as alertness allows; on a change of the
-  onlooker's word in its own right; and while the body waits for a command. It
+  onlooker's word in its own right; and while the host waits for a command. It
   hands its learning what it has: the recent steps (as many as T5's
   window), what memory answered to what was asked, what the onlooker says, what
   the region offers, why it is thinking. Its learning is also shown every
   return, and learns from it there; it thinks further on a collision of a
   step or of the region's report (what collided turns its next choice) and on
-  the onlooker's word (`learning.Learning.think`); the body's waiting is a seam
-  it leaves unused.
+  the onlooker's word (`learning.Learning.think`); while the host waits, it thinks
+  once in a situation (`consider`).
 - **Commands.** When the region has said all it says in a cycle, it asks its
-  learning what to do next and, if the body can carry it out (the body's own
-  rule), pushes it as T5's test (§6.4); the body carries it out. With no command
-  it has its learning think again while the body waits, at most MAX_WAIT_THOUGHTS
-  times, and stops asking as soon as its learning does not; then the body stands
-  still. It commands nothing while it holds no aim (Plone,
+  learning what to do next and, if the host can carry it out (the host's own
+  rule), pushes it as T5's test (§6.4); the host's effectors carry it out. With no
+  command it has its learning think again while the host waits, at most
+  MAX_WAIT_THOUGHTS times, and stops asking as soon as its learning does not; then
+  the host stands still. It commands nothing while it holds no aim (Plone,
   2026-09-25) — and it always comes to hold one (below).
 - **Writes** what its learning says to write — anew or as a revision — each with
   what it was built from, ids only (v0.3.4); it learns each datum's id when the
@@ -68,7 +69,7 @@ from .models.base import Context, Inducer, Learner, Write
 from .organs import Act, AsRead, Organs, Otherwise, Step
 
 # How many more times the mind thinks, in the same cycle, when it has no command
-# the body can carry out — while the body waits. DECLARED, not measured.
+# the host can carry out — while the host waits. DECLARED, not measured.
 MAX_WAIT_THOUGHTS: Final = 2
 # The aim the mind holds when no goal is given (Plone, 2026-09-28): the region
 # reports something other than what it reports most — a report seen before, but
@@ -106,7 +107,7 @@ def expected_report(said: dict[str, Any] | None, standing: dict[str, Any] | None
 
 
 class Mind:
-    """The one mind: it reads, expects, learns, and commands the body."""
+    """The one mind: it reads, expects, learns, and commands the host."""
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
                  curiosity: str = CURIOSITY[0], attention: bool = False) -> None:
@@ -217,7 +218,7 @@ class Mind:
                 if self._command_due or (first and self._aim is not None and self.commands
                                          and self.commands[-1][1] is None):
                     # It waited for what it reads, or — on its first arrival — the
-                    # body waits for want of an aim it now holds: command. Without
+                    # host waits for want of an aim it now holds: command. Without
                     # this a mind that held no aim at its first step commanded only
                     # when something else arrived — the onlooker — and without one
                     # never did. A prior recalled again later, asked for, is not a
@@ -428,8 +429,8 @@ class Mind:
         the answer's data. A remark that does not come as expected collides: a
         ResistEvent, the scar on the remark and on what the expectation was — the
         answer, when it was said again after it. The mind thinks on the collision
-        there and then and, if it thought, commands again: the body has not yet
-        moved this cycle and carries out the last command (Plone, 2026-09-27: a
+        there and then and, if it thought, commands again: the host has not yet
+        acted this cycle and carries out the last command (Plone, 2026-09-27: a
         remark strikes the mind directly; the mind does not wait for it). In a
         cycle the region said nothing in, what is said is all that comes, and
         the mind commands after it."""
@@ -453,7 +454,7 @@ class Mind:
         else:
             self._answer = ()
             if self.think("onlooker", ask, write, again=True) and self._report_this_cycle:
-                self.command(ask, write, test, on="command again")  # before the body moves
+                self.command(ask, write, test, on="command again")  # before the host acts
         if not self._report_this_cycle:
             self.command(ask, write, test)
         self._report_this_cycle = False
@@ -480,9 +481,9 @@ class Mind:
 
     def command(self, ask, write, test, on: str = "command") -> None:
         """Construct the next action, and command it: T5's test, carried out by
-        the body if it can. With no command, think again while the body waits.
+        the host if it can. With no command, think again while the host waits.
         `on` is "command again" when it commands a second time in a cycle, on
-        what an Other said: the body carries out the last, and its learning is told
+        what an Other said: the host carries out the last, and its learning is told
         so, so that what it writes can say which it replaces."""
         if not self._seen:
             return
@@ -514,7 +515,7 @@ class Mind:
 
     def think(self, on: str, ask, write, again: bool = False) -> bool:
         """An expectation met a mismatch, or no command came: have its learning think.
-        Once a cycle for a mismatch; `again` is the body waiting. False when the
+        Once a cycle for a mismatch; `again` is the host waiting. False when the
         learning does not think on this."""
         if self._thought_at != self.steps_seen:
             self._thoughts_this_cycle = 0

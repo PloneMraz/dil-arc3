@@ -1,15 +1,16 @@
-"""The ARC-AGI-3 host — the body the loop runs inside, and the mind it carries.
+"""The ARC-AGI-3 host — the container the loop runs inside, and the mind it carries.
 
-`dil/` is the operating mechanism. This ring is the body and the thinking organ,
+`dil/` is the operating mechanism. This ring is the host and the thinking organ,
 kept apart:
 
-  - **the body** — `frame.py` gates what the engine returns, `action.py` says
+  - **the host**, its sensory organs and effectors — `frame.py` gates what the engine returns, `action.py` says
     what a legal move looks like, `host.py` holds the game and carries out what
     was committed, `observe.py` carries the frame and the region's status
     inward, `command.py` carries out the mind's command at link 5. It takes in
     and carries out; it computes nothing and weighs nothing.
   - **the mind** — one mind, neutral about its region, with its learning
-    (`mind/`); this host declares its eye and body to it (`organs.py`) and tells
+    (`mind/`); this host declares its sensory organs and effectors to it
+    (`organs.py`) and tells
     it its task (`task.py`). It reads, expects, is curious and wants, and
     constructs the next action, commanding it as T5's test (§6.4). It acts on
     nothing.

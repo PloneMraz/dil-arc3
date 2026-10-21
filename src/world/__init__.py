@@ -1,6 +1,6 @@
 """The world — what lies outside the agent: the region it acts on, and the Others who see it act.
 
-Neither the agent nor its host. The host's body touches the region (`reset`,
+Neither the agent nor its host. The host's effectors touch the region (`reset`,
 `step`) and, when it does not act, lets a moment pass (`idle`); the Others in
 the world see each act, or the lack of one, as anyone standing by would. What an
 Other says reaches the agent only as the host hears it (`remarks`), on the

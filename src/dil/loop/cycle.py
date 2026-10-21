@@ -166,7 +166,7 @@ class HostCycleInput:
     # Needed first when this host's entities were affordances, which return only
     # when the agent uses one: N-1 absences were recorded every cycle for ever,
     # measured at 444 of 481 scars over 159 real ls20 cycles. It is still needed:
-    # in a cycle the body stood still in, the region is not present — nothing was
+    # in a cycle the host stood still in, the region is not present — nothing was
     # done to it — and only the onlooker is. `None` means the host does not report presence and the
     # original behaviour holds exactly, so dil-core's semantics are unchanged.
     afforded: frozenset[str] | None = None
@@ -202,7 +202,7 @@ class RespondContext:
     host: HostCycleInput
     # DEVIATION from dil-core, declared: the actions T5 pushed to the region as
     # tests this cycle (§6.4). dil-core hands them to the host after the cycle
-    # (`CycleResult.tests`); a host whose body carries them out needs them here,
+    # (`CycleResult.tests`); a host whose effectors carry them out needs them here,
     # where the committed action is formed.
     tests: tuple[Any, ...] = ()
 

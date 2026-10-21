@@ -371,7 +371,7 @@ def targets(grid):
 
 def clicks_only(script: Script):
     """A run's start in a region of clicks only: the start-up's return before the
-    task's words, then a cycle in which the body has nothing it can do."""
+    task's words, then a cycle in which the host has nothing it can do."""
     mind, inducer, cycle, data = loop(script, told=False)
     run(cycle, frame(lit(0), lit(0), action=0), status(action=0, affords=(6,)))
     mind.receive("task", MIND_TASK.payload, None)
@@ -382,7 +382,7 @@ def clicks_only(script: Script):
 def test_with_nothing_it_can_do_it_asks_its_model_what_can_be_done_here():
     script = Script(block(NAMES))
     mind, inducer, cycle, data = clicks_only(script)
-    assert len(script.shown) == 1, "asked while the body waited"
+    assert len(script.shown) == 1, "asked while the host waited"
     words = script.shown[0][0]["content"]
     assert "No step has been seen yet" in words and "Starting from this grid" in words
     assert mind.commands[-1][1] == (6, 1, 0), "it commands at a cell its model named"
@@ -399,7 +399,7 @@ def test_it_asks_once_in_a_situation_and_not_where_it_can_act():
     mind, inducer, cycle, data = clicks_only(script)
     run(cycle, status(action=0, affords=(6,)))
     assert len(script.shown) == 1, "asked once where it stands, though it still can do nothing"
-    assert mind.commands[-1][1] is None, "and the body waits"
+    assert mind.commands[-1][1] is None, "and the host waits"
     mind2, inducer2, cycle2, _ = loop(Script(block(STILL)))
     run(cycle2, frame(lit(0), lit(1)), status())                                 # it can act: asked on the step only
     assert [a["on"] for a in inducer2.answers] == ["not foreseen"], "never asked what can be done where it can act"

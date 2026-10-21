@@ -1,4 +1,4 @@
-"""The body: what it reports inward, and what it refuses to do.
+"""The host: what it reports inward, and what it refuses to do.
 
 The host holds the game and executes what the self committed. It never chooses.
 Every test here is written against a fake engine, because the host takes the
@@ -145,7 +145,7 @@ def test_next_returns_none_when_nothing_has_happened_since_the_last_report():
 
 
 def test_an_unafforded_move_is_refused_not_substituted():
-    """Quietly swapping in a legal action would put the choice in the body."""
+    """Quietly swapping in a legal action would put the choice in the host."""
     src = a_source([f()], opening=f(0, actions=(6,)))
     src.next()
     with pytest.raises(IllegalMove, match="not in available_actions"):

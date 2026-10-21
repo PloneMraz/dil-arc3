@@ -1,4 +1,4 @@
-"""The body carries out the mind's command at link 5, and weighs nothing (`arc3/command.py`)."""
+"""The host's effectors carry out the mind's command at link 5, and weighs nothing (`arc3/command.py`)."""
 
 from __future__ import annotations
 

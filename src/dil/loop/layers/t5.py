@@ -168,7 +168,7 @@ class T5Output:
 # An action pushed to the region to test an expectation (§6.4): "an action that
 # pushes to the region to see whether the return matches the Expectation just
 # built". The rule thinks; it does not act: a test is recorded as an emission
-# from T5, and it reaches the region only if the host has a body to carry it
+# from T5, and it reaches the region only if the host has effectors to carry it
 # out. Ported from dil-core a8ef7ce.
 TestFn = Callable[[Any], None]
 

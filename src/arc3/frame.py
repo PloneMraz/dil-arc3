@@ -2,7 +2,7 @@
 
 This is the host's sense organ, and it is deliberately a **gate**, not a
 converter. §5's tagging gate refuses a datum that arrives without provenance; the
-same stance applies at the boundary of the body: a frame that falls outside the
+same stance applies at the boundary of the host: a frame that falls outside the
 declaration in `decisions.py` is refused, not coerced. Silently clamping an
 out-of-range cell would make the declaration a comment rather than a claim.
 
@@ -50,7 +50,7 @@ class Frame:
     def top(self) -> Grid:
         """The last grid in the stack.
 
-        Which grid of the stack is read is not decided here: the body carries
+        Which grid of the stack is read is not decided here: the host carries
         every grid (`observe.frame_payload`), and the mind's reading — the last
         grid — is the host's declaration of its organs (`organs.py`) and of Tag H
         (`decisions.situation_fit`). This accessor serves probes and reporting.

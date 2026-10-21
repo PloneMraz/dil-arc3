@@ -747,7 +747,7 @@ class LanguageInducer:
                                                    "unrunnable", "look", "looked", "code_only") if isinstance(payload.get(k), str)}
 
     def consider(self, situation: str, state: Grid) -> tuple[ProgramForm, Note] | None:
-        """Asked while the body waits with nothing it can do: the model, shown the
+        """Asked while the host waits with nothing it can do: the model, shown the
         state alone, writes a program whose `targets` may name where an act that
         takes a cell can be put — as grid's reading of a state names things there
         (its `things`), here the model's. Asked only before it holds a reading.

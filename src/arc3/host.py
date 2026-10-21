@@ -1,4 +1,4 @@
-"""The host — the body the loop runs inside, over a live ARC-AGI-3 game.
+"""The host — the container the loop runs inside, over a live ARC-AGI-3 game.
 
 `HostSource` says it plainly: *the agent acts through `deliver`*. DIL is the
 condition, not the actor. So this ring holds the game, reports what the region
@@ -19,7 +19,7 @@ the frame and the region (`observe.py`), and T7 registers an absence only
 against those the region says are there.
 
 The SDK is not imported here. The environment and the engine's action class both
-arrive as arguments, so the body stays testable with the game uninstalled — the
+arrive as arguments, so the host stays testable with the game uninstalled — the
 same stance `frame.py` takes at the sense boundary.
 """
 
@@ -84,12 +84,12 @@ class Arc3Source:
         self._t = 0
         self._budget = action_budget
         self._spent = 0
-        # A cycle in which the body stood still, not yet reported; and how many.
+        # A cycle in which the host stood still, not yet reported; and how many.
         self._waited = False
         self._waits = 0
         # What was committed, in order — the run's own record of its acts.
         self.delivered: list[Move] = []
-        # Whether the body stood still for want of a command it could carry out.
+        # Whether the host stood still for want of a command it could carry out.
         self.stood_still = False
 
     @property
@@ -103,13 +103,13 @@ class Arc3Source:
 
     @property
     def waits(self) -> int:
-        """How many cycles the body stood still."""
+        """How many cycles the host stood still."""
         return self._waits
 
     def next(self) -> HostCycleInput | None:
         """What the region returned, and what is said of the agent, as the loop consumes it.
 
-        A cycle in which the body stood still is a cycle too: nothing reaches
+        A cycle in which the host stood still is a cycle too: nothing reaches
         the region, so the region returns nothing, and the host reports only
         what it hears. It counts against the run's budget as an action does,
         so standing still has an end; RHAE counts only the actions.
@@ -186,8 +186,8 @@ class Arc3Source:
 
         A move the current frame does not afford is refused rather than
         substituted. Quietly swapping in a legal action would put the choice in
-        the body, and the body does not choose. A body told to wait does not
-        move: nothing reaches the region, and the next cycle carries only what
+        the host, and the host does not choose. A host told to wait does not
+        act: nothing reaches the region, and the next cycle carries only what
         is said of the agent (`command.py`).
         """
         if isinstance(response.action, dict) and response.action.get("kind") == "wait":

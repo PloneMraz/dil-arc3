@@ -126,7 +126,7 @@ def test_the_world_shows_each_act_to_the_others_once_they_watch():
 
 
 def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_still():
-    # The body's acts are scripted here (`plan`), not the mind's: the mind only
+    # The host's acts are scripted here (`plan`), not the mind's: the mind only
     # fills T5, as it would in a run.
     mind = Mind(GridInducer(ARC_ORGANS), ARC_ORGANS, priors={"task": TASK_CUE})
     data, events = create_data_store(), create_event_log()
@@ -151,7 +151,7 @@ def test_the_host_hears_the_onlooker_and_keeps_cycling_while_the_body_stands_sti
         source.deliver(Emission(action=action))
     inp = source.next()
     assert inp is not None and {s.source_id for s in inp.signals} == {ONLOOKER_CHANNEL}, \
-        "a cycle the body stood still in carries only what is heard"
+        "a cycle the host stood still in carries only what is heard"
     assert inp.afforded == {"onlooker"}, "the region is not counted absent: nothing was done to it"
     assert heard[-1] == [{"entity": "onlooker", "remark": "standing still", "since": 1, "for": 3}]
     assert source.next() is None, "standing still counts against the budget: it has an end"

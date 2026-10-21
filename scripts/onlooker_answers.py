@@ -6,7 +6,7 @@ Read back from the store alone, as a third party would. Works on stores written
 before the remark struck the mind (objections as acts at `here`) and after (as
 [state, act] pairs, lifted when the onlooker says something else).
 
-  A  the move the body carried out in a cycle whose remark objected to an act at
+  A  the move the host carried out in a cycle whose remark objected to an act at
      the state it stood in: was it that act?
   B  choices made while an objection stood, at a state it holds for: how many
      took the act objected to, and how many of those said there was no other way
@@ -119,7 +119,7 @@ def main(run: Path) -> None:
 
     print(f"store: {run}")
     print(f"thoughts on the onlooker: {len(thoughts)}  (answers with an objection: {len(answers)})")
-    print(f"A  body's move in the cycle of an objection was the act objected to: {a_same} of {a_total}")
+    print(f"A  host's move in the cycle of an objection was the act objected to: {a_same} of {a_total}")
     print(f"B  choices at a state an objection held for: {b_at}; took the objected act: {b_took}"
           f" (said so: {b_no_other})")
     print(f"C  answers scarred (said again after): {scarred} of {len(answers)}")

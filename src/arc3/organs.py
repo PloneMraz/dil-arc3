@@ -1,4 +1,4 @@
-"""This host's eye and body, declared for the one mind (`mind.organs`).
+"""This host's sensory organs and effectors, declared for the one mind (`mind.organs`).
 
 The eye delivers a frame as the stacks of grids the engine returned and the move
 between (`observe.frame_payload`); the mind reads the last grid of each stack —
@@ -8,7 +8,7 @@ two as a stack of six — and the step carries the grids before the last, which
 the region showed between: at a level's end, what the act did before the next
 level came (every level ended in version 19 came as a stack of 2 to 27). A grid is rows of cells, each a colour 0-15.
 The region reports its state, its level count and its stack depth
-(`observe.region_status`), and what it offers next. The body carries out RESET
+(`observe.region_status`), and what it offers next. The effectors carry out RESET
 always, and any other act the region offers unless the game has ended
 (`command.can_carry_out`); ACTION6 carries a cell.
 

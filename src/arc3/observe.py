@@ -1,12 +1,12 @@
 """The bridge: what the host carries inward, and nothing more.
 
-The host is the body. Like an eye it takes the signal in — the frame the engine
-returns, read and gated by `frame.py` — and carries it inward; it computes
+The host's sensory organs, like an eye, take the signal in — the frame the engine
+returns, read and gated by `frame.py` — and carry it inward; they compute
 nothing from it. Working out what the grid means is the mind's, and the mind is
 one: it learns, and its model computes for it (`mind/`).
 
 Each cycle's signals travel on three channels, through T3 — the frame and the
-region's status every cycle the body acted, and, when the world has an
+region's status every cycle the host acted, and, when the world has an
 onlooker, what it says of the agent (`onlooker_transducer`):
 
   - **the frame** — the stack of grids before the move and the stack after, and
@@ -94,7 +94,7 @@ def frame_payload(prev: Frame, move: Move, now: Frame, context: str) -> dict[str
 
     Carried as they are — every grid of each stack, no grid chosen as "the" view
     (`Frame.top` stays a probe's accessor). Which grid the mind reads is the
-    mind's reading, not the body's.
+    mind's reading, not the host's.
     """
     return {
         "entity": FRAME_ENTITY,

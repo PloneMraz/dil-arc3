@@ -153,10 +153,10 @@ COST: Final = _item(
     },
 )
 
-# What the body can see — about the frames, and about the sense they come by.
+# What the host can see — about the frames, and about the sense they come by.
 SEEING: Final = _item(
     "seeing",
-    "body",
+    "host",
     "frames",
     {
         "says": [
@@ -171,10 +171,10 @@ SEEING: Final = _item(
     sense=VISION_SENSE,
 )
 
-# What the body can do — about the actions.
+# What the host can do — about the actions.
 ACTIONS_ITEM: Final = _item(
     "actions",
-    "body",
+    "host",
     ACTIONS_OBJECT,
     {
         "says": [

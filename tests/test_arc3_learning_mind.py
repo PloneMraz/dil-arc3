@@ -286,7 +286,7 @@ QUIET = {"remark": None}
 def test_the_word_strikes_before_the_body_moves_and_the_mind_commands_again():
     # From lit(1) the untried act the mind would take is ACTION2 (it tried 1).
     # The onlooker objects to ACTION2 in the same cycle: the mind thinks and
-    # commands again before the body moves, and the body carries out the last.
+    # commands again before the host acts, and the host carries out the last.
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
     said = {"remark": "repeating", "act": {"act": "ACTION2"}, "since": 0, "at_least": 4}
@@ -299,7 +299,7 @@ def test_the_word_strikes_before_the_body_moves_and_the_mind_commands_again():
     from dil.loop.types import ModField
     assert carry_out(RespondContext(cycle=1, appraisal=result.appraisal, expectations=(), host=HostCycleInput(
         signals=(status(affords=(1, 2)),)), field=ModField(), tests=result.tests))["actionId"] == moves[1]["actionId"], \
-        "the body carries out the last"
+        "the host carries out the last"
 
 
 def test_said_again_after_it_was_answered_the_answer_is_scarred():
@@ -435,10 +435,10 @@ def test_the_field_reaches_the_mind_and_alertness_lets_it_think_more_in_a_cycle(
 
 
 def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
-    # Without an onlooker nothing arrives in a cycle the body stood still in, so a
+    # Without an onlooker nothing arrives in a cycle the host stood still in, so a
     # mind that held no aim at its first step, and was never asked again, stood
     # for the whole run (LOG.md, 2026-09-28). Once what it reads comes back and it
-    # holds an aim, while the body waits, it commands.
+    # holds an aim, while the host waits, it commands.
     mind = seated()   # the task not yet recalled
     data, events = create_data_store(), create_event_log()
     cycle = create_cycle(
@@ -454,7 +454,7 @@ def test_a_mind_that_held_no_aim_at_its_first_step_commands_once_it_holds_one():
     pushed: list = []
     mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
                      write=lambda request: None, ask=None, test=pushed.append)
-    assert pushed and mind.commands[-1][1] is not None, "the aim held, the waiting body gets a command"
+    assert pushed and mind.commands[-1][1] is not None, "the aim held, the waiting host gets a command"
 
 
 def _grid(i: int) -> list[list[int]]:
@@ -516,18 +516,18 @@ def test_a_choice_commanded_again_says_which_it_replaces():
     choices = [d.payload for _, d in of_kind(data, "choice")]
     last = choices[-1]
     assert last["supersedes"]["chose"] == [2, None, None] and last["chose"] != [2, None, None], \
-        "the second choice of the cycle, the one the body carries out, names the one it replaces"
+        "the second choice of the cycle, the one the host carries out, names the one it replaces"
     assert "supersedes" not in choices[-2]
 
 
 def test_what_it_reads_recalled_again_later_is_no_reason_to_command():
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status(), _remark(QUIET))
-    mind.commands.append((mind.steps_seen, None))    # the body waits, for its own reasons
+    mind.commands.append((mind.steps_seen, None))    # the host waits, for its own reasons
     pushed: list = []
     mind.take_return({"open": dict(MIND_TASK.open), "payload": MIND_TASK.payload, "entity": MIND_TASK.id},
                      write=lambda request: None, ask=None, test=pushed.append)
-    assert pushed == [], "only its first arrival commands a body waiting for want of an aim"
+    assert pushed == [], "only its first arrival commands a host waiting for want of an aim"
 
 
 def test_curiosity_counts_somewhere_new_not_a_change():

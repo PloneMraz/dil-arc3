@@ -7798,3 +7798,23 @@ machine's too), and three made here (`scripts/data/t1/i1-v41`, `i2-v41`, `alone-
   4. The Other reached this choice through the field it had moved over the steps before,
   not by the word itself. From there I0 reaches the level in far fewer actions (0.80
   against 0.19).
+
+#### "Host", never "body"; effectors; the whole an agent (Plone)
+
+Plone: one word for the part that takes in and carries out, used throughout — the
+host, defined across fields, where "body" reads as a visible mass and was used in
+three senses; its part that carries out the mind's command is its effectors (the
+physiological term for the organ that carries out a response, paired with the
+receptor); the whole — DIL, host, mind — is the agent (host + self = agent). Done by
+sense, never blindly (the host knows, learns and rewrites nothing: "everything the
+body knows" became the agent's): CLAUDE.md, README.md and the paper's drafts; the
+comments and docstrings in `src/` (`mind/`, `arc3/`, `world/`, `dil/`), the tests'
+texts, `scripts/run_game.py`'s report ("the host stood still") and
+`onlooker_answers.py`; the two prior items about seeing and acting tagged `kind:
+host`, not `body` — ls20, 150 cycles, chooses as version 41 at every one of its 175
+choices. Left: Plone's own words quoted ("Cơ thể có thể đơ để đợi"), the record body
+of `hash_chain.py` and `event_sink.py`, and the HTTP and file bodies of
+`commit_store.py`, `test_api_key.py`, `wm_probe.py` and the notebook builders. This
+LOG keeps its history as written. 413 tests pass. In `mind/mind.py`'s docstring a
+sentence still said the host's waiting was a seam left unused; since 2026-10-19 the
+mind thinks once in a situation while the host waits (`consider`), and it says so.

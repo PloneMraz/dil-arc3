@@ -54,7 +54,7 @@ THE LOOP, one step at a time:
   its held hypotheses predict — through the situations it has stood in and, for
   an inducer whose hypotheses reach past where they were met, up to
   MAX_IMAGINED_STEPS past them, where a situation not stood in is itself
-  something left to try; else the act that starts the region again (if the body
+  something left to try; else the act that starts the region again (if the host
   has one), or the known act toward the situation least
   visited.
 - **A collision turns its thinking** (Plone, 2026-10-11: a mismatch is not a
@@ -243,7 +243,7 @@ class Hypothesis(Weighed):
 
 @dataclass(eq=False)
 class Reading:
-    """A way of reading states its model gave while the body waited (`consider`):
+    """A way of reading states its model gave while the host waited (`consider`):
     no hypothesis — no step was met to build one from — but what the model reads
     states with, so its form is in hand only until its datum is in the store, and
     then read there (`recall`), as a hypothesis's is."""
@@ -468,7 +468,7 @@ class Learning:
         # Each hypothesis read, by its datum: the payload read, the form restored
         # from it, and what its inducer said in it (the payload off the tallies).
         self._restored: dict[str, tuple[Any, Any, dict[str, Any]]] = {}
-        self._considered: set[str] = set()   # where it thought while the body waited
+        self._considered: set[str] = set()   # where it thought while the host waited
         self._used: dict[str, None] = {}
         self._chosen_kind: tuple | None = None
         # Hypotheses about the aim (S4): those that applied to the step being
@@ -745,8 +745,8 @@ class Learning:
           - the onlooker's word (`onlooker`), which reaches the mind as a
             collision, and the mind commands again once it has thought.
 
-        On the body waiting for want of a command, it thinks on where it stands,
-        once in a situation (`_think_while_waiting`); on anything else — the body
+        On the host waiting for want of a command, it thinks on where it stands,
+        once in a situation (`_think_while_waiting`); on anything else — the host
         waiting for want of an aim — it does not think (None), so the mind does
         not wait on it. On the onlooker's
         word:
@@ -807,11 +807,11 @@ class Learning:
                         answer=tuple(("handle", a) for a in answers))
 
     def _think_while_waiting(self) -> Thinking | None:
-        """The body waits with nothing it can do here: it thinks on where it
+        """The host waits with nothing it can do here: it thinks on where it
         stands, asking its model for a way to read this state it does not hold
         (`Inducer.consider`) — once in a situation, so a wait is thought on and
         does not set off another thought (the regress stops: the mind thinks on
-        what comes from outside or while the body waits). Its model's answer is
+        what comes from outside or while the host waits). Its model's answer is
         kept whole; a reading it gives is written, built from the state it stood
         in, and every state is read again. None where its model says nothing new
         (Plone, 2026-10-19: where every act wants what the model names, a model
@@ -960,7 +960,7 @@ class Learning:
         return round_half_up(shifted_count(MAX_IMAGINED_STEPS, rising(axis(self._field, EXPLORATION))))
 
     def _named(self, remark: dict[str, Any]) -> list[Act]:
-        """The acts an onlooker's word names, as the body takes them (the host says
+        """The acts an onlooker's word names, as the host takes them (the host says
         which act a word names: `Organs.named_by`)."""
         named = [remark.get("act")] if remark.get("act") else list(remark.get("acts") or [])
         return [act for act in (self.organs.named_by(said) for said in named) if act is not None]
@@ -1642,7 +1642,7 @@ class Learning:
     def _most_curious(self, here: str, pool: list[tuple[Act, tuple]]) -> tuple[Act, float]:
         if self.curiosity == "test":
             return self._least_sure(here, pool)
-        # Which of the body's acts first (its family), over every kind of it; at
+        # Which of the host's acts first (its family), over every kind of it; at
         # equal want, the first in the host's order.
         first: dict = {}
         for act, _ in pool:
