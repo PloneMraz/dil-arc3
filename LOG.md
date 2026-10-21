@@ -7575,9 +7575,9 @@ in the submitted code (`9fcaafc`) and in two of version 37's stores (ls20, m0r0,
   ls20); what was objected to, and when it was lifted, is in the thoughts (48 and 27
   in ls20).
 - 422 returns were scarred in ls20 and 112 in m0r0; a thought was built from 273 and
-  78 of them — the others turned nothing (a collision on the frame where nothing
-  differed where the mind reads, a report that deviated in no field, or a cycle's
-  thoughts spent).
+  78 of them. The others set off no thought; the code's reasons are a collision
+  the learning does not turn on, a report deviating in no field it reads, or the
+  cycle's thoughts spent — which of them, case by case, is not counted.
 
 For the paper: the claim holds — every change in what the mind does is written —
 with two limits to state: a choice names a thought written in its own cycle only
