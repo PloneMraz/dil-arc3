@@ -7583,3 +7583,34 @@ For the paper: the claim holds — every change in what the mind does is written
 with two limits to state: a choice names a thought written in its own cycle only
 through the return it shares with it, and a turn held into a second choice is named
 by neither.
+
+#### A turned choice names its return and its thought (Plone: fix both limits)
+
+The two limits found above, fixed in the mind and its learning (code after the
+submitted `9fcaafc`; version 37 keeps the limits):
+
+- **Every choice a turn holds for is built from the return that collided**
+  (`Learning._turn_from`, kept when the thought turns it), not from the latest return.
+- **A datum may ask to be relinked** (`Write.relinks`): written while some handles it
+  was built from have no id yet, it carries `awaiting` (how many); when the last id
+  comes back the mind revises it with `built_after` (their ids), the revision built
+  from all the datum was built from (`Mind._relink`). Choices ask for it; a handle
+  still unresolved is otherwise left out as before (`Mind._resolve`). 408 tests pass
+  (one new: a turn held for two choices, both naming the return and, once it came
+  back, the thought).
+
+Measured, grid, the 11 games, 600 cycles, attention (`scripts/data/t1/relink`, against
+`foreseen`, whose choices are version 37's on these games):
+
+- `thoughts.py`: every turned choice now names the return and the thought's id —
+  ls20 102 of 102, m0r0 30 of 30, tu93 75 of 75. The stores verify under dil-core's
+  verifier, and its conformance verdicts on m0r0 are as before (§13.4 partial, §13.7
+  fail on diversity-loss).
+- **Not without effect on behaviour**, as had been expected: score 1.10586 against
+  1.10603, levels the same (12); lp85 and m0r0 choose exactly as before, the other nine
+  depart at some step (ls20 at its 41st). The cause, checked on ls20 over 120 cycles:
+  with the relinking revisions turned off and the held-turn naming kept, every choice
+  and every count is as before; with them on, the counts the choices read of the
+  field depart at the 21st choice and the choices at the 47th. The revisions are data
+  written, and data written comes back into the loop as the store's arrivals, which
+  move the field a little.

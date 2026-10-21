@@ -156,6 +156,10 @@ class Mind:
         self._handle_of: dict[str, object] = {}
         self._ids: dict[object, str] = {}
         self._owed: dict[object, tuple[Any, tuple[object, ...]]] = {}
+        # Data written before the ids of some handles they were built from came
+        # back (`Write.relinks`): their handle, payload as written, and the
+        # handles still awaited.
+        self._relinks: list[tuple[object, dict[str, Any], list[object]]] = []
 
     # ── what the run's report reads ──
 
@@ -231,6 +235,7 @@ class Mind:
                 owed = self._owed.pop(handle, None)
                 if owed is not None and write is not None:
                     self._request(write, WriteRequest(payload=owed[0], datum_id=entity, built_from=owed[1]))
+                self._relink(write, handle)
             return
         if not self._answers(open_tags, ret.get("fixed")):
             return
@@ -248,8 +253,33 @@ class Mind:
 
     # ── writing ──
 
+    def _relink(self, write, handle: object) -> None:
+        """A handle's id has come back: each datum written awaiting it, once it
+        awaits nothing more, is revised to name the ids it was built from after
+        (`built_after`); the revision waits for that datum's own id if need be."""
+        still = []
+        for owner, payload, awaited in self._relinks:
+            awaited = [h for h in awaited if h is not handle]
+            if awaited:
+                still.append((owner, payload, awaited))
+                continue
+            after = sorted(self._ids[h] for h in payload["_awaited"])
+            built = (*payload["_built"], *(i for i in after if i not in payload["_built"]))
+            revised = {k: v for k, v in payload.items() if k not in ("_awaited", "_built")}
+            revised["built_after"] = after
+            # The revision is built from all the datum was: what it named, and now these.
+            self._write(write, [Write(payload=revised, revises=owner, built_from=built)])
+        self._relinks = still
+
+    def _awaited(self, refs: tuple[object, ...]) -> list[object]:
+        """The handles among what a datum was built from whose ids have not come back."""
+        return [ref[1] for ref in refs if isinstance(ref, tuple) and len(ref) == 2 and ref[0] == "handle"
+                and ref[1] not in self._ids]
+
     def _resolve(self, refs: tuple[object, ...]) -> tuple[object, ...]:
-        """Units and datum ids as they are; handles and priors as the ids they became."""
+        """Units and datum ids as they are; handles and priors as the ids they became.
+        A handle whose id has not come back is left out (a datum that asks for it is
+        revised once it comes: `Write.relinks`)."""
         out: list[object] = []
         for ref in refs:
             if isinstance(ref, tuple) and len(ref) == 2 and ref[0] == "handle":
@@ -281,7 +311,13 @@ class Mind:
                 else:
                     self._request(write, WriteRequest(payload=w.payload, datum_id=datum_id, built_from=built))
             else:
-                self._request(write, WriteRequest(payload=w.payload, open=dict(w.tags or {}), built_from=built),
+                payload = w.payload
+                awaited = self._awaited(w.built_from) if w.relinks and w.handle is not None else []
+                if awaited and write is not None and isinstance(payload, dict):
+                    payload = {**payload, "awaiting": len(awaited)}
+                    self._relinks.append((w.handle, {**payload, "_awaited": list(awaited), "_built": built},
+                                          list(awaited)))
+                self._request(write, WriteRequest(payload=payload, open=dict(w.tags or {}), built_from=built),
                               w.handle)
 
     # ── the aim ──

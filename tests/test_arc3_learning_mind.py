@@ -1010,3 +1010,32 @@ def test_what_an_act_did_where_it_stood_alike_it_expects_again():
     run(cycle, frame(b, b), status())                              # ACTION1 here: nothing, as recalled
     assert mind.holds[-1] == 1, "expected nothing of it, from where it stood alike"
     assert mind.holds[0] == 0, "the first time, it expected an answer, and silence collided"
+
+
+def test_a_choice_a_collision_turned_names_the_return_and_once_it_comes_back_the_thought(monkeypatch):
+    # A step that changed nothing where something was expected: silence, a thought
+    # on it, and the choices the turn holds for (held longer here, so there are
+    # two). Each is built from the return that collided — the later one too — and
+    # is revised to name the thought once its id comes back (`Write.relinks`).
+    import mind.learning as learning
+    monkeypatch.setattr(learning, "TURN_HOLD", 4)
+    acts = (1, 2, 3, 4)
+    mind, cycle, data, events = loop()
+    run(cycle, frame(lit(0), lit(1)), status(affords=acts))
+    run(cycle, frame(lit(1), lit(1), action=2), status(action=2, affords=acts))     # silence: collides
+    before = lit(1)
+    for i, after in enumerate([lit(2), lit(0), lit(1), lit(2), lit(0)]):
+        run(cycle, frame(before, after, action=3 + i % 2), status(action=3 + i % 2, affords=acts))
+        before = after
+    written = {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
+               for w in r.activity.written}
+    thoughts = [k for k, d in of_kind(data, "thought") if d.payload.get("collided") == "silence"]
+    assert thoughts, "the silence was thought on"
+    thought, collided = thoughts[0], written[thoughts[0]][0]
+    turned = [(k, d) for k, d in of_kind(data, "choice") if "; turned " in d.payload.get("why", "")]
+    assert len(turned) >= 2, "the turn held for more than one choice"
+    for k, d in turned:
+        assert collided in written[k], "every choice the turn holds for names the return that collided"
+        assert d.payload.get("awaiting", 0) >= 1, "written while the thought's id had not come back"
+        assert thought in written[k] and thought in d.payload.get("built_after", []), \
+            "and, once its id came back, the thought"

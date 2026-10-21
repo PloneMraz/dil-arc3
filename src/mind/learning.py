@@ -264,6 +264,11 @@ class TurnHandle:
     cycle: int
 
 
+class ChoiceHandle:
+    """A choice, as a handle: the mind names on it, once their ids come back, what
+    it was built from that had none when it was written (`Write.relinks`)."""
+
+
 # How many choices a collision's turn holds for at NEUTRAL alertness. DECLARED.
 TURN_HOLD: Final = 2
 # What a choice a collision turned says of it.
@@ -490,6 +495,9 @@ class Learning:
         self._carried: dict[str, float] = {}
         self._counted_at: Any = None
         self._turn_thought: object | None = None
+        # What the thought that turned it was built from: what every choice the
+        # turn holds for is built from, the first and the later ones alike.
+        self._turn_from: tuple[object, ...] = ()
         self._expected_otherwise = False
         self._last_step: tuple[str, Act, Step, Any] | None = None
         self._expected_from: tuple[str, ...] = ()
@@ -849,6 +857,7 @@ class Learning:
         self._turn_thought = TurnHandle(self.steps)
         self._turn_left = self._turn_hold()
         built = (unit,) if unit is not None else ()
+        self._turn_from = built
         payload = {"on": "step", "step": self.steps, "here": self._state_of.get(source_raw), **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
                                       built_from=built)])
@@ -878,6 +887,7 @@ class Learning:
             self._turn = ("from", kind, coarse, TURN_WHYS[2])
             self._turn_thought = handle
             self._turn_left = self._turn_hold()
+            self._turn_from = tuple(u for u in (unit, self._report_unit) if u is not None)
             said = {"collided": "the region ended", "turns": "from that kind of act"}
         elif self._reached(now):
             said = {"collided": "the aim came", "turns": "nothing of its own: what brings it is learned (S4)"}
@@ -1789,15 +1799,16 @@ class Learning:
                 built.append(context.remark_unit)   # what it quotes, it was built from
         built += [("handle", h) for h in through]
         if self._turn_thought is not None and why.endswith(TURN_WHYS):
-            # What turned it: the return that collided, and the thought on it
-            # (whose id is known only once it comes back, in a later cycle).
-            if self._last_step is not None and self._last_step[3] is not None:
-                built.append(self._last_step[3])
+            # What turned it: the return that collided — for every choice the turn
+            # holds for — and the thought on it, whose id is known only once it
+            # comes back, in a later cycle: the mind names it then (`relinks`).
+            built += [u for u in self._turn_from if u not in built]
             built.append(("handle", self._turn_thought))
         built.append(("prior", "task"))
         # And what it read, or computed from what it read, to choose.
         built += [b for b in self._take_used() if b not in built]
-        return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built))]
+        return Proposal(act, why=why), [Write(payload=choice, tags=dict(CHOICE_TAGS), built_from=tuple(built),
+                                              handle=ChoiceHandle(), relinks=True)]
 
 
 __all__ = ["CHOICE_TAGS", "CURIOSITY", "EXPERIENCE_TAGS", "FIT_LAW", "HYPOTHESIS_TAGS", "MAX_PATH_NODES", "THOUGHT_TAGS",

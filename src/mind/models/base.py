@@ -82,6 +82,11 @@ class Write:
     # What it was built from: observation units, datum ids, handles of the
     # learning's own data, or ("prior", name) for a prior the mind recalled.
     built_from: tuple[object, ...] = ()
+    # A datum the learning never revises itself may ask the mind to name, once
+    # their ids come back, the handles it was built from that had none when it was
+    # written: it is written with `awaiting` (how many), and revised with
+    # `built_after` (their ids) when the last comes. It needs a `handle`.
+    relinks: bool = False
 
 
 @dataclass
