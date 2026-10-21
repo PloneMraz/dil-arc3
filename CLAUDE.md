@@ -1020,7 +1020,12 @@ of the field following the field (B2), the field carrying its history (DEVIATION
 with an act opaque to the mind, an act never once taken never foreseen, a grid that
 is no grid bearing nothing out, the store's hash as dil-core's (its stores verify
 under dil-core's own verifier), and what was brought from dil-core 288ad30 and
-817bf75; on the pinned Python 3.12 image. What
+817bf75; on the pinned Python 3.12 image. An eleventh, `57470744`, is the same
+notebook's **version 41**, code `963b7fb`: as the tenth, with each choice a
+collision turned named among what it was built from — the return that collided,
+and the thought once its id came back (`built_after`) — the prior item about the
+world's things recalled, a mismatch on recalled data scarred as its own, and
+dil-core's checker reading §13.4 by the cycle a scar happened in. What
 each scored, and what the run did, is in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 

@@ -7726,3 +7726,11 @@ datum scarred as its own and the comments corrected): `COMPLETE`; 15 of 183 leve
 0.4892 — the scorecard version 40's, and every choice in all 25 stores the same, step,
 act and why. All 25 stores verify under dil-core's verifier. Version 40's unpacked
 stores were removed; its `stores.tar.gz` is kept.
+
+#### Submitted: version 41, code `963b7fb` (Plone)
+
+Submission `57470744`, 07:03 UTC: `dil-arc3-learning` version 41 — grid, S2b, attention,
+600 cycles, four at once; turned choices relinked to their thoughts, recalled data
+scarred as their own, the world's prior recalled. Its Save & Run: 15 of 183 levels,
+0.489, all 25 stores verifying under dil-core. Nothing is pushed to Kaggle until it is
+scored.
