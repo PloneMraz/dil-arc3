@@ -18,25 +18,29 @@ STORE_DIR is a game's store (the folder holding `store/event-log` and
 
 from __future__ import annotations
 
-import glob
 import json
 import re
 import sqlite3
 import sys
 from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
+from dil.store.event_sink import read_jsonl_sink  # noqa: E402 — the segments in chain order
 
 
 def main(root: str) -> None:
     store = root.rstrip("/") + "/store"
     built: dict[str, list] = {}
     scars: set[str] = set()
-    for f in sorted(glob.glob(store + "/event-log/*.jsonl")):
-        for line in open(f):
-            r = json.loads(line)["record"]
-            if r.get("form") == "scar" and r.get("datumId", "").startswith("signal-"):
-                scars.add(r["datumId"])
-            for w in (r.get("activity") or {}).get("written", []):
-                built[w["datumId"]] = w.get("builtFrom", [])
+    # In chain order: a log past one segment's size goes on in `…-002.jsonl`,
+    # which a sort by name puts first, and a datum's last line would be lost.
+    for r in read_jsonl_sink(store + "/event-log"):
+        if r.get("form") == "scar" and r.get("datumId", "").startswith("signal-"):
+            scars.add(r["datumId"])
+        for w in (r.get("activity") or {}).get("written", []):
+            built[w["datumId"]] = w.get("builtFrom", [])
     con = sqlite3.connect(store + "/memory/data.sqlite")
     data = {k: json.loads(v) for k, v in con.execute("SELECT k, v FROM data")}
 
