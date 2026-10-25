@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Expect, Collide, Revise</title>
+<style>
+  @page { size: A4; margin: 20mm 20mm 22mm 20mm; }
+  :root { --ink: #1d1d1d; --muted: #555; --rule: #cfc8b8; --accent: #8c2f1b; --green: #2f5527; }
+  html { font-family: "DejaVu Serif", Georgia, "Times New Roman", serif; font-size: 10.5pt; color: var(--ink); line-height: 1.42; }
+  body { margin: 0; background: #fff; }
+  h1 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 21pt; line-height: 1.18; margin: 0 0 4pt; }
+  .subtitle { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11.5pt; color: var(--muted); margin: 0 0 10pt; }
+  .author { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; margin: 0 0 14pt; }
+  h2 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 13pt; margin: 16pt 0 5pt; break-after: avoid; }
+  h3 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; margin: 11pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
+  .abstract { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 7pt 0; margin: 0 0 8pt; }
+  .abstract p { margin: 0; }
+  code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 8.8pt; }
+  figure { margin: 10pt 0; break-inside: avoid; }
+  figure img { width: 100%; }
+  figcaption { font-size: 9pt; color: var(--muted); margin-top: 3pt; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.6pt; margin: 6pt 0 4pt; break-inside: auto; font-family: "DejaVu Sans", Arial, sans-serif; }
+  th, td { border-bottom: 1px solid #e3ddcf; padding: 2.5pt 4pt; vertical-align: top; text-align: left; }
+  th { border-bottom: 1.5px solid #999; font-weight: bold; }
+  tr { break-inside: avoid; }
+  .tcap { font-size: 9pt; color: var(--muted); margin: 8pt 0 0; font-family: "DejaVu Sans", Arial, sans-serif; break-after: avoid; }
+  ol, ul { margin: 0 0 6pt 16pt; padding: 0; }
+  li { margin: 0 0 2pt; }
+  .todo { background: #fff3a8; padding: 0 2pt; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9pt; }
+  .note { border: 1px dashed #c9a400; background: #fffbe0; padding: 6pt 8pt; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9pt; margin: 0 0 12pt; }
+  blockquote { margin: 6pt 14pt; color: #333; font-style: italic; }
+  .refs p { text-align: left; font-size: 9pt; margin-bottom: 3pt; }
+</style>
+</head>
+<body>
+
+<div class="note">Draft for review — removed before publishing. Yellow marks what waits for the submission's hidden score (Plone settles which submission the paper names: <code>57623232</code>, <code>dil-arc3-history</code> version 1, as drafted here; else version 41, <code>57470744</code>). Every number is from <code>LOG.md</code> and <code>paper/TABLES.md</code>; the evidence numbers are <code>dil-arc3-history</code> version 1's stores.</div>
+
+<h1>Expect, Collide, Revise: Learning Without a Reward Function, Every Step on the Record</h1>
+<p class="subtitle">The DIL protocol on ARC-AGI-3 — a report on submission <span class="todo">[[57623232]]</span></p>
+<p class="author">Plone Mraz · independent researcher, Vietnam · code: notebook <code>plonemraz/dil-arc3-history</code>; protocol and reference implementation: github.com/PloneMraz/dil-core</p>
+
+<div class="abstract"><p><b>Abstract.</b> We built an agent that learns each ARC-AGI-3 game with no reward function. Before every action it expects what the game will return; when the return differs, the mismatch is recorded as a collision, and the collision turns what it does next. Every expectation, collision, thought and choice is a datum that names what it was built from, in an append-only, hash-chained event log, following the DIL protocol. The question is not how high the agent scores but whether a third party can read back, from the log alone, what it knew at each step and why it acted. On the 25 public games the submitted code's logs hold 1,111 chains a reader can follow from a collision to the thought and the choice it turned; all 1,735 turned choices name the collision behind them, and all 25 logs verify under the protocol's reference verifier. The agent also reads its own history: 2,589 times it read the log for collisions that had come before, and 1,313 times for the steps it had taken, each read itself recorded. The submission scores <span class="todo">[[score]]</span> on the leaderboard, against 0.02 and 0.06 for a random agent; the score is low, and we say why.</p></div>
+
+<h2>1. Introduction</h2>
+<p>ARC-AGI-3 scores an agent by how few actions it needs against a human, on games it has never seen. Whatever the agent knows of a game it must learn while playing it, and every action spent learning is counted. The common way to learn by acting is to maximise a reward. We take another, older one: the agent expects, the world answers, and where the answer differs from the expectation, the difference is what the agent learns from — not a score to raise or lower, but data that changes what it does next.</p>
+<p>A second requirement shapes everything else. An agent that changes itself from its own experience is hard to trust unless the change can be inspected. Our question is therefore whether a third party, holding only the agent's record, can read back what the agent knew at each step, what contradicted it, and why it acted as it did — and can check that the record was not rewritten. An agent may misread and revise its memory; it may not rewrite the record of what happened.</p>
+<figure>
+  <img src="figures/figure1-loop.png" alt="Figure 1: the loop">
+  <figcaption>Figure 1. The loop. The game returns a frame; the host's sensory organs take it in and compute nothing; every datum passes the eight layers T1–T8 under a global field; at T5 the mind compares the return with what it expected and commands; the host's effectors carry the command out. An onlooker in the world remarks on how the agent behaves. The store is the agent's history: its memory, <code>[data]</code>, which it revises, and the record, <code>[event]</code>, which it only reads.</figcaption>
+</figure>
+<p>This paper reports on one submission, and it makes four contributions:</p>
+<ol>
+  <li>An agent whose beliefs, refutations, thoughts and choices are data with provenance, in a hash-chained log that a verifier and a conformance checker read without the agent's help (sections 2–5).</li>
+  <li>A learning mind that names no task, with a replaceable model inside it: the same mind and loop serve another model or another environment (section 3).</li>
+  <li>What the log shows of the agent's play: where its actions went, why a collision turns it, why two individuals of the same agent part, and why changes made before an agent's first success did not carry from the public games to the hidden ones (sections 5–7).</li>
+  <li>A ledger of the ideas that failed, each with its measurement (section 7).</li>
+</ol>
+
+<h2>2. The DIL protocol, in brief</h2>
+<p>DIL (Data Integration Loop) is a protocol for an agent that runs as a closed loop over a region it interacts with, learns from collisions with what it expected, and leaves a trace a third party can audit. It is specified in two public documents — a conceptual specification and a normative protocol (version 0.3.9) — and implemented in TypeScript as <code>dil-core</code>, the reference implementation; the agent described here carries a Python port of it, kept in step and checked against it.</p>
+<h3>2.1 Layers, field and invariants</h3>
+<p>Every datum the agent meets passes eight layers on a one-directional meaning channel: T1 (activity and environment), T2 (agency: was this change self-written or pushed by the environment?), T3 (channels and queries), T4 (binding to a source), T5 (temporal expectation), T6 (Others), T7 (absence: what failed to come back) and T8 (appraisal and response). Beside the meaning channel runs a global modulatory field, GLOB-MOD, here with three axes — trust, alertness, exploration — to which every layer contributes votes and which every layer reads as background; it carries how to read, never what is read. Eight invariants hold the loop to its form: among them, meaning is relational (INV-4: no layer assigns meaning to a signal in isolation), history accrues and is never loaded (INV-5), every change is classified as self-written or environment-pushed before it is interpreted (INV-6), and the appraisal step may not draw its criteria from the state being edited (INV-8). A violated invariant halts the loop.</p>
+<h3>2.2 The store: memory and record</h3>
+<p>The whole store is the agent's history, and DIL draws one boundary inside it. What the agent has learned — its hypotheses, its experiences, what it expects — is <code>[data]</code>, its memory, and it may revise it. What happened to it — each observation that arrived, each command, each collision, and what every belief was built from — is <code>[event]</code>: the loop only appends to it, and the agent may read it but never alter it.</p>
+<blockquote>An agent can be wrong about its past. It must not be able to rewrite the past to prove itself right.</blockquote>
+<p>Every agent accumulates bias: interpretations harden into beliefs, failures are explained away, contradictions forgotten. The moment an agent can rewrite the record of how it came to its mind, it can manufacture a past in which it was never wrong. The hash chain (each line carries the SHA-256 of its sequence number, the previous line's hash, its schema version and its record) does not make a rewrite impossible; it makes one visible to anyone who checks the chain against a head published beyond the agent's reach. Human history is written after the fact, by those who keep it, and read through each reader's lens. This record is not free of bias, but its bias is of another kind: written as things happen, by a rule declared before the run, it keeps every failure as faithfully as every success, marks what the agent said of itself apart from what the world returned, and stays the same from one reader to the next — so where two readers disagree, they can return to the same record and check.</p>
+<p>Concretely, a store holds a manifest (the run's declared constants, so a reader can re-appraise the trace under the law that governed it), a line for every datum's exit from every layer, every provenance move, every emission, every expectation (with what it was held by), every scar — a <i>ResistEvent</i>, carrying what was expected and what returned — every revision of a datum, every read of memory and of the record, and a seal per cycle naming the data admitted and written, each written datum with the ids it was built from. A scarred datum moves <code>running → scar</code>, and returns to <code>running</code> when it is used again: a datum never rests as a conclusion.</p>
+<h3>2.3 Conformance</h3>
+<p>The protocol's §13 lists criteria a third party checks from the trace: invariants (C1), host conditions (C2), the loop (C3), the self (C4), resistance (C5), the store (C6) and failure signals (C7). <code>dil-core</code> ships the verifier (the chain) and the checker (the criteria) as a command-line tool; both read a store directly. C4 is partial by design — the protocol forbids an implementation to claim its own continuity, which is a third party's to say — and C2 cannot be checked from disk.</p>
+
+<h2>3. The agent</h2>
+<h3>3.1 Four roles</h3>
+<p>The agent is one whole, built in four roles that are not interchangeable. <b>DIL</b> is the mechanism by which it runs; it acts on nothing. The <b>host</b> is the container: its sensory organs take in what the game returns, its effectors carry out the mind's command, and it computes nothing from what it takes in. The <b>mind</b> is the thinking: it expects, is curious, wants, and chooses; its <b>model</b> is the part that computes for it, and can be replaced. The self, in DIL's terms, is not a part at all but what the loop produces as it runs. One line is never crossed: <i>the mind acts on nothing; it commands, and the host carries the command out through its effectors</i>. The command is T5's <i>test</i> — an action pushed to the region to see whether the return matches the expectation just built — and what judges it is the region's return, never the mind.</p>
+<h3>3.2 Learning without a reward</h3>
+<p><b>Experience.</b> Each step — the state before, the act, the state after, and what the game reported of itself — is kept as an experience, a datum revised in place as it is met again. What an experience says is the mind's own expectation: the act there gives what it gave.</p>
+<p><b>Hypotheses are data.</b> What an experience suggests beyond itself, the model states as a hypothesis — here, a grid inducer: a cell rewritten, nothing changed, the level's aim reached by an act; once the aim has come, a thing moved, blocked, or moved into a colour. Each is written as a datum built from the step it came from.</p>
+<p><b>Expecting.</b> Before each act the mind expects, from the experiences and hypotheses that apply, the one right at the highest rate, (right + 1) / (tried + 2), held only while it has been right more often than wrong; that datum is what the expectation <i>is</i> (its <code>held_by</code>). Where nothing it knows applies, it expects the game to be otherwise than it was — the act was commanded to learn something — so silence too can collide. Every state is expected as the mind reads it: a ticking clock is not read, and so collides with nothing.</p>
+<p><b>Collision.</b> When the return differs, the return and every datum the expectation rested on move to <code>scar</code>, each with its own scar record. A mismatch is never a penalty: no count of collisions is kept or sought.</p>
+<p><b>A collision turns the mind.</b> The mind thinks on what collided and writes the thought, built from the return: a silence turns it away from that kind of act, an answer other than foreseen turns it toward where the answer differed, an end of the game turns it away from what led there. The turn holds for as many choices as the field's alertness says (two at neutral), and every choice it turns says so in its reason and names the return and, once its id has come back, the thought.</p>
+<p><b>Curiosity and the aim.</b> Untried, the mind wants an act by how often that kind of act reached a state not met before. Reaching a level's aim is an experience too: the model says what brings it, the mind holds that as a hypothesis weighed by the game's report, and goes where a held one says an act brings the aim. With attention (an option, used in the submission), how much an act is wanted is read from what it did in the situations most like the present one.</p>
+<p><b>The field.</b> The mind votes on the field like every layer — on exploration, whether the game came where it had not stood; on trust, whether what its memory named was borne out — and reads it in whole counts: how sure it must be before it expects, how long a turn holds, how far it looks ahead. The field carries its history across cycles (about twenty cycles' memory), so an individual born in another field acts otherwise.</p>
+<p><b>Reading its own history.</b> The mind reads <code>[event]</code> through a view open to it every cycle — a link, not a switch — and each read is recorded by the place of the records in the chain. It reads it two ways. On a collision that turns it, it reads the game's scars on that source: each scar whose return collided the same way, in the same situation, by the same kind of act, holds the turn one choice longer, and the thought names those scars as <code>event:&lt;seq&gt;</code>. And the recent steps by which it weighs the onlooker's word are read from the seals of the latest cycles and from memory, not from what the mind kept for itself; its answer names the records it read. <span class="todo">[[this paragraph holds for 57623232; with version 41 it goes]]</span></p>
+<h3>3.3 An Other</h3>
+<p>An onlooker stands in the world, outside the agent: a separate piece of code that sees the agent's acts (as opaque tokens) and the moments without one, knows no game, and says what it sees — "repeating", "back-and-forth", "standing still". Its word reaches the mind as a collision, never as an instruction. The mind expects the onlooker to say what it said, or, once answered, to stop; a remark that comes otherwise collides. Told once that it repeats an act whose every step reached a new state, the mind keeps on and writes why; told again, it objects, and puts the named act behind every other.</p>
+<h3>3.4 Neutral learning, replaceable model</h3>
+<p>The learning names no environment: no grid, colour, click, clock or level appears in it. An act is opaque to the mind; what an act is, whether the game offers it and how it is written are asked of the host's organs, and what a state is, of the model. Another model — a language model writing predictive programs was tried — plugs into the same seat; another environment needs another host and model, not another mind.</p>
+<h3>3.5 On Kaggle</h3>
+<p>The submission is a CPU notebook with no network: the agent ships whole, with no model weights. One scorecard, each game made on it once; each game runs in a process of its own, four at once, 600 cycles a game, a deadline nine hours less twenty minutes after the start. The loop is deterministic: the same code chooses the same act, step for step, on this machine and on Kaggle.</p>
+
+<h2>4. A chain the reader can check</h2>
+<p>Kaggle shows no log of a scored run; the evidence is the submitted code's Save &amp; Run on the 25 public games, whose stores are published with the notebook. Each cycle leaves in <code>[event]</code> the path of every datum through the layers, what entered, what was scarred, what the mind read, and each datum it wrote with the ids it was built from.</p>
+<figure>
+  <img src="figures/figure2-chain.png" alt="Figure 2: the lp85 chain">
+  <figcaption>Figure 2. One chain in lp85, each box a record a reader finds by its id in the published store.</figcaption>
+</figure>
+<p>Figure 2 is one chain from lp85, where the agent finished the first level in its human baseline's 17 actions. A click at (37, 20), expected to change the game, returns it unchanged: the return <code>signal-9-0</code> is scarred. The thought <code>written-9-0</code> records the silence and turns the mind away from that kind of act. The next choice, <code>written-9-3</code>, clicks at (5, 32) and says so in its reason — "not yet taken from here; turned from what was silent" — built from the return, and, once the thought's id came back in cycle 10, revised to name it (<code>built_after</code>). The experience <code>written-9-2</code> now holds that the click there changes nothing; that is what the mind expects of it from then on. The next return, <code>signal-10-0</code>, comes as expected, and nothing collides. (The click at (37, 20) is not met again in that run.)</p>
+<h3>4.1 Across the 25 games</h3>
+<table>
+  <tr><th>What the stores hold (25 games, 600 cycles each)</th><th>Count</th></tr>
+  <tr><td>collisions of the game's frame (scars)</td><td>2,715</td></tr>
+  <tr><td>chains of a scar, the thought it set off and the choice it turned, all built from the same return</td><td>1,111</td></tr>
+  <tr><td>… whose next return came as expected</td><td>716</td></tr>
+  <tr><td>… whose act was met again where it had collided (an expectation held by that act's experience)</td><td>56, of them 42 as expected every time</td></tr>
+  <tr><td>choices a collision turned; each built from the return that collided</td><td>1,735; 1,735</td></tr>
+  <tr><td>… naming the thought's id (the other two: each game's last choice, its id awaited when the run stopped)</td><td>1,733</td></tr>
+  <tr><td>collisions that turned the mind; the record said came before</td><td>2,636; 167 (turns held 215 choices longer)</td></tr>
+  <tr><td>reads of the record: for collisions; for the recent steps</td><td>2,589 (36,541 records); 1,313 (43,466)</td></tr>
+  <tr><td>thoughts and choices naming a record read (<code>event:&lt;seq&gt;</code>)</td><td>1,480 and 92 (25,858 ids)</td></tr>
+</table>
+<p>All 25 logs verify under <code>dil-core</code>'s verifier. Its checker passes C1 (invariants), C3 (loop), C5 (resistance) and C6 (store) in all 25; C4 is partial by design; C7 (resistance-source diversity) fails in six — cd82, dc22, g50t, ls20, m0r0, sc25 — where the agent never looked stuck and the onlooker therefore never spoke, leaving the frame as the only source of resistance. We leave that failure visible rather than arrange a second source.</p>
+<h3>4.2 Two individuals of one agent</h3>
+<p>Because the field carries its history and the mind reads it in counts, the same agent born in a different field is a different individual, and the log shows where they part. Measured on version 41's code over eleven games: born neutral, 1.106; born doubting, alert and exploring, 1.016; born trusting, calm and consolidating, 1.150; alone, with no onlooker, 1.040 (the eleven games' offline score). In tu93 the doubting and the trusting individuals part at step 72: a silence at step 71 turns both away from the same act; at step 72 the first is still turned and the second no longer is — the turn's hold is one of the counts each reads of its field — and over the run they choose alike at only 213 of 599 steps. In m0r0 the agent with the onlooker and the agent alone part at step 71 the same way: the onlooker's earlier remarks had moved the field, and with it the hold; with the onlooker the agent reached the level in far fewer actions (0.80 against 0.19). <code>scripts/differ.py</code> finds such a parting from two stores alone.</p>
+<h3>4.3 How to check</h3>
+<p>Every count above is computed from the stores alone (the scores, from each run's scorecard): <code>dil verify</code> and <code>dil conformance</code> (<code>dil-core</code>'s tool) for the chain and the criteria; <code>scripts/chains.py</code> for the chains, <code>scripts/thoughts.py</code> for turned choices and their thoughts, <code>scripts/differ.py</code> for two individuals. None reads the run's own report.</p>
+
+<h2>5. Results</h2>
+<p class="tcap">Table 1. Every submission: the leaderboard (hidden games) and the Save &amp; Run on the 25 public games (levels of 183; score).</p>
+<table>
+  <tr><th>Submission</th><th>Notebook, version</th><th>What it is</th><th>Leaderboard</th><th>25 public</th></tr>
+  <tr><td>56462757</td><td>starter kit</td><td>the starter's random agent</td><td>0.02</td><td>—</td></tr>
+  <tr><td>56600038</td><td>gateway probe</td><td>the random agent on this agent's road</td><td>0.06</td><td>—</td></tr>
+  <tr><td>56588469</td><td>dil-arc3-run 12</td><td>a language model in the learning's place, 60 cycles</td><td>0.00</td><td>—</td></tr>
+  <tr><td>56623380</td><td>dil-arc3-learning 5</td><td>the learning mind, no weights</td><td>0.05</td><td>—</td></tr>
+  <tr><td>56658708</td><td>12</td><td>grid inducer, S2b, attention; the rerun ended early, cause unknown</td><td>0.00</td><td>—</td></tr>
+  <tr><td>56820389</td><td>18</td><td>attention; the clock read in rows and columns</td><td>0.26</td><td>15, 0.502</td></tr>
+  <tr><td>56887238</td><td>23</td><td>the store as the mind's memory; experiences as its expectation</td><td>0.25</td><td>13, 0.499</td></tr>
+  <tr><td>56934496</td><td>26</td><td>suspects: where the aim may lie, tested before it has come</td><td>0.02</td><td>15, 0.515</td></tr>
+  <tr><td>56983446</td><td>28</td><td>moves, blocks and into-aims, only once the aim has come</td><td>0.25</td><td>13, 0.514</td></tr>
+  <tr><td>57371259</td><td>35</td><td>collisions turn the mind; the field carries its history</td><td>0.26</td><td>16, 0.518</td></tr>
+  <tr><td>57443352</td><td>37</td><td>as 35, its stores verifying under dil-core's verifier</td><td>0.25</td><td>16, 0.491</td></tr>
+  <tr><td>57470744</td><td>41</td><td>as 37, each turned choice naming its return and thought</td><td>0.25</td><td>15, 0.489</td></tr>
+  <tr><td><b>57623232</b></td><td>dil-arc3-history 1</td><td>as 41, the mind reading its own history</td><td><span class="todo">[[score]]</span></td><td>15, 0.489</td></tr>
+</table>
+<p>The score is low. On the public games the described code completes 15 of 183 levels; its offline score, 0.489, comes almost entirely from three levels finished near or within the human baseline (lp85, r11l, tn36). Version 23's log showed where the actions go: 29% changed nothing — 2,341 untried acts the inducer did not foresee and 1,874 acts its hypotheses had foreseen would change nothing, tried last but never out of reach — and 17% were walks back to where something was left to try; every other level took 3 to 20 times the baseline. Before a level's aim first comes, the mind has nothing to go toward; it covers the game. Reading its history changed no score: on the 25 games the new submission chose otherwise than version 41 in six games and gained or lost no level in any; it ran about 17–20% longer.</p>
+
+<h2>6. Why a collision changes behaviour</h2>
+<p>The mechanism is simple enough to state as a causal chain, and the log holds each link. An expectation is a datum; the return is a datum pushed by the environment; their mismatch is recorded against both; the mind's thought is a datum built from the return; the next choice is built from the thought and says how it turned; the experience revised is what the mind will expect of that act there. Nothing in the chain is a reward: the mismatch does not make an act worse or better, it makes the mind think, and what it thinks is written. This is why behaviour can change without a reward function — and why every change is accountable: a change of behaviour with no collision behind it would show in the log as a choice that names no thought.</p>
+<p>The same mechanism explains why the agent's individuals differ and why its score barely moved across versions. Two individuals with the same experience part where a count they read of the field differs — a turn held one choice longer sends one elsewhere. And a change to the mind that acts before the first success at a level only reshuffles where the agent explores: it moves which levels are found early, not how efficiently they are played once understood.</p>
+
+<h2>7. What did not work, and why</h2>
+<p class="tcap">Table 2. One change at a time, on the 25 public games (levels of 183, offline score).</p>
+<table>
+  <tr><th>Version</th><th>What changed</th><th>Levels</th><th>Score</th><th>Kept</th></tr>
+  <tr><td>16</td><td>the clock in columns</td><td>12</td><td>0.477</td><td>—</td></tr>
+  <tr><td>18</td><td>attention; the clock rules; faster code</td><td>15</td><td>0.502</td><td>yes</td></tr>
+  <tr><td>19</td><td>the store as the mind's memory; synced once a cycle</td><td>15</td><td>0.502</td><td>yes</td></tr>
+  <tr><td>20</td><td>curiosity for things made (B1), C1, FORESEEN_LAW</td><td>15</td><td>0.488</td><td>no</td></tr>
+  <tr><td>21</td><td>S2b, C1, FORESEEN_LAW</td><td>13</td><td>0.364</td><td>no</td></tr>
+  <tr><td>22</td><td>B1, C1, no FORESEEN_LAW</td><td>13</td><td>0.430</td><td>no</td></tr>
+  <tr><td>23</td><td>S2b, C1; experiences as the mind's expectation</td><td>13</td><td>0.499</td><td>yes</td></tr>
+  <tr><td>24</td><td>P1: a blocked hypothesis for an act that takes no place</td><td>12</td><td>0.499</td><td>no</td></tr>
+  <tr><td>25</td><td>an object-centred inducer, first form</td><td>12</td><td>0.457</td><td>no</td></tr>
+  <tr><td>26</td><td>suspects</td><td>15</td><td>0.515</td><td>no (hidden 0.02)</td></tr>
+  <tr><td>28</td><td>moves and into-aims once the aim has come</td><td>13</td><td>0.514</td><td>yes</td></tr>
+  <tr><td>30</td><td>silence collides; a collision turns the mind; the field reaches it</td><td>14</td><td>0.513</td><td>yes</td></tr>
+  <tr><td>32</td><td>T1: each command tests what memory is least sure of</td><td>13</td><td>0.379</td><td>no</td></tr>
+  <tr><td>33</td><td>T1c</td><td>12</td><td>0.255</td><td>no</td></tr>
+  <tr><td>34</td><td>the report's collisions thought on; what an act did where it stood alike expected again; the mind's vote on trust</td><td>16</td><td>0.519</td><td>yes</td></tr>
+  <tr><td>35</td><td>the field's carry and the counts following it</td><td>16</td><td>0.518</td><td>yes</td></tr>
+  <tr><td>37</td><td>acts opaque to the mind; an act never taken never foreseen; the log's hash as dil-core's</td><td>16</td><td>0.491</td><td>yes</td></tr>
+  <tr><td>38</td><td>object inducer, a move said only once seen three times</td><td>15</td><td>0.500</td><td>no</td></tr>
+  <tr><td>39</td><td>object inducer, a thing known by its colours</td><td>14</td><td>0.486</td><td>no</td></tr>
+  <tr><td>40, 41</td><td>turned choices relinked to their thoughts; the world's prior recalled</td><td>15</td><td>0.489</td><td>yes</td></tr>
+  <tr><td>history 1</td><td>the mind reads its own history</td><td>15</td><td>0.489</td><td>yes</td></tr>
+</table>
+<p class="tcap">Table 3. Ideas measured and not kept.</p>
+<table>
+  <tr><th>Idea</th><th>Measured on</th><th>Result</th><th>Against</th></tr>
+  <tr><td>Of acts all foreseen, the one foreseen least surely first</td><td>25 games</td><td>13 levels, 0.364 (with C1)</td><td>15, 0.502</td></tr>
+  <tr><td>A ladder of looser aim hypotheses</td><td>6 games</td><td>no level more; one borne out once, refuted 195 times</td><td>—</td></tr>
+  <tr><td>A blocked hypothesis for an act that takes no place</td><td>25 games</td><td>12, 0.499</td><td>13, 0.499</td></tr>
+  <tr><td>Try an act by the chance a way ends otherwise</td><td>ls20, tu93</td><td>ls20's level in 564 actions; tu93 0.283</td><td>342 actions; 0.571</td></tr>
+  <tr><td>An object-centred inducer, first form</td><td>25 games</td><td>12, 0.457</td><td>13, 0.499</td></tr>
+  <tr><td>Suspects: where the aim may lie, tested before it comes</td><td>hidden games</td><td>0.02</td><td>0.25</td></tr>
+  <tr><td>Near at a step's scale (for suspects)</td><td>6 games</td><td>0.502</td><td>0.578</td></tr>
+  <tr><td>An end as an experience</td><td>6 games</td><td>0.571</td><td>0.569, no level more</td></tr>
+  <tr><td>A repeated remark objected to everywhere</td><td>10 games</td><td>every level the same</td><td>—</td></tr>
+  <tr><td>Foreseen acts ordered by doubt</td><td>10 games</td><td>tn36's level lost</td><td>33 actions</td></tr>
+  <tr><td>After the aim, toward what is like where it came from</td><td>10 games</td><td>every level and action the same</td><td>—</td></tr>
+  <tr><td>Moves mirrored to the other three directions</td><td>10 games</td><td>every level and action the same</td><td>—</td></tr>
+  <tr><td>Moves per thing</td><td>10 games</td><td>every level and action the same</td><td>—</td></tr>
+  <tr><td>T1, five versions: commands as tests of the least sure expectation</td><td>25 games</td><td>13, 0.379 (T1); 12, 0.255 (T1c)</td><td>14, 0.513</td></tr>
+  <tr><td>A language model writing <code>predict</code> programs</td><td>1–3 games</td><td>right about one step in eleven; no level</td><td>—</td></tr>
+  <tr><td>The object inducer, steps 3–4</td><td>25 games</td><td>15, 0.500; 14, 0.486</td><td>16, 0.491</td></tr>
+</table>
+<p><b>The lesson is one of theory.</b> Before its first success at a level, a change to the mind only moves where it explores, and the public games did not foretell the hidden ones. The sharpest case is "suspects" — testing where a level's aim might lie before it has ever come: it reached the most levels on the public games (15, 0.515) and scored 0.02 hidden, against 0.25 for the version it changed. A scored run's log is not shown, so the cause is not established; the likely one is that the public score rests on three early levels, and a change that acts from the first step can lose such levels in hidden games. Since then, the inducer's laws of things — moves, blocks — apply only once a level's aim has come, so that what earned the first levels is not moved; the four hidden scores since have stayed at 0.25–0.26.</p>
+
+<h2>8. Limits</h2>
+<ul>
+  <li><b>Accuracy is low</b>, and we do not dress it up: three levels near the human baseline carry the public score.</li>
+  <li><b>C7 fails where the agent never looks stuck.</b> The onlooker speaks only when it judges the agent stuck, so an agent that keeps varying its moves meets one source of resistance, the frame. A second source would have to be a real one.</li>
+  <li><b>Writing is data.</b> What the mind writes comes back into the loop as the store's arrivals and moves the field a little: naming each thought in the choice it turned moved nine games of eleven slightly.</li>
+  <li><b>A run that stops at its cycle budget</b> leaves its last choice awaiting the ids it was to be built from.</li>
+  <li><b>The record's reach is bounded.</b> A read of the record goes back at most 4,096 records (about forty cycles here); what lies further stays on disk for a third party. Reading the record costs time: up to about 18% in the games with the most collisions.</li>
+  <li><b>The verifier is the protocol's own reference implementation</b>, not an independent one; the hash chain detects a rewrite only against a head anchored outside the agent's reach.</li>
+  <li><b>The inducer is thin</b>: it lacks things that move together, mirrored behaviour and hidden state; the field's axes keep narrow bands, and trust stays high wherever memory is mostly right, so it tells games apart little.</li>
+</ul>
+
+<h2>9. Conclusion</h2>
+<p>The agent does not learn ARC-AGI-3 well. What it shows is that learning without a reward can be complete in its accounting: every belief it formed, every refutation it met, every thought and every changed choice can be read back from the record and checked by someone who does not trust it, and the record says where the agent was wrong as faithfully as where it was right. The mind names no task; another model, or another environment, plugs into the same loop and keeps the same record.</p>
+
+<h2>Reproducing</h2>
+<p>The notebook <code>plonemraz/dil-arc3-history</code> (version 1) builds and runs the agent offline on the public games and writes every store; Save &amp; Run reproduces every choice, step for step (the loop is deterministic; the records' wall-clock times, and so the hashes, differ from run to run). The protocol (v0.3.9), the specification and the verifier are public at github.com/PloneMraz/dil-core. The agent's repository is published after the competition.</p>
+
+<div class="refs">
+<h2>References</h2>
+<p>[1] P. Mraz. DIL — Data Integration Loop: protocol v0.3.9, and the specification it derives from (v9). github.com/PloneMraz/dil-core, 2026.</p>
+<p>[2] ARC Prize Foundation. ARC-AGI-3 and the RHAE score; competition rules and toolkit. arcprize.org, kaggle.com/competitions/arc-prize-2026-arc-agi-3, 2026.</p>
+</div>
+
+</body>
+</html>

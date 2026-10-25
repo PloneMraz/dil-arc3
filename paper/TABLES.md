@@ -23,6 +23,7 @@ a game, four at once.
 | `57371259` | 35 | `b4d7d5a` | collisions turn the mind; the field carries its history (B1) and the counts follow it (B2) | 0.26 | 16, 0.518 |
 | `57443352` | 37 | `9fcaafc` | as 35, its stores verifying under dil-core's verifier | 0.25 | 16, 0.491 |
 | `57470744` | 41 | `963b7fb` | as 37, each turned choice naming its return and its thought | 0.25 | 15, 0.489 |
+| `57623232` | `dil-arc3-history` 1 | `e04c515` | as 41, the mind reading its own history (protocol v0.3.9) | pending | 15, 0.489 |
 
 [LOG: "v12 scored: 0.00", "The gateway probe scored 0.06", "Learning notebook version 5
 scored: 0.05", "Submission `56658708` scored 0.00", "Version 18 …", "Submission `56820389`
@@ -119,3 +120,22 @@ again, on version 41's code"]:
 - individuals: I0 1.106, I1 1.016, I2 1.150, A1 (no Other) 1.040 on eleven games; the
   field's chain (tu93, I1 and I2 part at step 72 by the turn's hold); the Other's chain
   (m0r0, I0 and A1 part at step 71, through the field the onlooker had moved).
+
+## The evidence on `dil-arc3-history` version 1's stores (the paper's draft uses these)
+
+From its 25 stores [LOG: "`dil-arc3-history` version 1 (Save & Run) …", "Corrected:
+'met the act again' …", "thoughts.py reads the log's segments in chain order"]:
+
+- all 25 verify under dil-core's verifier; dil-core's checker: §13.1, §13.3, §13.5,
+  §13.6 pass in all 25, §13.4 partial, §13.2 not verifiable from disk, §13.7 fails in
+  six (cd82, dc22, g50t, ls20, m0r0, sc25);
+- 2,715 frame scars; 1,111 chains; 716 met the next return as expected; 56 met the act
+  again where it collided, 42 of them as expected every time;
+- 1,735 turned choices, every one built from the return that collided, 1,733 naming the
+  thought (the other two, r11l's and sb26's last choices, awaiting);
+- reading its history: 2,636 turning collisions, 167 the record said came before (holds
+  +215 choices); 2,589 reads for `collisions` (36,541 records), 1,313 for `evidence`
+  (43,466); 1,480 thoughts and 92 choices name records read (25,858 `event:<seq>`);
+- against version 41: choices part in six games (bp35, lf52, r11l, s5i5, su15, tn36),
+  no score moves; the notebook 3,985 s against 3,325;
+- Figure 2's chain is the same record for record in both runs (lp85 does not part).

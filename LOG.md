@@ -8041,3 +8041,18 @@ click at (5, 32), the turn held 2 choices, the expectation of `signal-10-0` had
 delta 0. The Writeup now holds both figures; counted strictly — every word after
 the title, headings and table cells included, image links and table rules not —
 1,476 words.
+
+#### The paper's first full draft (PDF)
+
+`paper/paper.html`, printed to `paper/paper.pdf` with headless Chrome (A4, 11 pages
+with the draft's note): abstract; introduction with Figure 1; DIL in brief (layers,
+field, invariants; the store as history, memory and record, with dil-core's
+paragraph on why `[event]` is only appended to; conformance); the agent (four
+roles, learning without a reward, reading its own history, the onlooker, neutral
+learning, how it plays on Kaggle); the chain a reader can check (Figure 2, the
+counts, two individuals, how to check); results (Table 1); why a collision changes
+behaviour; what did not work (Tables 2 and 3, and the lesson of suspects); limits;
+conclusion; reproducing; references. Drafted on `dil-arc3-history` version 1's stores
+(`paper/TABLES.md`, its new section); what waits for submission `57623232`'s hidden
+score is marked in yellow. The PDF's metadata: Title, Chrome's user agent and Skia
+— no author field.
