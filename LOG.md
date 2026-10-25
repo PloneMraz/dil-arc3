@@ -7940,3 +7940,27 @@ lines taking room in the view's 4,096. Corrected on the way: a scar record does
 carry content — the ResistEvent's `expected` and `received` and the scarred
 datum's payload (about 25 KB each in these stores) — where I had told Plone the
 log carried no grid.
+
+#### The two directions: store size, time, and the objects inducer (Plone asked)
+
+- **Store size.** `[event]` grows 0.2–0.8% a game with both directions (the
+  `read-record` lines: ls20 71.2 → 71.4 MiB, lp85 32.7 → 32.9); `[data]` not at all,
+  a read writing nothing there and the `event:<seq>` ids sitting in the seals. r11l's
+  store is smaller (89.3 → 51.9 MiB) because it takes another way from step 105,
+  not because of the reads.
+- **Time**, each game alone, one after another on this machine, grid, attention:
+
+  | | base | direction 1 | 1 + 2 |
+  |---|---|---|---|
+  | ls20, 300 cycles | 72 s | 81 s (+12.5%) | 82 s (+14%) |
+  | tu93, 600 cycles | 236 s | 276 s (+16.7%) | 279 s (+17.8%) |
+  | lp85, 600 cycles | 239 s | 241 s (+0.6%) | 246 s (+2.6%) |
+
+  The cost is direction 1's: each turning collision reads back up to 4,096
+  records and decodes the scars among them (about 75 KB each); tu93 turns 172
+  times, lp85 19.
+- **The objects inducer**, the eleven games, 600 cycles, base against both
+  directions: 1.09486 and 11 of 80 levels in both, every game's score the same;
+  the same three games choose otherwise (lf52, r11l, tn36), and direction 2 again
+  changes nothing. All 22 stores verify under dil-core's verifier; its checker fails
+  only cn04 (§13.7), in both runs alike. `[event]` grows 0.2–0.9%.
