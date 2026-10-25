@@ -197,7 +197,9 @@ now, in dil-core first and then here.
 1. **The store is read back.** §9 has the self accrue from scars. A scar
    returns to `running` when it is used again — an expectation it is, or a
    recall — and `[event]` records each `scar → running`. §10's
-   resistance-retrieval channel exists and is off by default: as a predictor it
+   resistance-retrieval channel is the record's view: open to the mind's rule
+   every cycle, never a switch, each read recorded (`read-record`, protocol
+   v0.3.9). Recollection, one law over it, is not the mind's: as a predictor it
    loses (6).
 2. **The field reaches every layer, and every layer reads it.** INV-7 has it
    reach every layer as background — "same data plus a different field yields

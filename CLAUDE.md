@@ -314,8 +314,11 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   trên event-log/ giống như data trong memory/"; protocol v0.3.8 §1, §9, and the
   specification v9). `[data]` (`store/memory/`) is its memory, and can be
   altered. `[event]` (`store/event-log/`) is the record of what happened to it,
-  only appended to and read: the agent may read it, and what it learns from it
-  is held in `[data]`; it never works on `[event]` as on `[data]`. What the mind
+  only appended to and read: the agent may read it — through the record's view,
+  open to the mind's rule every cycle, a link and never a switch (Plone,
+  2026-10-25; protocol v0.3.9, each read a `read-record` line, a datum built
+  from a record naming it `event:<seq>`) — and what it learns from it is held
+  in `[data]`; it never works on `[event]` as on `[data]`. What the mind
   learns, and each change in it, belongs in `[data]`; what its model computes
   from, it reads back from its memory (next).
 - **What its model computes from, the mind reads from its memory** (Plone,
@@ -733,8 +736,11 @@ the eleven games the one that reached the most levels — declared, not measured
 beyond that; `run_game.py --field` starts the loop in a field of its own (an
 individual's disposition at birth) and `--field-carry` sets another carry; T7's
 `attention_span = 4.0`, scaled by the field; a commit every 12 scars, not dil-core's 9 (Plone, 2026-09-28: a
-commit is the costliest thing a cycle does); the resistance-retrieval channel (`recollection`) is not wired —
-the channel exists, off by default, and is not recommended as a predictor. T3
+commit is the costliest thing a cycle does); the resistance-retrieval channel is the
+record's view (protocol v0.3.9, `dil/loop/record_view.py`): open to the mind's
+rule every cycle, never a switch (Plone, 2026-10-25), each read a `read-record`
+line; recollection, one law over it, is not the mind's (as a predictor it loses:
+LOG.md). T3
 asks the store once per description while exploration is at NEUTRAL or below:
 re-asking returns the same data, and asking every cycle would crowd T2's
 matching window of 8. Leaning to explore, it asks again a description asked
@@ -851,7 +857,7 @@ scored better would work against the paper, not for it.
 4. When the six are met, the 25 games are run once, to confirm. Until then the
    25 are run on Kaggle by Save & Run to choose what to submit (LOG.md).
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.8.md` is 65 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.9.md` is 65 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their

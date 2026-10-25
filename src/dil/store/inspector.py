@@ -24,6 +24,7 @@ from .display_name import display_name, event_display_name
 from .event_log import ReadableEventLog
 from .resist_event import (
     ReadActivity,
+    ReadRecordActivity,
     RevisionActivity,
     CrystallizationActivity,
     CycleSealActivity,
@@ -114,6 +115,11 @@ def inspect_event_log(log: ReadableEventLog) -> str:
             lines.append(
                 f"  #{i}  [read] {r.datum_id} @T{r.issuing_layer} for {r.purpose}: "
                 f"{len(r.read)} datum(s) (c{r.cycle_mark}) {_clock(r.t)}"
+            )
+        elif isinstance(r, ReadRecordActivity):
+            lines.append(
+                f"  #{i}  [read-record] {r.datum_id} @T{r.issuing_layer} for {r.purpose}: "
+                f"{len(r.records)} record(s) (c{r.cycle_mark}) {_clock(r.t)}"
             )
         elif isinstance(r, CrystallizationActivity):
             lines.append(

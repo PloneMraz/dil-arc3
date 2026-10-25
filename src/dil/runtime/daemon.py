@@ -77,7 +77,7 @@ class Daemon:
 
     __slots__ = (
         "_host", "_source", "_layers", "_glob", "_initial_emission", "_now",
-        "_respond", "_recollection", "_admit", "_commit_on_write", "_sync_cadence",
+        "_respond", "_admit", "_commit_on_write", "_sync_cadence",
         "_fixture_data", "_fixture_events", "_commit_every", "_diversity",
         "_commits", "_chain_head", "_recover_from",
         "_cycle", "_data", "_events", "_requisitioned",
@@ -100,12 +100,10 @@ class Daemon:
         commit_every: int | None = None,
         recover_from: str | None = None,
         respond: RespondPolicy | None = None,
-        recollection: Any = None,
         admit: AdmitPolicy | None = None,
         commit_on_write: bool = True,
         sync_cadence: str = SYNC_CADENCE,
     ) -> None:
-        self._recollection = recollection
         # SYNC_CADENCE (store/decisions.py; dil-core c6b8f30): "cycle" syncs
         # `[data]` and `[event]` to disk once a cycle, at its close and before any
         # commit marker; "record", the default, each write.
@@ -253,7 +251,6 @@ class Daemon:
             now=self._now,
             resume=resume,
             respond=self._respond,
-            recollection=self._recollection,
             admit=self._admit,
         )
         self._running = True

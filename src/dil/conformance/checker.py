@@ -44,8 +44,10 @@ from ..store.resist_event import (
     ManifestRecord,
     ProvenanceActivity,
     ReadActivity,
+    ReadRecordActivity,
     RevisionActivity,
 )
+from ..store.event_log import record_seq
 from ..store.tags import TaggedDatum, invalid_open_tag_reason
 from .decisions import CONFORMANCE_DIVERSITY_WINDOW, CONFORMANCE_MIN_DISTINCT_SOURCES
 
@@ -294,6 +296,31 @@ def check_conformance(
     provenance_lines = [r for r in records if isinstance(r, ProvenanceActivity)]
     revisions = [r for r in records if isinstance(r, RevisionActivity)]
     reads = [r for r in records if isinstance(r, ReadActivity)]
+    record_reads = [r for r in records if isinstance(r, ReadRecordActivity)]
+    # Where each cycle's records begin in the chain (`seq`, a record's index in
+    # the log): what the log held before a cycle is what lies before that (v0.3.9).
+    cycle_begins: dict[int, int] = {}
+    for seq, r in enumerate(records):
+        if isinstance(r, ManifestRecord):
+            continue
+        c = (
+            r.anchor.cycle if isinstance(r, EventRecord)
+            else r.activity.cycle if isinstance(r, CycleSealActivity)
+            else r.cycle_mark
+        )
+        cycle_begins.setdefault(c, seq)
+
+    def held_before(seq: int, cycle: int) -> bool:
+        """v0.3.9: a record of the history the log held before `cycle`."""
+        return isinstance(seq, int) and 0 <= seq < cycle_begins.get(cycle, len(records))
+
+    def built_from_unseen(i: str, cycle: int) -> bool:
+        # v0.3.9: a record read is named `event:<seq>`, one the log held before
+        # the cycle that wrote.
+        seq = record_seq(i)
+        if seq is not None:
+            return not held_before(seq, cycle)
+        return i not in entered or entered[i] > cycle
     emissions = [r for r in records if isinstance(r, EmissionActivity)]
     crystallizations = [r for r in records if isinstance(r, CrystallizationActivity)]
     expectations = [r for r in records if isinstance(r, ExpectationActivity)]
@@ -876,7 +903,7 @@ def check_conformance(
                 (w, r.activity.cycle)
                 for r in cycle_seals
                 for w in r.activity.written
-                if any(i not in entered or entered[i] > r.activity.cycle for i in w.built_from)
+                if any(built_from_unseen(i, r.activity.cycle) for i in w.built_from)
             ),
             None,
         )
@@ -890,6 +917,13 @@ def check_conformance(
                 for i in r.read
                 if i not in entered or entered[i] >= r.cycle_mark
             ),
+            None,
+        )
+        # v0.3.9 §9 ("Reading the record"; dil-core c258f43): what was read of
+        # `[event]` was history — records the log held before the cycle that
+        # read them.
+        unrecorded = next(
+            ((r, seq) for r in record_reads for seq in r.records if not held_before(seq, r.cycle_mark)),
             None,
         )
         # v0.3.5 §9: every datum an expectation named as what it is shows its
@@ -951,7 +985,7 @@ def check_conformance(
             ),
             _claim(
                 "every datum the agent wrote says what it was built from, each a "
-                "datum whose entry the trace shows (§9)",
+                "datum whose entry the trace shows or a record the log held before (§9)",
                 "trace",
                 "fail" if unbuilt else "pass",
             ),
@@ -960,6 +994,12 @@ def check_conformance(
                 "cycle that read it (§9, v0.3.7)",
                 "trace",
                 "fail" if unremembered else "pass",
+            ),
+            _claim(
+                "every record read of `[event]` was in the log before the cycle that "
+                "read it (§9, v0.3.9)",
+                "trace",
+                "fail" if unrecorded else "pass",
             ),
             _claim(
                 "every datum an expectation was (held_by) shows its entry, and met "
@@ -1001,12 +1041,17 @@ def check_conformance(
             detail = (
                 f"datum {unbuilt[0].datum_id}, written at cycle {unbuilt[1]}, does "
                 "not say what it was built from, or names data with no recorded "
-                "entry (§9)"
+                "entry or a record the log did not hold before (§9)"
             )
         elif unremembered:
             detail = (
                 f"datum {unremembered[1]}, read at cycle {unremembered[0].cycle_mark}, "
                 "shows no entry in the trace before that cycle"
+            )
+        elif unrecorded:
+            detail = (
+                f"record #{unrecorded[1]}, read at cycle {unrecorded[0].cycle_mark}, "
+                "was not in the log before that cycle (§9, v0.3.9)"
             )
         elif unheld:
             detail = (

@@ -345,6 +345,27 @@ class ReadActivity:
     activity_kind: Literal["read"] = "read"
 
 
+@dataclass(frozen=True, slots=True)
+class ReadRecordActivity:
+    """A read of `[event]` (v0.3.9, §9 "Reading the record"; dil-core c258f43).
+
+    T5's rule read these records of the agent's history, through the cycle's
+    read-only view of the log. One line for each purpose, each cycle: which
+    records, by their place in the chain (`seq`), in which cycle, by which layer,
+    for what. Like a `read` line, it is the cycle datum's and carries no content:
+    what was read is in the log.
+    """
+
+    datum_id: str
+    cycle_mark: int
+    issuing_layer: LayerIndex
+    purpose: str
+    records: tuple[int, ...]
+    t: int
+    kind: Literal["activity"] = "activity"
+    activity_kind: Literal["read-record"] = "read-record"
+
+
 ActivityRecord: TypeAlias = (
     CycleSealActivity
     | LayerExitActivity
@@ -355,6 +376,7 @@ ActivityRecord: TypeAlias = (
     | ResistanceReadingActivity
     | RevisionActivity
     | ReadActivity
+    | ReadRecordActivity
 )
 
 
@@ -421,6 +443,17 @@ def record_read(
     return ReadActivity(
         datum_id=datum_id, cycle_mark=cycle_mark, issuing_layer=issuing_layer,
         purpose=purpose, read=tuple(read), t=t,
+    )
+
+
+def record_read_record(
+    datum_id: str, cycle_mark: int, issuing_layer: LayerIndex, purpose: str,
+    records: tuple[int, ...], t: int,
+) -> ReadRecordActivity:
+    """A `read-record` line: at cycle N, layer L read these records of `[event]` for this purpose (no content)."""
+    return ReadRecordActivity(
+        datum_id=datum_id, cycle_mark=cycle_mark, issuing_layer=issuing_layer,
+        purpose=purpose, records=tuple(records), t=t,
     )
 
 

@@ -30,6 +30,7 @@ implements `dil.DIL_PROTOCOL_VERSION`).
 from __future__ import annotations
 
 import copy
+import re
 import os
 from dataclasses import fields, is_dataclass
 from typing import Any, Protocol
@@ -37,10 +38,20 @@ from typing import Any, Protocol
 from .decisions import INDEX_KEYS
 from .event_sink import (
     EventSinkProtocol,
+    SeqRecord,
     create_jsonl_file_sink,
     read_log_records,
+    read_log_records_back,
 )
 from .resist_event import EventRecord, LogRecord
+
+
+def record_seq(id_: str) -> int | None:
+    """The place in the chain an id names, when it names a record of the log —
+    `event:<seq>`, as a datum built from a record read names it — rather than a
+    datum; None otherwise (v0.3.9)."""
+    m = re.fullmatch(r"event:(\d+)", id_) if isinstance(id_, str) else None
+    return int(m.group(1)) if m else None
 
 
 # Values a copy keeps as they are: immutable, so nothing can reach into them.
@@ -101,6 +112,12 @@ class ReadableEventLog(Protocol):
         """Scar lookup by resistance source (activity records carry no source_id)."""
         ...
 
+    def back(self, before: int, scan: int) -> list[SeqRecord]:
+        """The records before `before` (a place in the chain), newest first, at
+        most `scan` of them (v0.3.9 §9, "Reading the record").
+        Bounded, so a read in a cycle costs what it scans, never the whole log."""
+        ...
+
 
 class EventLog(ReadableEventLog, Protocol):
     """The append-only [event] log.
@@ -141,6 +158,10 @@ class InMemoryEventLog:
 
     def by_source_id(self, source_id: str) -> list[EventRecord]:
         return list(self._by_source.get(source_id, ()))
+
+    def back(self, before: int, scan: int) -> list[SeqRecord]:
+        start = min(before, len(self._records)) - 1
+        return [SeqRecord(seq, self._records[seq]) for seq in range(start, max(-1, start - scan), -1)]
 
 
 def create_event_log(sink: EventSinkProtocol | None = None) -> EventLog:
@@ -198,6 +219,9 @@ class DurableEventLog:
             for r in read_log_records(self._dir)
             if isinstance(r, EventRecord) and r.event.source_id == source_id
         ]
+
+    def back(self, before: int, scan: int) -> list[SeqRecord]:
+        return read_log_records_back(self._dir, before, scan)
 
     def head(self) -> str:
         """The current tamper-evidence chain head (for external anchoring)."""

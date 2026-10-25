@@ -9,7 +9,7 @@ expected here were computed by node (`JSON.stringify`, `crypto.createHash`).
 import json
 import unittest
 
-from dil.store import CHAIN_GENESIS, ChainBroken, ChainOk, verify_chain
+from dil.store import CHAIN_GENESIS, SCHEMA_VERSION, ChainBroken, ChainOk, verify_chain
 from dil.store.hash_chain import (
     ChainedEventLine,
     _canonical_json,
@@ -67,7 +67,7 @@ class NumbersAsJavaScriptWritesThem(unittest.TestCase):
     def test_the_line_as_written_reads_back_to_the_same_hash(self) -> None:
         line = chain_next(CHAIN_GENESIS, 0, EXPECTATION)
         record = json.loads(json.dumps(line.record))
-        self.assertEqual(hash_chain_entry(0, CHAIN_GENESIS, 4, record), line.hash)
+        self.assertEqual(hash_chain_entry(0, CHAIN_GENESIS, SCHEMA_VERSION, record), line.hash)
 
 
 if __name__ == "__main__":

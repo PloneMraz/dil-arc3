@@ -38,7 +38,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Protocol, TypeAlias
+from typing import Any, NamedTuple, Protocol, TypeAlias
 
 from .decisions import MAX_SEGMENT_BYTES
 from .hash_chain import (
@@ -64,6 +64,7 @@ from .resist_event import (
     ResistanceReadingActivity,
     ResistEvent,
     ReadActivity,
+    ReadRecordActivity,
     RevisionActivity,
     WrittenTags,
 )
@@ -256,6 +257,17 @@ def serialize_event_record(rec: LogRecord) -> SerializedEventRecord:
             "t": rec.t,
         }
 
+    if isinstance(rec, ReadRecordActivity):
+        return {
+            "form": "read-record",
+            "datumId": rec.datum_id,
+            "cycleMark": rec.cycle_mark,
+            "issuingLayer": rec.issuing_layer,
+            "purpose": rec.purpose,
+            "records": list(rec.records),
+            "t": rec.t,
+        }
+
     if isinstance(rec, CrystallizationActivity):
         return {
             "form": "crystallization",
@@ -342,6 +354,13 @@ def deserialize_event_record(rec: SerializedEventRecord) -> LogRecord:
             # port wrote before (2026-10-05 to 2026-10-19).
             issuing_layer=rec["issuingLayer"], purpose=rec.get("purpose", rec.get("for")),
             read=tuple(rec["read"]), t=rec["t"],
+        )
+
+    if form == "read-record":
+        return ReadRecordActivity(
+            datum_id=rec["datumId"], cycle_mark=rec["cycleMark"],
+            issuing_layer=rec["issuingLayer"], purpose=rec["purpose"],
+            records=tuple(rec["records"]), t=rec["t"],
         )
 
     if form == "crystallization":
@@ -512,6 +531,65 @@ def read_jsonl_sink(dir_: str | os.PathLike[str]) -> list[SerializedEventRecord]
 def read_log_records(dir_: str | os.PathLike[str]) -> list[LogRecord]:
     """All LogRecords across the directory's segments, read from the substrate."""
     return [deserialize_event_record(r) for r in read_jsonl_sink(dir_)]
+
+
+class SeqRecord(NamedTuple):
+    """A record with its place in the chain: `seq`, as its line carries it."""
+
+    seq: int
+    record: LogRecord
+
+
+_BACK_BLOCK = 1 << 16
+
+
+def read_log_records_back(
+    dir_: str | os.PathLike[str], before: int, scan: int
+) -> list[SeqRecord]:
+    """The records before `before` (a place in the chain), newest first, at most
+    `scan` of them — read from the end of the newest segment
+    backward, a block at a time, so what it costs is what it scans, never the
+    whole log (v0.3.9 §9, "Reading the record"; dil-core c258f43). The records
+    of the cycle that reads, still being appended, lie past `before` and are
+    passed over."""
+    out: list[SeqRecord] = []
+    if scan <= 0:
+        return out
+
+    def take(line: bytes) -> None:
+        if len(out) >= scan or not line.strip():
+            return
+        obj = json.loads(line.decode("utf-8"))
+        if obj["seq"] >= before:
+            return
+        out.append(SeqRecord(obj["seq"], deserialize_event_record(obj["record"])))
+
+    for seg in reversed(list_segments(dir_)):
+        if len(out) >= scan:
+            break
+        with seg.file.open("rb") as fh:
+            pos = fh.seek(0, os.SEEK_END)
+            rest = b""
+            while len(out) < scan:
+                if pos == 0:
+                    if rest:
+                        take(rest)
+                    break
+                n = min(_BACK_BLOCK, pos)
+                pos -= n
+                fh.seek(pos)
+                buf = fh.read(n) + rest
+                # Every complete line after the first newline; what precedes it
+                # may be cut, and waits for the block before.
+                end = len(buf)
+                i = buf.rfind(b"\n", 0, end)
+                while i >= 0 and len(out) < scan:
+                    if end > i + 1:
+                        take(buf[i + 1:end])
+                    end = i
+                    i = buf.rfind(b"\n", 0, end)
+                rest = buf[:end]
+    return out
 
 
 def verify_jsonl_sink(dir_: str | os.PathLike[str]) -> ChainVerification:

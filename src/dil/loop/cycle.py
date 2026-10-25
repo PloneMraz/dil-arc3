@@ -50,7 +50,7 @@ from ..store.decisions import (
     FIT_FLOOR_PARAM,
     H_COUNT,
 )
-from ..store.event_log import EventLog
+from ..store.event_log import EventLog, record_seq
 from ..store.resist_event import (
     ActivityEvent,
     ContextAnchor,
@@ -64,6 +64,7 @@ from ..store.resist_event import (
     record_layer_exit,
     record_provenance,
     record_read,
+    record_read_record,
     record_resistance_reading,
     record_revision,
     record_scar,
@@ -92,7 +93,8 @@ from .layer import LayerContribution, LayerEmission, LayerSpec, run_layer
 from .layers.t2 import Emission, ObservedChange, T2Input
 from .layers.t3 import STORE_CHANNEL, is_store_query, store_query
 from .layers.t4 import T4Input
-from .layers.t5 import StoreView, T5Input, T5Output
+from .layers.t5 import RecordView, StoreView, T5Input, T5Output
+from .record_view import create_record_view
 from .layers.t6 import T6Input
 from .layers.t7 import ExpectedEntity, T7Input, T7Output
 from .layers.t8 import ObservedInteraction, T8Input
@@ -300,10 +302,10 @@ class Cycle:
 
     __slots__ = (
         "_layers", "_glob", "_data", "_events", "_channel", "_now",
-        "_cycle", "_last_emission", "_cycle_t", "_respond", "_recollection",
+        "_cycle", "_last_emission", "_cycle_t", "_respond",
         "_pending", "_recalled", "_unasked", "_last_lateral", "_running_recalled",
         "_admit", "_running_admitted", "_pending_writes", "_running_written",
-        "_unit_datum", "_view", "_reads",
+        "_unit_datum", "_view", "_reads", "_record", "_record_reads",
     )
 
     def __init__(
@@ -316,7 +318,6 @@ class Cycle:
         now: Callable[[], int] | None = None,
         resume: DriverState | None = None,
         respond: RespondPolicy | None = None,
-        recollection: Any = None,
         admit: AdmitPolicy | None = None,
     ) -> None:
         # How each return from the region enters `[data]` (see `AdmitPolicy`):
@@ -340,13 +341,11 @@ class Cycle:
         # The cycle's view of `[data]` for T5, and what it read (v0.3.7 §9, Reading memory).
         self._view: StoreView | None = None
         self._reads: dict[str, dict[str, None]] | None = None
-        # The host's resistance-retrieval channel (§10), if one is declared. The
-        # driver does not call it — T5 does, through its declared PredictRule.
-        # The driver only asks which scars it returned, so their return can be
-        # recorded in `[event]` (§9: every transition along a provenance edge is
-        # recorded as it occurs). Without this, `scar → running` could never
-        # fire and the store would stay write-only.
-        self._recollection = recollection
+        # The cycle's view of `[event]` for T5, and what it read, by purpose
+        # (v0.3.9 §9, "Reading the record"; dil-core c258f43). An open link:
+        # built every cycle, never declared or switched off; open for the pass.
+        self._record: RecordView | None = None
+        self._record_reads: dict[str, dict[int, None]] | None = None
         # DEVIATION from dil-core, declared. The content of the terminal
         # emission is host-declared, exactly as T3's transducers and T4's
         # resolver already are. dil-core hard-codes a marker because its
@@ -428,6 +427,30 @@ class Cycle:
 
         return StoreView(read=read, id_of=id_of)
 
+    def _record_view(self, before: int) -> RecordView:
+        """The cycle's read-only view of `[event]`, for T5 (v0.3.9 §9, Reading
+        the record): what the log held before the cycle (`before`, its size when
+        the cycle began). Each read is kept, by purpose, for the cycle's
+        `read-record` lines."""
+        reads: dict[str, dict[int, None]] = {}
+        self._record_reads = reads
+
+        def on_read(purpose: str, seqs: tuple[int, ...]) -> None:
+            kept = reads.setdefault(purpose, {})
+            for s in seqs:
+                kept[s] = None
+
+        inner = create_record_view(self._events, before, on_read)
+
+        def opened(f: Callable[..., Any]) -> Callable[..., Any]:
+            def call(*args: Any, **kwargs: Any) -> Any:
+                if self._record_reads is not reads:
+                    raise RuntimeError("the record's view is read within its cycle only")
+                return f(*args, **kwargs)
+            return call
+
+        return RecordView(recent=opened(inner.recent), about=opened(inner.about), scars=opened(inner.scars))
+
     def _datum_id(self) -> str:
         """The id the cycle datum takes in `[data]`; also its key in the path."""
         return f"cycle-{self._cycle}"
@@ -500,7 +523,7 @@ class Cycle:
         datum = t4.datum
         self._log_exit(4)
 
-        t5 = run_layer(L.t5, T5Input(bound=t4.output.bound, view=self._view), field, datum)
+        t5 = run_layer(L.t5, T5Input(bound=t4.output.bound, view=self._view, record=self._record), field, datum)
         datum = t5.datum
         self._log_exit(5)
 
@@ -588,7 +611,7 @@ class Cycle:
         self._log_exit(4)
         ch.publish(4, t4.output)
 
-        t5 = run_layer(L.t5, replace(gather_t5(ch), view=self._view), field, datum)
+        t5 = run_layer(L.t5, replace(gather_t5(ch), view=self._view, record=self._record), field, datum)
         datum = t5.datum
         self._log_exit(5)
         ch.publish(5, t5.output)
@@ -643,6 +666,8 @@ class Cycle:
 
     def run(self, region_input: HostCycleInput) -> CycleResult:
         field = self._glob.current()
+        # What the log held when the cycle began: the record T5 may read (v0.3.9).
+        before = self._events.size()
 
         # ── Query-returns join what the region returned (§6, link 1) ──
         # "Input channels: query returns, messages from an Other, event streams,
@@ -765,6 +790,7 @@ class Cycle:
         self._running_admitted = tuple(admitted_ids.values())
         admitted_now = frozenset(self._running_admitted)
         self._view = self._store_view(admitted_now)
+        self._record = self._record_view(before)
 
         pass_ = (
             self._pass_single_threaded(host, field, admitted)
@@ -852,6 +878,17 @@ class Cycle:
                 record_read(self._datum_id(), self._cycle, 5, purpose, tuple(ids), self._now())
             )
 
+        # ── What T5 read of `[event]` (v0.3.9 §9, "Reading the record") ──
+        # One line for each purpose, naming the records read by their place in
+        # the chain, in the order first read. Closed with the pass, as the
+        # store's is.
+        self._record = None
+        record_reads, self._record_reads = self._record_reads, None
+        for purpose, seqs in (record_reads or {}).items():
+            self._events.append(
+                record_read_record(self._datum_id(), self._cycle, 5, purpose, tuple(seqs), self._now())
+            )
+
         # ── The store answers the queries raised this cycle (§6.4, §9 open layer) ──
         # Answered now, ingested at T1 next cycle. Answering changes nothing in
         # `[data]`; the datum moves only when it runs. Memory is what the store
@@ -887,6 +924,17 @@ class Cycle:
                 )
             built_from: list[str] = []
             for source in w.built_from:
+                # A record of the history, read: `event:<seq>`, one the log
+                # held before this cycle (v0.3.9).
+                seq = record_seq(source) if isinstance(source, str) else None
+                if seq is not None:
+                    if seq >= before:
+                        raise ValueError(
+                            f'write: built_from names "{source}", which the log did not hold before this cycle'
+                        )
+                    if source not in built_from:
+                        built_from.append(source)
+                    continue
                 source_id = source if isinstance(source, str) else self._unit_datum.get(id(source))
                 if source_id is None or not self._data.has(source_id):
                     raise ValueError(
@@ -1042,29 +1090,6 @@ class Cycle:
                     self._now(),
                 )
             )
-
-        # ── Scars that returned as material (§9, `scar → running`) ──
-        # A recalled scar is "data in use"; §9 is explicit that a scar is not a
-        # resting place. The datum key is the recalled scar's own (`cycle-N`),
-        # not this cycle's: it is that datum which moved, not this one.
-        if self._recollection is not None:
-            # The move is the datum's own and happens once: a scar recalled
-            # again once it is back in use does not move again, and `[data]`
-            # follows the log. Ported from dil-core dc7a9a7.
-            for recalled in self._recollection.drain():
-                held = self._data.get(recalled.datum_id)
-                if held is None or held.fixed.provenance != "scar":
-                    continue
-                self._data.put(recalled.datum_id, to_running(held, self._cycle))
-                self._events.append(
-                    record_provenance(
-                        recalled.datum_id,
-                        self._cycle,
-                        "scar",
-                        "running",
-                        self._now(),
-                    )
-                )
 
         # ── Forward-building (§6.2): build situations, cast outcomes ──
         # The datum takes the running→simulated→projected road WHEN the store
@@ -1367,7 +1392,6 @@ def create_cycle(
     now: Callable[[], int] | None = None,
     resume: DriverState | None = None,
     respond: RespondPolicy | None = None,
-    recollection: Any = None,
     admit: AdmitPolicy | None = None,
 ) -> Cycle:
     return Cycle(
@@ -1379,6 +1403,5 @@ def create_cycle(
         now=now,
         resume=resume,
         respond=respond,
-        recollection=recollection,
         admit=admit,
     )

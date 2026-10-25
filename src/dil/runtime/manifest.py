@@ -23,6 +23,7 @@ from ..loop.decisions import (
     APPRAISAL_ANCHOR_KIND,
     BASELINE_WINDOW,
     MATCHING_WINDOW,
+    RECORD_SCAN,
     STABILITY_THRESHOLD,
     SUFFICIENT_RECURRENCE,
 )
@@ -59,6 +60,7 @@ def collect_manifest(t: int) -> ManifestRecord:
                 "STABILITY_THRESHOLD": STABILITY_THRESHOLD,
                 "BASELINE_WINDOW": BASELINE_WINDOW,
                 "SUFFICIENT_RECURRENCE": SUFFICIENT_RECURRENCE,
+                "RECORD_SCAN": RECORD_SCAN,
             },
             "tagC_appraisalAnchor": {
                 "kind": APPRAISAL_ANCHOR_KIND,

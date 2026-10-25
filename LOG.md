@@ -7860,3 +7860,33 @@ the log was memory. Three comments of the port, and dil-core's from which they
 came, still said `[data]` is "overwritten each cycle", a reading v0.3.6 corrected;
 they say it is revised as the loop runs (dil-core `4001f3b`). 413 tests pass. The comments that date
 reading memory to v0.3.7 stay.
+
+#### Reading the record: an open link, not a switch — protocol v0.3.9 (Plone)
+
+Plone: reading the event log is an open link, not a switch, in all three
+repositories. Until now the one reading of `[event]` was recollection, a predict
+rule a host wired in (`Cycle(recollection=…)`), off unless declared — and off here
+since it was measured as a predictor (2026-09-24 above: it lost 62 of 66 contests
+and doubled the errors). dil-core first (`c258f43`, with `6388158`), then here:
+the driver hands T5's rule a view of `[event]` every cycle, nothing declared —
+`recent`, `about(datum)`, `scars(source)`, newest first, holding what the log held
+before the cycle that reads, each read going back at most `RECORD_SCAN = 4096`
+records (tag B, in the manifest). Each read leaves one `read-record` line per
+purpose, naming the records by seq (tag schema 5); what is learned from them is
+written to `[data]`, a datum naming a record read as `event:<seq>` in what it was
+built from, which the driver refuses when the log did not hold it before the
+cycle. The durable log reads backward from the end of its newest segment, a block
+at a time. The checker's criterion 6 holds every record read, and every record
+built from, to what the log held before that cycle — by place in the chain, so a
+store carrying a past run's records reads rightly. Recollection is now one law
+over the view (`recall`, `recollecting`), its expectation held by the datum that
+collided, so the driver moves it `scar → running` and scars it again as any held
+datum; the Cycle's and the daemon's `recollection` options are gone. `spec/` holds
+protocol v0.3.9 byte for byte; CLAUDE.md, README, `spec/README.md`.
+
+The mind's rule does not take the view yet (it names no `record` parameter), so
+what the mind does is unchanged — reasoned from the code, not measured; it reads
+the record once that is designed and measured (Plone: next). Checked: an ls20 run
+of 60 cycles verifies under dil-core's verifier with the new schema, and
+`read` and `read-record` lines written here verify and read back under dil-core.
+423 tests pass (`tests/test_read_record.py` replaces `test_recollection_cycle.py`).

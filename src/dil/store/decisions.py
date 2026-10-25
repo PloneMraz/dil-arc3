@@ -33,7 +33,9 @@ from typing import Final
 #       returns and the cycle datum enter at `running`), and the `revision` line.
 #   4 → v0.3.7's `read` line: what T5 read of `[data]`, by id, for what (§9
 #       "Reading memory"). Ported from dil-core d472e53.
-SCHEMA_VERSION: Final = 4
+#   5 → v0.3.9's `read-record` line: what T5 read of `[event]`, by seq, for
+#       what (§9 "Reading the record"). Ported from dil-core c258f43.
+SCHEMA_VERSION: Final = 5
 
 # The first schema version under the self-describing, version-stamped chain — the
 # boundary of the versioned `[event]` chain. A pre-versioning line is NOT
@@ -134,7 +136,8 @@ OPEN_TAG_DEFINITIONS: Final[dict[str, str]] = {}
 
 # DECIDE@IMPL tag F — store scope.
 # Rationale: this host serves one agent. A private store MUST carry the
-# resistance-retrieval channel, otherwise drift is certain (§10).
+# resistance-retrieval channel, otherwise drift is certain (§10): the record's
+# view, open to T5's rule every cycle, carries it (v0.3.9, loop/record_view.py).
 STORE_SCOPE: Final = "private"
 
 # DECIDE@IMPL tag G — depth of the per-[event] context anchor.

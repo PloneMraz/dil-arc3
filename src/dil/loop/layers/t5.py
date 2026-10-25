@@ -149,11 +149,38 @@ class T5Result:
     pred_err: PredErr
 
 
+# It can READ THE RECORD (protocol v0.3.9, §6.3 T5 and §9 "Reading the record";
+# ported from dil-core c258f43). The whole store is the agent's history; `[data]`
+# is its memory and `[event]` the record of what happened, which the agent reads
+# and never alters. The link is open: the driver hands the view to the rule every
+# cycle, and whether to read is the rule's. Each way of reading goes back from
+# the newest record before the cycle that reads, at most `RECORD_SCAN` records,
+# and returns at most `limit`: `recent`, every record; `about`, the records of
+# one datum (its entry, its moves, its revisions, the lines it left, and for a
+# cycle datum its seal and the lines of its cycle); `scars`, the scars recorded
+# against one resistance source. What it returns is what was read: each is
+# recorded in `[event]`, one `read-record` line for each purpose, by its place in
+# the chain (`seq`). What the agent learns from it it writes to `[data]`, naming a
+# record read among what the datum was built from as `event:<seq>`.
+@dataclass(frozen=True, slots=True)
+class RecordView:
+    """The rule's read-only view of `[event]`, for one cycle."""
+
+    # recent(purpose, limit=None) -> the newest records, as SeqRecords.
+    recent: Callable[..., Any]
+    # about(datum_id, purpose, limit=None) -> the records of one datum.
+    about: Callable[..., Any]
+    # scars(source_id, purpose, limit=None) -> the scars against one source.
+    scars: Callable[..., Any]
+
+
 @dataclass(frozen=True, slots=True)
 class T5Input:
     bound: tuple[BoundInfo, ...] = dc_field(default_factory=tuple)
     # The cycle's view of `[data]`, from the driver (READ, above; v0.3.7).
     view: StoreView | None = None
+    # The cycle's view of `[event]`, from the driver (READ THE RECORD; v0.3.9).
+    record: RecordView | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,6 +247,15 @@ def _takes_read(rule: Callable[..., Any]) -> bool:
     return any(p.kind is p.VAR_KEYWORD or p.name == "read" for p in params)
 
 
+def _takes_record(rule: Callable[..., Any]) -> bool:
+    """Whether a rule receives the record's view, by name (v0.3.9)."""
+    try:
+        params = inspect.signature(rule).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(p.kind is p.VAR_KEYWORD or p.name == "record" for p in params)
+
+
 def _content_equal(a: InfoUnit, b: InfoUnit) -> bool:
     return json.dumps(a.content, sort_keys=True, default=str) == json.dumps(
         b.content, sort_keys=True, default=str
@@ -252,6 +288,7 @@ class T5(BaseLayer):
         self._predict_tests = _takes_test(self._predict)
         self._predict_field = _takes_field(self._predict)
         self._predict_read = _takes_read(self._predict)
+        self._predict_record = _takes_record(self._predict)
         self._window_size = (
             baseline_window if baseline_window is not None else BASELINE_WINDOW
         )
@@ -322,6 +359,8 @@ class T5(BaseLayer):
             # also ask the store; the query is traced to T5 for the same reason.
             args: tuple[Any, ...] = (entity_id, tuple(window), observed, contribute, ask, write)
             more: dict[str, Any] = {"read": input.view} if self._predict_read else {}
+            if self._predict_record:
+                more["record"] = input.record
             if self._predict_field == "keyword":
                 out = self._predict(*args, test, field=field, **more)
             elif self._predict_field == "positional":
