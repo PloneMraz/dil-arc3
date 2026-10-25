@@ -76,3 +76,81 @@ turn lasts, and how far it looks ahead.
 
 **An Other.** An onlooker in the world remarks when the agent repeats itself or
 stands still; its word reaches the mind as a collision, not an instruction.
+
+## 3. A chain the reader can check
+
+Each cycle leaves in `[event]` the path of every datum through the layers, what
+entered, what was scarred, what the mind read, and each datum it wrote with the ids
+it was built from. Kaggle shows no log of a scored run, so the evidence is the
+submitted code's Save & Run on the 25 public games; its stores are published with
+the notebook.
+
+Figure 2 is one chain from lp85, where the agent finishes the first level in its
+human baseline's 17 actions. A click at (37, 20), expected to change the game,
+returns it unchanged: the return `signal-9-0` is scarred. The thought `written-9-0`
+records the silence and turns the mind from that kind of act; the next choice,
+`written-9-3`, clicks elsewhere and says so in its reason, naming the return and the
+thought. The experience `written-9-2` now holds that the click there changes
+nothing; when the agent meets that click again at cycle 22, the game answers as now
+expected, and nothing collides.
+
+Across the 25 games: 2,757 frame collisions; 1,130 such chains, each a scar, the
+thought it set off and the choice it turned, all built from the same return; in 717
+the next return came as expected. All 1,742 turned choices name the return behind
+them. All 25 logs verify under the protocol's reference verifier, and its
+conformance checker passes four criteria in every store (invariants, loop,
+resistance, store); continuity of the self it leaves to a third party, as the
+protocol requires.
+
+Two individuals of the same agent, born in different fields, part in tu93 at step
+72: a silence turns both, but the turn lasts one choice longer in one of them. With
+and without the onlooker, the agent parts in all eleven games tried; in m0r0 the
+onlooker's earlier remarks had moved its field, and with it the agent scored 0.80
+on the game against 0.19 alone. `scripts/chains.py`,
+`thoughts.py` and `differ.py` find all of this in the stores alone.
+
+*Figure 2: the lp85 chain, each record by its id.* [[to draw]]
+
+## 4. Results
+
+| | Leaderboard |
+|---|---|
+| Random agent (starter kit, twice) | 0.02, 0.06 |
+| A language model in the learning's place | 0.00 |
+| The learning mind, first form | 0.05 |
+| Grid inducer, versions 18, 23, 28, 35, 37 | 0.25–0.26 |
+| … with "suspects" (version 26) | 0.02 |
+| **This submission (version 41)** | **[[score]]** |
+
+On the 25 public games the submitted code finishes 15 of 183 levels (0.489). An
+earlier version's log (23) showed where the actions go: 29% changed nothing and 17%
+walked back to where something was left to try; three levels came near the human
+baseline, the rest at 3 to 20 times it.
+
+## 5. What did not work, and why
+
+Nineteen ideas were measured and not kept (the PDF's Table 3): a law ordering
+foreseen acts (13 levels against 15), a ladder of looser aim hypotheses (one refuted
+195 times), an object-centred inducer (0.457 in its first form; later 0.500 and 0.486 against
+the grid's 0.491, with fewer levels), commands chosen
+as tests of the least sure expectation (0.379 and 0.255 against 0.513), and a
+language model writing predictive programs, right about one step in eleven.
+
+The lesson is one of Theory. Before its first success in a level, a change only
+moves where the agent explores, and the public games did not foretell the hidden
+ones: "suspects" reached the most levels in public (15, 0.515) and scored 0.02
+hidden, against 0.25 for the version it changed. Since then, the inducer's laws of
+things — moves, blocks — apply only once a level's aim has come, so that what
+earned the first levels is not moved.
+
+## 6. Limits and conclusion
+
+The score is low, and said so. Where the agent never looks stuck, the onlooker has
+no reason to speak, and the checker's diversity criterion fails (six games of 25).
+Writing what the mind learns is itself data that returns to the loop: naming each
+thought in its choice moved nine games of eleven a little. The verifier is the
+protocol's own reference implementation, not an independent one.
+
+What holds is the record: every belief, refutation and choice the agent made can be
+read back, and checked, by someone who does not trust it. The mind names no task;
+another model, or another environment, plugs into the same loop.
