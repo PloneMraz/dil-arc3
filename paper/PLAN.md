@@ -25,13 +25,13 @@ Kept here so that a new session starts from it, not from memory. History goes in
    from their stores (`scripts/differ.py`): the Other present or not, and the
    field — once it carries its history (B1, DEVIATION 9) and the mind's counts
    follow it (B2) — set otherwise at birth.
-1. **The submission the paper describes: proposed version 41** (2026-10-21, to be
-   settled with Plone once its score comes): `57470744`, notebook
+1. **The submission the paper describes: version 41** (proposed 2026-10-21;
+   settled with Plone 2026-10-25, once it scored 0.25): `57470744`, notebook
    `plonemraz/dil-arc3-learning` version 41, code `963b7fb` — grid, S2b with
    attention, 600 cycles a game, four at once; each choice a collision turned
    names the return and the thought, and all 25 stores of its Save & Run verify
    under dil-core's verifier. Version 37 (`57443352`, 0.25; its stores verify
-   too) is the fallback. **Version 35 (`57371259`, 0.26) is set aside**: its
+   too) scored the same, without the thoughts named. **Version 35 (`57371259`, 0.26) is set aside**: its
    stores do not verify under dil-core's verifier (the hash of floats changed
    after it, LOG.md, 2026-10-19), and the paper's claim is that a third party
    checks the log. The notebook attached is the version described; a private
@@ -106,8 +106,8 @@ change in what it does can be read back by a third party from `[event]`.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
-(proposed 2026-10-21: versions 41 and 37 — to be settled once version 41's score
-has come).
+(versions 41 and 37, approved by Plone 2026-10-25; he settles them on the last day,
+version 41 among them at least).
 
 ## Where things are
 

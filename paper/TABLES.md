@@ -22,14 +22,15 @@ a game, four at once.
 | `56983446` | 28 | `9e69156` | version 23 with moves, blocks and into aims once the aim has come | 0.25 | 13, 0.514 |
 | `57371259` | 35 | `b4d7d5a` | collisions turn the mind; the field carries its history (B1) and the counts follow it (B2) | 0.26 | 16, 0.518 |
 | `57443352` | 37 | `9fcaafc` | as 35, its stores verifying under dil-core's verifier | 0.25 | 16, 0.491 |
-| `57470744` | 41 | `963b7fb` | as 37, each turned choice naming its return and its thought | pending | 15, 0.489 |
+| `57470744` | 41 | `963b7fb` | as 37, each turned choice naming its return and its thought | 0.25 | 15, 0.489 |
 
 [LOG: "v12 scored: 0.00", "The gateway probe scored 0.06", "Learning notebook version 5
 scored: 0.05", "Submission `56658708` scored 0.00", "Version 18 …", "Submission `56820389`
 scored 0.26", "Version 23 …", "Submission `56887238` scored 0.25", "Version 26 …",
 "`56934496` … scored 0.02", "Version 28 …", "`56983446` … scored 0.25", "Version 35 …",
 "Version 35 scored 0.26", "Version 36 (Save & Run) …" (Kaggle's version 37), "Submission
-`57443352` scored: 0.25", "Version 40 …", "Version 41 …"]
+`57443352` scored: 0.25", "Version 40 …", "Version 41 …", "Submission `57470744`
+scored: 0.25"]
 
 ## Table 2 — one change at a time, on the 25 public games
 

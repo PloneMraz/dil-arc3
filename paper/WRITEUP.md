@@ -1,6 +1,6 @@
 # Expect, Collide, Revise: Learning Without a Reward Function, Every Step on the Record
 
-*The DIL protocol on ARC-AGI-3 — submission [[57470744, to be settled]]*
+*The DIL protocol on ARC-AGI-3 — submission 57470744*
 
 <!-- Draft. Budget: 1,500 words in all (OUTLINE.md). Every number is checked against
 LOG.md and paper/TABLES.md before submission. [[...]] marks what is still open. -->
@@ -15,7 +15,7 @@ from, in a hash-chained event log, following the DIL protocol. On the 25 public
 games, the submitted code's logs hold 1,130 chains a reader can follow from a
 collision to the thought and the choice it turned; all 1,742 turned choices name
 the collision behind them, and all 25 logs verify under the protocol's reference
-verifier. The submission scores [[score]] on the leaderboard, against 0.02 and
+verifier. The submission scores 0.25 on the leaderboard, against 0.02 and
 0.06 for a random agent.
 
 ## 1. Introduction
@@ -120,7 +120,7 @@ on the game against 0.19 alone. `scripts/chains.py`,
 | The learning mind, first form | 0.05 |
 | Grid inducer, versions 18, 23, 28, 35, 37 | 0.25–0.26 |
 | … with "suspects" (version 26) | 0.02 |
-| **This submission (version 41)** | **[[score]]** |
+| **This submission (version 41)** | **0.25** |
 
 On the 25 public games the submitted code finishes 15 of 183 levels (0.489). An
 earlier version's log (23) showed where the actions go: 29% changed nothing and 17%

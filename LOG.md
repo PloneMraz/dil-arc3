@@ -7829,3 +7829,12 @@ score **0.25** — version 37's `57443352` 0.25, version 35's `57371259` 0.26. I
 & Run had scored 0.489 (15 of 183 levels) against version 37's 0.491 (16). Kaggle
 shows two decimals, so whether version 41 scored a little above or below version 37
 hidden cannot be read from it. Kaggle is free to use again.
+
+#### The paper describes version 41; the finals approved (Plone)
+
+Settled with Plone: the paper describes submission `57470744` (version 41, 0.25), as
+proposed on 2026-10-21 — the same score as version 37, and its stores hold the
+evidence the paper's section 3 reads (each turned choice naming its thought).
+`paper/WRITEUP.md` now carries its ID and score; `TABLES.md`, `PLAN.md` and
+`OUTLINE.md` the same. The two final ARC-AGI-3 submissions, versions 41 and 37, are
+approved; Plone settles them himself on the last day, version 41 among them at least.

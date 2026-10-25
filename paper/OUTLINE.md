@@ -149,8 +149,8 @@ nine games of eleven a little, LOG.md, 2026-10-21).
 
 ## To settle before drafting
 
-- The submission described: proposed version 41 (`57470744`), fallback version 37;
-  version 35 set aside, its stores not verifying under dil-core (`PLAN.md`). To be
-  settled with Plone once version 41's score comes.
+- The submission described: version 41 (`57470744`, 0.25), settled with Plone
+  2026-10-25; version 35 set aside, its stores not verifying under dil-core
+  (`PLAN.md`).
 - The game Figure 2's chain is from — chosen from version 41's stores when the
   chains are found.
