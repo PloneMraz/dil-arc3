@@ -147,7 +147,9 @@ nine games of eleven a little, LOG.md, 2026-10-21).
 ## Figures and tables
 
 - Cover image (required) — our own; no screenshots of others' work.
-- Figure 1: the loop. Figure 2: a trace excerpt.
+- Figure 1: the loop (`figures/figure1-loop.svg`, `.png`). Figure 2: the lp85 chain, each
+  record by its id (`figures/figure2-chain.*`). Cover: `figures/cover.*` (1600×900).
+  Drawn by hand as SVG, rendered with headless Chrome; the PNGs carry no metadata.
 - Table 1: scores. Table 2: one change at a time. Table 3: ideas that failed.
 
 ## To settle before drafting

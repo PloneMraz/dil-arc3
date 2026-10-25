@@ -42,7 +42,9 @@ Contributions:
    success did not carry from the public games to the hidden ones.
 4. A ledger of the ideas that failed, each measured.
 
-*Figure 1: region → host (sensory organs) → layers T1–T8 → mind → host (effectors) → region.* [[to draw]]
+![Figure 1](figures/figure1-loop.png)
+
+*Figure 1: the loop, and the store: memory (`[data]`) and the record (`[event]`).*
 
 ## 2. Approach
 
@@ -110,7 +112,9 @@ onlooker's earlier remarks had moved its field, and with it the agent scored 0.8
 on the game against 0.19 alone. `scripts/chains.py`,
 `thoughts.py` and `differ.py` find all of this in the stores alone.
 
-*Figure 2: the lp85 chain, each record by its id.* [[to draw]]
+![Figure 2](figures/figure2-chain.png)
+
+*Figure 2: the lp85 chain, each record by its id in the published store.*
 
 ## 4. Results
 

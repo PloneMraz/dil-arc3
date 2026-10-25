@@ -8024,3 +8024,20 @@ The entries above that say "60 … 32" and "the same act met again at cycle 22"
 (2026-10-21) were wrong, and are left as written; `paper/WRITEUP.md` and
 `paper/TABLES.md` now say what holds: the experience is what the mind expects of
 that act there from then on, and the next return, `signal-10-0`, came as expected.
+
+#### The paper's figures and cover
+
+`paper/figures/`: Figure 1, the loop (the world — the region and the onlooker; the
+host's sensory organs and effectors; DIL's layers under the field; the mind at T5
+with its model; the store, `[data]` and `[event]`, and what reads and writes each);
+Figure 2, the lp85 chain as the records hold it (`signal-9-0` scarred, the thought
+`written-9-0`, the choice `written-9-3` turned and relinked in cycle 10, the
+experience `written-9-2`, the next return `signal-10-0` as expected); the cover,
+1600 × 900 (the rules give no size). Drawn by hand as SVG, rendered to PNG with
+headless Chrome (a fresh profile each run); the PNGs carry no text chunks or EXIF.
+Every id and value in Figure 2 was read again from the store (version 41's, and
+the same in `dil-arc3-history` version 1's): the act carried out in cycle 9 was the
+click at (5, 32), the turn held 2 choices, the expectation of `signal-10-0` had
+delta 0. The Writeup now holds both figures; counted strictly — every word after
+the title, headings and table cells included, image links and table rules not —
+1,476 words.

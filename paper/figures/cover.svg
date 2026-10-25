@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="DejaVu Sans, Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a3a3a"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#faf8f3"/>
+  <rect x="0" y="0" width="1600" height="12" fill="#b5442c"/>
+
+  <!-- title -->
+  <text x="100" y="250" font-size="96" font-weight="bold" fill="#1f1f1f">Expect,</text>
+  <text x="100" y="360" font-size="96" font-weight="bold" fill="#b5442c">Collide,</text>
+  <text x="100" y="470" font-size="96" font-weight="bold" fill="#2f5527">Revise</text>
+  <text x="104" y="545" font-size="34" fill="#3a3a3a">Learning without a reward function,</text>
+  <text x="104" y="590" font-size="34" fill="#3a3a3a">every step on the record</text>
+  <text x="104" y="660" font-size="24" fill="#6d6352">The DIL protocol on ARC-AGI-3</text>
+
+  <!-- the cycle -->
+  <g transform="translate(1180,360)">
+    <circle r="210" fill="none" stroke="#d8cfbd" stroke-width="2"/>
+    <path d="M -60,-201 A 210 210 0 0 1 200,-64" fill="none" stroke="#3a3a3a" stroke-width="4" marker-end="url(#a)"/>
+    <path d="M 175,116 A 210 210 0 0 1 -95,187" fill="none" stroke="#3a3a3a" stroke-width="4" marker-end="url(#a)"/>
+    <path d="M -195,78 A 210 210 0 0 1 -170,-123" fill="none" stroke="#3a3a3a" stroke-width="4" marker-end="url(#a)"/>
+    <g>
+      <circle cx="-120" cy="-172" r="62" fill="#ffffff" stroke="#1f1f1f" stroke-width="3"/>
+      <text x="-120" y="-164" text-anchor="middle" font-size="24" font-weight="bold" fill="#1f1f1f">expect</text>
+    </g>
+    <g>
+      <circle cx="205" cy="25" r="62" fill="#fdecea" stroke="#b5442c" stroke-width="3"/>
+      <text x="205" y="33" text-anchor="middle" font-size="24" font-weight="bold" fill="#8c2f1b">collide</text>
+    </g>
+    <g>
+      <circle cx="-150" cy="150" r="62" fill="#eef5ec" stroke="#2f5527" stroke-width="3"/>
+      <text x="-150" y="158" text-anchor="middle" font-size="24" font-weight="bold" fill="#2f5527">revise</text>
+    </g>
+    <text x="10" y="-6" text-anchor="middle" font-size="18" fill="#6d6352">the game's return,</text>
+    <text x="10" y="18" text-anchor="middle" font-size="18" fill="#6d6352">never a reward</text>
+  </g>
+
+  <!-- the record -->
+  <g transform="translate(100,745)" font-size="16" fill="#2f5527">
+    <rect x="0" y="0" width="230" height="64" rx="6" fill="#ffffff" stroke="#79a06f" stroke-width="2"/>
+    <text x="16" y="27" font-weight="bold">scar</text><text x="16" y="50" font-size="14">signal-9-0</text>
+    <rect x="280" y="0" width="230" height="64" rx="6" fill="#ffffff" stroke="#79a06f" stroke-width="2"/>
+    <text x="296" y="27" font-weight="bold">thought</text><text x="296" y="50" font-size="14">built from signal-9-0</text>
+    <rect x="560" y="0" width="230" height="64" rx="6" fill="#ffffff" stroke="#79a06f" stroke-width="2"/>
+    <text x="576" y="27" font-weight="bold">choice</text><text x="576" y="50" font-size="14">turned from the silence</text>
+    <rect x="840" y="0" width="230" height="64" rx="6" fill="#ffffff" stroke="#79a06f" stroke-width="2"/>
+    <text x="856" y="27" font-weight="bold">experience</text><text x="856" y="50" font-size="14">what it now expects</text>
+    <rect x="1120" y="0" width="300" height="64" rx="6" fill="#eef5ec" stroke="#79a06f" stroke-width="2"/>
+    <text x="1136" y="27" font-weight="bold">next return</text><text x="1136" y="50" font-size="14">as expected</text>
+    <g stroke="#79a06f" stroke-width="3">
+      <line x1="232" y1="32" x2="278" y2="32"/><line x1="512" y1="32" x2="558" y2="32"/>
+      <line x1="792" y1="32" x2="838" y2="32"/><line x1="1072" y1="32" x2="1118" y2="32"/>
+    </g>
+    <text x="0" y="100" font-size="15" fill="#6d6352">[event]: append-only, hash-chained — a third party reads back why every act was chosen</text>
+  </g>
+</svg>
