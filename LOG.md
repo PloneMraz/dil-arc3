@@ -8066,3 +8066,15 @@ mind reading its history, public score **0.25** — version 41's `57470744` 0.25
 their Save & Runs (15 of 183 levels, 0.489, both). Kaggle shows two decimals. Kaggle
 is free to use again. The paper's PDF draft names it, as drafted (it is not lower):
 its ID and score filled in, the draft's note saying so.
+
+#### The Writeup names `57623232`; the finals proposed anew (Plone)
+
+Plone approved both: the Writeup now describes submission `57623232` as the PDF does —
+its ID; the evidence of its stores (2,715 frame scars, 1,111 chains, 716 next returns
+as expected, 1,735 turned choices all naming their return, 3,902 reads of the record);
+a sentence each in the abstract and the approach on the mind reading its history; the
+individuals marked as measured on version 41's code. To stay inside 1,500 words, the
+introduction's description of the loop (Figure 1 and section 2 say it) and two
+phrases were cut: 1,472 words after the title, 1,492 with it, counted strictly. The
+two final ARC-AGI-3 submissions proposed: `57623232` and `57470744` (in place of
+versions 41 and 37); Plone settles them on the last day.

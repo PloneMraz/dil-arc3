@@ -1,6 +1,6 @@
 # Expect, Collide, Revise: Learning Without a Reward Function, Every Step on the Record
 
-*The DIL protocol on ARC-AGI-3 — submission 57470744*
+*The DIL protocol on ARC-AGI-3 — submission 57623232*
 
 <!-- Draft. Budget: 1,500 words in all (OUTLINE.md). Every number is checked against
 LOG.md and paper/TABLES.md before submission. [[...]] marks what is still open. -->
@@ -12,10 +12,10 @@ expects what each action will bring back; where the return differs, the mismatch
 is recorded as a collision, and the collision turns what it does next. Every
 expectation, collision, thought and choice is a datum naming what it was built
 from, in a hash-chained event log, following the DIL protocol. On the 25 public
-games, the submitted code's logs hold 1,130 chains a reader can follow from a
-collision to the thought and the choice it turned; all 1,742 turned choices name
+games, the submitted code's logs hold 1,111 chains a reader can follow from a
+collision to the thought and the choice it turned; all 1,735 turned choices name
 the collision behind them, and all 25 logs verify under the protocol's reference
-verifier. The submission scores 0.25 on the leaderboard, against 0.02 and
+verifier. It also reads its own history. The submission scores 0.25 on the leaderboard, against 0.02 and
 0.06 for a random agent.
 
 ## 1. Introduction
@@ -28,10 +28,8 @@ learns from — not a score to raise, but data that changes what it does next.
 
 Our question is whether a third party can read back, from the agent's record
 alone, what it knew at each step and why it acted. An agent may misread and
-revise its memory; it may not rewrite the record of what happened. Figure 1 shows the loop: the
-game returns a frame, the host's sensory organs take it in, the protocol's layers
-carry it, the mind compares it with what it expected and commands, and the host's
-effectors carry the command out.
+revise its memory; it may not rewrite the record of what happened. Figure 1 shows
+the loop.
 
 Contributions:
 
@@ -77,6 +75,9 @@ and a modulatory field — trust, alertness, exploration, voted by every layer a
 carried across cycles — sets how sure it must be before it expects, how long a
 turn lasts, and how far it looks ahead.
 
+**Its history.** The mind reads `[event]` too: a collision the record says came
+before turns it longer, and every read is recorded.
+
 **An Other.** An onlooker in the world remarks when the agent repeats itself or
 stands still; its word reaches the mind as a collision, not an instruction.
 
@@ -97,15 +98,14 @@ thought. The experience `written-9-2` now holds that the click there changes
 nothing, and that is what the agent expects of it from then on; the next return,
 `signal-10-0`, comes as expected, and nothing collides.
 
-Across the 25 games: 2,757 frame collisions; 1,130 such chains, each a scar, the
-thought it set off and the choice it turned, all built from the same return; in 717
-the next return came as expected. All 1,742 turned choices name the return behind
-them. All 25 logs verify under the protocol's reference verifier, and its
+Across the 25 games: 2,715 frame collisions; 1,111 such chains, each a scar, the
+thought it set off and the choice it turned, all built from the same return; in 716
+the next return came as expected. All 1,735 turned choices name the return behind
+them. The mind read the record 3,902 times, each read recorded. All 25 logs verify under the protocol's reference verifier, and its
 conformance checker passes four criteria in every store (invariants, loop,
-resistance, store); continuity of the self it leaves to a third party, as the
-protocol requires.
+resistance, store); continuity of the self is a third party's to say.
 
-Two individuals of the same agent, born in different fields, part in tu93 at step
+Two individuals of the same agent (version 41's code), born in different fields, part in tu93 at step
 72: a silence turns both, but the turn lasts one choice longer in one of them. With
 and without the onlooker, the agent parts in all eleven games tried; in m0r0 the
 onlooker's earlier remarks had moved its field, and with it the agent scored 0.80
@@ -114,7 +114,7 @@ on the game against 0.19 alone. `scripts/chains.py`,
 
 ![Figure 2](figures/figure2-chain.png)
 
-*Figure 2: the lp85 chain, each record by its id in the published store.*
+*Figure 2: the lp85 chain, each record by its id.*
 
 ## 4. Results
 
@@ -123,9 +123,9 @@ on the game against 0.19 alone. `scripts/chains.py`,
 | Random agent (starter kit, twice) | 0.02, 0.06 |
 | A language model in the learning's place | 0.00 |
 | The learning mind, first form | 0.05 |
-| Grid inducer, versions 18, 23, 28, 35, 37 | 0.25–0.26 |
+| Grid inducer, versions 18, 23, 28, 35, 37, 41 | 0.25–0.26 |
 | … with "suspects" (version 26) | 0.02 |
-| **This submission (version 41)** | **0.25** |
+| **This submission (`dil-arc3-history` 1)** | **0.25** |
 
 On the 25 public games the submitted code finishes 15 of 183 levels (0.489). An
 earlier version's log (23) showed where the actions go: 29% changed nothing and 17%
@@ -152,8 +152,8 @@ earned the first levels is not moved.
 
 The score is low, and said so. Where the agent never looks stuck, the onlooker has
 no reason to speak, and the checker's diversity criterion fails (six games of 25).
-Writing what the mind learns is itself data that returns to the loop: naming each
-thought in its choice moved nine games of eleven a little. The verifier is the
+What the mind writes returns to the loop as data: naming each thought in its
+choice moved nine games of eleven a little. The verifier is the
 protocol's own reference implementation, not an independent one.
 
 What holds is the record: every belief, refutation and choice the agent made can be
