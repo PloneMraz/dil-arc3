@@ -85,6 +85,9 @@ Contributions:
 4. a ledger of the ideas that failed, each with its numbers.
 
 **2. Approach** [350] — The four roles (DIL, host, model, the self as a law).
+In the paper, not the Writeup: why `[event]` may only be added to — dil-core's
+README, opening its "The `[data]` / `[event]` store" (`df017ef`; Plone,
+2026-10-25), taken whole; the Writeup's introduction keeps its one sentence.
 "The mind acts on nothing; it commands, and the host carries the command out
 through its effectors" (T5's test).
 The learning: experience → hypothesis (data) → expectation (the one right at the
