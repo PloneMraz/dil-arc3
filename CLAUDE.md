@@ -149,7 +149,7 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   count); revises the datum in place at each weighing, and says in a new datum,
   built from it, when whether it holds changes; keeps each experience as a datum
   (`kind: experience`), revised in place as it changes
-  (Plone, 2026-10-04: the whole store is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
+  (Plone, 2026-10-04: `[data]` is the agent's memory); is curious; chooses, looking ahead by what its held hypotheses
   predict (at most `MAX_IMAGINED_STEPS` past where it has stood, and
   `MAX_IMAGINED_PREDICTIONS` predictions a choice there, kept for that choice
   only). **Reaching
@@ -307,13 +307,17 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
 - **What the host can carry out is one rule** (`command.can_carry_out`), which the
   host declares to the mind with its organs and the mind asks before it counts a
   proposal as a command.
-- **The whole store is the agent's memory** (Plone, 2026-10-04: "Toàn bộ
-  store/ của dil là trí nhớ của agent. Trong đó, [event] không thể bị sửa hay ghi
-  đè mà chỉ được ghi mới và được đọc, còn [data] thì có thể."; protocol v0.3.6
-  §3, §9, and the specification v8). `[event]` cannot be altered or
-  overwritten, only appended to and read; `[data]` can be altered. What the mind
+- **The whole store is the agent's history; `[data]` is its memory** (Plone,
+  2026-10-25, correcting the wording of 2026-10-04: "toàn bộ store/ là lịch sử
+  của agent chứ không chỉ là trí nhớ, và agent có quyền đọc đối với event-log/
+  nên memory/ cũng sẽ có dữ liệu về event-log chứ không phải làm việc trực tiếp
+  trên event-log/ giống như data trong memory/"; protocol v0.3.8 §1, §9, and the
+  specification v9). `[data]` (`store/memory/`) is its memory, and can be
+  altered. `[event]` (`store/event-log/`) is the record of what happened to it,
+  only appended to and read: the agent may read it, and what it learns from it
+  is held in `[data]`; it never works on `[event]` as on `[data]`. What the mind
   learns, and each change in it, belongs in `[data]`; what its model computes
-  from, it reads back from the store (next).
+  from, it reads back from its memory (next).
 - **What its model computes from, the mind reads from its memory** (Plone,
   2026-10-05: (B), for every inducer; each read recorded; the model's inputs
   only). What came in a cycle is in hand in that cycle — met in it, not yet
@@ -847,7 +851,7 @@ scored better would work against the paper, not for it.
 4. When the six are met, the 25 games are run once, to confirm. Until then the
    25 are run on Kaggle by Save & Run to choose what to submit (LOG.md).
 
-**The protocol document is not the paper.** `DIL-protocol-v0.3.7.md` is 65 KB of
+**The protocol document is not the paper.** `DIL-protocol-v0.3.8.md` is 65 KB of
 normative specification, written for someone implementing it. The paper is a
 separate artifact still to be written, in the shape ARC Prize asks for —
 abstract, introduction, prior work, approach, results, conclusion — and their

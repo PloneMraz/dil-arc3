@@ -867,7 +867,7 @@ def test_an_inner_line_that_counts_only_some_acts_is_not_taken_for_the_clock():
 
 
 def test_an_experience_is_a_datum_written_once_and_revised_as_it_changes():
-    # The whole store is the agent's memory (protocol v0.3.6; Plone, 2026-10-04):
+    # `[data]` is the agent's memory (protocol v0.3.8; Plone, 2026-10-04/25):
     # what the mind learned, and each change in it, is in [data].
     mind, cycle, data, events = loop()
     run(cycle, frame(lit(0), lit(1)), status())

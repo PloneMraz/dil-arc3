@@ -1,7 +1,7 @@
 """The [data] store and the provenance lifecycle (protocol §9).
 
-`[data]` is mutable — overwritten each cycle — unlike the immutable `[event]`
-log. It is the loop's working memory.
+`[data]` is mutable — its content revised as the loop runs — unlike the
+immutable `[event]` log. It is the agent's memory.
 
 Lifecycle: prior → running → scar. The store records and tags origin ONLY; the
 tag is mechanical (presence/absence of a cycle-mark and a resistance-stamp) and
@@ -128,7 +128,7 @@ def to_projected(datum: TaggedDatum) -> TaggedDatum:
 
 
 class DataStore(Protocol):
-    """The mutable [data] store: overwritten each cycle, keyed by datum id."""
+    """The mutable [data] store: revised as the loop runs, keyed by datum id."""
 
     def put(self, id: str, datum: TaggedDatum) -> None: ...
     def get(self, id: str) -> TaggedDatum | None: ...

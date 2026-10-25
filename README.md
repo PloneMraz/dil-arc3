@@ -42,7 +42,7 @@ Settled deliberately, with Plone.
 
 | role | what it is | in this repo |
 |---|---|---|
-| **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's memory: what it had before it lived (`prior`), what it met, and what its mind wrote | `src/dil/` |
+| **DIL** | the operating mechanism of the whole — how information moves; its store is the agent's history: what it had before it lived (`prior`), what it met, and what its mind wrote — `[data]` its memory, `[event]` the record it reads and never alters | `src/dil/` |
 | **host** | its sensory organs take in what the region returns and carry it inward; its effectors carry out the mind's command; it declares both to the mind. **Computes nothing and weighs nothing.** | `src/arc3/frame.py`, `action.py`, `host.py`, `observe.py`, `command.py`, `organs.py`, `prior.py` |
 | **model** | the mind's computing, inside it — not a second mind — and replaceable: an inducer the mind learns with — grid, or a language model. The **mind** is **one** and neutral about its region: it learns, reads, expects, is curious and wants, holds an aim, and constructs the next action; commands it as T5's test. **Acts on nothing.** | `src/mind/` (`mind.py`, `learning.py`, `models/`); `src/arc3/task.py` |
 | **self** | what the loop produces when it runs (§7) — a law, located in no file. Its behaviour is the host's acting under the mind's command. | none: the word is not used in the code |
@@ -153,7 +153,7 @@ Other, becomes another individual, and where it parts is read back from the two
 stores (`scripts/differ.py`). An act is opaque to the mind: what an act is, the
 host declares in its organs, and the mind only asks.
 
-The whole store is the agent's memory, and what a model computes from, the mind
+`[data]` is the agent's memory, and what a model computes from, the mind
 reads there: what came in a cycle is in hand in that cycle, and from the next it
 is read from `[data]` through T5's view — the states the mind has stood in,
 each hypothesis's form (restored by its inducer from its datum), the recent
@@ -201,7 +201,7 @@ now, in dil-core first and then here.
    loses (6).
 2. **The field reaches every layer, and every layer reads it.** INV-7 has it
    reach every layer as background — "same data plus a different field yields
-   different meaning". It carries dispositions, never what was read (DIL-en-v8
+   different meaning". It carries dispositions, never what was read (DIL-en-v9
    §2: "how to read, never what is read"): three axes, the specification's own
    examples — `trust`, `alertness`, `exploration`. Each layer reads the one that
    bears on its operation and shifts a declared threshold or gain by ½ to 1½:

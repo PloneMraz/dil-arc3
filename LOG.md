@@ -7838,3 +7838,25 @@ evidence the paper's section 3 reads (each turned choice naming its thought).
 `paper/WRITEUP.md` now carries its ID and score; `TABLES.md`, `PLAN.md` and
 `OUTLINE.md` the same. The two final ARC-AGI-3 submissions, versions 41 and 37, are
 approved; Plone settles them himself on the last day, version 41 among them at least.
+
+#### The whole store is the agent's history, `[data]` its memory: protocol v0.3.8 (Plone)
+
+A correction of wording, Plone's own: on 2026-10-04 he said the whole store is the
+agent's memory, and protocol v0.3.6 and the specification v8 wrote it so. Said
+exactly, the whole store is the agent's history; `[data]` (`store/memory/`) is its
+memory, and can be altered; `[event]` (`store/event-log/`) is the record of what
+happened to it, only appended to and read — the agent may read it, and what it
+learns from it is held in `[data]`; it never works on `[event]` as on `[data]`. The
+layout named the folder `memory/` for that reason, by design. Plone chose a new
+version, as v0.3.6 had been one for a wording alone: dil-core `d95120d` (protocol
+v0.3.8, specification v9; no requirement on an implementation changes, the store's
+claim stays 0.3.5; its README's paragraph of this morning now draws the boundary
+inside the history, and no longer says the agent "may only add to" `[event]` — the
+loop appends, the agent does not). Here: `spec/` holds the two new copies, byte for
+byte, with their hashes; CLAUDE.md's rule, README, the port's comments
+(`recollection.py`, `t5.py`, `event_log.py`, `resist_event.py`, `store/__init__.py`),
+`learning.py` and three tests say history or record where they said the store or
+the log was memory. Three comments of the port, and dil-core's from which they
+came, still said `[data]` is "overwritten each cycle", a reading v0.3.6 corrected;
+they say it is revised as the loop runs (dil-core `4001f3b`). 413 tests pass. The comments that date
+reading memory to v0.3.7 stay.

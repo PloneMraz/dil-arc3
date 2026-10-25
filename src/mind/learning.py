@@ -33,9 +33,9 @@ THE LOOP, one step at a time:
 - **Experience, written.** Each experience is a datum (`kind: experience`): from where,
   by what act, to where, how often met, how often it reached somewhere new or
   the aim or ended the region, what the region reported. Written once the step's
-  report has come, and revised in place as it changes. The whole store is the
-  agent's memory (protocol v0.3.6).
-- **Memory.** The whole store is the agent's memory, and what its model
+  report has come, and revised in place as it changes. `[data]` is the agent's
+  memory (protocol v0.3.8).
+- **Memory.** `[data]` is the agent's memory, and what its model
   computes from, the mind reads there (Plone, 2026-10-05): the states it has
   stood in, the hypotheses it predicts with, the recent steps. What came in a
   cycle is in hand in that cycle — met in it, not yet
@@ -375,8 +375,8 @@ class Learning:
         self.curiosity = curiosity
         self._hypothesis_tags = {**HYPOTHESIS_TAGS, "object": organs.state_object}
         self._experience_tags = {**EXPERIENCE_TAGS, "object": organs.state_object}
-        # The experiences changed since their datum was last written (the whole
-        # store is the agent's memory: every change in what it learned is written).
+        # The experiences changed since their datum was last written (`[data]` is
+        # the agent's memory: every change in what it learned is written).
         self._pending: list[Edge] = []
         self.attention = attention
         # For a choice being made: how alike each state met is to where it stands

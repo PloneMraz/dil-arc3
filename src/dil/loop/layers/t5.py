@@ -105,8 +105,8 @@ WriteFn = Callable[[WriteRequest], None]
 
 
 # It can READ (protocol v0.3.7, §6.3 T5 and §9 "Reading memory"; done here
-# first, 2026-10-05, and ported back from dil-core d472e53). The whole store is
-# the agent's memory, and what a model computes from, the mind takes from it.
+# first, 2026-10-05, and ported back from dil-core d472e53). `[data]` is the
+# agent's memory, and what a model computes from, the mind takes from it.
 # `ask` answers a cycle later and runs every layer; `read` is a view of `[data]`
 # the rule reads directly, in the cycle. It is memory alone: a datum admitted in
 # the cycle reading is met in it, not recalled, and the view does not

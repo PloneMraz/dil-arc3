@@ -273,7 +273,7 @@ def test_the_activity_record_carries_the_tag_set_and_never_the_content():
     assert tags.open == {"domain": "rules", "kind": "directive", "object": "region-status"}
     assert (tags.fixed.provenance, tags.fixed.cycle_mark) == ("running", 1)
     assert "Your goal is to win" not in repr(seal_of(events, 1)), (
-        "uncontested content stays out of the agent's memory (§9)"
+        "uncontested content stays out of the record (§9)"
     )
     assert seal_of(events, 0).activity.recalled == ()
     assert "recalled" not in serialize_event_record(seal_of(events, 0))["activity"], (

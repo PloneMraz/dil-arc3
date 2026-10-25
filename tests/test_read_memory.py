@@ -1,7 +1,7 @@
 """(B): what the mind's model computes from, the mind reads from its memory
 (Plone, 2026-10-05; READ, protocol v0.3.7 §9).
 
-The whole store is the agent's memory. What came in a cycle is in hand in that
+`[data]` is the agent's memory. What came in a cycle is in hand in that
 cycle; from the next it is read from the store through T5's view, each cycle's
 reads are recorded in `[event]`, and what is written from what was read names
 it among what it was built from.

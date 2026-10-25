@@ -87,7 +87,7 @@ class ActivityEvent:
     """One cycle's activity, for the log's AUDIT role (§9 "completeness of trace").
 
     What was emitted, what returned, in which flow mode. Trace, not experience —
-    it never becomes a scar; like all the store, it is the agent's memory.
+    it never becomes a scar; like all the store, it is the agent's history.
     """
 
     cycle: int
@@ -106,7 +106,7 @@ class ActivityEvent:
     # asks a third party to confirm "host data entered only via the
     # tagging-gate" from the trace; the content stays out because an activity
     # record is trace, not experience ("without letting uncontested information
-    # into the agent's memory"). Empty when nothing was recalled, and then not
+    # become experience"). Empty when nothing was recalled, and then not
     # written at all, so every other record is byte-identical.
     recalled: tuple["RecalledTags", ...] = ()
     # The full tag set of every region return that entered `[data]` this
@@ -327,7 +327,7 @@ class RevisionActivity:
 class ReadActivity:
     """A read of `[data]` (v0.3.7, §9 "Reading memory"; dil-core d472e53).
 
-    The whole store is the agent's memory, and what a model computes
+    `[data]` is the agent's memory, and what a model computes
     from, the mind takes from it: at T5, beside `ask`, `write` and `test`, a view
     of `[data]` it reads directly — no query, no cycle's delay. Each cycle's reads
     are recorded here, one line for each purpose: which data, in which cycle, by

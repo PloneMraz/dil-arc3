@@ -1,8 +1,9 @@
 """The experience store — `[data]` and `[event]` (protocol §9).
 
-`[data]` is the mutable present, overwritten each cycle. `[event]` is the
-append-only log of read-only records: the one artifact an auditor can trust
-unconditionally, doubling as the agent's memory and the conformance trace.
+`[data]` is the mutable present, the agent's memory, its content revised as the
+loop runs. `[event]` is the append-only log of read-only records: the one
+artifact an auditor can trust unconditionally, doubling as the record in the
+agent's history and the conformance trace.
 
 The store's atomic unit is the registered mismatch, not the document. What
 accrues is collisions.
