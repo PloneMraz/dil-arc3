@@ -7999,3 +7999,10 @@ su15, tn36 — and in none does a score move.
   summed 13,658 s against 11,686 (+17%) — sp80 1,850 s, bp35 1,286; the scorecard
   closed at 3,633 s, inside the 9-hour limit by far, the deadline being one run of
   the 110 hidden games, which this does not measure.
+
+#### Submitted: `dil-arc3-history` version 1, code `e04c515` (Plone)
+
+Submission `57623232`, 08:34 UTC: grid, S2b, attention, 600 cycles, four at once;
+the mind reading its history (protocol v0.3.9). Its Save & Run: 15 of 183 levels,
+0.489, as version 41's; all 25 stores verifying under dil-core. Nothing is pushed
+to Kaggle until it is scored.

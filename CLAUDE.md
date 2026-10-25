@@ -1048,8 +1048,12 @@ notebook's **version 41**, code `963b7fb`: as the tenth, with each choice a
 collision turned named among what it was built from — the return that collided,
 and the thought once its id came back (`built_after`) — the prior item about the
 world's things recalled, a mismatch on recalled data scarred as its own, and
-dil-core's checker reading §13.4 by the cycle a scar happened in. What
-each scored, and what the run did, is in LOG.md. The paper must name the submission it
+dil-core's checker reading §13.4 by the cycle a scar happened in. A twelfth,
+`57623232`, is notebook `plonemraz/dil-arc3-history` **version 1**, code `e04c515`:
+as the eleventh, with the mind reading its history through the record's view
+(protocol v0.3.9) — a collision the record says came before turns it longer, and
+the recent steps come from the record. What each scored, and what the run did, is
+in LOG.md. The paper must name the submission it
 describes, and describe that notebook: a later version is a later submission.
 
 The notebook (`scripts/kaggle/build_dil_run.py`) has two branches in one cell:
