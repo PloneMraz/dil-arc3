@@ -7978,3 +7978,24 @@ the reader goes; the marker is gone here). A Save & Run of the 25 games in a new
 `dil-arc3-history`; `build_dil_run.py` now pins the CPU image as it pins the GPU's
 (`dil-arc3-learning`'s, Python 3.12.13, `…dafd4ce5…`), since a new notebook was once
 given 3.13.
+
+#### `dil-arc3-history` version 1 (Save & Run): the mind reading its history, on the 25 games
+
+Pushed 13:26 (+0700), code `e04c515` (both directions), `COMPLETE` by 14:45; Python
+3.12 (the pinned image). The scorecard is version 41's to the digit: 15 of 183
+levels, 0.48919, 14,975 actions, every game's score the same. On the eleven games
+every choice is the one this machine made (`rr-e2`): the loop is deterministic here
+as there. Against version 41 the choices part in six games — bp35, lf52, r11l, s5i5,
+su15, tn36 — and in none does a score move.
+
+- 2,636 turning collisions; 167 the record said came before, holding 215 choices
+  more. 2,589 reads for `collisions` (36,541 records) and 1,313 for `evidence`
+  (43,466); 1,480 thoughts and 92 choices name records read (25,858 `event:<seq>`).
+- All 25 stores verify under dil-core's verifier; its checker fails §13.7 in the
+  six it failed in for versions 40 and 41 (cd82, dc22, g50t, ls20, m0r0, sc25).
+  `[event]` 1,206 MiB against version 41's 1,242 (r11l's other way), `[data]` 740
+  against 742.
+- Time: the notebook 3,985 s against version 41's 3,325 (+20%); the games' walls
+  summed 13,658 s against 11,686 (+17%) — sp80 1,850 s, bp35 1,286; the scorecard
+  closed at 3,633 s, inside the 9-hour limit by far, the deadline being one run of
+  the 110 hidden games, which this does not measure.
