@@ -155,8 +155,6 @@ nine games of eleven a little, LOG.md, 2026-10-21).
 ## To settle before drafting
 
 - The submission described: `57623232` (`dil-arc3-history` version 1, 0.25), settled
-  with Plone 2026-10-26 (before: version 41, `57470744`, 0.25), settled with Plone
-  2026-10-25; version 35 set aside, its stores not verifying under dil-core
-  (`PLAN.md`).
-- The game Figure 2's chain is from — chosen from version 41's stores when the
-  chains are found.
+  with Plone 2026-10-26 (version 41, `57470744`, 0.25, the day before); version 35
+  set aside, its stores not verifying under dil-core (`PLAN.md`).
+- Figure 2's chain: lp85, the same record for record in both runs.
