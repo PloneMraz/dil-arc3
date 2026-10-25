@@ -546,50 +546,59 @@ _BACK_BLOCK = 1 << 16
 def read_log_records_back(
     dir_: str | os.PathLike[str], before: int, scan: int
 ) -> list[SeqRecord]:
+    """The records before `before`, newest first, at most `scan` (`iter_log_records_back`)."""
+    return list(iter_log_records_back(dir_, before, scan))
+
+
+def iter_log_records_back(
+    dir_: str | os.PathLike[str], before: int, scan: int
+):
     """The records before `before` (a place in the chain), newest first, at most
-    `scan` of them — read from the end of the newest segment
-    backward, a block at a time, so what it costs is what it scans, never the
-    whole log (v0.3.9 §9, "Reading the record"; dil-core c258f43). The records
-    of the cycle that reads, still being appended, lie past `before` and are
-    passed over."""
-    out: list[SeqRecord] = []
+    `scan` of them — read from the end of the newest segment backward, a block at
+    a time, and only as far as the reader goes, so what it costs is what it scans,
+    never the whole log (v0.3.9 §9, "Reading the record"; dil-core c258f43). The
+    records of the cycle that reads, still being appended, lie past `before` and
+    are passed over."""
+    taken = 0
     if scan <= 0:
-        return out
-
-    def take(line: bytes) -> None:
-        if len(out) >= scan or not line.strip():
-            return
-        obj = json.loads(line.decode("utf-8"))
-        if obj["seq"] >= before:
-            return
-        out.append(SeqRecord(obj["seq"], deserialize_event_record(obj["record"])))
-
+        return
     for seg in reversed(list_segments(dir_)):
-        if len(out) >= scan:
-            break
         with seg.file.open("rb") as fh:
             pos = fh.seek(0, os.SEEK_END)
             rest = b""
-            while len(out) < scan:
+            while True:
+                lines: list[bytes] = []
                 if pos == 0:
                     if rest:
-                        take(rest)
-                    break
-                n = min(_BACK_BLOCK, pos)
-                pos -= n
-                fh.seek(pos)
-                buf = fh.read(n) + rest
-                # Every complete line after the first newline; what precedes it
-                # may be cut, and waits for the block before.
-                end = len(buf)
-                i = buf.rfind(b"\n", 0, end)
-                while i >= 0 and len(out) < scan:
-                    if end > i + 1:
-                        take(buf[i + 1:end])
-                    end = i
+                        lines.append(rest)
+                    rest = b""
+                else:
+                    n = min(_BACK_BLOCK, pos)
+                    pos -= n
+                    fh.seek(pos)
+                    buf = fh.read(n) + rest
+                    # Every complete line after the first newline; what precedes
+                    # it may be cut, and waits for the block before.
+                    end = len(buf)
                     i = buf.rfind(b"\n", 0, end)
-                rest = buf[:end]
-    return out
+                    while i >= 0:
+                        if end > i + 1:
+                            lines.append(buf[i + 1:end])
+                        end = i
+                        i = buf.rfind(b"\n", 0, end)
+                    rest = buf[:end]
+                for line in lines:
+                    if not line.strip():
+                        continue
+                    obj = json.loads(line.decode("utf-8"))
+                    if obj["seq"] >= before:
+                        continue
+                    yield SeqRecord(obj["seq"], deserialize_event_record(obj["record"]))
+                    taken += 1
+                    if taken >= scan:
+                        return
+                if pos == 0 and not rest:
+                    break
 
 
 def verify_jsonl_sink(dir_: str | os.PathLike[str]) -> ChainVerification:

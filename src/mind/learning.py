@@ -303,6 +303,34 @@ class Evidence(Sequence):
         return self._learning.recalled_step(step, unit, report, rest[0] if rest else None)
 
 
+class RecordEvidence(Sequence):
+    """The recent steps as an inducer is shown them, read from the record of what
+    happened (`[event]`, protocol v0.3.9) when the inducer looks, and only then:
+    the seals of the latest cycles say which step and which report each cycle
+    admitted, by id, and memory (`[data]`) holds what they were. The step in hand,
+    met this cycle, is the last, as it came. Each seal read is a record read, and
+    what is built from what the inducer read names it (`event:<seq>`) beside the
+    data read (Plone, 2026-10-25: the steps it is shown come from its history,
+    not from what the mind keeps)."""
+
+    def __init__(self, learning: "Learning", seen: list) -> None:
+        self._learning, self._seen, self._steps = learning, seen, None
+
+    def _read(self) -> list:
+        if self._steps is None:
+            self._steps = self._learning.recent_from_record([tuple(s[:3]) for s in self._seen])
+        return self._steps
+
+    def __len__(self) -> int:
+        return len(self._read())
+
+    def __getitem__(self, i):
+        steps = self._read()
+        if isinstance(i, slice):
+            return [steps[j] for j in range(*i.indices(len(steps)))]
+        return steps[i]
+
+
 @dataclass(eq=False)
 class Edge(Weighed):
     """One experience: from a state, an act, came a state and a report. `source`
@@ -486,6 +514,16 @@ class Learning:
         # ("unforeseen", where the answer differed); and the thought's handle.
         self._turn: tuple | None = None
         self._turn_left = 0
+        # The record of what happened (`[event]`), as the mind reads it this cycle
+        # (protocol v0.3.9: an open link), and the source its steps come from.
+        # What collided and turned it, by the return that collided: (collision,
+        # situation, kind) — the return's datum id once it has come back
+        # (`recall_from`); the region's scars are read against it (`_repeats`).
+        self._record: Any = None
+        self.step_source: str | None = None
+        self._collided: dict[str, tuple] = {}
+        self._read_for_word: dict[str, None] = {}
+        self._collided_unsettled: list[tuple[tuple, Any]] = []
         # The cycle's field, as every layer reads it (INV-7; `read_field`).
         self._field: Any = None
         # B2 (Plone, 2026-10-18): what it reads of the field each cycle, as whole
@@ -541,6 +579,31 @@ class Learning:
                 self._unsettled.append((raw, unit, side))
             else:
                 self._raw[raw] = Recalled(datum, side)
+        collided, self._collided_unsettled = self._collided_unsettled, []
+        for key, unit in collided:
+            datum = view.id_of(unit)
+            if datum is None:
+                self._collided_unsettled.append((key, unit))
+            else:
+                self._collided[datum] = key
+
+    def read_record(self, record: Any) -> None:
+        """The record of what happened (`[event]`) as the mind reads it this cycle
+        (protocol v0.3.9 §9, "Reading the record"): open to it every cycle, each
+        read recorded. None outside a cycle."""
+        self._record = record
+
+    def _repeats(self, key: tuple) -> list[int]:
+        """Where the record says this collision came before: the scars on the
+        source its steps come from whose return collided as this one does — the
+        same way, in the same situation, by the same kind of act — by their place
+        in the chain, as far back as the record's view reaches. The region's
+        scars, not the mind's own account of its thoughts: what the region pushed
+        (INV-6)."""
+        if self._record is None or self.step_source is None:
+            return []
+        return [found.seq for found in self._record.scars(self.step_source, "collisions")
+                if self._collided.get(getattr(found.record, "datum_id", None)) == key]
 
     def _settle(self, h: Hypothesis) -> None:
         """A hypothesis whose datum is in the store: read there from now on."""
@@ -611,6 +674,60 @@ class Learning:
             report = payload.get(self.organs.report_key) if isinstance(payload, dict) else report
         return step, report
 
+    def recent_from_record(self, seen: list, into: dict | None = None) -> list[tuple[Step, dict[str, Any] | None]]:
+        """The recent steps `seen` — (step, unit, report), the last the newest — as
+        the record says they came: all of them read from it when the newest came
+        in an earlier cycle, else those before it, and the one in hand, met this
+        cycle, as it came. As they are, without a record to read."""
+        if not seen:
+            return []
+        if self._record is None or self._view is None:
+            return [(s, r) for s, _, r in seen]
+        step, unit, report = seen[-1]
+        in_store = unit is not None and self._view.id_of(unit) is not None
+        out = self.steps_from_record(len(seen) if in_store else len(seen) - 1, into)
+        return out if in_store else out + [(step, report)]
+
+    def steps_from_record(self, n: int, into: dict | None = None) -> list[tuple[Step, dict[str, Any] | None]]:
+        """The `n` steps before the one in hand, oldest first, as the record says
+        they came: each cycle's seal names the step and the report it admitted —
+        by the channel each came on (its `source`) — and memory holds what they
+        were. Fewer where the record's view does not reach so far. What was read
+        goes `into` what the next datum written is built from (the learning's
+        `_used`, unless another is given)."""
+        used = self._used if into is None else into
+        record, view = self._record, self._view
+        if n <= 0 or record is None or view is None or getattr(record, "cycles", None) is None:
+            return []
+        step_channel = self.organs.channels.get("step")
+        report_channel = self.organs.channels.get("report")
+        out: list[tuple[Step, dict[str, Any] | None]] = []
+        for found in record.cycles("evidence", 2 * n):
+            admitted = found.record.activity.admitted
+            came = {t.open.get("source"): t.datum_id for t in admitted}
+            frame = came.get(step_channel)
+            if frame is None:
+                continue
+            held = view.read(frame, "evidence")
+            step = self.organs.step(held.payload) if held is not None else None
+            if step is None:
+                continue
+            used[frame] = None
+            used[f"event:{found.seq}"] = None
+            report = None
+            said = came.get(report_channel)
+            if said is not None:
+                payload = view.read(said, "evidence")
+                if payload is not None:
+                    used[said] = None
+                    payload = payload.payload
+                    report = payload.get(self.organs.report_key) if isinstance(payload, dict) else None
+            out.append((step, report))
+            if len(out) >= n:
+                break
+        out.reverse()
+        return out
+
     def _take_used(self) -> tuple[str, ...]:
         """What was read, or computed from what was read, since this was last asked:
         what is written now was built from it."""
@@ -632,7 +749,7 @@ class Learning:
         brings the aim, from what the mind expected of the step and what the
         region showed between (S4)."""
         out = []
-        evidence = Evidence(self, self._seen_now)
+        evidence = RecordEvidence(self, self._seen_now) if self._record is not None else Evidence(self, self._seen_now)
         extra = {"report": report, "expected": self._expected, "through": step.through} if report is not None else {}
         used = self._take_used()
         forms = self.inducer.induce(source_raw, act, step.before, step.after, foreseen=foreseen,
@@ -778,6 +895,8 @@ class Learning:
         remark = context.remark or {}
         said = self._said(remark)
         lifted = self._lift(said)
+        # What it reads of its history to weigh the word, named in the answer.
+        self._read_for_word = {}
         built = (context.seen[-1][1],) if context.seen else ()
         if context.remark_unit is not None:
             built = (*built, context.remark_unit)   # what it objected on
@@ -788,6 +907,7 @@ class Learning:
             return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
         again = said in self._objected
         if said[0] == "repeating" and not again and self._getting_somewhere(remark, context):
+            built = (*built, *self._read_for_word)
             self._objected.setdefault(said, set())
             payload = {"on": "onlooker", "remark": remark, "here": self._here, "kept_on":
                        "each step of the run reached a state it had not stood in"}
@@ -795,6 +915,7 @@ class Learning:
                 payload["lifted"] = lifted
             return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), built_from=built)])
         pairs = self._objecting(remark, context, again)
+        built = (*built, *(r for r in self._read_for_word if r not in built))
         self._objected.setdefault(said, set()).update(pairs)
         answer = Answer()
         answers = self._answers.setdefault(said, [])
@@ -854,10 +975,19 @@ class Learning:
             said = {"collided": "unforeseen", "act": self.organs.record(act), "turns": "to where it differed"}
         else:
             return None
+        # A collision the record says came before, the same way here by the same
+        # kind of act, turns it for longer: a choice more for each time (DECLARED,
+        # not measured; Plone, 2026-10-25: history as evidence to the thought).
+        key = (said["collided"], situation, kind)
+        repeats = self._repeats(key)
+        if unit is not None:
+            self._collided_unsettled.append((key, unit))
         self._turn_thought = TurnHandle(self.steps)
-        self._turn_left = self._turn_hold()
-        built = (unit,) if unit is not None else ()
+        self._turn_left = self._turn_hold() + len(repeats)
+        built = ((unit,) if unit is not None else ()) + tuple(f"event:{seq}" for seq in repeats)
         self._turn_from = built
+        if repeats:
+            said = {**said, "came before": len(repeats), "holds for": self._turn_left}
         payload = {"on": "step", "step": self.steps, "here": self._state_of.get(source_raw), **said}
         return Thinking(writes=[Write(payload=payload, tags=dict(THOUGHT_TAGS), handle=self._turn_thought,
                                       built_from=built)])
@@ -986,7 +1116,7 @@ class Learning:
         if self._now_raw is not None and remark.get("remark") == "repeating":
             pairs |= {(self._now_raw, act) for act in named}
         run = int(remark.get("at_least") or 0)
-        steps = [s for s, _, _ in context.seen]
+        steps = [s for s, _ in self.recent_from_record(context.seen, self._read_for_word)]
         reach = min(run, len(steps)) if run and remark.get("remark") == "back-and-forth" else 0
         if again and run:
             reach = min(len(steps), int(shifted_count(run, rising(axis(context.field, ALERTNESS)))))
@@ -1000,7 +1130,7 @@ class Learning:
         """Whether each step of the run the onlooker points at reached a situation
         not stood in before in that run."""
         run = int(remark.get("at_least") or 0)
-        steps = [s for s, _, _ in context.seen][-run:] if run else []
+        steps = [s for s, _ in self.recent_from_record(context.seen, self._read_for_word)][-run:] if run else []
         if len(steps) < run or not steps:
             return False
         states = [self.inducer.situation(steps[0].before)] + [self.inducer.situation(s.after) for s in steps]

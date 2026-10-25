@@ -349,7 +349,13 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   when the field has not leaned, shifted by exploration as T5's is (½–1½, 8 to
   24; the mind keeps 32 and reads that many): the steps just seen, each with
   what the region reported of itself that cycle. The mind reads them for how
-  far an objection of the onlooker's reaches.
+  far an objection of the onlooker's reaches, and an inducer is shown them.
+  **They come from its history** (Plone, 2026-10-25): the seals of the latest
+  cycles in the record (`cycles`, read through the record's view) say which step
+  and report each cycle admitted, memory says what they were, and the step in
+  hand comes as it came; the answer to the onlooker names the seals and data it
+  read (`event:<seq>`). The same steps the mind kept: no choice changed, measured
+  on the eleven games (LOG.md, 2026-10-25).
 - **The mind keeps what it learned** (Plone, 2026-09-27). It is shown every step
   as it comes (`observe`) and
   holds all it learned, one step at a time (INV-5: accrued, never loaded). What
@@ -393,7 +399,12 @@ settled with Plone; where and why is in `LOG.md`, under 2026-09-24.
   thought, built from the return: silence turns it from that kind of act; an
   answer other than it foresaw turns it to where the answer differed (where its
   model says an act lies there: `Inducer.unlike`, `Inducer.at`). The turn holds
-  for as many choices as alertness says (`TURN_HOLD`, below), each saying so in
+  for as many choices as alertness says (`TURN_HOLD`, below) — and a choice
+  longer for each time the record says this collision came before: a scar on
+  the step's source whose return collided the same way, in the same situation,
+  by the same kind of act (the region's scars, read through the record's view;
+  the thought says `came before` and names them; declared, not measured; Plone,
+  2026-10-25) — each saying so in
   its `why` and naming among what it was built from the return that collided
   and, once the thought's id comes back, the thought (`built_after`, next
   section); the next collision turns it again. On the region's

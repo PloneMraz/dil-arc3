@@ -60,6 +60,10 @@ COMPETITION = "arc-prize-2026-arc-agi-3"
 # interpreter, built for 3.12; on the image a new notebook was given on 2026-10-19,
 # Python 3.13, torch could not load (LOG.md, 2026-10-19).
 GPU_IMAGE = "gcr.io/kaggle-private-byod/python@sha256:37c64f7dd9c54116ecd1bcc88817c5469b88387388fade02bfa8bf3fc647d461"
+# The CPU notebook's image, pinned: the one `dil-arc3-learning` runs on (Python
+# 3.12.13, read from its metadata 2026-10-25), so a new CPU notebook is not given
+# a newer one, as the GPU notebook made on 2026-10-19 was (3.13).
+CPU_IMAGE = "gcr.io/kaggle-images/python@sha256:dafd4ce5668bbf1ad422e4c109e0f18c9623c3a7c7f48b0235f13142755c40b9"
 # name: (Kaggle model handle, manifest from Hugging Face, served name, serving)
 MODELS = {
     "27b": ("michaelpoluektov/qwen3-6-27b-fp8/transformers/default/1",
@@ -583,6 +587,7 @@ def main() -> None:
             "id": f"{OWNER}/{slug}", "title": title,
             "code_file": "run.ipynb", "language": "python", "kernel_type": "notebook",
             "is_private": True, "enable_gpu": False, "enable_tpu": False, "enable_internet": False,
+            "docker_image": CPU_IMAGE, "docker_image_pinning_type": "original",
             "keywords": [], "dataset_sources": [f"{OWNER}/{DATASET_SLUG}"],
             "competition_sources": [COMPETITION], "kernel_sources": [], "model_sources": [],
         }, indent=1))

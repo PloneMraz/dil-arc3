@@ -449,7 +449,8 @@ class Cycle:
                 return f(*args, **kwargs)
             return call
 
-        return RecordView(recent=opened(inner.recent), about=opened(inner.about), scars=opened(inner.scars))
+        return RecordView(recent=opened(inner.recent), about=opened(inner.about), scars=opened(inner.scars),
+                          cycles=opened(inner.cycles))
 
     def _datum_id(self) -> str:
         """The id the cycle datum takes in `[data]`; also its key in the path."""

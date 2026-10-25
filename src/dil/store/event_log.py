@@ -41,6 +41,7 @@ from .event_sink import (
     SeqRecord,
     create_jsonl_file_sink,
     read_log_records,
+    iter_log_records_back,
     read_log_records_back,
 )
 from .resist_event import EventRecord, LogRecord
@@ -160,8 +161,13 @@ class InMemoryEventLog:
         return list(self._by_source.get(source_id, ()))
 
     def back(self, before: int, scan: int) -> list[SeqRecord]:
+        return list(self.iter_back(before, scan))
+
+    def iter_back(self, before: int, scan: int):
+        """`back`, record by record, as far as the reader goes."""
         start = min(before, len(self._records)) - 1
-        return [SeqRecord(seq, self._records[seq]) for seq in range(start, max(-1, start - scan), -1)]
+        for seq in range(start, max(-1, start - scan), -1):
+            yield SeqRecord(seq, self._records[seq])
 
 
 def create_event_log(sink: EventSinkProtocol | None = None) -> EventLog:
@@ -222,6 +228,10 @@ class DurableEventLog:
 
     def back(self, before: int, scan: int) -> list[SeqRecord]:
         return read_log_records_back(self._dir, before, scan)
+
+    def iter_back(self, before: int, scan: int):
+        """`back`, record by record, as far as the reader goes."""
+        return iter_log_records_back(self._dir, before, scan)
 
     def head(self) -> str:
         """The current tamper-evidence chain head (for external anchoring)."""

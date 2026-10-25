@@ -21,7 +21,7 @@ from typing import Callable
 
 from ..store.event_log import ReadableEventLog
 from ..store.event_sink import SeqRecord
-from ..store.resist_event import EventRecord, LogRecord, ManifestRecord
+from ..store.resist_event import CycleSealActivity, EventRecord, LogRecord, ManifestRecord
 from .decisions import RECORD_SCAN
 from .layers.t5 import RecordView
 
@@ -47,7 +47,8 @@ def create_record_view(
         out: list[SeqRecord] = []
         if cap <= 0:
             return out
-        for r in log.back(before, scan):
+        records = log.iter_back(before, scan) if hasattr(log, "iter_back") else log.back(before, scan)
+        for r in records:
             if not keep(r.record):
                 continue
             out.append(r)
@@ -70,4 +71,10 @@ def create_record_view(
             limit,
         )
 
-    return RecordView(recent=recent, about=about, scars=scars)
+    def cycles(purpose: str, limit: int | None = None) -> list[SeqRecord]:
+        # DEVIATION (proposed, for measurement; Plone, 2026-10-25): the seals of
+        # the latest cycles — what each admitted, emitted and wrote — so what
+        # happened is read cycle by cycle without reading every line between.
+        return read(purpose, lambda r: isinstance(r, CycleSealActivity), limit)
+
+    return RecordView(recent=recent, about=about, scars=scars, cycles=cycles)

@@ -7964,3 +7964,16 @@ log carried no grid.
   the same three games choose otherwise (lf52, r11l, tn36), and direction 2 again
   changes nothing. All 22 stores verify under dil-core's verifier; its checker fails
   only cn04 (§13.7), in both runs alike. `[event]` grows 0.2–0.9%.
+
+#### Both directions kept; a notebook of their own (Plone)
+
+Plone keeps both: a collision the record says came before turns the mind a choice
+longer each time, and the recent steps come from its history. CLAUDE.md says so;
+three tests (`tests/test_mind_reads_history.py`: the region's scars counted against
+the returns of its own earlier turns, nothing without a record or a source, and the
+steps read back from the record equal to the ones the mind kept), 426 pass. The
+record's fourth way of reading, `cycles`, is marked `DEVIATION` in the port until
+dil-core has it. A Save & Run of the 25 games in a new notebook,
+`dil-arc3-history`; `build_dil_run.py` now pins the CPU image as it pins the GPU's
+(`dil-arc3-learning`'s, Python 3.12.13, `…dafd4ce5…`), since a new notebook was once
+given 3.13.

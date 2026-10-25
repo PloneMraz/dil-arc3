@@ -172,6 +172,8 @@ class RecordView:
     about: Callable[..., Any]
     # scars(source_id, purpose, limit=None) -> the scars against one source.
     scars: Callable[..., Any]
+    # cycles(purpose, limit=None) -> the seals of the latest cycles (proposed).
+    cycles: Callable[..., Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)

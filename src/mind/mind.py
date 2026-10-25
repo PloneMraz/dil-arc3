@@ -549,11 +549,13 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
     channels = mind.organs.channels
 
     def rule(entity_id: str, window, observed: InfoUnit, contribute=None, ask=None, write=None, test=None,
-             field=None, read=None):
+             field=None, read=None, record=None):
         # The cycle's field reaches the mind as it reaches every layer (INV-7);
-        # and the store's view, what it reads its memory through (v0.3.7 §9).
+        # the store's view, what it reads its memory through (v0.3.7 §9); and the
+        # record's, what it reads its history through (v0.3.9 §9).
         mind._field = field
         mind.learning.recall_from(read)
+        mind.learning.read_record(record)
         mind.learning.read_field(field)
         content = observed.content if isinstance(observed.content, dict) else {}
         channel = content.get("channel")
@@ -565,6 +567,7 @@ def mind_rule(mind: Mind) -> Callable[..., InfoUnit | Expecting]:
             return observed
         if channel == channels.get("step") and isinstance(payload, dict):
             step = mind.organs.step(payload)
+            mind.learning.step_source = entity_id
             if step is not None:
                 return mind.on_step(step, observed, content, payload, window, contribute, ask, write)
         if channel == channels.get("report") and isinstance(payload, dict):
