@@ -7818,3 +7818,14 @@ of `hash_chain.py` and `event_sink.py`, and the HTTP and file bodies of
 LOG keeps its history as written. 413 tests pass. In `mind/mind.py`'s docstring a
 sentence still said the host's waiting was a seam left unused; since 2026-10-19 the
 mind thinks once in a situation while the host waits (`consider`), and it says so.
+
+### 2026-10-25
+
+#### Submission `57470744` scored: 0.25
+
+Read on 2026-10-25, after Plone said it had finished (when it reached `COMPLETE` is
+not known here: `competitions submissions` shows only the submission's date): public
+score **0.25** — version 37's `57443352` 0.25, version 35's `57371259` 0.26. Its Save
+& Run had scored 0.489 (15 of 183 levels) against version 37's 0.491 (16). Kaggle
+shows two decimals, so whether version 41 scored a little above or below version 37
+hidden cannot be read from it. Kaggle is free to use again.
