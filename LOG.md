@@ -7924,7 +7924,7 @@ the working tree, not committed, for Plone to decide.
 | actions | 6,589 | 6,589 | 6,589 |
 | games whose choices differ from base | — | 3 (lf52 from step 307, r11l 105, tn36 169) | the same 3, choice for choice as direction 1 |
 | turned thoughts "came before" | — | 94 (holds +124 choices) | 94 |
-| `read-record` lines | 0 | 999 (`collisions`, 12,117 records) | + 621 `evidence` (20,765 records) |
+| `read-record` lines | 0 | 999 (`collisions`, 12,109 records) | + 621 `evidence` (20,765 records) |
 | written data naming a record read | 0 | 94 thoughts, 64 choices (215 ids) | 715 thoughts, 64 choices (12,066 ids) |
 | ls20, 300 cycles alone | 72 s | 81 s (+12.5%) | 82 s (+14%) |
 
