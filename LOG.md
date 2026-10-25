@@ -8056,3 +8056,13 @@ conclusion; reproducing; references. Drafted on `dil-arc3-history` version 1's s
 (`paper/TABLES.md`, its new section); what waits for submission `57623232`'s hidden
 score is marked in yellow. The PDF's metadata: Title, Chrome's user agent and Skia
 — no author field.
+
+### 2026-10-26
+
+#### Submission `57623232` scored: 0.25
+
+Read on 2026-10-26, after Plone said it had come: `dil-arc3-history` version 1, the
+mind reading its history, public score **0.25** — version 41's `57470744` 0.25, as
+their Save & Runs (15 of 183 levels, 0.489, both). Kaggle shows two decimals. Kaggle
+is free to use again. The paper's PDF draft names it, as drafted (it is not lower):
+its ID and score filled in, the draft's note saying so.

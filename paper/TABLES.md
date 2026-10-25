@@ -23,7 +23,7 @@ a game, four at once.
 | `57371259` | 35 | `b4d7d5a` | collisions turn the mind; the field carries its history (B1) and the counts follow it (B2) | 0.26 | 16, 0.518 |
 | `57443352` | 37 | `9fcaafc` | as 35, its stores verifying under dil-core's verifier | 0.25 | 16, 0.491 |
 | `57470744` | 41 | `963b7fb` | as 37, each turned choice naming its return and its thought | 0.25 | 15, 0.489 |
-| `57623232` | `dil-arc3-history` 1 | `e04c515` | as 41, the mind reading its own history (protocol v0.3.9) | pending | 15, 0.489 |
+| `57623232` | `dil-arc3-history` 1 | `e04c515` | as 41, the mind reading its own history (protocol v0.3.9) | 0.25 | 15, 0.489 |
 
 [LOG: "v12 scored: 0.00", "The gateway probe scored 0.06", "Learning notebook version 5
 scored: 0.05", "Submission `56658708` scored 0.00", "Version 18 …", "Submission `56820389`
@@ -31,7 +31,7 @@ scored 0.26", "Version 23 …", "Submission `56887238` scored 0.25", "Version 26
 "`56934496` … scored 0.02", "Version 28 …", "`56983446` … scored 0.25", "Version 35 …",
 "Version 35 scored 0.26", "Version 36 (Save & Run) …" (Kaggle's version 37), "Submission
 `57443352` scored: 0.25", "Version 40 …", "Version 41 …", "Submission `57470744`
-scored: 0.25"]
+scored: 0.25", "Submission `57623232` scored: 0.25"]
 
 ## Table 2 — one change at a time, on the 25 public games
 
