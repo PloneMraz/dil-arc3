@@ -7890,3 +7890,53 @@ the record once that is designed and measured (Plone: next). Checked: an ls20 ru
 of 60 cycles verifies under dil-core's verifier with the new schema, and
 `read` and `read-record` lines written here verify and read back under dil-core.
 423 tests pass (`tests/test_read_record.py` replaces `test_recollection_cycle.py`).
+
+#### The mind reads its history: two directions measured (Plone)
+
+Plone: the mind uses the record's view — first direction 1, then direction 2 with
+it — each written, run and measured. The eleven games, 600 cycles, grid, S2b,
+attention; each run from a snapshot of `src/` (`scripts/data/wt/`, the baseline a
+worktree at `d05b9c6`), so editing could not reach a running game. The code is in
+the working tree, not committed, for Plone to decide.
+
+- **Direction 1 — a collision the record says came before turns the mind for
+  longer.** On each collision that turns it, the learning reads the scars on the
+  step's source (`record.scars`, purpose `collisions`) and counts those whose
+  return collided the same way, in the same situation, by the same kind of act —
+  the region's scars, matched against the returns of its own earlier turns once
+  their ids came back. Each adds a choice to the turn's hold (declared, not
+  measured); the thought says `came before` and `holds for` and names the scars
+  as `event:<seq>`.
+- **Direction 2 — the recent steps come from the record.** The steps the mind
+  weighs the onlooker's word by (how far an objection reaches, whether a run was
+  getting somewhere), and the evidence an inducer is shown, are read from the
+  seals of the latest cycles (which step and report each admitted), their content
+  from `[data]`; the step in hand as it came. The answer names the seals and data
+  read. It needs a fourth way of reading, `cycles` (the seals of the latest
+  cycles), added to the port only (`DEVIATION`, proposed). The grid inducer takes
+  `evidence` and does not use it: with grid, direction 2 reaches only the
+  onlooker's answers.
+
+| | base | direction 1 | 1 + 2 |
+|---|---|---|---|
+| score (11) | 1.10586 | 1.10586 | 1.10586 |
+| levels | 12 / 80 | 12 / 80 | 12 / 80 |
+| actions | 6,589 | 6,589 | 6,589 |
+| games whose choices differ from base | — | 3 (lf52 from step 307, r11l 105, tn36 169) | the same 3, choice for choice as direction 1 |
+| turned thoughts "came before" | — | 94 (holds +124 choices) | 94 |
+| `read-record` lines | 0 | 999 (`collisions`, 12,117 records) | + 621 `evidence` (20,765 records) |
+| written data naming a record read | 0 | 94 thoughts, 64 choices (215 ids) | 715 thoughts, 64 choices (12,066 ids) |
+| ls20, 300 cycles alone | 72 s | 81 s (+12.5%) | 82 s (+14%) |
+
+The base is version 41's score on these games (1.10586, as `relink`). All 33
+stores verify under dil-core's verifier; dil-core's checker fails only §13.7 in
+ls20 and m0r0, in all three runs alike. Per game the scores are the base's in both:
+where a turn held longer it chose otherwise (lf52 step 307: still turned from a
+silence, it clicked elsewhere), and the paths met no level the base did not. r11l
+chooses alike only up to step 105, after its level. Direction 2 changes no choice:
+the steps read from the record are the ones the mind kept. Its `collisions` reads
+reach a little less far (ar25 786 records against 790), its own `read-record`
+lines taking room in the view's 4,096. Corrected on the way: a scar record does
+carry content — the ResistEvent's `expected` and `received` and the scarred
+datum's payload (about 25 KB each in these stores) — where I had told Plone the
+log carried no grid.
