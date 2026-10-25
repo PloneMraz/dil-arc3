@@ -27,8 +27,8 @@ expects, the game answers, and where the answer differs, the difference is what 
 learns from — not a score to raise, but data that changes what it does next.
 
 Our question is whether a third party can read back, from the agent's record
-alone, what it knew at each step and why it acted. An agent may change its mind
-about the past, but not the record of how it came to that mind. Figure 1 shows the loop: the
+alone, what it knew at each step and why it acted. An agent may misread and
+revise its memory; it may not rewrite the record of what happened. Figure 1 shows the loop: the
 game returns a frame, the host's sensory organs take it in, the protocol's layers
 carry it, the mind compares it with what it expected and commands, and the host's
 effectors carry the command out.
