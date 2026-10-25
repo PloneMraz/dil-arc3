@@ -172,7 +172,7 @@ class RecordView:
     about: Callable[..., Any]
     # scars(source_id, purpose, limit=None) -> the scars against one source.
     scars: Callable[..., Any]
-    # cycles(purpose, limit=None) -> the seals of the latest cycles (proposed).
+    # cycles(purpose, limit=None) -> the seals of the latest cycles (dil-core 600d1e3).
     cycles: Callable[..., Any] | None = None
 
 

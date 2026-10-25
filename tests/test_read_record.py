@@ -236,3 +236,18 @@ def test_the_durable_log_reads_back_from_disk_across_segments_as_in_memory(tmp_p
         expected = [(seq, records[seq]) for seq in range(min(before, len(records)) - 1, max(-1, before - 1 - scan), -1)]
         assert [(r.seq, r.record) for r in log.back(before, scan)] == expected, (before, scan)
     log.close()
+
+
+def test_cycles_reads_the_seals_of_the_latest_cycles_newest_first():
+    data, events = seeded()
+    got = []
+
+    def rule(entity_id, window, observed, contribute=None, ask=None, write=None, *, record=None):
+        got.append([r.record.activity.cycle for r in record.cycles("what happened", 2)])
+        return persistence(entity_id, window, observed)
+
+    cycle = cycle_over(data, events, rule)
+    for _ in range(4):
+        cycle.run(HostCycleInput(signals=(seen("hall", "sun"),)))
+    assert got == [[], [0], [1, 0], [2, 1]]
+    assert [(l.cycle_mark, len(l.records)) for l in record_reads(events)] == [(1, 1), (2, 2), (3, 2)]

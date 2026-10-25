@@ -72,9 +72,9 @@ def create_record_view(
         )
 
     def cycles(purpose: str, limit: int | None = None) -> list[SeqRecord]:
-        # DEVIATION (proposed, for measurement; Plone, 2026-10-25): the seals of
-        # the latest cycles — what each admitted, emitted and wrote — so what
-        # happened is read cycle by cycle without reading every line between.
+        # The seals of the latest cycles — what each admitted, emitted and wrote —
+        # so what happened is read cycle by cycle without reading every line
+        # between (dil-core 600d1e3).
         return read(purpose, lambda r: isinstance(r, CycleSealActivity), limit)
 
     return RecordView(recent=recent, about=about, scars=scars, cycles=cycles)

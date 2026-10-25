@@ -7972,8 +7972,9 @@ longer each time, and the recent steps come from its history. CLAUDE.md says so;
 three tests (`tests/test_mind_reads_history.py`: the region's scars counted against
 the returns of its own earlier turns, nothing without a record or a source, and the
 steps read back from the record equal to the ones the mind kept), 426 pass. The
-record's fourth way of reading, `cycles`, is marked `DEVIATION` in the port until
-dil-core has it. A Save & Run of the 25 games in a new notebook,
+record's fourth way of reading, `cycles`, was marked `DEVIATION` in the port until
+dil-core had it (dil-core `600d1e3`, the same day, with reading back only as far as
+the reader goes; the marker is gone here). A Save & Run of the 25 games in a new notebook,
 `dil-arc3-history`; `build_dil_run.py` now pins the CPU image as it pins the GPU's
 (`dil-arc3-learning`'s, Python 3.12.13, `…dafd4ce5…`), since a new notebook was once
 given 3.13.
