@@ -7866,7 +7866,7 @@ reading memory to v0.3.7 stay.
 Plone: reading the event log is an open link, not a switch, in all three
 repositories. Until now the one reading of `[event]` was recollection, a predict
 rule a host wired in (`Cycle(recollection=…)`), off unless declared — and off here
-since it was measured as a predictor (2026-09-24 above: it lost 62 of 66 contests
+since it was measured as a predictor (2026-09-23 above: it lost 62 of 66 contests
 and doubled the errors). dil-core first (`c258f43`, with `6388158`), then here:
 the driver hands T5's rule a view of `[event]` every cycle, nothing declared —
 `recent`, `about(datum)`, `scars(source)`, newest first, holding what the log held
