@@ -15,7 +15,10 @@ STORE_DIR is a game's store (the folder holding `store/event-log` and
    saying how it turned);
 4. what the mind expects of that act there from then on: the experience of it
    (`kind: experience`, from where, by what act), and each later cycle it was met
-   again (its revisions) — whether the frame then collided or came as expected;
+   again — an expectation of the region's return held by that experience
+   (`form: expectation`, its `heldBy`) — whether the frame then collided or came
+   as expected. Not its revisions: every written experience is revised when the
+   inducer reads situations again, whether or not the act is met;
 5. the next collision after it: which act, and what had been expected.
 """
 
@@ -64,10 +67,15 @@ def chains(records, data):
     for d, w in written.items():
         for b in w["built"]:
             by_source.setdefault(b, []).append(d)
-    revisions: dict[str, list[int]] = {}
+    # Each datum an expectation of a return from outside was held by (v0.3.5
+    # `heldBy`), with the cycle and whether the return deviated; the agent's own
+    # writes coming back on the store's channel, whose entity is the datum, are
+    # not a meeting with the region.
+    held_at: dict[str, list[tuple[int, bool]]] = {}
     for r in records:
-        if r.get("form") == "revision":
-            revisions.setdefault(r["datumId"], []).append(r["cycleMark"])
+        if r.get("form") == "expectation" and r.get("entity") not in written:
+            for h in r.get("heldBy") or []:
+                held_at.setdefault(h, []).append((r["cycleMark"], (r.get("delta") or 0) > 0))
     out = []
     for sid, scar in sorted(scars.items(), key=lambda kv: kv[1]["cycleMark"]):
         cycle = scar["cycleMark"]
@@ -86,7 +94,8 @@ def chains(records, data):
             experience = next((d for d, w in written.items() if w["kind"] == "experience"
                                and (data.get(d) or {}).get("payload", {}).get("from") == said.get("here")
                                and (data.get(d) or {}).get("payload", {}).get("act") == said.get("act")), None)
-        met_again = [r for r in revisions.get(experience, []) if r > cycle + 1] if experience else []
+        met = [(c, collided) for c, collided in held_at.get(experience, []) if c > cycle] if experience else []
+        met_again = [c for c, _ in met]
         expected = (scar.get("event") or {}).get("expected") or {}
         otherwise = isinstance(expected.get("value"), dict) and bool(expected["value"].get("otherwise"))
         nxt = frame_of(cycle + 1)
@@ -100,7 +109,7 @@ def chains(records, data):
             "experience_says": {k: (data.get(experience) or {}).get("payload", {}).get(k)
                                 for k in ("act", "seen", "changed", "supports", "fails")} if experience else None,
             "experience_met_again_at": met_again,
-            "met_again_collided": [r for r in met_again if frame_of(r) in scars],
+            "met_again_collided": [c for c, collided in met if collided],
             "next": nxt, "next_collided": nxt in scars,
             "next_expected": ("otherwise" if isinstance(((scars.get(nxt) or {}).get("event") or {}).get("expected", {})
                                                        .get("value"), dict)

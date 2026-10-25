@@ -8006,3 +8006,21 @@ Submission `57623232`, 08:34 UTC: grid, S2b, attention, 600 cycles, four at once
 the mind reading its history (protocol v0.3.9). Its Save & Run: 15 of 183 levels,
 0.489, as version 41's; all 25 stores verifying under dil-core. Nothing is pushed
 to Kaggle until it is scored.
+
+#### Corrected: "met the act again" counted revisions, not meetings
+
+Drawing Figure 2, the lp85 chain's last link did not hold: the experience
+`written-9-2` (the click at (37, 20) changes nothing) was revised at cycle 22, but
+the act carried out into cycle 22 was the click at (20, 17). Every written
+experience is revised when the inducer reads situations again
+(`learning.py`, "read again, each written one is revised"), whether or not its act
+is met; `scripts/chains.py` took each revision for a meeting. It now counts a
+meeting as an expectation of a return from outside held by that experience
+(`heldBy`). On version 41's 25 stores: 78 chains met the act again where it had
+collided (not 60), 40 of them as expected every time (not 32); 2,757 frame scars,
+1,130 chains and 717 next returns as expected stand. On `dil-arc3-history` version
+1's: 2,715, 1,111, 716, 56 and 42. In lp85 the act is never met again in the run.
+The entries above that say "60 … 32" and "the same act met again at cycle 22"
+(2026-10-21) were wrong, and are left as written; `paper/WRITEUP.md` and
+`paper/TABLES.md` now say what holds: the experience is what the mind expects of
+that act there from then on, and the next return, `signal-10-0`, came as expected.

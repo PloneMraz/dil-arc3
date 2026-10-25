@@ -92,8 +92,8 @@ returns it unchanged: the return `signal-9-0` is scarred. The thought `written-9
 records the silence and turns the mind from that kind of act; the next choice,
 `written-9-3`, clicks elsewhere and says so in its reason, naming the return and the
 thought. The experience `written-9-2` now holds that the click there changes
-nothing; when the agent meets that click again at cycle 22, the game answers as now
-expected, and nothing collides.
+nothing, and that is what the agent expects of it from then on; the next return,
+`signal-10-0`, comes as expected, and nothing collides.
 
 Across the 25 games: 2,757 frame collisions; 1,130 such chains, each a scar, the
 thought it set off and the choice it turned, all built from the same return; in 717

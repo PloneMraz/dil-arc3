@@ -109,12 +109,13 @@ again, on version 41's code"]:
   say), §13.7 fails in six (cd82, dc22, g50t, ls20, m0r0, sc25: one source of resistance
   where the onlooker had no reason to object);
 - 2,757 frame scars; 1,130 chains of a scar, the thought it set off and the choice it
-  turned; 717 met the next return as expected; 60 met the act again where it collided,
-  32 of them as expected every time;
+  turned; 717 met the next return as expected; 78 met the act again where it collided
+  (an expectation of the return held by that act's experience), 40 of them as expected
+  every time;
 - 1,742 turned choices, every one built from the return that collided, 1,740 naming the
   thought (the other two, each game's last choice, awaiting);
-- Figure 2: lp85, `signal-9-0` → `written-9-0` → `written-9-3` → `written-9-2`, met
-  again at cycle 22 as expected;
+- Figure 2: lp85, `signal-9-0` → `written-9-0` → `written-9-3` → `written-9-2`, the
+  next return `signal-10-0` as expected (the act there is not met again in the run);
 - individuals: I0 1.106, I1 1.016, I2 1.150, A1 (no Other) 1.040 on eleven games; the
   field's chain (tu93, I1 and I2 part at step 72 by the turn's hold); the Other's chain
   (m0r0, I0 and A1 part at step 71, through the field the onlooker had moved).
