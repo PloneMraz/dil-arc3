@@ -42,3 +42,37 @@ Contributions:
 4. A ledger of the ideas that failed, each measured.
 
 *Figure 1: region → host (sensory organs) → layers T1–T8 → mind → host (effectors) → region.* [[to draw]]
+
+## 2. Approach
+
+**DIL** is a protocol for a loop that learns from collision and can be audited:
+eight layers (T1–T8) every datum passes, eight invariants that halt the loop when
+broken, and a store of two parts — `[data]`, which may be revised, and `[event]`,
+an append-only, hash-chained log. DIL itself acts on nothing. The **host** is the
+container: its sensory organs take in what the game returns, its effectors carry
+out commands, and it computes nothing. The **mind** expects, is curious, wants and
+commands; the **model** computes for it and can be replaced. *The mind acts on
+nothing; it commands, and the host carries the command out through its
+effectors* — and the game's return, never the mind, judges a command.
+
+**Learning.** Each step is kept as an experience: from this state, this act gave
+that. What an experience suggests beyond itself, the model (here a grid inducer)
+states as a hypothesis — a cell rewritten, nothing changed, later a thing moved —
+written as a datum built from the step it came from. Before each act the mind
+expects, from the experience or hypothesis right at the highest rate,
+(right + 1) / (tried + 2); where nothing it knows applies, it expects the game to
+change, so that silence too can collide. When the return differs, the mismatch is
+recorded: the return, and every datum the expectation rested on, move to `scar`.
+The mind then thinks on what collided, writes the thought, and the thought turns
+its next choice — away from a kind of act that changed nothing, toward where an
+answer differed, away from what ended the game. A mismatch is never a penalty: no
+count of collisions is kept or sought.
+
+**Choosing.** The mind is curious for acts that have reached states not met
+before; it goes where a hypothesis says the level's aim lies once it holds one;
+and a modulatory field — trust, alertness, exploration, voted by every layer and
+carried across cycles — sets how sure it must be before it expects, how long a
+turn lasts, and how far it looks ahead.
+
+**An Other.** An onlooker in the world remarks when the agent repeats itself or
+stands still; its word reaches the mind as a collision, not an instruction.
