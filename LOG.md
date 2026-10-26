@@ -8088,3 +8088,39 @@ removed (their `stores.tar.gz` kept); the stores of the five eleven-game runs of
 The corrected chain counts kept in each run's `evidence/`. `dil-arc3-history`
 version 1's stores stay unpacked, the paper's evidence. `output-learn5`'s stores have
 no archive and stay. Disk free: 25 GB → 39 GB.
+
+#### The paper checked against TABLES.md and LOG.md (Plone: blocks 1 and 2)
+
+Plone had the Writeup and the PDF checked item by item against `paper/TABLES.md` and
+this log, and approved the corrections to the PDF's source (`paper/paper.html`) and
+to `TABLES.md`; the Writeup's full text waits for his reading. Facts the checks
+established that this log did not yet hold:
+
+- **dil-core's checker on `dil-arc3-history` version 1's 25 stores**: §13.1, §13.3,
+  §13.5 and §13.6 pass in all 25; §13.4 partial; §13.2 not verifiable from disk;
+  §13.7 fails in six (cd82, dc22, g50t, ls20, m0r0, sc25).
+- **lp85's first level in the human baseline's 17 actions, on version 1**: its
+  scorecard (`submit-e04c515-history1/competition.json`, lp85's third run) gives
+  `level_actions` [17, 582, …], `level_baseline_actions` [17, 38, …],
+  `level_scores` [100.0, …].
+- **Three levels carry the score, on version 1**: lp85 2.7778, r11l 4.7619, tn36
+  3.3583 — 10.90 of the 25 games' 12.23 summed (the run's 0.48919 is 12.2297 / 25),
+  read from the same scorecard.
+- **How far a read of the record reaches**: `RECORD_SCAN = 4,096` records, which
+  `src/dil/loop/decisions.py` (lines 72–76) gives as "about forty cycles of lines at
+  the hundred or so a cycle this host's loop writes" — an estimate, not measured.
+- **Turned choices on version 1, split**: 1,198 in the collision's own cycle (from
+  1,111 collisions — the chains; 87 of them a second choice made again after the
+  onlooker spoke, each carrying `supersedes`), 495 later ones while a frame
+  collision's turn held, 42 while a turn from the game's end held: 1,735.
+- **Corrected in the drafts**: the two random-agent scores are one agent on two roads
+  (`56462757`, 0.02; `56600038`, 0.06); "suspects" set the best public score yet
+  (0.515) with 15 levels equal to the best (versions 18–20), not the most levels; five
+  hidden scores since it, not four; the times are the notebook's +20% on Kaggle (four
+  games at once), the games' own +17%, and tu93's +18% alone on this machine; the
+  "nine games of eleven" are an offline measurement (1.10603 → 1.10586, levels the
+  same); §13.7's name is "failure signals"; the PDF's Table 3 holds all nineteen ideas;
+  WAY_LAW was run with P1, its two baselines named; Kaggle's scale is not checked
+  (only the toolkit's, 0–100); the internal labels (S2b, B1, C1, P1, T1c,
+  FORESEEN_LAW) are said in words in the PDF's tables, B1's two meanings split in
+  `TABLES.md`.

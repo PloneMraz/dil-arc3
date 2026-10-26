@@ -2,10 +2,10 @@
 
 Every number is read from `LOG.md` (the entry named in brackets) or from Kaggle's
 list of submissions (`kaggle competitions submissions`), and is checked again
-against them before it enters the Writeup or the PDF. Scores are RHAE in percent,
-as Kaggle and the toolkit's scorecard give them: the leaderboard's on the hidden
-games, the Save & Run's on the 25 public games (`environment_files`) at 600 cycles
-a game, four at once.
+against them before it enters the Writeup or the PDF. Scores are RHAE: the
+Save & Run's are the toolkit's offline scorecard on a 0–100 scale (LOG 4136–4145), on
+the 25 public games (`environment_files`) at 600 cycles a game, four at once; the
+leaderboard's are Kaggle's on the hidden games, whose scale was not checked (LOG 4145).
 
 ## Table 1 — every submission
 
@@ -20,7 +20,7 @@ a game, four at once.
 | `56887238` | 23 | `b6a95ac` | the store as the mind's memory; experiences as its expectation | 0.25 | 13, 0.499 |
 | `56934496` | 26 | `a6c4563` | suspects: where the aim may lie, tested before it has come | 0.02 | 15, 0.515 |
 | `56983446` | 28 | `9e69156` | version 23 with moves, blocks and into aims once the aim has come | 0.25 | 13, 0.514 |
-| `57371259` | 35 | `b4d7d5a` | collisions turn the mind; the field carries its history (B1) and the counts follow it (B2) | 0.26 | 16, 0.518 |
+| `57371259` | 35 | `b4d7d5a` | collisions turn the mind; the field carries its history (carry 0.95) and the counts follow it (B2) | 0.26 | 16, 0.518 |
 | `57443352` | 37 | `9fcaafc` | as 35, its stores verifying under dil-core's verifier | 0.25 | 16, 0.491 |
 | `57470744` | 41 | `963b7fb` | as 37, each turned choice naming its return and its thought | 0.25 | 15, 0.489 |
 | `57623232` | `dil-arc3-history` 1 | `e04c515` | as 41, the mind reading its own history (protocol v0.3.9) | 0.25 | 15, 0.489 |
@@ -42,9 +42,9 @@ Each Save & Run against the one before it; what changed, and what it did.
 | 16 | the clock in columns | 12 | 0.477 | — |
 | 18 | attention; the clock rules of today; faster code | 15 | 0.502 | yes |
 | 19 | (A) and (B): the store as the mind's memory; synced once a cycle | 15 | 0.502 | yes (no level changed) |
-| 20 | `made` curiosity (B1), C1, FORESEEN_LAW | 15 | 0.488 | no |
+| 20 | curiosity for things made (`made`), the aim read from before the last grid (C1), foreseen acts least sure first (FORESEEN_LAW) | 15 | 0.488 | no |
 | 21 | S2b, C1, FORESEEN_LAW | 13 | 0.364 | no (FORESEEN_LAW harms) |
-| 22 | `made`, C1, no FORESEEN_LAW | 13 | 0.430 | no |
+| 22 | curiosity for things made, C1, no FORESEEN_LAW | 13 | 0.430 | no |
 | 23 | S2b, C1; experiences as the mind's expectation | 13 | 0.499 | yes |
 | 24 | P1 (a blocked hypothesis for an act that takes no place) | 12 | 0.499 | no |
 | 25 | the objects inducer (first form) | 12 | 0.457 | no |
@@ -54,7 +54,7 @@ Each Save & Run against the one before it; what changed, and what it did.
 | 32 | T1: each command tests what memory is least sure of | 13 | 0.379 | no |
 | 33 | T1c | 12 | 0.255 | no |
 | 34 | the report's collisions thought on; what an act did where it stood alike, expected again; the mind's vote on trust | 16 | 0.519 | yes |
-| 35 | the field's carry (B1, 0.95) and the counts following it (B2) | 16 | 0.518 | yes |
+| 35 | the field's carry (0.95) and the counts following it (B2) | 16 | 0.518 | yes |
 | 37 | acts opaque to the mind; an act never taken never foreseen; the log's hash as dil-core's | 16 | 0.491 | yes |
 | 38 | objects inducer, a move said only once seen three times | 15 | 0.500 | no |
 | 39 | objects inducer, a thing known by its colours | 14 | 0.486 | no |
@@ -64,9 +64,10 @@ Each Save & Run against the one before it; what changed, and what it did.
 (step 3) on the 25 games" and "(step 4)". Versions 29 and 31 repeat 28 and 30.]
 
 What it shows (Theory): before the first success a change reshuffles where the
-mind explores, and the public games did not foretell the hidden ones — suspects
-reached the most levels here (15, 0.515) and scored 0.02 hidden, against 0.25 for the
-version it changed.
+mind explores, and the public games did not foretell the hidden ones — suspects set
+the best public score yet (0.515, its 15 levels as versions 18–20) and scored 0.02
+hidden, against 0.25 for the version it changed [LOG 5767; the headings of versions
+18 and 20].
 
 ## Table 3 — ideas that failed
 
@@ -75,7 +76,7 @@ version it changed.
 | FORESEEN_LAW: of acts all foreseen, the one foreseen least surely first | 25 games | 13 levels, 0.364 (with C1) | 15, 0.502 (version 19); the law alone run on tn36 and sp80 |
 | C2b: a ladder of looser aim hypotheses | 6 games | no level more; vc33's borne out once, refuted 195 times | — |
 | P1: a blocked hypothesis for an act that takes no place | 25 games | 12 levels, 0.499 | 13, 0.499 |
-| WAY_LAW: try an act here by the chance a way ends otherwise | ls20, tu93 | ls20's level in 564 actions; tu93 0.283 | version 23: 342 actions; P1 alone: tu93 0.571 |
+| WAY_LAW (run with P1): try an act here by the chance a way ends otherwise | ls20, tu93 | ls20's level in 564 actions; tu93 0.283 | ls20: version 23, 342 actions (P1 alone: none); tu93: P1 alone, 0.571 [LOG 5557–5559] |
 | The objects inducer, first form | 25 games | 12 levels, 0.457 | 13, 0.499 |
 | Suspects: where the aim may lie, tested before it comes | hidden games | 0.02 | 0.25 |
 | Near at a step's scale (for suspects) | 6 games | 0.502 | 0.578 |
