@@ -12,8 +12,9 @@ Kept here so that a new session starts from it, not from memory. History goes in
    developed until it does (silence as a collision; a collision turning what the
    mind does next; scars and the field reaching how it builds behaviour), and the
    paper describes the notebook that shows it. The dates below move with it.
-   The title is settled: "Expect, Collide, Revise: Learning Without a Reward
-   Function, Every Step on the Record". The evidence is a checkable chain, not a
+   The title is settled: "Expect, Collide, Revise: Learning From Mismatch, Every
+   Step on the Record" (Plone, 2026-10-26; before: "Learning Without a Reward
+   Function"). The evidence is a checkable chain, not a
    claim (`OUTLINE.md`).
    **The work on dil-arc3, in order (Plone, 2026-10-11): 3 → 2 → 1 → 4 —
    done** (LOG.md, 2026-10-11 to 2026-10-19): (3) a collision of the region's

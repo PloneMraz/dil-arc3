@@ -8124,3 +8124,31 @@ established that this log did not yet hold:
   (only the toolkit's, 0–100); the internal labels (S2b, B1, C1, P1, T1c,
   FORESEEN_LAW) are said in words in the PDF's tables, B1's two meanings split in
   `TABLES.md`.
+
+#### The paper retitled, its choosing rule said, its prior work written (Plone)
+
+Checked in the code (`src/mind/learning.py` 1488–1509 and 1781–1782): an untried
+kind of act is ranked by counted odds, the aim's first, (aims + 1) / (tried + 2), then
+reaching a state not met before, (new + 1) / (tried + 2), plus UCB1's bonus
+√(2 ln(N + 1) / (tried + 1)) — a bandit rule over counts, maximised at each choice.
+Nothing is summed or discounted over time and a collision scores nothing, but "Without
+a Reward Function" invited the reading that nothing is maximised. Plone chose a new
+title: **"Expect, Collide, Revise: Learning From Mismatch, Every Step on the Record"**
+— in the Writeup, the PDF, the outline, the plan and the cover. The PDF's §3.2 now
+says the rule and its order, with UCB1 cited (Auer et al. 2002); a section 1.1, Prior
+work, places it beside count-based exploration (Bellemare et al. 2016) and
+prediction-error curiosity (Pathak et al. 2017) — alike in the rule for choosing,
+apart in what the mismatch does — and predictive processing (Clark 2013); the
+ARC-AGI-3 preview's winner named from arcprize.org, its method not described there.
+Each reference was checked (arXiv, Crossref). The universality claim says what is
+shown: another model has taken the model's seat; another environment is what the
+design is for, not yet shown.
+
+The Writeup (`paper/WRITEUP.md`) is written whole as Plone read it: **1,469 words**
+counted raw. The PDF (`paper/paper.pdf`, 12 pages) is copied to the workspace's
+`Plone's documents/pdfs/ExpectCollideRevise.pdf`, a local folder with no remote: the
+Public Project Link still needs a public place. The stores' archive (410 MB) was read
+before any upload — no name, email or local path in `[event]` or `[data]`, files
+owned by Kaggle's `root` — and is not uploaded: this repository stays private until
+ARC-AGI-3 ends (final submissions 2026-11-02), and the link is wanted only when the
+paper is submitted (2026-11-04 to 07). Both drafts carry `[[link]]` where it goes.

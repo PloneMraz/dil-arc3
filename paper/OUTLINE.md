@@ -34,8 +34,9 @@ read.) PDFs in the workspace's `Downloads/papers/`.
 
 ## Title (Plone, 2026-10-11)
 
-**"Expect, Collide, Revise: Learning Without a Reward Function, Every Step on
-the Record"** — DIL's two contributions: behaviour that changes from its own
+**"Expect, Collide, Revise: Learning From Mismatch, Every Step on the Record"**
+(Plone, 2026-10-26, in place of "Learning Without a Reward Function": the choosing
+rule ranks counted odds with UCB1's bonus, close to count-based exploration) — DIL's two contributions: behaviour that changes from its own
 collisions with what it expected, not from a reward set beforehand; and every
 step of it auditable. No competition name in the title (not required; most
 winning titles have none; it serves Universality). Subtitle: the DIL protocol on
