@@ -8185,3 +8185,13 @@ to a private repository, `PloneMraz/Plones_documents` (GitHub takes no apostroph
 name). Read before the push: no local path, session link or payment data in the PDFs'
 text; ten carry "Huỳnh Mai Phúc (Plone Mraz)" in their author field, the name Plone
 allowed in that repository's README; `markdowns/` is ignored.
+
+#### dil-core's DOI in the paper (Plone)
+
+dil-core's Hugging Face mirror (`plonemraz/dil-core`) was brought back in step with
+GitHub (its one Hub-only commit, `bfcdb5e`, replaced: the same content as `fec5e7e`),
+and dil-core's citation metadata moved to version 0.2.0 (dil-core `b2d1927`). Plone
+generated a DOI for that revision: `10.57967/hf/11268` (DataCite: version `1aba031`,
+findable). The PDF's reference [1] now names dil-core 0.2.0 and that DOI; printed
+again (12 pages, no author field) and copied to `Plone's documents`. The Writeup
+cites no reference list and is unchanged.
