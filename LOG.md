@@ -8166,3 +8166,14 @@ dil-arc3 goes public after 2026-11-02 (CLAUDE.md says so). The paper's PDF lives
 the workspace's `Plone's documents` folder, now a git repository of its own (`main`,
 `markdowns/` ignored; nothing committed yet), listed among the nested repositories in
 the workspace root's `.gitignore` (root commit `9631100`); it is not public yet.
+
+#### The paper's licence (Plone)
+
+The PDF is released under CC0 1.0, which satisfies both arcprize.org's "permissive
+public domain license" and the Paper Track rules' CC-BY 4.0 (§1.6), as MIT-0 does for
+the code. Its "Reproducing" section now says so, and that the agent's repository is
+published under MIT-0; the PDF was printed again (12 pages, no author field) and
+copied to `Plone's documents/pdfs/ExpectCollideRevise.pdf`. In that repository the
+other documents stay all rights reserved, and its `LICENSE` and `README.md` name this
+PDF as the one exception. The Writeup carries no licence line: a Writeup is licensed
+by the rules on submission, and it has one word left under its count.
