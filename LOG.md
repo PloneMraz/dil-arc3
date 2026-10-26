@@ -8177,3 +8177,11 @@ copied to `Plone's documents/pdfs/ExpectCollideRevise.pdf`. In that repository t
 other documents stay all rights reserved, and its `LICENSE` and `README.md` name this
 PDF as the one exception. The Writeup carries no licence line: a Writeup is licensed
 by the rules on submission, and it has one word left under its count.
+
+#### `Plone's documents` on GitHub (Plone)
+
+Committed (`795dcd0`: the twelve PDFs, `README.md`, `LICENSE`, `.gitignore`) and pushed
+to a private repository, `PloneMraz/Plones_documents` (GitHub takes no apostrophe in a
+name). Read before the push: no local path, session link or payment data in the PDFs'
+text; ten carry "Huỳnh Mai Phúc (Plone Mraz)" in their author field, the name Plone
+allowed in that repository's README; `markdowns/` is ignored.

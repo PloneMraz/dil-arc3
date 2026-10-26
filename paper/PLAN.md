@@ -112,8 +112,9 @@ after 2026-11-02 (Plone, 2026-10-26, option (b): this repository stays private u
 ARC-AGI-3 ends), as a release of dil-core (tag `dil-arc3-57623232-stores`, not marked
 latest); its URL then replaces `[[link]]` in the Writeup and the PDF. dil-arc3 itself
 goes public after 2026-11-02. The PDF's home is the workspace's `Plone's documents`
-repository (`pdfs/ExpectCollideRevise.pdf`; a repository of its own since 2026-10-26,
-`markdowns/` ignored), not yet public (Plone, 2026-10-26).
+repository (`pdfs/ExpectCollideRevise.pdf`; `markdowns/` ignored), on GitHub as
+`PloneMraz/Plones_documents`, private (Plone, 2026-10-26): the Public Project Link
+needs the PDF where no login is asked, which a private repository is not.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
