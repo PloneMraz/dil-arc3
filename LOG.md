@@ -8078,3 +8078,13 @@ introduction's description of the loop (Figure 1 and section 2 say it) and two
 phrases were cut: 1,472 words after the title, 1,492 with it, counted strictly. The
 two final ARC-AGI-3 submissions proposed: `57623232` and `57470744` (in place of
 versions 41 and 37); Plone settles them on the last day.
+
+#### Cleaned (Plone)
+
+The measurement worktree (`scripts/data/wt/base`, at `d05b9c6`) removed and pruned,
+with the `src/` snapshots beside it; version 41's and version 37's unpacked stores
+removed (their `stores.tar.gz` kept); the stores of the five eleven-game runs of
+2026-10-25 (`scripts/data/t1/rr-*`) removed, their scorecards, reports and logs kept.
+The corrected chain counts kept in each run's `evidence/`. `dil-arc3-history`
+version 1's stores stay unpacked, the paper's evidence. `output-learn5`'s stores have
+no archive and stay. Disk free: 25 GB → 39 GB.

@@ -115,9 +115,11 @@ versions 41 and 37; he settles them on the last day).
 - Scores and what each run did: `LOG.md` (versions 28 to 35: 2026-10-09 to
   2026-10-19; the ideas that failed: 2026-10-05 to 2026-10-18; point 4:
   2026-10-18).
-- Version 41's Save & Run output (25 games): `scripts/data/kaggle/dil-run/submit-963b7fb-v41/`
-  (git-ignored) — the evidence is read from it; what the scripts found, in its
-  `evidence/`. Version 37's: `submit-9fcaafc-v36/`; version 35's:
+- The described submission's Save & Run output (25 games):
+  `scripts/data/kaggle/dil-run/submit-e04c515-history1/` (git-ignored), its stores
+  unpacked — the evidence is read from them; `evidence/chains-summary.txt`.
+  Version 41's: `submit-963b7fb-v41/` (`stores.tar.gz`; what the scripts found, in
+  its `evidence/`, `chains-summary-corrected.txt` with the corrected count). Version 37's: `submit-9fcaafc-v36/`; version 35's:
   `submit-b4d7d5a-v35/` (their `stores.tar.gz`).
 - Point 4's individuals: reports and scorecards in `scripts/data/t1/` (git-ignored);
   their stores to be made again.
