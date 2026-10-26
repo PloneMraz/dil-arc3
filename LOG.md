@@ -8152,3 +8152,10 @@ before any upload — no name, email or local path in `[event]` or `[data]`, fil
 owned by Kaggle's `root` — and is not uploaded: this repository stays private until
 ARC-AGI-3 ends (final submissions 2026-11-02), and the link is wanted only when the
 paper is submitted (2026-11-04 to 07). Both drafts carry `[[link]]` where it goes.
+
+#### When the stores are published (Plone)
+
+Option (b): after 2026-11-02, the final ARC-AGI-3 submissions, as a dil-core release
+(tag `dil-arc3-57623232-stores`, not marked latest), `stores.tar.gz` sha256
+`1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`. Ready and checked;
+nothing uploaded. `paper/PLAN.md` holds it.

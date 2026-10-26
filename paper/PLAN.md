@@ -106,6 +106,12 @@ change in what it does can be read back by a third party from `[event]`.
 | 2026-11-01 → 04 | review against each criterion; the Writeup's word count; every number in both checked against LOG.md; outbound disclosure (no session link, no personal data, no metadata in the PDF or the images) |
 | 2026-11-04 → 07 | the PDF published where it needs no login; the Writeup made, notebook, PDF, cover image and submission ID attached, **submitted**; the margin to 2026-11-09 kept |
 
+The stores' archive (`submit-e04c515-history1/stores.tar.gz`, 410,049,466 bytes,
+sha256 `1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`) is published
+after 2026-11-02 (Plone, 2026-10-26, option (b): this repository stays private until
+ARC-AGI-3 ends), as a release of dil-core (tag `dil-arc3-57623232-stores`, not marked
+latest); its URL then replaces `[[link]]` in the Writeup and the PDF.
+
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
 (`57623232` and version 41's `57470744`, approved by Plone 2026-10-26 in place of
