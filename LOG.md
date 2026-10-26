@@ -8202,3 +8202,15 @@ The PDF's author line follows DQP's: "Huỳnh Mai Phúc (Plone Mraz)", "Independ
 Researcher, Vietnam", 2026, ORCID 0009-0009-0571-7151 (linked); the line naming the
 notebook and dil-core stands below it. Printed again (12 pages; the file's metadata
 still has no author field) and copied to `Plone's documents`.
+
+### 2026-10-27
+
+#### The author in the PDF and in the rule (Plone)
+
+The PDF's Author field now reads "Huỳnh Mai Phúc (Plone Mraz)", as the author's
+Word-made PDFs have it: Chrome writes the Title and no Author, so
+`scripts/paper_pdf.py` prints the paper and sets the field (pypdf, outside the
+`.venv`). CLAUDE.md's outbound rule says so: the real name, with the affiliation
+and ORCID, may stand where Plone signs as an author — the paper's author block, its
+PDF's author field, citation metadata (Plone, 2026-10-26: "Tên thật thì không có
+vấn đề gì"; approved 2026-10-27). The rest of the rule holds.

@@ -58,6 +58,7 @@ after, each on the days its git history gives.
 | `kaggle/run_series.py` | a measurement on Kaggle, one configuration after another on the learning notebook: builds, pushes, waits for the run, and keeps its output under `scripts/data/kaggle/dil-run/` | `m25\|a6 [--first-pushed] [--cycles 600] [--concurrency 4] [--start I] [--stop J] [--games a,b]` — m25: the 25 games, five configurations; a6: the six a change is measured on, grid with and without `--attention` |
 | `kaggle/make_manifest.py` | writes a model manifest from what Hugging Face publishes (sha256 for weights, git blob sha1 for the rest), for the notebook to check a Kaggle copy against | `HF_REPO REVISION KAGGLE_HANDLE OUT.json` |
 | `dump_frames.py` | records transitions from both games | `OUT.pkl` |
+| `paper_pdf.py` | prints `paper/paper.html` to `paper/paper.pdf` with headless Chrome and sets the PDF's Author field, which a print leaves empty; needs pypdf, so it runs outside the `.venv`: `uv run --no-project --with pypdf python scripts/paper_pdf.py` | — |
 | `verify_gate.py` | the host's boundary gate against live frames | — |
 | `probe_frame.py` | the real shape and value range of frames | — |
 | `try_reprs.py` | candidate effect representations | `frames.pkl` |
