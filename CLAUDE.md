@@ -1202,7 +1202,8 @@ headless browser; the text is kept in `Downloads/pages/` in the workspace).
   change in what it does can be read back by a third party from `[event]`), the
   evidence for it, and the limits, stated plainly. The protocol stays as it is
   and is linked, not condensed.
-- **This repository stays private until ARC-AGI-3 ends, then goes public.** The
+- **This repository stays private until ARC-AGI-3 ends, then goes public** — after
+  2026-11-02, the final submissions (Plone, 2026-10-26). The
   paper's required public Notebook carries the code in the meantime.
 - **Follow the rules as written**: the Writeup stays within 1,500 words and
   stands on its own; beside it, a longer PDF of the paper goes in the Public

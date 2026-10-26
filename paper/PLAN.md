@@ -110,7 +110,10 @@ The stores' archive (`submit-e04c515-history1/stores.tar.gz`, 410,049,466 bytes,
 sha256 `1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`) is published
 after 2026-11-02 (Plone, 2026-10-26, option (b): this repository stays private until
 ARC-AGI-3 ends), as a release of dil-core (tag `dil-arc3-57623232-stores`, not marked
-latest); its URL then replaces `[[link]]` in the Writeup and the PDF.
+latest); its URL then replaces `[[link]]` in the Writeup and the PDF. dil-arc3 itself
+goes public after 2026-11-02. The PDF's home is the workspace's `Plone's documents`
+repository (`pdfs/ExpectCollideRevise.pdf`; a repository of its own since 2026-10-26,
+`markdowns/` ignored), not yet public (Plone, 2026-10-26).
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02

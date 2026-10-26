@@ -8159,3 +8159,10 @@ Option (b): after 2026-11-02, the final ARC-AGI-3 submissions, as a dil-core rel
 (tag `dil-arc3-57623232-stores`, not marked latest), `stores.tar.gz` sha256
 `1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`. Ready and checked;
 nothing uploaded. `paper/PLAN.md` holds it.
+
+#### Where the PDF lives; when dil-arc3 goes public (Plone)
+
+dil-arc3 goes public after 2026-11-02 (CLAUDE.md says so). The paper's PDF lives in
+the workspace's `Plone's documents` folder, now a git repository of its own (`main`,
+`markdowns/` ignored; nothing committed yet), listed among the nested repositories in
+the workspace root's `.gitignore` (root commit `9631100`); it is not public yet.
