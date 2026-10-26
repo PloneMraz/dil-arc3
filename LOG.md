@@ -8195,3 +8195,10 @@ generated a DOI for that revision: `10.57967/hf/11268` (DataCite: version `1aba0
 findable). The PDF's reference [1] now names dil-core 0.2.0 and that DOI; printed
 again (12 pages, no author field) and copied to `Plone's documents`. The Writeup
 cites no reference list and is unchanged.
+
+#### The paper's author block (Plone)
+
+The PDF's author line follows DQP's: "Huỳnh Mai Phúc (Plone Mraz)", "Independent
+Researcher, Vietnam", 2026, ORCID 0009-0009-0571-7151 (linked); the line naming the
+notebook and dil-core stands below it. Printed again (12 pages; the file's metadata
+still has no author field) and copied to `Plone's documents`.

@@ -10,7 +10,8 @@
   body { margin: 0; background: #fff; }
   h1 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 21pt; line-height: 1.18; margin: 0 0 4pt; }
   .subtitle { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11.5pt; color: var(--muted); margin: 0 0 10pt; }
-  .author { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; margin: 0 0 14pt; }
+  .author { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; margin: 0 0 14pt; text-align: left; }
+  .author a { color: inherit; text-decoration: none; }
   h2 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 13pt; margin: 16pt 0 5pt; break-after: avoid; }
   h3 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; margin: 11pt 0 3pt; break-after: avoid; }
   p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
@@ -37,7 +38,8 @@
 
 <h1>Expect, Collide, Revise: Learning From Mismatch, Every Step on the Record</h1>
 <p class="subtitle">The DIL protocol on ARC-AGI-3 — a report on submission 57623232</p>
-<p class="author">Plone Mraz · independent researcher, Vietnam · code: notebook <code>plonemraz/dil-arc3-history</code>; protocol and reference implementation: github.com/PloneMraz/dil-core</p>
+<p class="author" style="margin-bottom: 6pt"><b>Huỳnh Mai Phúc (Plone Mraz)</b><br><i>Independent Researcher, Vietnam</i><br>2026<br><i>ORCID:</i> <a href="https://orcid.org/0009-0009-0571-7151">0009-0009-0571-7151</a></p>
+<p class="author">Code: notebook <code>plonemraz/dil-arc3-history</code>; protocol and reference implementation: github.com/PloneMraz/dil-core</p>
 
 <div class="abstract"><p><b>Abstract.</b> We built an agent that learns each ARC-AGI-3 game from mismatch. Before every action it expects what the game will return; when the return differs, the mismatch is recorded as a collision, and the collision turns what it does next. Every expectation, collision, thought and choice is a datum that names what it was built from, in an append-only, hash-chained event log, following the DIL protocol. The question is not how high the agent scores but whether a third party can read back, from the log alone, what it knew at each step and why it acted. On the 25 public games the submitted code's logs hold 1,111 chains a reader can follow from a collision to the thought and the choice it turned; all 1,735 turned choices are built from the return that collided, and all 25 logs verify under the protocol's reference verifier. The agent also reads its own history: 2,589 times it read the log for collisions that had come before, and 1,313 times for the steps it had taken, each read itself recorded. The submission scores 0.25 on the leaderboard, against 0.02 for the starter kit's random agent and 0.06 for the same agent on this submission's road; the score is low, and we say why.</p></div>
 
