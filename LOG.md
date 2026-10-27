@@ -8214,3 +8214,16 @@ Word-made PDFs have it: Chrome writes the Title and no Author, so
 and ORCID, may stand where Plone signs as an author — the paper's author block, its
 PDF's author field, citation metadata (Plone, 2026-10-26: "Tên thật thì không có
 vấn đề gì"; approved 2026-10-27). The rest of the rule holds.
+
+#### `Plone's documents` on Hugging Face alone (Plone)
+
+Hugging Face refused a git push of the archive (`pre-receive hook declined`): its
+history holds the PDFs as plain blobs, and the Hub takes binary files only through
+LFS or Xet. Plone deleted the GitHub repository instead — it existed only for a
+Zenodo DOI, and Hugging Face gives one — so the archive lives on Hugging Face alone:
+the dataset `plonemraz/Plones_documents`, private, not gated, its files uploaded with
+`hf upload` (commit `24f7c51`; the twelve PDFs' sha256 match the local files, the
+README is the same byte for byte). The local repository keeps its own history and no
+remote. Plone deleted the `plonemraz/Meta-Philosophy` dataset himself (the
+documents' Markdown under MIT; nothing found linking to it). After 2026-11-02: public,
+not gated, checked without a login, then a DOI. `paper/PLAN.md` holds the plan.

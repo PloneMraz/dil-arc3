@@ -112,11 +112,13 @@ after 2026-11-02 (Plone, 2026-10-26, option (b): this repository stays private u
 ARC-AGI-3 ends), as a release of dil-core (tag `dil-arc3-57623232-stores`, not marked
 latest); its URL then replaces `[[link]]` in the Writeup and the PDF. dil-arc3 itself
 goes public after 2026-11-02. The PDF's home is the workspace's `Plone's documents`
-repository (`pdfs/ExpectCollideRevise.pdf`; `markdowns/` ignored), on GitHub as
-`PloneMraz/Plones_documents`, private until 2026-11-02 and public after it (Plone,
-2026-10-26). The Public Project Link is that repository's GitHub link to the PDF,
-which asks no login; the paper takes no DOI, and the repository's own Zenodo record,
-if it comes, has nothing to do with the Paper Track.
+folder (`pdfs/ExpectCollideRevise.pdf`; `markdowns/` ignored), kept on Hugging Face
+alone as the dataset `plonemraz/Plones_documents` (Plone, 2026-10-27: no GitHub, no
+Zenodo), updated with `hf upload`; private until 2026-11-02, then public and **not
+gated** (a gated dataset asks for a login), checked without one, and then given a DOI
+of its own — the archive's, not the paper's. The Public Project Link is
+`https://huggingface.co/datasets/plonemraz/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf`,
+which serves the PDF itself.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
