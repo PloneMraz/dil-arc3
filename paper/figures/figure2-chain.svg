@@ -87,6 +87,6 @@
   <path d="M807,140 L858,140" stroke="#b5442c" stroke-width="2.5" fill="none" marker-end="url(#r)"/>
   <text x="832" y="132" text-anchor="middle" font-size="11" fill="#8c2f1b">test</text>
 
-  <text x="600" y="560" text-anchor="middle" font-size="13" fill="#555">lp85, first level, from version 41's store: every box is a record a reader finds by its id.</text>
+  <text x="600" y="560" text-anchor="middle" font-size="13" fill="#555">lp85, first level, from submission 57623232's store: every box is a record a reader finds by its id.</text>
   <text x="600" y="580" text-anchor="middle" font-size="13" fill="#555">The click at (37, 20) is not met again in the run; what the mind expects of it there is the experience.</text>
 </svg>

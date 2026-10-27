@@ -8256,3 +8256,21 @@ reinforcement learning approach to predict which actions will cause frame change
 and "uses a CNN-based model to predict which actions (ACTION1-ACTION6) will result in
 new frame states". The Medium recap the page also links to could not be read (HTTP
 403, then a Cloudflare block).
+
+#### Figure 2 from the published store; the plan brought up to date (Plone)
+
+Figure 2's label said "from version 41's store", while the Writeup and the PDF give
+the stores of `57623232` (`dil-arc3-history` 1) as the evidence. Every record it shows
+was read again in that run's lp85 store, and each holds as drawn: `signal-9-0`, the
+click at (37, 20) expected otherwise and returned unchanged, moved `running → scar`
+(seq 905), its scar keeping what was expected and what came; `written-9-0` (a thought:
+silence, that act, turned from that kind of act) built from `signal-9-0`;
+`written-9-2` (an experience: from that state, that act, changed nothing, borne out 1
+and refuted 0, seen once to the run's end) built from `signal-9-0`, `signal-9-1`;
+`written-9-3` (a choice: the click at (5, 32), "not yet taken from here; turned from
+what was silent", a turn held 2) built from `signal-9-0` and more, revised in cycle 10
+(seq 988) with `built_after: written-9-0`; `signal-10-0`, the click at (5, 32), cycle
+10 with no scar and the frame's expectation at delta 0. The label now reads "from
+submission 57623232's store"; the PNG rendered again (2400 × 1200, no text chunks),
+the PDF printed again (12 pages). With it, `paper/PLAN.md`'s three stale lines (the
+rubric's Accuracy, the data the paper reads, the individuals run again) say what holds.

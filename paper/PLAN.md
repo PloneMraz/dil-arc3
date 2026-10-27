@@ -38,12 +38,13 @@ Kept here so that a new session starts from it, not from memory. History goes in
    after it, LOG.md, 2026-10-19), and the paper's claim is that a third party
    checks the log. The notebook attached is the version described; a private
    one is made public after the deadline.
-2. **Data**: version 41's Save & Run on the 25 public games, stores unpacked in
-   `scripts/data/kaggle/dil-run/submit-963b7fb-v41/stores/` (the commit
-   snapshots left packed), for `[event]` logs to read the evidence from. The
-   individuals of point 4 are to be run again with version 41's code: their
-   stores were removed with the old measurements' on 2026-10-20 (their reports
-   and scorecards kept). The scored run's own logs are not shown by Kaggle, so
+2. **Data**: `dil-arc3-history` version 1's Save & Run on the 25 public games,
+   stores unpacked in `scripts/data/kaggle/dil-run/submit-e04c515-history1/stores/`
+   (and packed in `stores.tar.gz` beside them), for `[event]` logs to read the
+   evidence from; version 41's kept packed in `submit-963b7fb-v41/stores.tar.gz`.
+   The individuals of point 4 were run again on version 41's code (LOG.md, "Point
+   4 again, on version 41's code"): I0 is version 41's own stores; I1, I2 and the
+   agent alone are in `scripts/data/t1/i1-v41`, `i2-v41`, `alone-v41`. The scored run's own logs are not shown by Kaggle, so
    the evidence is from the same code on the public games, and the paper says
    so.
 3. **Form: both** (Plone, 2026-10-11, after first choosing the Writeup alone:
@@ -80,7 +81,7 @@ Kept here so that a new session starts from it, not from memory. History goes in
 
 | Criterion | What it asks | What this paper brings |
 |---|---|---|
-| Accuracy | performance on the leaderboard (submission ID) | version 35's score, stated plainly (version 28: 0.25); against the random agent on the same road |
+| Accuracy | performance on the leaderboard (submission ID) | submission 57623232's score, 0.25, stated plainly (version 41: 0.25; version 35, 0.26, set aside); against the random agent, 0.02, and the same agent on this road, 0.06 |
 | Universality | does it translate beyond the competition | the mind and its learning name no task; host and model replace; the audit holds anywhere |
 | Progress | does it raise anyone's chance of a top score | a loop a third party can check from `[event]`; what did not work, measured |
 | Theory | *why* it works, not only how | expectation → collision → the mind turned → the next collision otherwise; why the same DIL makes different individuals (the Other, the field); why scores barely moved: changes reshuffle exploration, the public 25 do not foretell the hidden games |
