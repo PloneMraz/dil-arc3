@@ -8227,3 +8227,32 @@ README is the same byte for byte). The local repository keeps its own history an
 remote. Plone deleted the `plonemraz/Meta-Philosophy` dataset himself (the
 documents' Markdown under MIT; nothing found linking to it). After 2026-11-02: public,
 not gated, checked without a login, then a DOI. `paper/PLAN.md` holds the plan.
+
+#### The Writeup and the PDF, reviewed (Plone, items 1–7)
+
+Plone's review, approved whole. (1) `[[link]]` filled with the stores' release URL,
+`https://github.com/PloneMraz/dil-core/releases/tag/dil-arc3-57623232-stores`, in both;
+the release is made after 2026-11-02 (option (b)); "published with the notebook" cut, as
+whether a public notebook's output downloads without a login could not be checked
+while it is private. Checked: dil-core is public, a release file of it downloads
+without a login (HTTP 200), and GitHub takes a release file under 2 GiB (the archive is
+410 MB). (2) The PDF's second contribution now says what the conclusion says: another
+model has taken the seat; another environment is designed for, not yet shown. (3) The
+PDF's abstract adds that reading its history changed no score. (4) "Theory" → "theory"
+in the Writeup. (5) The Writeup ends with the full paper's link, on Hugging Face. (6)
+The Writeup's expecting sentence as the PDF's ("from the experiences and hypotheses
+that apply"). (7) The preview's winner without its 12.58%: arcprize.org's results page
+(read 2026-10-27) gives "StochasticGoose @ Tufa Labs … Score: 12.58% • Levels
+Completed: 18" and says neither how the score is computed nor the method. To keep the
+Writeup within 1,470 words, "(29% of actions changed nothing)" left §6 (§4 has it) and
+"(the PDF, section 4.2)" became "(PDF, section 4.2)": **1,470 words** counted raw. The PDF
+printed again, 12 pages; the stores' URL kept on one line. Both links are opened
+without a login after 2026-11-02, before the Writeup is submitted (`paper/PLAN.md`).
+
+The method CLAUDE.md gives the preview's winner ("reinforcement learning with
+convolutional networks") is from the code the results page links to,
+github.com/DriesSmit/ARC3-solution, its README (read 2026-10-27): "It uses a simple
+reinforcement learning approach to predict which actions will cause frame changes",
+and "uses a CNN-based model to predict which actions (ACTION1-ACTION6) will result in
+new frame states". The Medium recap the page also links to could not be read (HTTP
+403, then a Cloudflare block).

@@ -48,7 +48,7 @@ The game's return, never the mind, judges a command.
 
 **Learning.** Each step is kept as an experience; what it suggests beyond itself,
 the model (a grid inducer) states as a hypothesis, a datum built from that step.
-The mind expects by the one right at the highest rate, (right + 1) / (tried + 2),
+The mind expects, from the experiences and hypotheses that apply, the one right at the highest rate, (right + 1) / (tried + 2),
 Laplace's rule of succession; where nothing applies, it expects the game to change,
 so silence too can collide. On a mismatch the return and every datum the
 expectation rested on move to `scar`; the mind thinks on it, writes the thought,
@@ -78,7 +78,7 @@ stands still; its word reaches the mind as a collision, not an instruction.
 Each cycle leaves in `[event]` every datum's path through the layers, every scar,
 every read, and every write with the ids it was built from. Kaggle shows no log of
 a scored run; the evidence is the submitted code's Save & Run on the 25 public
-games. Its stores are published with the notebook, and at [[link]].
+games. Its stores are published at https://github.com/PloneMraz/dil-core/releases/tag/dil-arc3-57623232-stores.
 
 Figure 2 is a chain from lp85, whose first level the agent finished in its human
 baseline's 17 actions. A click at (37, 20), expected to change the game, returns it
@@ -99,7 +99,7 @@ protocol's reference verifier, and its conformance checker passes §13.1, §13.3
 (host) cannot be read from disk.
 
 Individuals of the same agent born in different fields, or with and without the
-onlooker, part where a count read of the field differs (the PDF, section 4.2).
+onlooker, part where a count read of the field differs (PDF, section 4.2).
 `scripts/chains.py`, `thoughts.py` and `differ.py` find all of this in the stores
 alone.
 
@@ -134,7 +134,7 @@ object-centred inducer (0.500 against the grid's 0.491, but a level fewer, and
 levels count first) and a language model writing predictive programs, right about
 one step in eleven.
 
-The lesson is one of Theory. Before its first success in a level, a change only
+The lesson is one of theory. Before its first success in a level, a change only
 moves where the agent explores, and the public games did not foretell the hidden
 ones: "suspects" set the best public score yet (0.515, its 15 levels equal to the
 best) and scored 0.02 hidden, against 0.25 for the version it changed. Since then,
@@ -149,8 +149,10 @@ games of 25). What the mind writes returns to the loop as data: naming each
 thought in its choice changed choices in nine games of eleven (offline, 1.10603 →
 1.10586, levels the same). The verifier is the protocol's own, not independent.
 
-The log diagnoses the agent (29% of actions changed nothing), and the public games
-did not predict the hidden ones. What holds is the record: every belief, refutation
+The log diagnoses the agent, and the public games did not
+predict the hidden ones. What holds is the record: every belief, refutation
 and choice the agent made can be read back, and checked, by someone who does not
 trust it. The mind names no task; another model has taken its seat, and another
 environment is designed to.
+
+Full paper and references: https://huggingface.co/datasets/plonemraz/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf

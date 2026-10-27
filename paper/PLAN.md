@@ -110,7 +110,8 @@ The stores' archive (`submit-e04c515-history1/stores.tar.gz`, 410,049,466 bytes,
 sha256 `1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`) is published
 after 2026-11-02 (Plone, 2026-10-26, option (b): this repository stays private until
 ARC-AGI-3 ends), as a release of dil-core (tag `dil-arc3-57623232-stores`, not marked
-latest); its URL then replaces `[[link]]` in the Writeup and the PDF. dil-arc3 itself
+latest), at `https://github.com/PloneMraz/dil-core/releases/tag/dil-arc3-57623232-stores`
+— the URL the Writeup and the PDF already give (Plone, 2026-10-27). dil-arc3 itself
 goes public after 2026-11-02. The PDF's home is the workspace's `Plone's documents`
 folder (`pdfs/ExpectCollideRevise.pdf`; `markdowns/` in its local history, never uploaded), kept on Hugging Face
 alone as the dataset `plonemraz/Plones_documents` (Plone, 2026-10-27: no GitHub, no
@@ -118,7 +119,16 @@ Zenodo), updated with `hf upload`; private until 2026-11-02, then public and **n
 gated** (a gated dataset asks for a login), checked without one, and then given a DOI
 of its own — the archive's, not the paper's. The Public Project Link is
 `https://huggingface.co/datasets/plonemraz/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf`,
-which serves the PDF itself.
+which serves the PDF itself; the Writeup's last line gives it.
+
+**After 2026-11-02, before the Writeup is submitted — two links to open without a
+login** (Plone, 2026-10-27), each named before it serves anything (the first in the
+Writeup and the PDF, the second in the Writeup):
+1. the stores' release, `…/dil-core/releases/tag/dil-arc3-57623232-stores`: the
+   page opens and `stores.tar.gz` downloads, its sha256 as above;
+2. the PDF, `…/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf`: served
+   as a PDF once the dataset is public and not gated.
+Only then the DOI for `Plones_documents`, and the Writeup submitted.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
