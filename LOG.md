@@ -8274,3 +8274,17 @@ what was silent", a turn held 2) built from `signal-9-0` and more, revised in cy
 submission 57623232's store"; the PNG rendered again (2400 × 1200, no text chunks),
 the PDF printed again (12 pages). With it, `paper/PLAN.md`'s three stale lines (the
 rubric's Accuracy, the data the paper reads, the individuals run again) say what holds.
+
+### 2026-11-02
+
+#### The two final ARC-AGI-3 submissions selected (Plone)
+
+Plone selected the two final submissions on Kaggle, on the competition's last day:
+`57623232` (`dil-arc3-history` 1, the submission the paper describes, public score
+0.25) and `57470744` (`dil-arc3-learning` 41, 0.25), the pair he approved on
+2026-10-26. That they are the ones selected is his word: the Kaggle API (kaggle 2.2.4)
+lists a submission's ref, status and scores, and no field saying whether it is
+selected. Read the same morning, all thirteen of this account's submissions were
+complete, none being scored; two have a higher public score, `57371259` (version 35)
+and `56820389` (version 18), 0.26 each — 0.01 on the 55 public games, which says
+nothing of the 55 hidden ones, and the paper is linked to `57623232`.

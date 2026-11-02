@@ -132,9 +132,8 @@ Writeup and the PDF, the second in the Writeup):
 Only then the DOI for `Plones_documents`, and the Writeup submitted.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
-dil-arc3. Alongside: choose the two final ARC-AGI-3 submissions by 2026-11-02
-(`57623232` and version 41's `57470744`, approved by Plone 2026-10-26 in place of
-versions 41 and 37; he settles them on the last day).
+dil-arc3. Alongside, the two final ARC-AGI-3 submissions: `57623232` and version 41's
+`57470744`, selected on Kaggle by Plone on 2026-11-02.
 
 ## Where things are
 
