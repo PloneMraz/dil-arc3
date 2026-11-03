@@ -8447,3 +8447,13 @@ not gated, its head `192f378`. Plone generated a new DOI for that revision:
 `192f378`, creator `Plone Mraz`); `https://doi.org/10.57967/hf/11396` resolves to the
 dataset's page. `10.57967/hf/11387` stays findable, for `c8e1269`. Neither the
 Writeup, its fields nor the PDF name either DOI.
+
+#### The Writeup's figures replaced (Plone)
+
+Plone replaced the Writeup's two figures with the restyled PNGs (Figure 1 as the code
+wires the layers, Figure 2 recoloured). Read back through the Kaggle API
+(`list_hackathon_write_ups`): writeup `123294` still `PUBLISHED`, published
+2026-11-03 01:56:16 UTC, last updated 06:46:07 UTC. The API does not return the body,
+so the figures themselves are as Plone set them, not read back here. The cover and
+thumbnail are unchanged: `paper/figures/cover.png` draws no layer, only expect,
+collide, revise and the lp85 chain, and keeps the earlier colours.
