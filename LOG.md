@@ -8366,3 +8366,10 @@ and `plonemraz/dil-arc3-learning` (`57470744`). Without a login each page now an
 200 ("dil-arc3 history | Kaggle"), where the first answered 404 before; the others,
 `dil-arc3-run` and `dil-arc3-mind` among them, still 404. The API's `is_private`
 reads false for every notebook, private or not, and is no evidence either way.
+
+#### The protocol's author line, from the master copy (Plone)
+
+`spec/DIL-protocol-v0.3.9.md` names its author "Huỳnh Mai Phúc (Plone Mraz)", where it
+read "Plone Mraz", and carries an `ORCID:` line, as the copy in Plone's documents
+does: Plone made that copy the master of the protocol, and every other copy follows
+it. The normative text is unchanged, and no code reads the file.
