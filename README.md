@@ -1,3 +1,16 @@
+---
+license: other
+license_name: mit-0
+license_link: LICENSE
+language:
+  - en
+pretty_name: dil-arc3
+tags:
+  - agents
+  - arc-agi-3
+  - protocol
+---
+
 # dil-arc3
 
 An [ARC-AGI-3](https://arcprize.org/arc-agi/3/) agent whose whole operation is

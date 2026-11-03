@@ -8471,3 +8471,15 @@ also carries two figures this copy does not.
 loop (§6), and Figure 2, the eight layers as a closed loop (§7.2) — each with its
 caption, the SVG files in `spec/figures/`. The copy is now byte for byte the one in
 Plone's documents, figures included.
+
+### 2026-11-04
+
+#### A dataset card, for the Hugging Face copy (Plone)
+
+The repository goes to Hugging Face as the public dataset `plonemraz/dil-arc3`, a
+snapshot of `main` uploaded with `hf upload` (Plone): a git push of the history is
+refused there, since `paper/paper.pdf` and the PNGs in `paper/figures/` are kept in
+plain git, not LFS, and converting them would give 36 commits hashes GitHub does not
+have. `README.md` opens with the front matter the Hub reads as a dataset card, as
+dil-core's does: MIT-0 as `license: other` with `license_name: mit-0` and
+`license_link: LICENSE`, since MIT-0 is not among the Hub's licence identifiers.
