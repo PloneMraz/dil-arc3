@@ -8329,3 +8329,11 @@ false, `gated` false, at `c8e1269`). Without a login,
 answers 200, `application/pdf`, 715,008 bytes, sha256 `a34012cc8483…`, the same as
 `paper/paper.pdf` and the copy in `Plone's documents`. Both links the Writeup names
 now serve without a login; what is left is Plone's: the dataset's DOI, then the Writeup.
+
+#### The DOI of Plone's documents
+
+Plone generated the dataset's DOI: `10.57967/hf/11387` (DataCite, state findable,
+created 2026-11-03 01:04 UTC; title `Plones_documents`, creator `Plone Mraz`, version
+`c8e1269`, the dataset's head, which holds `ExpectCollideRevise.pdf` as published).
+`https://doi.org/10.57967/hf/11387` resolves to the dataset's page. It is the
+archive's DOI, not the paper's: the Writeup and the PDF are unchanged.
