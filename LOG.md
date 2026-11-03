@@ -8314,3 +8314,9 @@ of the PNG figures — carry no metadata beyond the PDF's title, Chrome's creato
 producer, dates, and in the last three the Author field; the PNGs no text chunk.
 
 The PDF's link still answers 401 without a login: `Plones_documents` is still private.
+
+#### dil-arc3 public (Plone)
+
+At Plone's word, `gh repo edit PloneMraz/dil-arc3 --visibility public`: the repository
+is public, and its page answers 200 without a login. CLAUDE.md and `paper/PLAN.md` say
+so. `Plones_documents` Plone makes public himself.
