@@ -8356,3 +8356,13 @@ uploaded in place of the relative image lines, links to the PDF, dil-arc3, the s
 release and the notebook `dil-arc3-history`. Opened without a login the page answers
 404, as does the notebook, still private: the Overview says a private notebook
 attached to a Writeup is made public after the deadline.
+
+#### The two final submissions' notebooks public (Plone)
+
+dil-arc3 public on GitHub is code shared publicly, which §3.6 asks to be shared on
+Kaggle too, in the competition's notebooks or forum. Plone made both notebooks of the
+final submissions public (Share → Public): `plonemraz/dil-arc3-history` (`57623232`)
+and `plonemraz/dil-arc3-learning` (`57470744`). Without a login each page now answers
+200 ("dil-arc3 history | Kaggle"), where the first answered 404 before; the others,
+`dil-arc3-run` and `dil-arc3-mind` among them, still 404. The API's `is_private`
+reads false for every notebook, private or not, and is no evidence either way.
