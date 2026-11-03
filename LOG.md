@@ -8337,3 +8337,22 @@ created 2026-11-03 01:04 UTC; title `Plones_documents`, creator `Plone Mraz`, ve
 `c8e1269`, the dataset's head, which holds `ExpectCollideRevise.pdf` as published).
 `https://doi.org/10.57967/hf/11387` resolves to the dataset's page. It is the
 archive's DOI, not the paper's: the Writeup and the PDF are unchanged.
+
+#### The Writeup submitted (Plone)
+
+Plone made and submitted the Paper Track Writeup:
+`https://kaggle.com/competitions/arc-prize-2026-paper-track/writeups/new-writeup-1793668233532`.
+Read back through the Kaggle API (`list_hackathon_write_ups`, kagglesdk with kaggle
+2.2.4): writeup `123294`, entry `91514`, team `Plone Mraz`; title "Expect, Collide,
+Revise: Learning From Mismatch, Every Step on the Record", subtitle "The DIL protocol
+on ARC-AGI-3 — submission 57623232"; `contentState: PUBLISHED`, published
+2026-11-03 01:56:16 UTC; track `346`, Main Track, the only one; cover and thumbnail
+images set; DOI opted in (`shouldCreateDoi: true`, made by Kaggle after the
+competition ends); licence CC BY 4.0, Kaggle's for the Writeup (§1.6). What the API
+did not return: the body, the links and the attached notebook (`GetHackathonWriteUp`
+404, `GetResolvedWriteUpLinks` 403); they are as Plone filled and previewed them — the
+Writeup's body from `paper/WRITEUP.md` (the editor counted 1,437 words), the figures
+uploaded in place of the relative image lines, links to the PDF, dil-arc3, the stores'
+release and the notebook `dil-arc3-history`. Opened without a login the page answers
+404, as does the notebook, still private: the Overview says a private notebook
+attached to a Writeup is made public after the deadline.

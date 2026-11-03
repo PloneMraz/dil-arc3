@@ -890,7 +890,9 @@ equations."
 - **The paper is submitted as a Kaggle Writeup**, not as an uploaded file. A
   Writeup is the Kaggle object that links to the notebooks, datasets and models
   behind it — which is almost certainly the mechanism behind the rule that a
-  paper "must be linked to a Kaggle code submission". None exists yet.
+  paper "must be linked to a Kaggle code submission". **Submitted** on 2026-11-03
+  (Plone): `kaggle.com/competitions/arc-prize-2026-paper-track/writeups/new-writeup-1793668233532`,
+  Main Track, naming submission `57623232`.
 - 2026-09-30 — Milestone 2. Optional, skipped deliberately: it is judged on
   leaderboard score at that date, and RHAE squares the action ratio, so an agent
   that completes few levels scores near zero. Missing it costs nothing
