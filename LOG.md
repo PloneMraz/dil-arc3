@@ -8457,3 +8457,10 @@ wires the layers, Figure 2 recoloured). Read back through the Kaggle API
 so the figures themselves are as Plone set them, not read back here. The cover and
 thumbnail are unchanged: `paper/figures/cover.png` draws no layer, only expect,
 collide, revise and the lp85 chain, and keeps the earlier colours.
+
+#### The specification's author line, from the master copy (Plone)
+
+`spec/DIL-en-v9.md` names its author "Huỳnh Mai Phúc (Plone Mraz)", where it read
+"Plone Mraz", and its ORCID line links to orcid.org, as the copy in Plone's
+documents does. The specification's text is otherwise unchanged; the master copy
+also carries two figures this copy does not.
