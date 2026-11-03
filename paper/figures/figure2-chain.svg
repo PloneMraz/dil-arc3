@@ -1,92 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" font-family="DejaVu Sans, Arial, Helvetica, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" font-family="Cambria, 'DejaVu Serif', serif">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f5f8a"/>
     </marker>
     <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#b5442c"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#a87a12"/>
     </marker>
   </defs>
   <rect width="1200" height="600" fill="#ffffff"/>
 
   <!-- cycle bands -->
-  <rect x="20" y="20" width="800" height="510" rx="8" fill="#faf8f3" stroke="#ddd5c3"/>
-  <text x="40" y="46" font-size="15" fill="#6d6352" letter-spacing="1">CYCLE 9</text>
-  <rect x="840" y="20" width="340" height="510" rx="8" fill="#f3f7f2" stroke="#cfdccb"/>
-  <text x="860" y="46" font-size="15" fill="#4f6b48" letter-spacing="1">CYCLE 10</text>
+  <rect x="20" y="20" width="800" height="510" rx="8" fill="#fafafa" stroke="#d6d6d6"/>
+  <text x="40" y="46" font-size="15" fill="#5a5a5a" letter-spacing="1">CYCLE 9</text>
+  <rect x="840" y="20" width="340" height="510" rx="8" fill="#eef3f8" stroke="#b9cbe0"/>
+  <text x="860" y="46" font-size="15" fill="#2f5f8a" letter-spacing="1">CYCLE 10</text>
 
   <!-- the return, scarred -->
-  <rect x="40" y="70" width="250" height="190" rx="8" fill="#fdecea" stroke="#b5442c" stroke-width="2"/>
-  <text x="56" y="96" font-size="13" fill="#8c2f1b" font-weight="bold">signal-9-0 · the region's return</text>
-  <text x="56" y="122" font-size="13" fill="#3a2a26">the click at (37, 20)</text>
-  <text x="56" y="144" font-size="13" fill="#3a2a26">expected: that the game would</text>
-  <text x="56" y="162" font-size="13" fill="#3a2a26">be otherwise</text>
-  <text x="56" y="184" font-size="13" fill="#3a2a26">returned: unchanged</text>
-  <rect x="56" y="200" width="218" height="44" rx="5" fill="#ffffff" stroke="#b5442c"/>
-  <text x="165" y="218" text-anchor="middle" font-size="12" fill="#8c2f1b" font-weight="bold">[event] scar: running → scar</text>
-  <text x="165" y="235" text-anchor="middle" font-size="11" fill="#8c2f1b">expected and received kept</text>
+  <rect x="40" y="70" width="250" height="190" rx="8" fill="#fbf4df" stroke="#a87a12" stroke-width="2"/>
+  <text x="56" y="96" font-size="13" fill="#8a6410" font-weight="bold">signal-9-0 · the region's return</text>
+  <text x="56" y="122" font-size="13" fill="#1a1a1a">the click at (37, 20)</text>
+  <text x="56" y="144" font-size="13" fill="#1a1a1a">expected: that the game would</text>
+  <text x="56" y="162" font-size="13" fill="#1a1a1a">be otherwise</text>
+  <text x="56" y="184" font-size="13" fill="#1a1a1a">returned: unchanged</text>
+  <rect x="56" y="200" width="218" height="44" rx="5" fill="#ffffff" stroke="#a87a12"/>
+  <text x="165" y="218" text-anchor="middle" font-size="12" fill="#8a6410" font-weight="bold">[event] scar: running → scar</text>
+  <text x="165" y="235" text-anchor="middle" font-size="11" fill="#8a6410">expected and received kept</text>
 
   <!-- the thought -->
-  <rect x="330" y="70" width="230" height="150" rx="8" fill="#fff" stroke="#8a7f69" stroke-width="1.5"/>
-  <text x="346" y="96" font-size="13" font-weight="bold" fill="#222">written-9-0 · thought</text>
-  <text x="346" y="122" font-size="13" fill="#333">collided: silence</text>
-  <text x="346" y="144" font-size="13" fill="#333">act: click (37, 20)</text>
-  <text x="346" y="166" font-size="13" fill="#333">turns: from that kind of act</text>
-  <text x="346" y="200" font-size="11" fill="#6d6352">built from: signal-9-0</text>
+  <rect x="330" y="70" width="230" height="150" rx="8" fill="#fff" stroke="#8a8a8a" stroke-width="1.5"/>
+  <text x="346" y="96" font-size="13" font-weight="bold" fill="#1a1a1a">written-9-0 · thought</text>
+  <text x="346" y="122" font-size="13" fill="#1a1a1a">collided: silence</text>
+  <text x="346" y="144" font-size="13" fill="#1a1a1a">act: click (37, 20)</text>
+  <text x="346" y="166" font-size="13" fill="#1a1a1a">turns: from that kind of act</text>
+  <text x="346" y="200" font-size="11" fill="#5a5a5a">built from: signal-9-0</text>
 
   <!-- the experience -->
-  <rect x="330" y="300" width="230" height="200" rx="8" fill="#fff" stroke="#8a7f69" stroke-width="1.5"/>
-  <text x="346" y="326" font-size="13" font-weight="bold" fill="#222">written-9-2 · experience</text>
-  <text x="346" y="352" font-size="13" fill="#333">from here, click (37, 20)</text>
-  <text x="346" y="374" font-size="13" fill="#333">to here: changed nothing</text>
-  <text x="346" y="396" font-size="13" fill="#333">borne out 1, not 0</text>
-  <text x="346" y="424" font-size="12" fill="#3f6636" font-style="italic">what the mind expects of</text>
-  <text x="346" y="442" font-size="12" fill="#3f6636" font-style="italic">that act there from now on</text>
-  <text x="346" y="478" font-size="11" fill="#6d6352">built from: signal-9-0, signal-9-1</text>
+  <rect x="330" y="300" width="230" height="200" rx="8" fill="#fff" stroke="#8a8a8a" stroke-width="1.5"/>
+  <text x="346" y="326" font-size="13" font-weight="bold" fill="#1a1a1a">written-9-2 · experience</text>
+  <text x="346" y="352" font-size="13" fill="#1a1a1a">from here, click (37, 20)</text>
+  <text x="346" y="374" font-size="13" fill="#1a1a1a">to here: changed nothing</text>
+  <text x="346" y="396" font-size="13" fill="#1a1a1a">borne out 1, not 0</text>
+  <text x="346" y="424" font-size="12" fill="#2f5f8a" font-style="italic">what the mind expects of</text>
+  <text x="346" y="442" font-size="12" fill="#2f5f8a" font-style="italic">that act there from now on</text>
+  <text x="346" y="478" font-size="11" fill="#5a5a5a">built from: signal-9-0, signal-9-1</text>
 
   <!-- the choice -->
-  <rect x="600" y="70" width="205" height="250" rx="8" fill="#fff" stroke="#b5442c" stroke-width="2"/>
-  <text x="616" y="96" font-size="13" font-weight="bold" fill="#8c2f1b">written-9-3 · choice</text>
-  <text x="616" y="122" font-size="13" fill="#333">chose: click (5, 32)</text>
-  <text x="616" y="146" font-size="12" fill="#333">why: "not yet taken from</text>
-  <text x="616" y="164" font-size="12" fill="#333">here; turned from what</text>
-  <text x="616" y="182" font-size="12" fill="#333">was silent"</text>
-  <text x="616" y="206" font-size="12" fill="#333">turn holds 2 choices</text>
-  <text x="616" y="224" font-size="12" fill="#333">(the field's alertness)</text>
-  <text x="616" y="258" font-size="11" fill="#6d6352">built from: signal-9-0, …</text>
-  <text x="616" y="276" font-size="11" fill="#6d6352">revised in cycle 10:</text>
-  <text x="616" y="294" font-size="11" fill="#6d6352">built_after: written-9-0</text>
+  <rect x="600" y="70" width="205" height="250" rx="8" fill="#fff" stroke="#a87a12" stroke-width="2"/>
+  <text x="616" y="96" font-size="13" font-weight="bold" fill="#8a6410">written-9-3 · choice</text>
+  <text x="616" y="122" font-size="13" fill="#1a1a1a">chose: click (5, 32)</text>
+  <text x="616" y="146" font-size="12" fill="#1a1a1a">why: "not yet taken from</text>
+  <text x="616" y="164" font-size="12" fill="#1a1a1a">here; turned from what</text>
+  <text x="616" y="182" font-size="12" fill="#1a1a1a">was silent"</text>
+  <text x="616" y="206" font-size="12" fill="#1a1a1a">turn holds 2 choices</text>
+  <text x="616" y="224" font-size="12" fill="#1a1a1a">(the field's alertness)</text>
+  <text x="616" y="258" font-size="11" fill="#5a5a5a">built from: signal-9-0, …</text>
+  <text x="616" y="276" font-size="11" fill="#5a5a5a">revised in cycle 10:</text>
+  <text x="616" y="294" font-size="11" fill="#5a5a5a">built_after: written-9-0</text>
 
   <!-- the next return -->
-  <rect x="860" y="70" width="300" height="150" rx="8" fill="#eef5ec" stroke="#79a06f" stroke-width="2"/>
-  <text x="876" y="96" font-size="13" font-weight="bold" fill="#2f5527">signal-10-0 · the next return</text>
-  <text x="876" y="122" font-size="13" fill="#333">the click at (5, 32), carried out</text>
-  <text x="876" y="144" font-size="13" fill="#333">by the host's effectors</text>
-  <text x="876" y="166" font-size="13" fill="#333">came as expected: no scar</text>
-  <text x="876" y="200" font-size="11" fill="#4f6b48">[event] expectation, delta 0</text>
+  <rect x="860" y="70" width="300" height="150" rx="8" fill="#eef3f8" stroke="#2f5f8a" stroke-width="2"/>
+  <text x="876" y="96" font-size="13" font-weight="bold" fill="#2f5f8a">signal-10-0 · the next return</text>
+  <text x="876" y="122" font-size="13" fill="#1a1a1a">the click at (5, 32), carried out</text>
+  <text x="876" y="144" font-size="13" fill="#1a1a1a">by the host's effectors</text>
+  <text x="876" y="166" font-size="13" fill="#1a1a1a">came as expected: no scar</text>
+  <text x="876" y="200" font-size="11" fill="#2f5f8a">[event] expectation, delta 0</text>
 
-  <rect x="860" y="300" width="300" height="200" rx="8" fill="#ffffff" stroke="#cfdccb"/>
-  <text x="876" y="326" font-size="13" font-weight="bold" fill="#2f5527">What a reader checks</text>
-  <text x="876" y="352" font-size="12" fill="#333">· each id is a record in the store</text>
-  <text x="876" y="374" font-size="12" fill="#333">· each "built from" names records</text>
-  <text x="876" y="392" font-size="12" fill="#333">  the log held before</text>
-  <text x="876" y="414" font-size="12" fill="#333">· the scar, the thought and the</text>
-  <text x="876" y="432" font-size="12" fill="#333">  turned choice share one return</text>
-  <text x="876" y="454" font-size="12" fill="#333">· the hash chain verifies</text>
-  <text x="876" y="476" font-size="12" fill="#333">  (scripts/chains.py, dil verify)</text>
+  <rect x="860" y="300" width="300" height="200" rx="8" fill="#ffffff" stroke="#b9cbe0"/>
+  <text x="876" y="326" font-size="13" font-weight="bold" fill="#2f5f8a">What a reader checks</text>
+  <text x="876" y="352" font-size="12" fill="#1a1a1a">· each id is a record in the store</text>
+  <text x="876" y="374" font-size="12" fill="#1a1a1a">· each "built from" names records</text>
+  <text x="876" y="392" font-size="12" fill="#1a1a1a">  the log held before</text>
+  <text x="876" y="414" font-size="12" fill="#1a1a1a">· the scar, the thought and the</text>
+  <text x="876" y="432" font-size="12" fill="#1a1a1a">  turned choice share one return</text>
+  <text x="876" y="454" font-size="12" fill="#1a1a1a">· the hash chain verifies</text>
+  <text x="876" y="476" font-size="12" fill="#1a1a1a">  (scripts/chains.py, dil verify)</text>
 
   <!-- built from -->
-  <path d="M292,130 L328,130" stroke="#555" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
-  <path d="M292,240 C315,240 305,360 328,360" stroke="#555" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
-  <path d="M270,70 C300,24 560,24 640,68" stroke="#555" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
-  <rect x="405" y="22" width="80" height="16" fill="#faf8f3"/>
-  <text x="445" y="35" text-anchor="middle" font-size="12" fill="#555">built from</text>
-  <path d="M562,190 C580,190 585,290 598,290" stroke="#b5442c" stroke-width="1.8" stroke-dasharray="5 4" fill="none" marker-end="url(#r)"/>
-  <text x="556" y="262" text-anchor="end" font-size="11" fill="#8c2f1b">built_after</text>
+  <path d="M292,130 L328,130" stroke="#2f5f8a" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
+  <path d="M292,240 C315,240 305,360 328,360" stroke="#2f5f8a" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
+  <path d="M270,70 C300,24 560,24 640,68" stroke="#2f5f8a" stroke-width="1.8" fill="none" marker-end="url(#a)"/>
+  <rect x="405" y="22" width="80" height="16" fill="#fafafa"/>
+  <text x="445" y="35" text-anchor="middle" font-size="12" fill="#444">built from</text>
+  <path d="M562,190 C580,190 585,290 598,290" stroke="#a87a12" stroke-width="1.8" stroke-dasharray="5 4" fill="none" marker-end="url(#r)"/>
+  <text x="556" y="262" text-anchor="end" font-size="11" fill="#8a6410">built_after</text>
   <!-- carried out -->
-  <path d="M807,140 L858,140" stroke="#b5442c" stroke-width="2.5" fill="none" marker-end="url(#r)"/>
-  <text x="832" y="132" text-anchor="middle" font-size="11" fill="#8c2f1b">test</text>
+  <path d="M807,140 L858,140" stroke="#a87a12" stroke-width="2.5" fill="none" marker-end="url(#r)"/>
+  <text x="832" y="132" text-anchor="middle" font-size="11" fill="#8a6410">test</text>
 
-  <text x="600" y="560" text-anchor="middle" font-size="13" fill="#555">lp85, first level, from submission 57623232's store: every box is a record a reader finds by its id.</text>
-  <text x="600" y="580" text-anchor="middle" font-size="13" fill="#555">The click at (37, 20) is not met again in the run; what the mind expects of it there is the experience.</text>
+  <text x="600" y="560" text-anchor="middle" font-size="13" fill="#444">lp85, first level, from submission 57623232's store: every box is a record a reader finds by its id.</text>
+  <text x="600" y="580" text-anchor="middle" font-size="13" fill="#444">The click at (37, 20) is not met again in the run; what the mind expects of it there is the experience.</text>
 </svg>

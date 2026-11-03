@@ -8373,3 +8373,65 @@ reads false for every notebook, private or not, and is no evidence either way.
 read "Plone Mraz", and carries an `ORCID:` line, as the copy in Plone's documents
 does: Plone made that copy the master of the protocol, and every other copy follows
 it. The normative text is unchanged, and no code reads the file.
+
+#### The paper in the house style of the author's PDFs (Plone)
+
+Plone asked for the paper's PDF in the house style his other PDFs follow: the layout
+of `SP.pdf` as the workspace's `scripts/pdf-style.md` measures it. The PDF belongs to
+this repository, so it is made here, from `paper/paper.html`, by `scripts/paper_pdf.py`
+(not the workspace's `md2pdf.mjs`, which reads Markdown). The page's CSS now holds the
+measurements: Letter, 1 in margins, Cambria 12 pt on a 16.2 pt pitch, justified and
+unhyphenated, 8 pt between paragraphs, page numbers centred at 10 pt; the title split
+at its colon (28 pt, and the subtitle at 11 pt grey, letter-spaced); the author line,
+ORCID and two italic status lines; "Abstract" a front heading at 13.56 pt; every first
+level at 15 pt bold on a new page, the second at 13.56 pt; tables at 10 pt with 1 pt
+rules above and below; a figure's caption the italic paragraph after it. The script
+adds the table of contents on a page of its own after the Abstract, two levels with
+dot leaders, its page numbers read from the printed PDF (a marker in each heading,
+`pdftotext`, printed again until they settle), and sets the Title to the full title.
+Cambria is read from `Plone's documents/Fonts` through a fontconfig file of the run's
+own; without it the script warns and Chrome falls back to DejaVu Serif. Plone: a
+rebuild elsewhere is the rebuilder's to manage.
+
+The figures follow the style too: Cambria, blue `#2f5f8a` and gold `#a87a12` on the
+gold field ground `#fbf4df` (gold for the field, collisions and the mind; blue for the
+host, the store and what came as expected; the world grey), and the PDF takes them as
+SVG. Figure 1's DIL column was wrong against the protocol, as Plone saw: seven arrows
+between neighbouring layers drew the meaning channel as one thread, and "T8 appraisal"
+named T8 for a step that is not a layer. Protocol v0.3.9: the channel goes up (INV-3)
+but is multi-stream ("a datum produced at one layer may be consumed by several higher
+layers at once", §6; "a layer may fan in several lower layers", §6.2); T8 is
+Multi-Entity Abstraction, which "closes back into the loop, not into a sink" (§6.2),
+while "the behavioral return… is carried by emission (§6.4) from whichever layer
+emits, not by T8 alone" (§6.3); appraisal is the loop's fourth link and INV-8's step,
+which the code runs after T8. Drawing a single return from T8 to T1 would have made
+the loop a single ring; instead the column now draws what each layer reads in this
+code (`src/dil/loop/gathers.py`, as dil-core's `gathers.ts`): T1 → T2; T3 → T4 → T5 →
+T6 → T8; T2 and T5 into T6; T5 into T7; the host's signals into T1 and T3; T8
+"closes back into the loop"; the field "acts down on every layer; every layer votes
+on it"; "the command: T5's test — any layer may emit". Section 2.1 says the same: a
+"one-directional, multi-stream meaning channel", and T8 "multi-entity abstraction,
+which closes the channel back into the loop" (it said "appraisal and response").
+
+The code was read for whether it runs single-threaded. Cycle 0 runs a direct hand-off
+T1→T8, as the protocol asks before the self has crystallized; from cycle 1 each layer
+publishes on the meaning channel and each reads its declared dependencies (INV-3
+guarded per read), executed as one topological pass in one OS thread
+(`decisions.MULTI_STREAM_SCHEDULE`: "no OS concurrency claimed"), which the protocol's
+definition — consumption, not dispatch, in cycle-time — allows. The record shows it:
+in `57623232`'s ls20 store, `flow` reads `single-threaded` on cycle 0's two lines and
+`multi-stream` on 1,198, two for each later cycle. The graph is narrow — T6 is the one
+layer that fans in, T8 reads T6 and not T7, T3 reads the host and not T1 or T2 — and
+it is dil-core's; Plone: a shortfall that is not wrong at the base is acceptable.
+
+Also: Reproducing now says the agent's repository "is public at
+github.com/PloneMraz/dil-arc3, under MIT-0" (it said "is published after the
+competition"). The PDF: 22 pages (12 before), Letter; fonts Cambria and DejaVu Sans
+Mono; Title the full title, Author "Huỳnh Mai Phúc (Plone Mraz)"; the contents page's
+numbers match the pages ("1. Introduction" 3, "4.2 Two individuals of one agent" 11,
+"5. Results" 13, "7. What did not work, and why" 16, "References" 22); "section 4.2"
+and "Table 3", which the Writeup points to, stand as they were; the CC0 line, dil-core's
+DOI and the stores' link stand; the PNGs carry no metadata. Copied over
+`Plone's documents/pdfs/ExpectCollideRevise.pdf` (sha256 `1c69df4d4347…`); Plone
+commits there and uploads to Hugging Face himself, and the Writeup's two figures are
+his to replace with the new PNGs.

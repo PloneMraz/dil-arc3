@@ -2,54 +2,82 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Expect, Collide, Revise</title>
+<title>Expect, Collide, Revise: Learning From Mismatch, Every Step on the Record</title>
 <style>
-  @page { size: A4; margin: 20mm 20mm 22mm 20mm; }
-  :root { --ink: #1d1d1d; --muted: #555; --rule: #cfc8b8; --accent: #8c2f1b; --green: #2f5527; }
-  html { font-family: "DejaVu Serif", Georgia, "Times New Roman", serif; font-size: 10.5pt; color: var(--ink); line-height: 1.42; }
+  /* The house style of Plone's PDFs, after SP.pdf (Letter, Cambria): the workspace's
+     scripts/pdf-style.md states it; scripts/paper_pdf.py prints this page by it. */
+  @page { size: letter; margin: 1in;
+    @bottom-center { content: counter(page); font-family: Cambria, "DejaVu Serif", serif; font-size: 10pt; color: #000; } }
+  html { font-family: Cambria, "Cambria Math", "DejaVu Serif", "DejaVu Sans", FreeSerif, serif; font-size: 12pt; line-height: 16.2pt; color: #000; font-variant-emoji: text; }
   body { margin: 0; background: #fff; }
-  h1 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 21pt; line-height: 1.18; margin: 0 0 4pt; }
-  .subtitle { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11.5pt; color: var(--muted); margin: 0 0 10pt; }
-  .author { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; margin: 0 0 14pt; text-align: left; }
-  .author a { color: inherit; text-decoration: none; }
-  h2 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 13pt; margin: 16pt 0 5pt; break-after: avoid; }
-  h3 { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; margin: 11pt 0 3pt; break-after: avoid; }
-  p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
-  .abstract { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 7pt 0; margin: 0 0 8pt; }
-  .abstract p { margin: 0; }
-  code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 8.8pt; }
-  figure { margin: 10pt 0; break-inside: avoid; }
-  figure img { width: 100%; }
-  figcaption { font-size: 9pt; color: var(--muted); margin-top: 3pt; }
-  table { border-collapse: collapse; width: 100%; font-size: 8.6pt; margin: 6pt 0 4pt; break-inside: auto; font-family: "DejaVu Sans", Arial, sans-serif; }
-  th, td { border-bottom: 1px solid #e3ddcf; padding: 2.5pt 4pt; vertical-align: top; text-align: left; }
-  th { border-bottom: 1.5px solid #999; font-weight: bold; }
+  p { margin: 0 0 8pt; text-align: justify; hyphens: none; }
+  a { color: inherit; text-decoration: none; }
+  hr { display: none; }
+
+  .title-block { margin: 0 0 4pt; }
+  h1.title { font-size: 28pt; font-weight: normal; line-height: 1.15; margin: 0 0 2pt; }
+  .subtitle { font-size: 11pt; line-height: 12.9pt; color: #5a5a5a; letter-spacing: 0.75pt; margin: 0 0 10pt; text-align: left; }
+  .title-block p { text-align: left; }
+
+  h2, h3, h4 { font-weight: bold; break-after: avoid; break-inside: avoid; }
+  h2 { font-size: 15pt; line-height: 1.2; margin: 0 0 8pt; break-before: page; }
+  h2.front { font-size: 13.56pt; margin: 14pt 0 6pt; break-before: auto; }
+  h3 { font-size: 13.56pt; line-height: 1.2; margin: 14pt 0 6pt; }
+  h4 { font-size: 12pt; margin: 12pt 0 4pt; }
+
+  .toc-page { break-before: page; break-after: page; }
+  .toc-page h2 { break-before: auto; }
+  .toc { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0 0 2.9pt; text-align: left; }
+  .toc a { display: flex; align-items: baseline; }
+  .toc .t { flex: 0 1 auto; }
+  .toc .dots { flex: 1 0 1.5em; border-bottom: 1px dotted #000; margin: 0 0.25em; transform: translateY(-0.25em); }
+  .toc .pg { flex: none; }
+  .toc .l1 { padding-left: 12pt; }
+  .toc .l2 { padding-left: 24pt; }
+  .marker { position: absolute; font-size: 1px; color: transparent; }
+
+  ul, ol { margin: 0 0 8pt; padding-left: 24pt; }
+  li { text-align: justify; }
+  blockquote { margin: 0 0 8pt 24pt; padding: 0; }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: 0.85em; }
+
+  figure { margin: 8pt 0 4pt; text-align: center; break-inside: avoid; break-after: avoid; }
+  figure img { max-width: 100%; }
+  p.caption { font-style: italic; }
+  p.tcap { font-style: italic; break-after: avoid; margin: 12pt 0 4pt; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 10pt; line-height: 13pt; margin: 4pt 0 12pt;
+    border-top: 1pt solid #000; border-bottom: 1pt solid #000; }
+  th, td { padding: 3pt 6pt; vertical-align: top; text-align: left; }
+  th { font-weight: bold; border-bottom: 0.5pt solid #000; }
+  tr:nth-child(n+3) td { border-top: 0.5pt solid #bbb; }
   tr { break-inside: avoid; }
-  .tcap { font-size: 9pt; color: var(--muted); margin: 8pt 0 0; font-family: "DejaVu Sans", Arial, sans-serif; break-after: avoid; }
-  ol, ul { margin: 0 0 6pt 16pt; padding: 0; }
-  li { margin: 0 0 2pt; }
-  .todo { background: #fff3a8; padding: 0 2pt; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9pt; }
-  .note { border: 1px dashed #c9a400; background: #fffbe0; padding: 6pt 8pt; font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9pt; margin: 0 0 12pt; }
-  blockquote { margin: 6pt 14pt; color: #333; font-style: italic; }
-  .refs p { text-align: left; font-size: 9pt; margin-bottom: 3pt; }
+  tr:first-child, tr:nth-child(2) { break-after: avoid; }
+  table.keep { break-inside: avoid; }
 </style>
 </head>
 <body>
 
-<h1>Expect, Collide, Revise: Learning From Mismatch, Every Step on the Record</h1>
-<p class="subtitle">The DIL protocol on ARC-AGI-3 — a report on submission 57623232</p>
-<p class="author" style="margin-bottom: 6pt"><b>Huỳnh Mai Phúc (Plone Mraz)</b><br><i>Independent Researcher, Vietnam</i><br>2026<br><i>ORCID:</i> <a href="https://orcid.org/0009-0009-0571-7151">0009-0009-0571-7151</a></p>
-<p class="author">Code: notebook <code>plonemraz/dil-arc3-history</code>; protocol and reference implementation: github.com/PloneMraz/dil-core</p>
+<header class="title-block">
+<h1 class="title">Expect, Collide, Revise</h1>
+<p class="subtitle">Learning From Mismatch, Every Step on the Record</p>
+<p><b>Huỳnh Mai Phúc (Plone Mraz)</b> <i>Independent Researcher, Vietnam</i> 2026</p>
+<p>ORCID: <a href="https://orcid.org/0009-0009-0571-7151">0009-0009-0571-7151</a></p>
+<p><i>The DIL protocol on ARC-AGI-3 — a report on submission 57623232</i><br>
+<i>Code: notebook <code>plonemraz/dil-arc3-history</code>; protocol and reference implementation: github.com/PloneMraz/dil-core</i></p>
+</header>
 
-<div class="abstract"><p><b>Abstract.</b> We built an agent that learns each ARC-AGI-3 game from mismatch. Before every action it expects what the game will return; when the return differs, the mismatch is recorded as a collision, and the collision turns what it does next. Every expectation, collision, thought and choice is a datum that names what it was built from, in an append-only, hash-chained event log, following the DIL protocol. The question is not how high the agent scores but whether a third party can read back, from the log alone, what it knew at each step and why it acted. On the 25 public games the submitted code's logs hold 1,111 chains a reader can follow from a collision to the thought and the choice it turned; all 1,735 turned choices are built from the return that collided, and all 25 logs verify under the protocol's reference verifier. The agent also reads its own history: 2,589 times it read the log for collisions that had come before, and 1,313 times for the steps it had taken, each read itself recorded; reading it changed no score. The submission scores 0.25 on the leaderboard, against 0.02 for the starter kit's random agent and 0.06 for the same agent on this submission's road; the score is low, and we say why.</p></div>
+<h2 class="front">Abstract</h2>
+<p>We built an agent that learns each ARC-AGI-3 game from mismatch. Before every action it expects what the game will return; when the return differs, the mismatch is recorded as a collision, and the collision turns what it does next. Every expectation, collision, thought and choice is a datum that names what it was built from, in an append-only, hash-chained event log, following the DIL protocol. The question is not how high the agent scores but whether a third party can read back, from the log alone, what it knew at each step and why it acted. On the 25 public games the submitted code's logs hold 1,111 chains a reader can follow from a collision to the thought and the choice it turned; all 1,735 turned choices are built from the return that collided, and all 25 logs verify under the protocol's reference verifier. The agent also reads its own history: 2,589 times it read the log for collisions that had come before, and 1,313 times for the steps it had taken, each read itself recorded; reading it changed no score. The submission scores 0.25 on the leaderboard, against 0.02 for the starter kit's random agent and 0.06 for the same agent on this submission's road; the score is low, and we say why.</p>
+
+<!-- toc: scripts/paper_pdf.py puts the table of contents here -->
 
 <h2>1. Introduction</h2>
 <p>ARC-AGI-3 scores an agent by how few actions it needs against a human, on games it has never seen. Whatever the agent knows of a game it must learn while playing it, and every action spent learning is counted. The common way to learn by acting is to maximise a summed reward. Ours learns from mismatch, an older way: the agent expects, the world answers, and where the answer differs from the expectation, the difference is what the agent learns from — not a score to raise or lower, but data that changes what it does next.</p>
 <p>A second requirement shapes everything else. An agent that changes itself from its own experience is hard to trust unless the change can be inspected. Our question is therefore whether a third party, holding only the agent's record, can read back what the agent knew at each step, what contradicted it, and why it acted as it did — and can check that the record was not rewritten. An agent may misread and revise its memory; it may not rewrite the record of what happened.</p>
-<figure>
-  <img src="figures/figure1-loop.png" alt="Figure 1: the loop">
-  <figcaption>Figure 1. The loop. The game returns a frame; the host's sensory organs take it in and compute nothing; every datum passes the eight layers T1–T8 under a global field; at T5 the mind compares the return with what it expected and commands; the host's effectors carry the command out. An onlooker in the world remarks on how the agent behaves. The store is the agent's history: its memory, <code>[data]</code>, which it revises, and the record, <code>[event]</code>, which it only reads.</figcaption>
-</figure>
+<figure><img src="figures/figure1-loop.svg" alt="Figure 1: the loop"></figure>
+<p class="caption">Figure 1. The loop. The game returns a frame; the host's sensory organs take it in and compute nothing; every datum passes the eight layers T1–T8 under a global field; at T5 the mind compares the return with what it expected and commands; the host's effectors carry the command out. An onlooker in the world remarks on how the agent behaves. The store is the agent's history: its memory, <code>[data]</code>, which it revises, and the record, <code>[event]</code>, which it only reads.</p>
 <p>This paper reports on one submission, and it makes four contributions:</p>
 <ol>
   <li>An agent whose beliefs, refutations, thoughts and choices are data with provenance, in a hash-chained log that a verifier and a conformance checker read without the agent's help (sections 2–5).</li>
@@ -63,7 +91,7 @@
 <h2>2. The DIL protocol, in brief</h2>
 <p>DIL (Data Integration Loop) is a protocol for an agent that runs as a closed loop over a region it interacts with, learns from collisions with what it expected, and leaves a trace a third party can audit. It is specified in two public documents — a conceptual specification and a normative protocol (version 0.3.9) — and implemented in TypeScript as <code>dil-core</code>, the reference implementation; the agent described here carries a Python port of it, kept in step and checked against it.</p>
 <h3>2.1 Layers, field and invariants</h3>
-<p>Every datum the agent meets passes eight layers on a one-directional meaning channel: T1 (activity and environment), T2 (agency: was this change self-written or pushed by the environment?), T3 (channels and queries), T4 (binding to a source), T5 (temporal expectation), T6 (Others), T7 (absence: what failed to come back) and T8 (appraisal and response). Beside the meaning channel runs a global modulatory field, GLOB-MOD, here with three axes — trust, alertness, exploration — to which every layer contributes votes and which every layer reads as background; it carries how to read, never what is read. Eight invariants hold the loop to its form: among them, meaning is relational (INV-4: no layer assigns meaning to a signal in isolation), history accrues and is never loaded (INV-5), every change is classified as self-written or environment-pushed before it is interpreted (INV-6), and the appraisal step may not draw its criteria from the state being edited (INV-8). A violated invariant halts the loop.</p>
+<p>Every datum the agent meets passes eight layers on a one-directional, multi-stream meaning channel: T1 (activity and environment), T2 (agency: was this change self-written or pushed by the environment?), T3 (channels and queries), T4 (binding to a source), T5 (temporal expectation), T6 (Others), T7 (absence: what failed to come back) and T8 (multi-entity abstraction, which closes the channel back into the loop). Beside the meaning channel runs a global modulatory field, GLOB-MOD, here with three axes — trust, alertness, exploration — to which every layer contributes votes and which every layer reads as background; it carries how to read, never what is read. Eight invariants hold the loop to its form: among them, meaning is relational (INV-4: no layer assigns meaning to a signal in isolation), history accrues and is never loaded (INV-5), every change is classified as self-written or environment-pushed before it is interpreted (INV-6), and the appraisal step may not draw its criteria from the state being edited (INV-8). A violated invariant halts the loop.</p>
 <h3>2.2 The store: memory and record</h3>
 <p>The whole store is the agent's history, and DIL draws one boundary inside it. What the agent has learned — its hypotheses, its experiences, what it expects — is <code>[data]</code>, its memory, and it may revise it. What happened to it — each observation that arrived, each command, each collision, and what every belief was built from — is <code>[event]</code>: the loop only appends to it, and the agent may read it but never alter it.</p>
 <blockquote>An agent can be wrong about its past. It must not be able to rewrite the past to prove itself right.</blockquote>
@@ -93,13 +121,11 @@
 
 <h2>4. A chain the reader can check</h2>
 <p style="text-align: left">Kaggle shows no log of a scored run; the evidence is the submitted code's Save &amp; Run on the 25 public games, whose stores are published at <span style="white-space: nowrap">github.com/PloneMraz/dil-core/releases/tag/dil-arc3-57623232-stores</span>. Each cycle leaves in <code>[event]</code> the path of every datum through the layers, what entered, what was scarred, what the mind read, and each datum it wrote with the ids it was built from.</p>
-<figure>
-  <img src="figures/figure2-chain.png" alt="Figure 2: the lp85 chain">
-  <figcaption>Figure 2. One chain in lp85, each box a record a reader finds by its id in the published store.</figcaption>
-</figure>
+<figure><img src="figures/figure2-chain.svg" alt="Figure 2: the lp85 chain"></figure>
+<p class="caption">Figure 2. One chain in lp85, each box a record a reader finds by its id in the published store.</p>
 <p>Figure 2 is one chain from lp85, where the agent finished the first level in its human baseline's 17 actions. A click at (37, 20), expected to change the game, returns it unchanged: the return <code>signal-9-0</code> is scarred. The thought <code>written-9-0</code> records the silence and turns the mind away from that kind of act. The next choice, <code>written-9-3</code>, clicks at (5, 32) and says so in its reason — "not yet taken from here; turned from what was silent" — built from the return, and, once the thought's id came back in cycle 10, revised to name it (<code>built_after</code>); the revision was recorded in <code>[event]</code> too — a <code>revision</code> line and the choice's entry in that cycle's seal. The experience <code>written-9-2</code> now holds that the click there changes nothing; that is what the mind expects of it from then on. The next return, <code>signal-10-0</code>, comes as expected, and nothing collides. (The click at (37, 20) is not met again in that run.)</p>
 <h3>4.1 Across the 25 games</h3>
-<table>
+<table class="keep">
   <tr><th>What the stores hold (25 games, 600 cycles each)</th><th>Count</th></tr>
   <tr><td>collisions of the game's frame (scars)</td><td>2,715</td></tr>
   <tr><td>chains of a scar, the thought it set off and the choice it turned, all built from the same return</td><td>1,111</td></tr>
@@ -210,10 +236,9 @@
 <p>The agent does not learn ARC-AGI-3 well. What it shows is that learning from mismatch can be complete in its accounting: every belief it formed, every refutation it met, every thought and every changed choice can be read back from the record and checked by someone who does not trust it, and the record says where the agent was wrong as faithfully as where it was right. The log does work beyond audit: it showed where the actions go (29% changed nothing, 17% walked back to something left to try) and that the public games did not predict the hidden ones (suspects: 0.515 public, 0.02 hidden). The mind names no task; another model has taken the model's seat (a language model, section 3.4), and another environment is what the design is for, not yet shown.</p>
 
 <h2>Reproducing</h2>
-<p>The notebook <code>plonemraz/dil-arc3-history</code> (version 1) builds and runs the agent offline on the public games and writes every store; Save &amp; Run reproduces every choice, step for step (the loop is deterministic; the records' wall-clock times, and so the hashes, differ from run to run). The protocol (v0.3.9), the specification and the verifier are public at github.com/PloneMraz/dil-core. The agent's repository is published after the competition, under MIT-0.</p>
+<p>The notebook <code>plonemraz/dil-arc3-history</code> (version 1) builds and runs the agent offline on the public games and writes every store; Save &amp; Run reproduces every choice, step for step (the loop is deterministic; the records' wall-clock times, and so the hashes, differ from run to run). The protocol (v0.3.9), the specification and the verifier are public at github.com/PloneMraz/dil-core. The agent's repository is public at github.com/PloneMraz/dil-arc3, under MIT-0.</p>
 <p style="text-align: left">This paper is dedicated to the public domain under CC0 1.0 (creativecommons.org/publicdomain/zero/1.0/).</p>
 
-<div class="refs">
 <h2>References</h2>
 <p>[1] P. Mraz. DIL — Data Integration Loop: protocol v0.3.9, and the specification it derives from (v9); reference implementation dil-core 0.2.0. github.com/PloneMraz/dil-core, 2026. doi:10.57967/hf/11268.</p>
 <p>[2] ARC Prize Foundation. ARC-AGI-3 and the RHAE score; competition rules and toolkit. arcprize.org, kaggle.com/competitions/arc-prize-2026-arc-agi-3, 2026.</p>
@@ -222,7 +247,6 @@
 <p>[5] D. Pathak, P. Agrawal, A. A. Efros, T. Darrell. Curiosity-driven exploration by self-supervised prediction. ICML 2017. arXiv:1705.05363.</p>
 <p>[6] A. Clark. Whatever next? Predictive brains, situated agents, and the future of cognitive science. Behavioral and Brain Sciences 36(3):181–204, 2013. doi:10.1017/S0140525X12000477.</p>
 <p>[7] ARC Prize Foundation. ARC-AGI-3 Preview Agent Competition, results. arcprize.org/competitions/arc-agi-3-preview-agents, 2025.</p>
-</div>
 
 </body>
 </html>
