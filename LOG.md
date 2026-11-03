@@ -8288,3 +8288,29 @@ selected. Read the same morning, all thirteen of this account's submissions were
 complete, none being scored; two have a higher public score, `57371259` (version 35)
 and `56820389` (version 18), 0.26 each — 0.01 on the 55 public games, which says
 nothing of the 55 hidden ones, and the paper is linked to `57623232`.
+
+### 2026-11-03
+
+#### The stores published; dil-arc3's history read before it goes public
+
+ARC-AGI-3 closed at 2026-11-02 23:59 UTC. The stores of `57623232` are published as a
+release of dil-core, tag `dil-arc3-57623232-stores` at `c8d73de`, not marked latest:
+`https://github.com/PloneMraz/dil-core/releases/tag/dil-arc3-57623232-stores`. Read
+first: the archive holds the 25 stores alone (113,819 entries, all `root/root`: json,
+jsonl and sqlite), and none of their text or sqlite strings carries the owner's name,
+a path of this machine, an email or a session link. Opened without a login, the page
+answers 200 and `stores.tar.gz` downloads at 410,049,466 bytes, sha256
+`1b8920d5a3e47702337e78d9b967a61ac0220703ea25141d5c26cbfe554b5dc1`, as planned.
+dil-core's verifier, run on the ls20 store: `ok — 154121 record(s)`.
+
+dil-arc3's history, read against the outbound rule before the repository goes public:
+422 commits; each author `Plone Mraz` or `PloneMraz` with the owner's email; trailers
+`Claude Opus 5 (1M context)` (40) and `Claude Opus 5.5` (382); no session link in any
+revision (`claude.ai/code` only in CLAUDE.md's rule against it); the real name only
+where the owner signs as an author (the paper's author block, `scripts/paper_pdf.py`,
+the PDF's Author field, and the lines here and in CLAUDE.md that say so); no token or
+key in any diff. The binaries ever committed — ten revisions of `paper/paper.pdf`, five
+of the PNG figures — carry no metadata beyond the PDF's title, Chrome's creator and
+producer, dates, and in the last three the Author field; the PNGs no text chunk.
+
+The PDF's link still answers 401 without a login: `Plones_documents` is still private.
