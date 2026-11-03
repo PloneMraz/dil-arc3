@@ -8435,3 +8435,15 @@ DOI and the stores' link stand; the PNGs carry no metadata. Copied over
 `Plone's documents/pdfs/ExpectCollideRevise.pdf` (sha256 `1c69df4d4347…`); Plone
 commits there and uploads to Hugging Face himself, and the Writeup's two figures are
 his to replace with the new PNGs.
+
+#### The restyled PDF on Hugging Face, and the dataset's new DOI
+
+Plone committed and uploaded the restyled PDF to `plonemraz/Plones_documents`.
+Without a login, `…/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf`
+answers 200, `application/pdf`, 408,345 bytes, sha256 `1c69df4d4347…`: the same as
+`paper/paper.pdf` and the copy in `Plone's documents`. The dataset is still public and
+not gated, its head `192f378`. Plone generated a new DOI for that revision:
+`10.57967/hf/11396` (DataCite, findable, created 2026-11-03 08:53 UTC, version
+`192f378`, creator `Plone Mraz`); `https://doi.org/10.57967/hf/11396` resolves to the
+dataset's page. `10.57967/hf/11387` stays findable, for `c8e1269`. Neither the
+Writeup, its fields nor the PDF name either DOI.
