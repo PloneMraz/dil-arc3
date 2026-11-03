@@ -8464,3 +8464,10 @@ collide, revise and the lp85 chain, and keeps the earlier colours.
 "Plone Mraz", and its ORCID line links to orcid.org, as the copy in Plone's
 documents does. The specification's text is otherwise unchanged; the master copy
 also carries two figures this copy does not.
+
+#### The specification's two figures, from the master copy (Plone)
+
+`spec/DIL-en-v9.md` carries the master copy's two figures — Figure 1, the canonical
+loop (§6), and Figure 2, the eight layers as a closed loop (§7.2) — each with its
+caption, the SVG files in `spec/figures/`. The copy is now byte for byte the one in
+Plone's documents, figures included.
