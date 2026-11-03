@@ -8320,3 +8320,12 @@ The PDF's link still answers 401 without a login: `Plones_documents` is still pr
 At Plone's word, `gh repo edit PloneMraz/dil-arc3 --visibility public`: the repository
 is public, and its page answers 200 without a login. CLAUDE.md and `paper/PLAN.md` say
 so. `Plones_documents` Plone makes public himself.
+
+#### The PDF's link opens without a login
+
+Plone made `plonemraz/Plones_documents` public and not gated (the API: `private`
+false, `gated` false, at `c8e1269`). Without a login,
+`https://huggingface.co/datasets/plonemraz/Plones_documents/resolve/main/pdfs/ExpectCollideRevise.pdf`
+answers 200, `application/pdf`, 715,008 bytes, sha256 `a34012cc8483…`, the same as
+`paper/paper.pdf` and the copy in `Plone's documents`. Both links the Writeup names
+now serve without a login; what is left is Plone's: the dataset's DOI, then the Writeup.

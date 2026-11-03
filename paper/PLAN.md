@@ -131,7 +131,7 @@ Writeup and the PDF, the second in the Writeup):
    as a PDF once the dataset is public and not gated.
 Only then the DOI for `Plones_documents`, and the Writeup submitted.
 
-The first is done (2026-11-03): published, opened without a login, its sha256 as above.
+Both done (2026-11-03): each opened without a login, the archive's sha256 as above, the PDF the same as `paper/paper.pdf`.
 
 Settled with Plone (2026-10-19): the dates above, moved for the work on
 dil-arc3. Alongside, the two final ARC-AGI-3 submissions: `57623232` and version 41's
