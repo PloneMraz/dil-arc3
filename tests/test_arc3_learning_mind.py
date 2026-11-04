@@ -921,6 +921,20 @@ def test_silence_turns_the_next_choice_from_that_kind_of_act():
     assert "signal-1-0" in written_of(events)[choice[-1]], "built from the return that collided"
 
 
+def test_with_the_turn_off_a_collision_is_thought_on_and_turns_no_choice():
+    # A measurement (`--no-turn`, Plone, 2026-11-04): the same collision, the same
+    # thought, and no choice the turn shaped.
+    mind, cycle, data, events = loop()
+    mind.learning.turn = False
+    run(cycle, frame(lit(0), lit(1)), status(affords=(1, 2)))
+    first = mind.commands[-1][1]
+    run(cycle, frame(lit(1), lit(1), action=first[0]), status(affords=(1, 2), action=first[0]))
+    thoughts = [d.payload for _, d in of_kind(data, "thought")]
+    assert thoughts and thoughts[-1]["collided"] == "silence", thoughts
+    why = mind.learning.thoughts[-1].why
+    assert "turned" not in why, why
+
+
 def written_of(events):
     return {w.datum_id: w.built_from for r in events.all() if getattr(r, "activity_kind", None) == "cycle-seal"
             for w in r.activity.written}

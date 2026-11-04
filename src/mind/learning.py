@@ -395,7 +395,7 @@ class Learning:
     to expect, show it what came back, ask it what to do."""
 
     def __init__(self, inducer: Inducer, organs: Organs, priors: dict[str, dict[str, str]],
-                 curiosity: str = CURIOSITY[0], attention: bool = False) -> None:
+                 curiosity: str = CURIOSITY[0], attention: bool = False, turn: bool = True) -> None:
         if curiosity not in CURIOSITY:
             raise ValueError(f"curiosity is one of {CURIOSITY}, not {curiosity!r}")
         self.inducer = inducer
@@ -407,6 +407,10 @@ class Learning:
         # the agent's memory: every change in what it learned is written).
         self._pending: list[Edge] = []
         self.attention = attention
+        # Whether a collision's thought turns the choices after it. Off only to
+        # measure what the turn does (`--no-turn`, Plone, 2026-11-04): the
+        # collision is scarred and thought on as ever, and no choice is turned.
+        self.turn = turn
         # For a choice being made: how alike each state met is to where it stands
         # (attention), and what the chosen act was weighed by.
         self._alike: dict[str, float] = {}
@@ -1031,7 +1035,7 @@ class Learning:
     def _turned(self, here: str, fresh: list[tuple[Act, tuple]]) -> tuple[list[tuple[Act, tuple]], str]:
         """Of the acts not yet taken here, those a collision turned it to, with why;
         all of them, and no why, when it turned to none of them or was not turned."""
-        if self._turn is None:
+        if self._turn is None or not self.turn:
             return fresh, ""
         if self._turn[0] == "from":
             _, kind, coarse, turn_why = self._turn

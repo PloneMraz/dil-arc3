@@ -56,6 +56,7 @@ ap.add_argument("--curiosity", default="new",
                 help="the mind's law of curiosity, passed to run_game.py (mind/learning.py: CURIOSITY)")
 ap.add_argument("--attention", action="store_true",
                 help="passed to run_game.py (mind/learning.py: ATTENTION_K)")
+ap.add_argument("--no-turn", action="store_true", help="passed to run_game.py: a collision turns no choice")
 ap.add_argument("--alone", action="store_true",
                 help="passed to run_game.py: no onlooker in the world, the agent meets only the region")
 ap.add_argument("--field", default="", help="passed to run_game.py: the field the loop starts with")
@@ -164,7 +165,8 @@ while queue or running:
              "--endpoint", a.endpoint, "--model", a.model, "--max-tokens", str(a.max_tokens),
              "--remote", f"{host}:{port}", "--out", str(stores / f"store-{g}"),
              "--inducer", a.inducer, "--curiosity", a.curiosity, *(["--attention"] if a.attention else []),
-             *(["--alone"] if a.alone else []), *(["--field", a.field] if a.field else []),
+             *(["--alone"] if a.alone else []), *(["--no-turn"] if a.no_turn else []),
+             *(["--field", a.field] if a.field else []),
              *(["--field-carry", a.field_carry] if a.field_carry else []),
              *(["--code-only"] if a.code_only else []), *(["--think"] if a.think else [])],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=str(HERE.parent), env=env)

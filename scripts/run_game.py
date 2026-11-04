@@ -80,6 +80,9 @@ ap.add_argument("--curiosity", choices=CURIOSITY, default=CURIOSITY[0],
 ap.add_argument("--attention", action="store_true",
                 help="weigh how much an act is wanted by what it did in the situations most like where it "
                      "stands, not everywhere (idea (a), mind/learning.py: ATTENTION_K)")
+ap.add_argument("--no-turn", action="store_true",
+                help="a collision's thought turns no choice: a measurement of what the turn does "
+                     "(mind/learning.py: Learning.turn)")
 ap.add_argument("--offline-dir", default=None,
                 help="play the environment files in this directory (Kaggle), not the starter kit's")
 ap.add_argument("--alone", action="store_true", help="no onlooker: the agent meets only the region")
@@ -123,7 +126,7 @@ elif a.inducer == "objects":
 else:
     inducer = GridInducer(ARC_ORGANS)
 mind = Mind(inducer, ARC_ORGANS, priors={"task": TASK_CUE}, curiosity=a.curiosity,
-            attention=a.attention)
+            attention=a.attention, turn=not a.no_turn)
 seat = seat_rule(mind)
 layers = Layers(
     t1=create_t1(), t2=create_t2(), t3=create_t3(transducers()), t4=create_t4(),
