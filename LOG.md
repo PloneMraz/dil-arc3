@@ -8491,3 +8491,120 @@ dil-core's does: MIT-0 as `license: other` with `license_name: mit-0` and
 cited by DOI (`10.57967/hf/11396`), and the two places the specifications diverge
 (`AgencyTag`; substrate scope), mirroring RSIL's section of the same name. The copy
 is again byte for byte the master; the specification before it is unchanged.
+
+#### What the turn does: the 25 games with it off (Plone)
+
+A question a reader may put to the paper (B1): what does the turn add? Measured by
+taking it away, the rest kept: `--no-turn` (`Learning.turn`, off only to measure;
+default on, so the submission's behaviour is unchanged; one test, 428 pass) leaves
+every collision scarred and thought on, and turns no choice. The 25 public games,
+the submission's settings (grid, S2b, attention, 600 cycles), offline on this
+machine (`scripts/data/no-turn/`, git-ignored; 1,670 s, six at once):
+
+| | levels of 183 | score |
+|---|---|---|
+| the submission (`e04c515`, its Kaggle Save & Run) | 15 | 0.48919 |
+| the turn off | 13 | 0.51526 |
+
+The levels lost are ar25's first and sc25's; the score rises with tu93 (0.186 →
+0.882, its two levels in fewer actions), bp35, lf52 and vc33 a little, m0r0 and
+ls20 a little down. By levels first, the turn is kept. In tu93, with it off, no
+choice is turned (the submission's: 75) and the collisions are thought on (328
+thoughts on a collision, against 314). The two part early and then go their own
+way: `differ.py` finds the first choice made otherwise at step 32 in tu93, 47 in
+ar25 and 76 in sc25, and the same choice at 213, 231 and 217 of 599 steps; the
+field differs a little before they part, as what each writes in its choices
+differs (writing is data). Two levels of 183 is of the size of the differences in
+the paper's Table 2, and one run each: what the turn adds is not told apart here
+from how far a small change sends the agent elsewhere.
+
+The machine is not the cause: ar25, sc25 and tu93 run again here with the turn on
+(`scripts/data/turn-local-check/`) make the submission's choice at every step and
+its scores to the digit.
+
+#### What follows a chain: the base rates (Plone)
+
+The paper counts 1,111 chains, in 716 of which the next return came as expected
+(B3: against what?). `scripts/next_return.py` reads, in the submission's 25 stores,
+how often the next cycle's frame came as expected after each kind of frame. Only
+cycles with a next frame count, so the chains are 1,109 and 714 (`chains.py` counts
+the last cycle's two, with no frame after them, as met as expected):
+
+| the frame of cycle c | the frame of c + 1 as expected |
+|---|---|
+| a chain's scar | 714 of 1,109 (64.4%) |
+| another frame scar | 1,172 of 1,601 (73.2%) |
+| a frame as expected | 10,399 of 12,265 (84.8%) |
+| every frame | 12,285 of 14,975 (82.0%) |
+
+Split by whether c + 1's expectation was held by memory (`heldBy`) or by none,
+the chains stay lowest (held: 73.8%, 74.7%, 88.7%; none: 59.4%, 69.3%, 76.6%).
+Collisions come together, and a turned choice tries an act nothing foretells: a
+chain shows what a collision set off, not that the turn made the next step come
+as expected. The output: `submit-e04c515-history1/evidence/next-return.txt`.
+
+#### The paper and the Writeup, for a reader who has not read this log (Plone)
+
+Plone's review of the paper, taken up in `paper/paper.html` and `paper/WRITEUP.md`:
+the baseline of 0.06 is the starter's random agent run through this submission's
+pipeline (it read "the same agent on this submission's road", which reads as this
+agent); reference [1] names its author as the paper's author block does, and dil-core's DOI `10.57967/hf/11268`,
+the snapshot at `1aba031` that carries version 0.2.0 — the DOI dil-core's
+`CITATION.cff` and README now name too (dil-core `267e60a`); a paragraph on why the
+scars drive change and do not predict (the README's finding 6, measured on the
+recollection channel: ls20, its model right 94% of the time); two limits —
+provenance shows dependency, not cause, and the record holds only what the
+protocol observes — with section 6's "causal chain" made "a chain of records" to
+agree; the two findings that need no DIL offered to others; reading its own
+history named as the smallest question the record makes possible; and the phrases
+only this log explained, said plainly ("the learning's place", "an act that takes
+no place", "the aim read from before the last grid", "names no task",
+"into-aims", "somewhere new"). The PDF: 22 pages, its contents page as before
+("section 4.2" and "Table 3", which the Writeup names, where they were). The
+Writeup: 1,516 words by `wc` (1,470 before, the editor's count 1,437), room made by
+leaving to the PDF what it holds (the 87 choices made again, 1.10603 → 1.10586,
+0.500 against 0.491, the conformance criteria one by one, how the laws of things
+wait for the aim, the notebook's 20%) and two sentences that said what the
+abstract had.
+
+#### One whole, said so (Plone)
+
+A reader of the repository took DIL for a part that could be taken out — a run
+"without DIL", the same inducer and UCB1 — and found where that reading comes
+from: the code has a seam (`src/mind/` imports the field and T5 from `src/dil/`,
+which knows nothing of the mind, and the mind is seated as T5's predict rule), as
+any host's mind must on a protocol; the README's table put DIL in `src/dil/`; its
+opening said there is no decision procedure beneath DIL, where the paper names the
+choosing rule count-based; and the Writeup set DIL, host and mind side by side.
+The code is separable; the agent is not: without the loop this mind has no
+memory, no field and no collision. Said now in the Writeup (the opening of
+Approach) and the PDF (section 3.1): the agent is one whole, not a solver with
+DIL beside it; its choosing rule is count-based; the score is that rule's and the
+inducer's, and DIL's contribution is that every step toward it can be checked.
+The README's table puts DIL everywhere (the port in `src/dil/`), and its opening
+says the choosing rule runs inside the loop, on what the loop gives it. The PDF
+says the agent "runs on" the port (it said "carries").
+
+#### The submitted code, named (Plone)
+
+The paper named the repository and not the commit, and the repository has moved
+past it (comments only, `--no-turn` off by default, a script: three games run
+again make the submission's every choice). The PDF's Reproducing now names
+`e04c515`, and the tag `submission-57623232` (annotated) marks it. The Paper Track's
+rules, as kept on 2026-10-11, freeze no repository; what binds is the notebook the
+submission ran, `dil-arc3-history` version 1, to which nothing is pushed.
+
+#### The two measurements in the paper, and the tally (Plone)
+
+The PDF reports what the turn does (section 5: 13 levels and 0.515 with it off,
+against 15 and 0.489, the runs parting by step 76, so not told apart from how far
+a small change sends the agent) and what follows a chain (section 4.1: 714 of
+1,109, 64%, against 73% and 82%; `scripts/next_return.py` among the ways to check);
+the Writeup the second in a sentence. "No count of collisions is kept or sought"
+said less than the mind does, since a collision that came before holds the turn a
+choice longer for each time: both now say no tally of collisions is kept, and the
+one count used is read from the record each time; section 6 adds that for a silence
+the turn acts much as a short-lived penalty would, and that the turn toward where
+an answer differed is what a penalty cannot carry. Room in the Writeup (1,517 words
+by `wc`): the experience in Figure 2's walk-through, the limit "writing is data",
+and three phrases, left to the PDF. The PDF: 22 pages, its contents as before.
