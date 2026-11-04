@@ -8483,3 +8483,11 @@ plain git, not LFS, and converting them would give 36 commits hashes GitHub does
 have. `README.md` opens with the front matter the Hub reads as a dataset card, as
 dil-core's does: MIT-0 as `license: other` with `license_name: mit-0` and
 `license_link: LICENSE`, since MIT-0 is not among the Hub's licence identifiers.
+
+#### The specification's Companion specification section, from the master copy (Plone)
+
+`spec/DIL-en-v9.md` closes, as the master copy in Plone's documents now does, with a
+"Companion specification" section: DIL as the informational counterpart of RSIL,
+cited by DOI (`10.57967/hf/11396`), and the two places the specifications diverge
+(`AgencyTag`; substrate scope), mirroring RSIL's section of the same name. The copy
+is again byte for byte the master; the specification before it is unchanged.
