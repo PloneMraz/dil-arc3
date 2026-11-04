@@ -1,38 +1,26 @@
 # scripts/
 
-The measurement and run scripts behind the numbers in `README.md` and
-`LOG.md`. They were written in a session scratchpad on Windows and moved here
-on 2026-09-24, so that the work is kept with the code it measured.
+The measurement and run scripts behind the numbers in `README.md` and `LOG.md`. They were written in a session scratchpad on Windows and moved here on 2026-09-24, so that the work is kept with the code it measured.
 
-Run them from the repository root with an interpreter that has the game engine,
-on Python 3.12 (Kaggle's) — this repository's own `.venv` (`uv venv --python
-3.12 .venv`, then the starter kit's pinned packages):
+Run them from the repository root with an interpreter that has the game engine, on Python 3.12 (Kaggle's) — this repository's own `.venv` (`uv venv --python 3.12 .venv`, then the starter kit's pinned packages):
 
 ```sh
 PY=.venv/bin/python
 $PY scripts/<script>.py [args]
 ```
 
-`_paths.py` works out where the repository, its `src/` and the starter kit are,
-from where it sits, so nothing depends on where the workspace is mounted.
+`_paths.py` works out where the repository, its `src/` and the starter kit are, from where it sits, so nothing depends on where the workspace is mounted.
 
 ## Data
 
 `scripts/data/` is git-ignored output.
 
-- `frames.pkl` — 316 real transitions (`ls20` 159, `vc33` 157), the set every
-  offline measurement here was scored on. **Reproducible exactly**:
-  `$PY scripts/dump_frames.py scripts/data/frames.pkl` regenerated it on
-  2026-09-24 and all 316 transitions were identical to the original.
-- `prior-<game>-*/` — the durable store and `[event]` log of each `run_prior.py`
-  run.
+- `frames.pkl` — 316 real transitions (`ls20` 159, `vc33` 157), the set every offline measurement here was scored on. **Reproducible exactly**: `$PY scripts/dump_frames.py scripts/data/frames.pkl` regenerated it on 2026-09-24 and all 316 transitions were identical to the original.
+- `prior-<game>-*/` — the durable store and `[event]` log of each `run_prior.py` run.
 
 ## Scripts that run against the current code
 
-Each imports only what the code has now (checked 2026-10-06). Those from
-`wm_probe.py` to `run_game.py`, and the last six but `readlog.py` (as its row
-says), were run on 2026-09-24 and completed; the others were added or changed
-after, each on the days its git history gives.
+Each imports only what the code has now (checked 2026-10-06). Those from `wm_probe.py` to `run_game.py`, and the last six but `readlog.py` (as its row says), were run on 2026-09-24 and completed; the others were added or changed after, each on the days its git history gives.
 
 | script | what it measures | args |
 |---|---|---|
@@ -67,12 +55,7 @@ after, each on the days its git history gives.
 
 ## Scripts written against code that has since been removed
 
-Twenty-one scripts measured code that is gone, and no longer import against the
-code now; they were removed from the tree on 2026-10-06 (Plone: the codebase
-keeps no dead code; history is in the text). The numbers they gave are in
-`LOG.md`, and git keeps each script: the last commit that holds them all is
-`e1a3112`. To run one again, take it from there and point it at the commit it
-was written for:
+Twenty-one scripts measured code that is gone, and no longer import against the code now; they were removed from the tree on 2026-10-06 (Plone: the codebase keeps no dead code; history is in the text). The numbers they gave are in `LOG.md`, and git keeps each script: the last commit that holds them all is `e1a3112`. To run one again, take it from there and point it at the commit it was written for:
 
 ```sh
 git worktree add ../dil-arc3-at-321d9e0 321d9e0
@@ -87,17 +70,10 @@ git worktree remove ../dil-arc3-at-321d9e0
 | `321d9e0` | `arc3.model`, `arc3.effect`, `affordance_key` — the affordance era | run and completed: `diagnose.py`, `model_vs_persistence.py`, `three_arms.py`, `verify_shipped.py`, `run_loop.py` · imports verified, not re-run (live games, minutes each): `field_trace.py`, `measure_recollection.py`, `run_agent.py`, `store_demo.py`, `measure_effect.py` |
 | `147aab3` | the stuff-level readers `changes_of`, `contacts`, `interactions_of`, and `Region.kind` | run and completed: `see.py`, `contacts.py`, `surround.py`, `surround2.py`, `thing_repeat.py` |
 
-`model_vs_persistence.py` reproduces the recorded figures exactly at `321d9e0`:
-`ls20` 76% → 94%, `vc33` 41% → 69%.
+`model_vs_persistence.py` reproduces the recorded figures exactly at `321d9e0`: `ls20` 76% → 94%, `vc33` 41% → 69%.
 
-`debug_vc33.py`, of the affordance era, still imports against the code now, and
-is kept.
+`debug_vc33.py`, of the affordance era, still imports against the code now, and is kept.
 
 ## What was not kept
 
-The one-shot edit scripts (`port_*.py`, `mind_directive.py`, `prior_object.py`,
-`arc3_describe.py`, `readme_prior.py`) replaced exact passages of source that
-have since been committed; re-running them would fail on text that is no longer
-there, and their effect is in the history. Scripts that served `dil-core` or the
-website stay with the Windows backup until they are moved to their own
-repositories.
+The one-shot edit scripts (`port_*.py`, `mind_directive.py`, `prior_object.py`, `arc3_describe.py`, `readme_prior.py`) replaced exact passages of source that have since been committed; re-running them would fail on text that is no longer there, and their effect is in the history. Scripts that served `dil-core` or the website stay with the Windows backup until they are moved to their own repositories.
