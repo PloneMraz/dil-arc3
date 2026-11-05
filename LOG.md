@@ -3754,3 +3754,11 @@ The PDF reports what the turn does (section 5: 13 levels and 0.515 with it off, 
 #### Markdown without hard wraps (Plone)
 
 Every Markdown file here is now written with each paragraph, list item and quoted paragraph on one line (Plone, 2026-11-04: read raw in a narrow window, a hard wrap and the window's own wrap broke the text twice; the rule is in the workspace's CLAUDE.md). `README.md`, `CLAUDE.md`, `LOG.md`, `paper/OUTLINE.md`, `PLAN.md`, `TABLES.md`, `scripts/README.md` and `spec/README.md` were unwrapped by the workspace's `scripts/md-unwrap.py`, which keeps a file only if markdown-it (CommonMark, as GitHub and the site read it) renders it the same; `paper/WRITEUP.md` was unwrapped before it. The specification and the protocol in `spec/` had no hard wraps and are still the master copies byte for byte.
+
+### 2026-11-05
+
+#### New DOIs, with the author's full name (Plone)
+
+Plone generated new DOIs for the Hugging Face datasets so that each DataCite record names the author as the citation metadata does: every earlier one named only "Plone Mraz", since the Hub's DOI dialog takes the name from its author tag, not from the profile. This dataset's first DOI is `10.57967/hf/11445` (version `6cb052f`, the snapshot of `dc9d7ae`). dil-core's is now `10.57967/hf/11446` (version `38af037`; it was `10.57967/hf/11268`), and Plone's documents' `10.57967/hf/11444` (version `01995ee`; it was `10.57967/hf/11396`). None of the records carries an ORCID yet: the dialog has no field for one. The earlier DOIs still resolve, each linked to the next by DataCite ("IsPreviousVersionOf").
+
+The paper's reference [1] now cites dil-core by `10.57967/hf/11446`, and `spec/DIL-en-v9.md` cites RSIL by `10.57967/hf/11444`, as the master copy does. `paper/paper.pdf` was printed again (`scripts/paper_pdf.py`): 22 pages, Title and Author as before, its text the same but for that one DOI. The entries above that name the old DOIs are left as they were written.
