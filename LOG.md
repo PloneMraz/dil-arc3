@@ -3762,3 +3762,21 @@ Every Markdown file here is now written with each paragraph, list item and quote
 Plone generated new DOIs for the Hugging Face datasets so that each DataCite record names the author as the citation metadata does: every earlier one named only "Plone Mraz", since the Hub's DOI dialog takes the name from its author tag, not from the profile. This dataset's first DOI is `10.57967/hf/11445` (version `6cb052f`, the snapshot of `dc9d7ae`). dil-core's is now `10.57967/hf/11446` (version `38af037`; it was `10.57967/hf/11268`), and Plone's documents' `10.57967/hf/11444` (version `01995ee`; it was `10.57967/hf/11396`). None of the records carries an ORCID yet: the dialog has no field for one. The earlier DOIs still resolve, each linked to the next by DataCite ("IsPreviousVersionOf").
 
 The paper's reference [1] now cites dil-core by `10.57967/hf/11446`, and `spec/DIL-en-v9.md` cites RSIL by `10.57967/hf/11444`, as the master copy does. `paper/paper.pdf` was printed again (`scripts/paper_pdf.py`): 22 pages, Title and Author as before, its text the same but for that one DOI. The entries above that name the old DOIs are left as they were written.
+
+### 2026-11-08
+
+#### The Paper Track's deadline, read again from every source
+
+Kaggle gives 2026-11-09 23:59 UTC in three places: the API (`kaggle competitions list`), the Overview's Timeline ("November 9, 2026 - Final Submission Deadline … 11:59 PM UTC"), and the header's countdown (its title "Tue Nov 10 2026 06:59:00 GMT+0700"). The Rules (§2.1.a, §3.1.a) give no date of their own and send the reader to that Timeline. arcprize.org's Key Dates still read "November 8, 2026 - Papers due", with no time or zone, under a banner that says "ARC Prize 2026 has finished". The copies kept on 2026-09-24 and 2026-10-11 read November 9 as well: Kaggle never moved it. The pages read are kept in the workspace's `Downloads/pages/` (`paper-track-{overview,rules}-2026-11-08`).
+
+### 2026-11-09
+
+#### Before the deadline: what the judges read, checked
+
+The Writeup as Plone pasted it from Kaggle is `paper/WRITEUP.md` from its Abstract on, word for word but for the two image lines, and its two images are `figure1-loop.png` and `figure2-chain.png` byte for byte (last updated 2026-11-04 11:37 UTC, after `4210fed`). 1,495 words by `wc`. Each score in its Results table is the Kaggle submission it names. The PDF behind its link is `paper/paper.pdf` of `9de05a4` (420,792 bytes, sha256 `3de91edd…`), and what the Writeup points to in it holds: section 4.1 (the checker's results), section 4.2, Table 3 (nineteen rows). Every link in the Writeup and the PDF answers without a login; the tag `submission-57623232` is `e04c515`. The one notebook attached is `dil-arc3-history`: the second final, `57470744` (`dil-arc3-learning` 41), is in the PDF's Table 1 and was not attached (Plone).
+
+### 2026-11-10
+
+#### The Writeup public, and its DOI
+
+After the deadline the Writeup opens without a login: `https://www.kaggle.com/competitions/arc-prize-2026-paper-track/writeups/new-writeup-1793668233532`, its body `paper/WRITEUP.md` word for word, both figures shown, Main Track, the notebook `dil-arc3-history` public, and its project links the PDF, `github.com/PloneMraz/dil-arc3` and the stores' release. Kaggle gave it a DOI, `10.34740/kaggle/w/123294` (DataCite: findable, created 2026-11-10 00:05 UTC, creator "Plone Mraz", the Writeup's title); `https://doi.org/10.34740/kaggle/w/123294` resolves to `https://www.kaggle.com/w/123294`. The Paper Track lists 99 Writeups, all published (the list is kept in the workspace's `Downloads/pages/paper-track-writeups-2026-11-10.json`).
